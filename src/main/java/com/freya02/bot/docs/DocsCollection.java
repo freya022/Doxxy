@@ -1,28 +1,30 @@
 package com.freya02.bot.docs;
 
-import org.jsoup.internal.StringUtil;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DocsCollection {
-	private DocsCollection() {
+public record DocsCollection(ConstantList constantList, Map<String, BasicDocs> docsMap) {
+	public static DocsCollection of(String allClassesUrl, String constantsUrl) throws IOException {
+		ClassList.runGeneration(allClassesUrl);
 
-	}
-
-	public static DocsCollection of(String allClassesUrl) throws IOException {
-		final ClassList list = ClassList.of(allClassesUrl);
+		final ConstantList constantList = ConstantList.of(constantsUrl);
 		final Map<String, BasicDocs> docsMap = new HashMap<>();
 
-		for (Map.Entry<String, String> entry : list.getClassToUrlMap().entrySet()) {
+		for (Map.Entry<String, ClassReference> entry : ClassReferences.getAllReferences().entrySet()) {
 			String className = entry.getKey();
-			String classRelativeUrl = entry.getValue();
+			ClassReference classRef = entry.getValue();
 
-			final String absoluteUrl = StringUtil.resolve(allClassesUrl, classRelativeUrl);
-			docsMap.put(className, BasicDocs.of(absoluteUrl));
+			final String link = classRef.link();
+			if (link == null) {
+				continue;
+			}
+
+			if (docsMap.put(className, new BasicDocs(link)) != null) {
+				throw new IllegalStateException("Overwrote " + className + ": " + link);
+			}
 		}
 
-		return new DocsCollection();
+		return new DocsCollection(constantList, docsMap);
 	}
 }
