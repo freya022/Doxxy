@@ -27,6 +27,10 @@ public class Utils {
 		}
 	}
 
+	public static String fixJDKUrl(String url) {
+		return url.replace("https://docs.oracle.com/javase/8", "https://docs.oracle.com/javase/9");
+	}
+
 	@NotNull
 	public static synchronized Document getDocument(@NotNull String url) throws IOException {
 		final String input;

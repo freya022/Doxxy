@@ -11,7 +11,7 @@ import java.util.*;
 public class HTMLElement {
 	private final Element targetElement;
 
-	public HTMLElement(Element targetElement) {
+	public HTMLElement(@NotNull Element targetElement) {
 		this.targetElement = targetElement;
 	}
 
@@ -67,6 +67,16 @@ public class HTMLElement {
 				}
 			}
 		});
+
+		for (TextAttributes attributes : map.values()) {
+			if (attributes.contains(MdFlag2.CODE, MdFlag2.LINK)) {
+				final List<MdFlag2> flags = attributes.flags();
+				flags.remove(MdFlag2.CODE);
+				flags.remove(MdFlag2.LINK);
+
+				flags.add(MdFlag2.LINKED_CODE);
+			}
+		}
 
 		map.forEach((textNode, textAttributes) -> {
 			if (textAttributes.contains(MdFlag2.CODE) && !(textAttributes.contains(MdFlag2.PRE) || textAttributes.contains(MdFlag2.LINK))) {
@@ -179,5 +189,10 @@ public class HTMLElement {
 		});
 
 		return builder.toString().replaceAll("`\\[(.*?)]\\((.*?)\\)`", "[`$1`]($2)");
+	}
+
+	@Override
+	public String toString() {
+		return targetElement.wholeText();
 	}
 }

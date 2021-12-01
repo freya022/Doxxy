@@ -19,7 +19,14 @@ public enum MdFlag2 {
 	}, "a"),
 	BOLD(n -> "**", n -> "**", "b", "strong", "h2"),
 	STRIKETHROUGH(n -> "~~", n -> "~~", "s"),
-	ITALIC(n -> "*", n -> "*", "i");
+	ITALIC(n -> "*", n -> "*", "i"),
+	LINKED_CODE(n -> "[`", n -> {
+		while (!n.hasAttr("href") && n.parentNode() != null) {
+			n = n.parentNode();
+		}
+
+		return "`](%s)".formatted(n.absUrl("href"));
+	}, "linkedcode");
 
 	private final Function<Node, String> prefix;
 	private final Function<Node, String> suffix;
