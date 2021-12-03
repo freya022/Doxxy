@@ -21,8 +21,9 @@ public class ClassDoc {
 	@NotNull private final String className;
 	@Nullable private final List<HTMLElement> typeParameters;
 
-	private final Map<String, FieldDoc> fieldDocs = new HashMap<>();
-	private final Map<String, MethodDoc> methodDocs = new HashMap<>();
+	@NotNull private final Map<String, FieldDoc> fieldDocs = new HashMap<>();
+	@NotNull private final Map<String, MethodDoc> methodDocs = new HashMap<>();
+	@Nullable private final Map<DocDetailType, List<HTMLElement>> detailToElementsMap;
 
 	ClassDoc(@NotNull String url) throws IOException {
 		final Document document = Utils.getDocument(url);
@@ -42,9 +43,10 @@ public class ClassDoc {
 		//Get class type parameters if they exist
 		final Element detailListElement = document.selectFirst("body > div.flex-box > div > main > section.description > div.block + dl");
 		if (detailListElement != null) {
-			final Map<DocDetailType, List<HTMLElement>> map = MethodDoc.getDetailToElementsMap(detailListElement);
-			this.typeParameters = map.get(DocDetailType.TYPE_PARAMETERS);
+			detailToElementsMap = MethodDoc.getDetailToElementsMap(detailListElement);
+			this.typeParameters = detailToElementsMap.get(DocDetailType.TYPE_PARAMETERS);
 		} else {
+			detailToElementsMap = null;
 			this.typeParameters = null;
 		}
 
@@ -120,6 +122,10 @@ public class ClassDoc {
 	@NotNull
 	public String getClassName() {
 		return className;
+	}
+
+	public Map<DocDetailType, List<HTMLElement>> getDetailToElementsMap() {
+		return detailToElementsMap;
 	}
 
 	public List<HTMLElement> getTypeParameters() {

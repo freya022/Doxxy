@@ -21,6 +21,7 @@ public class MethodDoc {
 	@NotNull private final String methodSignature;
 	@Nullable private final HTMLElement descriptionElement;
 
+	@Nullable private final Map<DocDetailType, List<HTMLElement>> detailToElementsMap;
 	@Nullable private final List<HTMLElement> typeParametersDoc;
 	@Nullable private final List<HTMLElement> parametersDoc;
 	@Nullable private final HTMLElement returnsDoc;
@@ -54,7 +55,7 @@ public class MethodDoc {
 		//Need to parse the children of the <dl> tag in order to make a map of dt[class] -> List<Element>
 		final Element detailListElement = element.selectFirst("dl");
 		if (detailListElement != null) {
-			final Map<DocDetailType, List<HTMLElement>> detailToElementsMap = getDetailToElementsMap(detailListElement);
+			this.detailToElementsMap = getDetailToElementsMap(detailListElement);
 
 			this.typeParametersDoc = detailToElementsMap.get(DocDetailType.TYPE_PARAMETERS);
 			this.parametersDoc = detailToElementsMap.get(DocDetailType.PARAMETERS);
@@ -62,12 +63,18 @@ public class MethodDoc {
 			this.throwsDocs = detailToElementsMap.get(DocDetailType.THROWS);
 			this.incubatingDocs = findFirst(detailToElementsMap, DocDetailType.INCUBATING);
 		} else {
+			this.detailToElementsMap = null;
+
 			this.typeParametersDoc = null;
 			this.parametersDoc = null;
 			this.returnsDoc = null;
 			this.throwsDocs = null;
 			this.incubatingDocs = null;
 		}
+	}
+
+	public Map<DocDetailType, List<HTMLElement>> getDetailToElementsMap() {
+		return detailToElementsMap;
 	}
 
 	@Nullable
