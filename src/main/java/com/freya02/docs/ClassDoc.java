@@ -24,7 +24,7 @@ public class ClassDoc {
 	private final Map<String, FieldDoc> fieldDocs = new HashMap<>();
 	private final Map<String, MethodDoc> methodDocs = new HashMap<>();
 
-	public ClassDoc(@NotNull String url) throws IOException {
+	ClassDoc(@NotNull String url) throws IOException {
 		final Document document = Utils.getDocument(url);
 
 		//Get class name
@@ -47,8 +47,6 @@ public class ClassDoc {
 		} else {
 			this.typeParameters = null;
 		}
-
-		//TODO add global class cache
 
 		processInheritedElements(document, InheritedType.FIELD, this::onInheritedField);
 
@@ -78,7 +76,7 @@ public class ClassDoc {
 
 			final Element superClassLink = title.selectFirst("a");
 			if (superClassLink != null) {
-				final ClassDoc superClassDocs = new ClassDoc(superClassLink.absUrl("href"));
+				final ClassDoc superClassDocs = ClassDocs.of(superClassLink.absUrl("href"));
 
 				for (Element element : inheritedBlock.select("code > a")) {
 					final HttpUrl hrefUrl = HttpUrl.get(element.absUrl("href"));

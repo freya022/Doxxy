@@ -7,13 +7,11 @@ import org.jetbrains.annotations.Nullable;
 import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class MethodDoc {
 	private static final Logger LOGGER = Logging.getLogger();
+	private static final Set<String> warned = Collections.synchronizedSet(new HashSet<>());
 
 	@NotNull private final ClassDoc classDocs;
 
@@ -92,7 +90,9 @@ public class MethodDoc {
 				final String detailName = child.text();
 				final DocDetailType type = DocDetailType.parseType(detailName);
 				if (type == null) {
-					LOGGER.warn("Unknown method detail type: '{}'", detailName);
+					if (warned.add(detailName)) {
+						LOGGER.warn("Unknown method detail type: '{}'", detailName);
+					}
 
 					list = null;
 				} else {
