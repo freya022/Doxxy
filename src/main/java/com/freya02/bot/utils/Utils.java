@@ -32,6 +32,19 @@ public class Utils {
 	}
 
 	@NotNull
+	public static String getClassName(String fullName) {
+		for (int i = 0, length = fullName.length(); i < length; i++) {
+			final char c = fullName.charAt(i);
+
+			if (Character.isUpperCase(c)) {
+				return fullName.substring(i);
+			}
+		}
+
+		throw new IllegalArgumentException("Could not get glass name from '" + fullName + "'");
+	}
+
+	@NotNull
 	public static synchronized Document getDocument(@NotNull String url) throws IOException {
 		final String input;
 

@@ -11,6 +11,7 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -21,7 +22,7 @@ public class ClassDocs {
 	@Nullable private final List<HTMLElement> typeParameters;
 
 	private final List<FieldDocs> fieldDocs = new ArrayList<>();
-	private final List<MethodDocs> methodDocs = new ArrayList<>();
+	private final Map<String, MethodDoc> methodDocs = new HashMap<>();
 
 	public ClassDocs(@NotNull String url) throws IOException {
 		final Document document = Utils.getDocument(url);
@@ -31,7 +32,7 @@ public class ClassDocs {
 		this.className = segments.get(segments.size() - 1).substring(0, segments.get(segments.size() - 1).length() - 5);
 
 		//Get class description
-		final Element descriptionElement = document.selectFirst("body > main > div.contentContainer > div.description > ul > li > div");
+		final Element descriptionElement = document.selectFirst("body > div.flex-box > div > main > section.description > div.block");
 		if (descriptionElement != null) {
 			this.descriptionElement = new HTMLElement(descriptionElement);
 		} else {
@@ -39,9 +40,9 @@ public class ClassDocs {
 		}
 
 		//Get class type parameters if they exist
-		final Element detailListElement = document.selectFirst("body > div.flex-box > div > main > section.description > dl");
+		final Element detailListElement = document.selectFirst("body > div.flex-box > div > main > section.description > div.block + dl");
 		if (detailListElement != null) {
-			final Map<DocDetailType, List<HTMLElement>> map = MethodDocs.getDetailToElementsMap(detailListElement);
+			final Map<DocDetailType, List<HTMLElement>> map = MethodDoc.getDetailToElementsMap(detailListElement);
 			this.typeParameters = map.get(DocDetailType.TYPE_PARAMETERS);
 		} else {
 			this.typeParameters = null;
@@ -54,7 +55,7 @@ public class ClassDocs {
 		// Associate back with the h3 text (is the class)
 		// Have to parse the h3 class, is always in fully qualified
 
-		final Elements inheritedBlocks = document.select("body > main > div.contentContainer > div.summary > ul > li > section > ul > li > ul > li");
+		final Elements inheritedBlocks = document.select("section.method-summary > div.inherited-list");
 
 		for (Element inheritedBlock : inheritedBlocks) {
 			final Element title = inheritedBlock.selectFirst("h3");
@@ -62,21 +63,24 @@ public class ClassDocs {
 
 			final Element superClassLink = title.selectFirst("a");
 			if (superClassLink != null) {
-				final ClassDocs superClassDocs = new ClassDocs(Utils.fixJDKUrl(superClassLink.absUrl("href")));
+				final ClassDocs superClassDocs = new ClassDocs(superClassLink.absUrl("href"));
 
-				//Need to use JDK 16 docs
-				//section contains method id with precise parameters
-				//links are correctly formatted
-				//uses modern html overall
+				for (Element element : inheritedBlock.select("code > a")) {
+					final HttpUrl hrefUrl = HttpUrl.get(element.absUrl("href"));
 
-				//Need to filter method that are not inherited (and so are supposedly overridden)
-				methodDocs.addAll(superClassDocs.methodDocs);
+					String targetId = hrefUrl.fragment();
 
+					//You can inherit a same method multiple times, it will show up multiple times in the docs
+					// As the html is ordered such as the latest overridden method is shown, we can set the already existing doc to the newest one
+					// Example: https://docs.oracle.com/en/java/javase/16/docs/api/java.base/java/util/AbstractCollection.html#method.summary
+					final MethodDoc methodDoc = superClassDocs.methodDocs.get(targetId);
+					methodDocs.put(methodDoc.getElementId(), methodDoc);
+				}
 			} else {
 				final String[] titleSplit = title.text().split("\\s");
 				final String fullName = titleSplit[titleSplit.length - 1]; //TODO should I still get the full qualification, and parse the package names ? in case the lib has classes the JDK has lol
 
-				String className = getClassName(fullName);
+				String className = Utils.getClassName(fullName);
 
 				System.out.println(className);
 
@@ -88,21 +92,34 @@ public class ClassDocs {
 		processDetailElements(document, ClassDetailType.FIELD, fieldElement -> fieldDocs.add(new FieldDocs(this, fieldElement)));
 
 		//Try to find method details
-		processDetailElements(document, ClassDetailType.METHOD, methodElement -> methodDocs.add(new MethodDocs(this, methodElement)));
+		processDetailElements(document, ClassDetailType.METHOD, methodElement -> {
+			final MethodDoc methodDocs = new MethodDoc(this, methodElement);
+
+			this.methodDocs.put(methodDocs.getElementId(), methodDocs);
+		});
 	}
 
-	@NotNull
-	private String getClassName(String fullName) {
-		for (int i = 0, length = fullName.length(); i < length; i++) {
-			final char c = fullName.charAt(i);
-
-			if (Character.isUpperCase(c)) {
-				return fullName.substring(i);
-			}
-		}
-
-		throw new IllegalArgumentException("Could not get glass name from '" + fullName + "'");
-	}
+//	private boolean tryAddSuperMethodDoc(String targetId, MethodDoc superMethodDoc) {
+//
+//		for (int i = 0, methodDocsSize = methodDocs.size(); i < methodDocsSize; i++) {
+//			MethodDoc methodDoc = methodDocs.get(i);
+//
+//			if (superMethodDoc.getElementId().equals(targetId)) {
+//				methodDocs.set(i, superMethodDoc);
+//
+//				return true;
+//			}
+//		}
+//
+//		//If it's the first inherited method, just add it
+//		if (superMethodDoc.getElementId().equals(targetId)) {
+//			methodDocs.add(superMethodDoc);
+//
+//			return true;
+//		}
+//
+//		return false;
+//	}
 
 	@Nullable
 	public HTMLElement getDescriptionElement() {
@@ -123,40 +140,19 @@ public class ClassDocs {
 		return fieldDocs;
 	}
 
-	@NotNull
-	public List<MethodDocs> getMethodDocs() {
+	public Map<String, MethodDoc> getMethodDocs() {
 		return methodDocs;
 	}
 
 	private void processDetailElements(@NotNull Document document, @NotNull ClassDetailType detailType, Consumer<@NotNull Element> callback) {
-		final String detailTitleName = detailType.getDetailTitleName();
+		final String detailId = detailType.getDetailId();
 
 		//Get main blocks to determine what details are available (field, constructor (constr), method)
-		final Elements blockTitleElements = document.select("body > main > div.contentContainer > div.details > ul > li > section > ul > li > h3");
+		final Element detailsSection = document.getElementById(detailId);
+		if (detailsSection == null) return;
 
-		for (Element blockTitleElement : blockTitleElements) {
-
-			//Find the block with the same name as provided
-			if (blockTitleElement.text().equals(detailTitleName)) {
-				//Get the parent element since we found the title for the block, not the block itself
-				final Element parent = blockTitleElement.parent();
-				if (parent == null)
-					throw new IllegalArgumentException("No parent for detail block " + detailTitleName + ", really weird, cannot be a root node");
-
-				//We then look for all the sub-blocks (so fields / constructors / methods) by their title (h3)
-				final Elements titleElements = parent.select("ul > li > h4:nth-child(1)");
-
-				//Iterate on all titles and process their parent using the callback
-				for (Element titleElement : titleElements) {
-					final Element titleParent = titleElement.parent();
-					if (titleParent == null)
-						throw new IllegalArgumentException("Title element shouldn't been a root element");
-
-					callback.accept(titleParent);
-				}
-
-				return; //findFirst equivalent
-			}
+		for (Element element : detailsSection.select("ul.member-list > li > section.detail")) {
+			callback.accept(element);
 		}
 	}
 

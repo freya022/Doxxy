@@ -100,7 +100,7 @@ public class BasicDocs {
 		}
 
 		for (Detail detail : getDetails()) {
-			builder.addField(detail.key().getMarkdown(), detail.value().getMarkdown2(false), false);
+			builder.addField(detail.key().getMarkdown(), detail.value().getMarkdown2(), false);
 		}
 
 		return builder;

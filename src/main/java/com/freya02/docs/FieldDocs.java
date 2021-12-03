@@ -15,20 +15,17 @@ public class FieldDocs {
 		this.classDocs = classDocs;
 
 		//Get field name
-		final Element fieldNameElement = element.selectFirst("h4");
+		final Element fieldNameElement = element.selectFirst("h3");
 		if (fieldNameElement == null) throw new IllegalArgumentException();
 		this.fieldName = fieldNameElement.text();
 
 		//Get field type
-		final Element fieldDeclarationElement = element.selectFirst("pre");
-		if (fieldDeclarationElement == null) throw new IllegalArgumentException();
-
-		final String fieldDeclaration = fieldDeclarationElement.text().replace((char) 160, ' ');
-		final int secondLastSpaceIndex = fieldDeclaration.lastIndexOf(' ', fieldDeclaration.length() - 6);
-		this.fieldType = fieldDeclaration.substring(secondLastSpaceIndex, fieldDeclaration.lastIndexOf(' '));
+		final Element fieldTypeElement = element.selectFirst("div.member-signature > span.return-type");
+		if (fieldTypeElement == null) throw new IllegalArgumentException();
+		this.fieldType = fieldTypeElement.text();
 
 		//Get field description
-		final Element descriptionElement = element.selectFirst("div");
+		final Element descriptionElement = element.selectFirst("section.detail > div.block");
 		if (descriptionElement != null) {
 			this.descriptionElement = new HTMLElement(descriptionElement);
 		} else {

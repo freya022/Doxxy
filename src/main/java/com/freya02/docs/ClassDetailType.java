@@ -1,17 +1,16 @@
 package com.freya02.docs;
 
 public enum ClassDetailType {
-	FIELD("Field Detail"),
-	CONSTRUCTOR("Constructor Detail"),
-	METHOD("Method Detail");
+	FIELD("field.detail"),
+	CONSTRUCTOR("constructor.detail"),
+	METHOD("method.detail");
 
-	private final String detailTitleName;
-	ClassDetailType(String detailTitleName) {
-
-		this.detailTitleName = detailTitleName;
+	private final String detailId;
+	ClassDetailType(String detailId) {
+		this.detailId = detailId;
 	}
 
-	public String getDetailTitleName() {
-		return detailTitleName;
+	public String getDetailId() {
+		return detailId;
 	}
 }

@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.function.Function;
 
 public enum MdFlag2 {
-	PARAGRAPH(n -> "\n\n", n -> "\n\n", "p"),
+	PARAGRAPH(n -> "\n", n -> "\n", "p"),
 	PRE(n -> "", n -> "", "pre"),
 	CODE(n -> "`", n -> "`", "code"),
 	LINK(n -> "[", n -> {
@@ -26,7 +26,7 @@ public enum MdFlag2 {
 		}
 
 		return "`](%s)".formatted(n.absUrl("href"));
-	}, "linkedcode");
+	}, "linkedcode"), FENCED_CODE(n -> "```java\n", n -> "```", "fencedcode");
 
 	private final Function<Node, String> prefix;
 	private final Function<Node, String> suffix;

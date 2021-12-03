@@ -12,10 +12,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MethodDocs {
+public class MethodDoc {
 	private static final Logger LOGGER = Logging.getLogger();
 
 	@NotNull private final ClassDocs classDocs;
+
+	@NotNull private final String elementId;
 
 	@NotNull private final String methodName;
 	@NotNull private final String methodSignature;
@@ -27,22 +29,24 @@ public class MethodDocs {
 	@Nullable private final List<HTMLElement> throwsDocs;
 	@Nullable private final HTMLElement incubatingDocs;
 
-	public MethodDocs(@NotNull ClassDocs classDocs, @NotNull Element element) {
+	public MethodDoc(@NotNull ClassDocs classDocs, @NotNull Element element) {
 		this.classDocs = classDocs;
 
+		this.elementId = element.id();
+
 		//Get method name
-		final Element methodNameElement = element.selectFirst("h4");
+		final Element methodNameElement = element.selectFirst("h3");
 		if (methodNameElement == null) throw new IllegalArgumentException();
 		this.methodName = methodNameElement.text();
 
 		//Get method signature
-		final Element methodSignatureElement = element.selectFirst("pre");
+		final Element methodSignatureElement = element.selectFirst("div.member-signature");
 		if (methodSignatureElement == null) throw new IllegalArgumentException();
 
 		this.methodSignature = methodSignatureElement.text();
 
 		//Get method description
-		final Element descriptionElement = element.selectFirst("div");
+		final Element descriptionElement = element.selectFirst("section.detail > div.block");
 		if (descriptionElement != null) {
 			this.descriptionElement = new HTMLElement(descriptionElement);
 		} else {
@@ -102,6 +106,12 @@ public class MethodDocs {
 		return detailClassNameToElementsMap;
 	}
 
+	@NotNull
+	public String getElementId() {
+		return elementId;
+	}
+
+	@NotNull
 	public ClassDocs getClassDocs() {
 		return classDocs;
 	}

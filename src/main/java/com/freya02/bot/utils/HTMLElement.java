@@ -1,6 +1,7 @@
 package com.freya02.bot.utils;
 
 import org.jetbrains.annotations.NotNull;
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
@@ -12,14 +13,14 @@ public class HTMLElement {
 	private final Element targetElement;
 
 	public HTMLElement(@NotNull Element targetElement) {
-		this.targetElement = targetElement;
+		this.targetElement = Jsoup.parseBodyFragment(targetElement.outerHtml().replaceAll("</(.*)>(\\s*)<(\\1*)>", "</$1>$2<dummy></dummy><$3>"), targetElement.baseUri()).selectFirst("html > body");
 	}
 
 	public Element getTargetElement() {
 		return targetElement;
 	}
 
-	public String getMarkdown2(boolean allowStandaloneCode) {
+	public String getMarkdown2() {
 		final StringBuilder builder = new StringBuilder();
 		final LinkedHashMap<TextNode, TextAttributes> map = new LinkedHashMap<>();
 
@@ -75,17 +76,22 @@ public class HTMLElement {
 				flags.remove(MdFlag2.LINK);
 
 				flags.add(MdFlag2.LINKED_CODE);
+			} else if (attributes.contains(MdFlag2.CODE, MdFlag2.PRE)) {
+				attributes.flags().clear();
+				attributes.flags().add(MdFlag2.FENCED_CODE);
 			}
 		}
 
+		final List<MdFlag2> currentFlags = new ArrayList<>();
 		map.forEach((textNode, textAttributes) -> {
-			if (textAttributes.contains(MdFlag2.CODE) && !(textAttributes.contains(MdFlag2.PRE) || textAttributes.contains(MdFlag2.LINK))) {
-				if (!allowStandaloneCode) {
-					textAttributes.flags().remove(MdFlag2.CODE);
-				}
-			}
+			final List<MdFlag2> addedFlags = new ArrayList<>(textAttributes.flags());
+			addedFlags.removeAll(currentFlags);
 
-//			System.out.println(textNode.getWholeText() + " : " + textAttributes);
+			final List<MdFlag2> removedFlags = new ArrayList<>(currentFlags);
+			removedFlags.removeAll(textAttributes.flags());
+
+			currentFlags.clear();
+			currentFlags.addAll(textAttributes.flags());
 
 			if (textNode.getWholeText().equals("\n")) {
 				builder.append('\n');
@@ -93,32 +99,21 @@ public class HTMLElement {
 				return;
 			}
 
-			if (textAttributes.contains(MdFlag2.PRE, MdFlag2.CODE)) {
-				builder.append("```java\n");
-			} else {
-				List<MdFlag2> flags = textAttributes.flags();
-				for (int i = flags.size() - 1; i >= 0; i--) { //Need to inverse iteration order
-					MdFlag2 flag = flags.get(i);
-
-					builder.append(flag.getPrefix(textAttributes.node()));
-				}
+			for (MdFlag2 flag : removedFlags) {
+				builder.append(flag.getSuffix(textAttributes.node()));
 			}
 
-			if (textAttributes.contains(MdFlag2.PRE, MdFlag2.CODE)) {
+			for (MdFlag2 flag : addedFlags) {
+				builder.append(flag.getPrefix(textAttributes.node()));
+			}
+
+			if (textAttributes.contains(MdFlag2.FENCED_CODE)) {
 				builder.append(textNode.getWholeText());
 			} else {
 				builder.append(textNode.text()
-						.replace("<", "\\<") //Need to escape embed removers
+						.replace("<", "\\<") //Need to escape chevrons from java code
 						.replace(">", "\\>")
 				);
-			}
-
-			if (textAttributes.contains(MdFlag2.PRE, MdFlag2.CODE)) {
-				builder.append("```");
-			} else {
-				for (MdFlag2 flag : textAttributes.flags()) {
-					builder.append(flag.getSuffix(textAttributes.node()));
-				}
 			}
 		});
 
