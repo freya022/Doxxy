@@ -5,14 +5,19 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jsoup.nodes.Element;
 
-public class FieldDocs {
+public class FieldDoc {
+	@NotNull private final ClassDoc classDocs;
+
 	@NotNull private final String fieldName;
 	@NotNull private final String fieldType;
 	@Nullable private final HTMLElement descriptionElement;
-	@NotNull private final ClassDocs classDocs;
 
-	public FieldDocs(@NotNull ClassDocs classDocs, @NotNull Element element) {
+	@NotNull private final String elementId;
+
+	public FieldDoc(@NotNull ClassDoc classDocs, @NotNull Element element) {
 		this.classDocs = classDocs;
+
+		this.elementId = element.id();
 
 		//Get field name
 		final Element fieldNameElement = element.selectFirst("h3");
@@ -31,6 +36,14 @@ public class FieldDocs {
 		} else {
 			this.descriptionElement = null;
 		}
+	}
+
+	public ClassDoc getClassDocs() {
+		return classDocs;
+	}
+
+	public String getElementId() {
+		return elementId;
 	}
 
 	@NotNull

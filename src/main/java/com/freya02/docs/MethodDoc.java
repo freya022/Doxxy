@@ -15,7 +15,7 @@ import java.util.Map;
 public class MethodDoc {
 	private static final Logger LOGGER = Logging.getLogger();
 
-	@NotNull private final ClassDocs classDocs;
+	@NotNull private final ClassDoc classDocs;
 
 	@NotNull private final String elementId;
 
@@ -29,7 +29,7 @@ public class MethodDoc {
 	@Nullable private final List<HTMLElement> throwsDocs;
 	@Nullable private final HTMLElement incubatingDocs;
 
-	public MethodDoc(@NotNull ClassDocs classDocs, @NotNull Element element) {
+	public MethodDoc(@NotNull ClassDoc classDocs, @NotNull Element element) {
 		this.classDocs = classDocs;
 
 		this.elementId = element.id();
@@ -112,7 +112,7 @@ public class MethodDoc {
 	}
 
 	@NotNull
-	public ClassDocs getClassDocs() {
+	public ClassDoc getClassDocs() {
 		return classDocs;
 	}
 

@@ -10,21 +10,21 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-public class ClassDocs {
+public class ClassDoc {
 	@Nullable private final HTMLElement descriptionElement;
 	@NotNull private final String className;
 	@Nullable private final List<HTMLElement> typeParameters;
 
-	private final List<FieldDocs> fieldDocs = new ArrayList<>();
+	private final Map<String, FieldDoc> fieldDocs = new HashMap<>();
 	private final Map<String, MethodDoc> methodDocs = new HashMap<>();
 
-	public ClassDocs(@NotNull String url) throws IOException {
+	public ClassDoc(@NotNull String url) throws IOException {
 		final Document document = Utils.getDocument(url);
 
 		//Get class name
@@ -49,47 +49,17 @@ public class ClassDocs {
 		}
 
 		//TODO add global class cache
-		// in order to add super methods
-		// Method overridden by classes are NOT present in the "Method inherited from X" list
-		// Extract overridden method name with text()
-		// Associate back with the h3 text (is the class)
-		// Have to parse the h3 class, is always in fully qualified
 
-		final Elements inheritedBlocks = document.select("section.method-summary > div.inherited-list");
+		processInheritedElements(document, InheritedType.FIELD, this::onInheritedField);
 
-		for (Element inheritedBlock : inheritedBlocks) {
-			final Element title = inheritedBlock.selectFirst("h3");
-			if (title == null) throw new IllegalArgumentException();
-
-			final Element superClassLink = title.selectFirst("a");
-			if (superClassLink != null) {
-				final ClassDocs superClassDocs = new ClassDocs(superClassLink.absUrl("href"));
-
-				for (Element element : inheritedBlock.select("code > a")) {
-					final HttpUrl hrefUrl = HttpUrl.get(element.absUrl("href"));
-
-					String targetId = hrefUrl.fragment();
-
-					//You can inherit a same method multiple times, it will show up multiple times in the docs
-					// As the html is ordered such as the latest overridden method is shown, we can set the already existing doc to the newest one
-					// Example: https://docs.oracle.com/en/java/javase/16/docs/api/java.base/java/util/AbstractCollection.html#method.summary
-					final MethodDoc methodDoc = superClassDocs.methodDocs.get(targetId);
-					methodDocs.put(methodDoc.getElementId(), methodDoc);
-				}
-			} else {
-				final String[] titleSplit = title.text().split("\\s");
-				final String fullName = titleSplit[titleSplit.length - 1]; //TODO should I still get the full qualification, and parse the package names ? in case the lib has classes the JDK has lol
-
-				String className = Utils.getClassName(fullName);
-
-				System.out.println(className);
-
-				//TODO try to get from global cache
-			}
-		}
+		processInheritedElements(document, InheritedType.METHOD, this::onInheritedMethod);
 
 		//Try to find field details
-		processDetailElements(document, ClassDetailType.FIELD, fieldElement -> fieldDocs.add(new FieldDocs(this, fieldElement)));
+		processDetailElements(document, ClassDetailType.FIELD, fieldElement -> {
+			final FieldDoc fieldDocs = new FieldDoc(this, fieldElement);
+
+			this.fieldDocs.put(fieldDocs.getElementId(), fieldDocs);
+		});
 
 		//Try to find method details
 		processDetailElements(document, ClassDetailType.METHOD, methodElement -> {
@@ -99,27 +69,50 @@ public class ClassDocs {
 		});
 	}
 
-//	private boolean tryAddSuperMethodDoc(String targetId, MethodDoc superMethodDoc) {
-//
-//		for (int i = 0, methodDocsSize = methodDocs.size(); i < methodDocsSize; i++) {
-//			MethodDoc methodDoc = methodDocs.get(i);
-//
-//			if (superMethodDoc.getElementId().equals(targetId)) {
-//				methodDocs.set(i, superMethodDoc);
-//
-//				return true;
-//			}
-//		}
-//
-//		//If it's the first inherited method, just add it
-//		if (superMethodDoc.getElementId().equals(targetId)) {
-//			methodDocs.add(superMethodDoc);
-//
-//			return true;
-//		}
-//
-//		return false;
-//	}
+	private void processInheritedElements(Document document, InheritedType inheritedType, BiConsumer<ClassDoc, String> inheritedElementConsumer) throws IOException {
+		final Elements inheritedBlocks = document.select("section." + inheritedType + "-summary > div.inherited-list");
+
+		for (Element inheritedBlock : inheritedBlocks) {
+			final Element title = inheritedBlock.selectFirst("h3");
+			if (title == null) throw new IllegalArgumentException();
+
+			final Element superClassLink = title.selectFirst("a");
+			if (superClassLink != null) {
+				final ClassDoc superClassDocs = new ClassDoc(superClassLink.absUrl("href"));
+
+				for (Element element : inheritedBlock.select("code > a")) {
+					final HttpUrl hrefUrl = HttpUrl.get(element.absUrl("href"));
+
+					String targetId = hrefUrl.fragment();
+
+					inheritedElementConsumer.accept(superClassDocs, targetId);
+				}
+			} else {
+				final String[] titleSplit = title.text().split("\\s");
+				final String fullName = titleSplit[titleSplit.length - 1]; //TODO should I still get the full qualification, and parse the package names ? in case the lib has classes the JDK has lol
+
+				String className = Utils.getClassName(fullName);
+
+				System.err.println(className);
+
+				//TODO try to get from global cache
+			}
+		}
+	}
+
+	private void onInheritedMethod(ClassDoc superClassDocs, String targetId) {
+		//You can inherit a same method multiple times, it will show up multiple times in the docs
+		// As the html is ordered such as the latest overridden method is shown, we can set the already existing doc to the newest one
+		// Example: https://docs.oracle.com/en/java/javase/16/docs/api/java.base/java/util/AbstractCollection.html#method.summary
+		final MethodDoc methodDoc = superClassDocs.methodDocs.get(targetId);
+		methodDocs.put(methodDoc.getElementId(), methodDoc);
+	}
+
+	private void onInheritedField(ClassDoc superClassDocs, String targetId) {
+		final FieldDoc fieldDoc = superClassDocs.fieldDocs.get(targetId);
+
+		fieldDocs.put(fieldDoc.getElementId(), fieldDoc);
+	}
 
 	@Nullable
 	public HTMLElement getDescriptionElement() {
@@ -135,8 +128,7 @@ public class ClassDocs {
 		return typeParameters;
 	}
 
-	@NotNull
-	public List<FieldDocs> getFieldDocs() {
+	public Map<String, FieldDoc> getFieldDocs() {
 		return fieldDocs;
 	}
 
