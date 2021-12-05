@@ -20,7 +20,7 @@ public class HTMLElement {
 		return targetElement;
 	}
 
-	public String getMarkdown2() {
+	public String getMarkdown2(boolean allowStandaloneCode) {
 		final StringBuilder builder = new StringBuilder();
 		final LinkedHashMap<TextNode, TextAttributes> map = new LinkedHashMap<>();
 
@@ -84,6 +84,12 @@ public class HTMLElement {
 
 		final List<MdFlag2> currentFlags = new ArrayList<>();
 		map.forEach((textNode, textAttributes) -> {
+			if (textAttributes.contains(MdFlag2.CODE) && !(textAttributes.contains(MdFlag2.PRE) || textAttributes.contains(MdFlag2.LINK))) {
+				if (!allowStandaloneCode) {
+					textAttributes.flags().remove(MdFlag2.CODE);
+				}
+			}
+
 			final List<MdFlag2> addedFlags = new ArrayList<>(textAttributes.flags());
 			addedFlags.removeAll(currentFlags);
 
