@@ -17,11 +17,11 @@ public class DocsTest3 {
 	public static void main(String[] args) throws IOException {
 //		TestUtils.measureTime("get all docs", 10, 10, DocsTest3::getAllDocs);
 
-//		getAllDocs();
+		getAllDocs("http://localhost:63342/DocsBot/test_docs/allclasses.html");
 
 //		final ClassDocs docs1 = new ClassDocs("https://docs.oracle.com/en/java/javase/16/docs/api/java.base/java/util/zip/ZipEntry.html");
-		final ClassDoc docs2 = ClassDocs.of("https://docs.oracle.com/en/java/javase/16/docs/api/java.base/java/util/AbstractCollection.html");
-		final ClassDoc docs3 = ClassDocs.of("https://docs.oracle.com/en/java/javase/16/docs/api/java.desktop/java/awt/TextField.html");
+//		final ClassDoc docs2 = ClassDocs.of("https://docs.oracle.com/en/java/javase/16/docs/api/java.base/java/util/AbstractCollection.html");
+//		final ClassDoc docs3 = ClassDocs.of("https://docs.oracle.com/en/java/javase/16/docs/api/java.desktop/java/awt/TextField.html");
 
 //		System.out.println(docs2.getDescriptionElement().getMarkdown3());
 //
@@ -35,9 +35,9 @@ public class DocsTest3 {
 		System.out.println();
 	}
 
-	private static void getAllDocs() {
+	private static void getAllDocs(String url) {
 		try {
-			final Document document = Utils.getDocument("https://ci.dv8tion.net/job/JDA/javadoc/allclasses.html");
+			final Document document = Utils.getDocument(url);
 
 			final Map<String, ClassDoc> docsMap = new ConcurrentHashMap<>();
 
@@ -61,6 +61,8 @@ public class DocsTest3 {
 
 			service.shutdown();
 			service.awaitTermination(1, TimeUnit.DAYS);
+
+			System.out.println();
 		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();
 		}
