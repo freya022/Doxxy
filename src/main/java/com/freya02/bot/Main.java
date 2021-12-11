@@ -1,9 +1,9 @@
 package com.freya02.bot;
 
-import com.freya02.bot.docs.DocsCollection;
 import com.freya02.botcommands.api.CommandsBuilder;
 import com.freya02.botcommands.api.components.DefaultComponentManager;
 import com.freya02.botcommands.internal.Logging;
+import com.freya02.docs.ClassDocs;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import org.slf4j.Logger;
@@ -26,8 +26,7 @@ public class Main {
 			final Config config = Config.getConfig();
 
 			LOGGER.info("Loading docs");
-			final DocsCollection docsCollection = DocsCollection.of("https://ci.dv8tion.net/job/JDA/javadoc/allclasses.html",
-					"https://ci.dv8tion.net/job/JDA/javadoc/constant-values.html");
+			ClassDocs.loadAllDocs("http://localhost:63342/DocsBot/test_docs/allclasses.html");
 
 			LOGGER.info("Docs loaded");
 
@@ -42,7 +41,9 @@ public class Main {
 			CommandsBuilder.newBuilder(222046562543468545L)
 					.extensionsBuilder(extensionsBuilder -> extensionsBuilder
 							.registerConstructorParameter(Config.class, commandType -> config)
-							.registerConstructorParameter(DocsCollection.class, commandType -> docsCollection)
+					)
+					.textCommandBuilder(textCommandsBuilder -> textCommandsBuilder
+							.addPrefix("!")
 					)
 					.setComponentManager(new DefaultComponentManager(database::getConnection))
 					.build(jda, "com.freya02.bot.commands");

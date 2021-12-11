@@ -17,6 +17,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class ClassDoc {
+	private final String URL;
+
 	@Nullable private final HTMLElement descriptionElement;
 	@NotNull private final String className;
 	@Nullable private final List<HTMLElement> typeParameters;
@@ -26,6 +28,8 @@ public class ClassDoc {
 	@Nullable private final Map<DocDetailType, List<HTMLElement>> detailToElementsMap;
 
 	ClassDoc(@NotNull String url) throws IOException {
+		this.URL = url;
+
 		final Document document = Utils.getDocument(url);
 
 		//Get class name
@@ -155,5 +159,9 @@ public class ClassDoc {
 	@Override
 	public String toString() {
 		return "%s : %d fields, %d methods%s".formatted(className, fieldDocs.size(), methodDocs.size(), descriptionElement == null ? "" : " : " + descriptionElement.getTargetElement().text());
+	}
+
+	public String getURL() {
+		return URL;
 	}
 }

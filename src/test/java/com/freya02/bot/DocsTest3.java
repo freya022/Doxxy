@@ -1,17 +1,8 @@
 package com.freya02.bot;
 
-import com.freya02.bot.utils.Utils;
-import com.freya02.docs.ClassDoc;
 import com.freya02.docs.ClassDocs;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 public class DocsTest3 {
 	public static void main(String[] args) throws IOException {
@@ -33,38 +24,5 @@ public class DocsTest3 {
 //		final HTMLElement element = new HTMLElement(document.selectFirst("body > div.flex-box > div > main > section.description > div.block"));
 
 		System.out.println();
-	}
-
-	private static void getAllDocs(String url) {
-		try {
-			final Document document = Utils.getDocument(url);
-
-			final Map<String, ClassDoc> docsMap = new ConcurrentHashMap<>();
-
-			//Multithreading is rather useless here... only saved 100 ms out of 400 of the time
-			final ExecutorService service = Executors.newFixedThreadPool(4);
-			for (Element element : document.select("body > main > ul > li > a")) {
-				service.submit(() -> {
-					try {
-						final ClassDoc docs = ClassDocs.of(element.absUrl("href"));
-
-						final ClassDoc oldVal = docsMap.put(docs.getClassName(), docs);
-
-						if (oldVal != null) {
-							throw new IllegalStateException("Duplicated docs: " + element.absUrl("href"));
-						}
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				});
-			}
-
-			service.shutdown();
-			service.awaitTermination(1, TimeUnit.DAYS);
-
-			System.out.println();
-		} catch (IOException | InterruptedException e) {
-			e.printStackTrace();
-		}
 	}
 }
