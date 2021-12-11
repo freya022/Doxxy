@@ -1,6 +1,15 @@
 package com.freya02.bot;
 
 public class TestUtils {
+	/**
+	 * Mesures time to run a method
+	 *
+	 * @param desc       Description of the code
+	 * @param warmup     Number of warmup iterations
+	 * @param iterations Number of real iterations
+	 * @param code       The code to run
+	 * @return The average time in ms
+	 */
 	@SuppressWarnings("SameParameterValue")
 	public static double measureTime(String desc, int warmup, int iterations, Runnable code) {
 		for (int i = 0; i < warmup; i++) {
