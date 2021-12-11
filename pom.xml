@@ -89,5 +89,10 @@
             <version>1.14.3</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.overzealous</groupId>
+            <artifactId>remark</artifactId>
+            <version>1.2.0</version>
+        </dependency>
     </dependencies>
 </project>

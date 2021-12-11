@@ -20,6 +20,14 @@ public class HTMLElement {
 		return targetElement;
 	}
 
+	public String getMarkdown3() {
+		final String html = targetElement.outerHtml();
+//				.replaceAll("<code>([^/]*?)<a href=\"(.*?)\">(\\X*?)</a>([^/]*?)</code>", "<code>$1</code><a href=\"$2\"><code>$1</code></a><code>right</code>");
+
+
+		return JDocUtil.formatText(html, targetElement.baseUri());
+	}
+
 	public String getMarkdown2(boolean allowStandaloneCode) {
 		final StringBuilder builder = new StringBuilder();
 		final LinkedHashMap<TextNode, TextAttributes> map = new LinkedHashMap<>();

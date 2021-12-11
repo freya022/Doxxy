@@ -8,7 +8,7 @@ public class DocsTest3 {
 	public static void main(String[] args) throws IOException {
 //		TestUtils.measureTime("get all docs", 10, 10, DocsTest3::getAllDocs);
 
-		getAllDocs("http://localhost:63342/DocsBot/test_docs/allclasses.html");
+//		ClassDocs.loadAllDocs("http://localhost:63342/DocsBot/test_docs/allclasses.html");
 
 //		final ClassDocs docs1 = new ClassDocs("https://docs.oracle.com/en/java/javase/16/docs/api/java.base/java/util/zip/ZipEntry.html");
 //		final ClassDoc docs2 = ClassDocs.of("https://docs.oracle.com/en/java/javase/16/docs/api/java.base/java/util/AbstractCollection.html");
@@ -23,6 +23,9 @@ public class DocsTest3 {
 //
 //		final HTMLElement element = new HTMLElement(document.selectFirst("body > div.flex-box > div > main > section.description > div.block"));
 
-		System.out.println();
+//		final var e = new HTMLElement(Jsoup.parseBodyFragment("<a href=\"bruh.com\"><code>lol</code></a>", "https://lol.com"));
+//		System.out.println(e.getMarkdown2(false));
+
+		System.out.println(ClassDocs.of("https://docs.oracle.com/en/java/javase/16/docs/api/java.base/java/util/concurrent/CopyOnWriteArraySet.html").getDescriptionElement().getMarkdown3());
 	}
 }
