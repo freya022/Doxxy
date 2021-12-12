@@ -8,9 +8,9 @@ public class DocsTest3 {
 	public static void main(String[] args) throws IOException {
 //		TestUtils.measureTime("get all docs", 10, 10, DocsTest3::getAllDocs);
 
-		ClassDocs.loadAllDocs("http://localhost:63342/DocsBot/test_docs/allclasses-index.html");
+//		ClassDocs.loadAllDocs("http://localhost:63342/DocsBot/test_docs/allclasses-index.html");
 
-//		final ClassDocs docs1 = new ClassDocs("https://docs.oracle.com/en/java/javase/16/docs/api/java.base/java/util/zip/ZipEntry.html");
+//		final ClassDoc docs1 = ClassDocs.of("https://docs.oracle.com/en/java/javase/16/docs/api/java.base/java/util/zip/ZipEntry.html");
 //		final ClassDoc docs2 = ClassDocs.of("https://docs.oracle.com/en/java/javase/16/docs/api/java.base/java/util/AbstractCollection.html");
 //		final ClassDoc docs3 = ClassDocs.of("https://docs.oracle.com/en/java/javase/16/docs/api/java.desktop/java/awt/TextField.html");
 
