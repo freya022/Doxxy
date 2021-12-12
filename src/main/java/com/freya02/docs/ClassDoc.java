@@ -19,6 +19,7 @@ import java.util.function.Consumer;
 public class ClassDoc {
 	private final String URL;
 
+	@NotNull private final HTMLElement docTitle;
 	@Nullable private final HTMLElement descriptionElement;
 	@NotNull private final String className;
 	@Nullable private final List<HTMLElement> typeParameters;
@@ -31,6 +32,11 @@ public class ClassDoc {
 		this.URL = url;
 
 		final Document document = Utils.getDocument(url);
+
+		//Get javadoc title
+		final Element docTitle = document.selectFirst("body > div.flex-box > div > main > div > h1");
+		if (docTitle == null) throw new IllegalArgumentException();
+		this.docTitle = new HTMLElement(docTitle);
 
 		//Get class name
 		final List<String> segments = HttpUrl.get(url).pathSegments();
@@ -116,6 +122,10 @@ public class ClassDoc {
 		final FieldDoc fieldDoc = superClassDocs.fieldDocs.get(targetId);
 
 		fieldDocs.put(fieldDoc.getElementId(), fieldDoc);
+	}
+
+	public HTMLElement getDocTitle() {
+		return docTitle;
 	}
 
 	@Nullable
