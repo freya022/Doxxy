@@ -23,6 +23,7 @@ public class ClassDoc {
 	@Nullable private final HTMLElement descriptionElement;
 	@NotNull private final String className;
 	@Nullable private final List<HTMLElement> typeParameters;
+	@Nullable private final SeeAlso seeAlso;
 
 	@NotNull private final Map<String, FieldDoc> fieldDocs = new HashMap<>();
 	@NotNull private final Map<String, MethodDoc> methodDocs = new HashMap<>();
@@ -53,11 +54,19 @@ public class ClassDoc {
 		//Get class type parameters if they exist
 		final Element detailListElement = document.selectFirst("body > div.flex-box > div > main > section.description > div.block + dl");
 		if (detailListElement != null) {
-			detailToElementsMap = MethodDoc.getDetailToElementsMap(detailListElement);
+			this.detailToElementsMap = MethodDoc.getDetailToElementsMap(detailListElement);
 			this.typeParameters = detailToElementsMap.get(DocDetailType.TYPE_PARAMETERS);
+
+			final List<HTMLElement> seeAlsoElements = detailToElementsMap.get(DocDetailType.SEE_ALSO);
+			if (seeAlsoElements != null) {
+				this.seeAlso = new SeeAlso(seeAlsoElements.get(0));
+			} else {
+				this.seeAlso = null;
+			}
 		} else {
-			detailToElementsMap = null;
+			this.detailToElementsMap = null;
 			this.typeParameters = null;
+			this.seeAlso = null;
 		}
 
 		processInheritedElements(document, InheritedType.FIELD, this::onInheritedField);
@@ -180,5 +189,10 @@ public class ClassDoc {
 
 	public String getURL() {
 		return URL;
+	}
+
+	@Nullable
+	public SeeAlso getSeeAlso() {
+		return seeAlso;
 	}
 }
