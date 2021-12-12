@@ -7,15 +7,14 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class ClassDocs {
+	private static final Set<String> blackList = new HashSet<>();
 	private static final Map<String, ClassDoc> docs = new HashMap<>();
 	private static final Map<String, ClassDoc> docNames = new HashMap<>();
 	private static boolean loaded = false;
@@ -24,19 +23,45 @@ public class ClassDocs {
 		return Collections.unmodifiableMap(docNames); //TODO should use singleton
 	}
 
+	public static boolean nameExists(@NotNull String name) {
+		return docNames.containsKey(name);
+	}
+
+	public static boolean urlExists(@NotNull String url) {
+		final String cleanUrl = removeFragment(url);
+
+		return cleanUrlExists(cleanUrl);
+	}
+
+	private static boolean cleanUrlExists(String cleanUrl) {
+		return docs.containsKey(cleanUrl);
+	}
+
 	@Nullable
 	public static ClassDoc ofName(@NotNull String name) {
 		return docNames.get(name);
 	}
 
-	@NotNull
-	public static ClassDoc of(@NotNull String url) throws IOException {
-		final int index = url.indexOf('#');
-		if (index >= 0) {
-			url = url.substring(0, index);
+	@Nullable
+	public static ClassDoc getOrNull(@NotNull String url) {
+		url = removeFragment(url);
+
+		if (!blackList.contains(url)) {
+			try {
+				return of(url);
+			} catch (Exception ignored) {
+				blackList.add(url);
+			}
 		}
 
-		if (docs.get(url) == null) {
+		return null;
+	}
+
+	@NotNull
+	public static ClassDoc of(@NotNull String url) throws IOException {
+		url = removeFragment(url);
+
+		if (!cleanUrlExists(url)) {
 			final ClassDoc newDocs = new ClassDoc(url);
 
 			docs.put(url, newDocs);
@@ -46,6 +71,16 @@ public class ClassDocs {
 		} else {
 			return docs.get(url);
 		}
+	}
+
+	@NotNull
+	private static String removeFragment(@NotNull String url) {
+		final int index = url.indexOf('#');
+		if (index >= 0) {
+			return url.substring(0, index);
+		}
+
+		return url;
 	}
 
 	public static synchronized void loadAllDocs(String url) {
