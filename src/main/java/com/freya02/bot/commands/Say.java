@@ -10,7 +10,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 public class Say extends TextCommand {
 	@RequireOwner
 	@JDATextCommand(name = "say")
-	public void test(BaseCommandEvent event, @TextOption String str) {
+	public void say(BaseCommandEvent event, @TextOption String str) {
 		event.respond(new EmbedBuilder().setDescription(str).build()).queue();
 	}
 }
