@@ -1,5 +1,6 @@
 package com.freya02.bot;
 
+import com.freya02.docs.ClassDoc;
 import com.freya02.docs.ClassDocs;
 
 import java.io.IOException;
@@ -26,6 +27,7 @@ public class DocsTest3 {
 //		final var e = new HTMLElement(Jsoup.parseBodyFragment("<a href=\"bruh.com\"><code>lol</code></a>", "https://lol.com"));
 //		System.out.println(e.getMarkdown2(false));
 
-		System.out.println(ClassDocs.of("https://docs.oracle.com/en/java/javase/16/docs/api/java.base/java/util/concurrent/CopyOnWriteArraySet.html").getDescriptionElement().getMarkdown3());
+		final ClassDoc doc4 = ClassDocs.of("https://docs.oracle.com/en/java/javase/16/docs/api/java.base/java/util/concurrent/CopyOnWriteArraySet.html");
+		System.out.println(doc4.getDescriptionElement().getMarkdown3());
 	}
 }
