@@ -12,8 +12,6 @@ import java.nio.file.StandardOpenOption;
 
 public class DocsTest2 {
 	public static void main(String[] args) throws Exception {
-//		System.out.println(DecomposedName.getSimpleClassName("net.dv8tion.jda.api.entities.Invite.InviteType"));
-
 		final Document document = Utils.getDocument("https://ci.dv8tion.net/job/JDA/javadoc/allclasses.html");
 
 		final Path input = Main.BOT_FOLDER.resolve("docs_cache\\ci.dv8tion.net\\job\\JDA\\javadoc\\constant-values.html");
@@ -32,9 +30,6 @@ public class DocsTest2 {
 		TestUtils.measureTime("clean doc", 1000, 1000, () -> {
 			final Document cleanDoc = Jsoup.parse(clean, "https://ci.dv8tion.net/job/JDA/javadoc/allclasses.html", parser);
 		});
-
-//		final DocsCollection docsCollection = DocsCollection.of("https://ci.dv8tion.net/job/JDA/javadoc/allclasses.html",
-//				"https://ci.dv8tion.net/job/JDA/javadoc/constant-values.html");
 
 		System.out.println();
 	}
