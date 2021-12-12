@@ -26,7 +26,7 @@ public class Main {
 			final Config config = Config.getConfig();
 
 			LOGGER.info("Loading docs");
-			ClassDocs.loadAllDocs("http://localhost:63342/DocsBot/test_docs/allclasses.html");
+			ClassDocs.loadAllDocs("http://localhost:63342/DocsBot/test_docs/allclasses-index.html");
 
 			LOGGER.info("Docs loaded");
 

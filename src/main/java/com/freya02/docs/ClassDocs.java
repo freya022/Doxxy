@@ -62,7 +62,7 @@ public class ClassDocs {
 
 			//Multithreading is rather useless here... only saved 100 ms out of 400 of the time
 			final ExecutorService service = Executors.newFixedThreadPool(4);
-			for (Element element : document.select("body > main > ul > li > a")) {
+			for (Element element : document.select("#all-classes-table > div > div.summary-table.two-column-summary > div.col-first > a:nth-child(1)")) { //n = 1 needed as type parameters are links and external types
 				service.submit(() -> {
 					try {
 						final ClassDoc docs = ClassDocs.of(element.absUrl("href"));
