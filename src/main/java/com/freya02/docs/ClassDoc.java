@@ -86,9 +86,16 @@ public class ClassDoc {
 			final Element title = inheritedBlock.selectFirst("h3");
 			if (title == null) throw new IllegalArgumentException();
 
-			final Element superClassLink = title.selectFirst("a");
-			if (superClassLink != null) {
-				final ClassDoc superClassDocs = ClassDocs.of(superClassLink.absUrl("href"));
+			final Element superClassLinkElement = title.selectFirst("a");
+			if (superClassLinkElement != null) {
+				final String superClassLink = superClassLinkElement.absUrl("href");
+
+				//Do not process JDA docs, they are java 9
+				if (superClassLink.startsWith("https://ci.dv8tion.net/job/JDA/javadoc/")) {
+					continue;
+				}
+
+				final ClassDoc superClassDocs = ClassDocs.of(superClassLink);
 
 				for (Element element : inheritedBlock.select("code > a")) {
 					final HttpUrl hrefUrl = HttpUrl.get(element.absUrl("href"));
