@@ -7,8 +7,10 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.NoSuchElementException;
 
 public class Utils {
 	private static final Path CACHE_PATH = Main.BOT_FOLDER.resolve("docs_cache");
@@ -26,8 +28,16 @@ public class Utils {
 		}
 	}
 
-	public static String fixJDKUrl(String url) {
-		return url.replace("https://docs.oracle.com/javase/8", "https://docs.oracle.com/javase/9");
+	@NotNull
+	public static String readResource(@NotNull String url) {
+		final Class<?> callerClass = StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE).getCallerClass();
+		try (InputStream stream = callerClass.getResourceAsStream(url)) {
+			if (stream == null) throw new NoSuchElementException("Resource of class " + callerClass.getSimpleName() + " at URL '" + url + "' does not exist");
+
+			return new String(stream.readAllBytes());
+		} catch (IOException e) {
+			throw new RuntimeException("Unable to read resource of class " + callerClass.getSimpleName() + " at URL '" + url + "'", e);
+		}
 	}
 
 	@NotNull
