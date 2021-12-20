@@ -22,10 +22,19 @@ import java.util.stream.Collectors;
 public class ClassCommand extends ApplicationCommand {
 //	private static final Emoji CLIPBOARD_EMOJI = EmojiUtils.resolveJDAEmoji("clipboard");
 //	private static final int MAX_CHOICES = 25;
-	private final List<String> simpleNameList;
+	private final List<String> classNameList;
+
+	//Performance could be better without nested maps but this is way easier for the autocompletion to understand what to show
+	//Map<Class name, Map<Method short signature, MethodDoc>>
+	private final Map<String, Map<String, MethodDoc>> methodChoiceList = new HashMap<>();
+
+	private static record MapEntry<K, V>(K key, V value) {}
 
 	public ClassCommand() {
-		this.simpleNameList = ClassDocs.getDocNamesMap().values()
+		LOGGER.info("Loading docs");
+		ClassDocs.loadAllDocs("http://localhost:63342/DocsBot/test_docs/allclasses-index.html");
+
+		this.classNameList = ClassDocs.getDocNamesMap().values()
 				.stream()
 				.map(ClassDoc::getClassName)
 				.sorted()
