@@ -19,10 +19,10 @@ import java.util.function.Consumer;
 public class ClassDoc {
 	private final String URL;
 
-	@NotNull private final HTMLElement docTitle;
+	@NotNull private final HTMLElement docTitleElement;
 	@Nullable private final HTMLElement descriptionElement;
 	@NotNull private final String className;
-	@Nullable private final List<HTMLElement> typeParameters;
+	@Nullable private final List<HTMLElement> typeParameterElements;
 	@Nullable private final SeeAlso seeAlso;
 
 	@NotNull private final Map<String, FieldDoc> fieldDocs = new HashMap<>();
@@ -37,7 +37,7 @@ public class ClassDoc {
 		//Get javadoc title
 		final Element docTitle = document.selectFirst("body > div.flex-box > div > main > div > h1");
 		if (docTitle == null) throw new IllegalArgumentException();
-		this.docTitle = new HTMLElement(docTitle);
+		this.docTitleElement = new HTMLElement(docTitle);
 
 		//Get class name
 		final List<String> segments = HttpUrl.get(url).pathSegments();
@@ -55,7 +55,7 @@ public class ClassDoc {
 		final Element detailListElement = document.selectFirst("body > div.flex-box > div > main > section.description > div.block + dl");
 		if (detailListElement != null) {
 			this.detailToElementsMap = MethodDoc.getDetailToElementsMap(detailListElement);
-			this.typeParameters = detailToElementsMap.get(DocDetailType.TYPE_PARAMETERS);
+			this.typeParameterElements = detailToElementsMap.get(DocDetailType.TYPE_PARAMETERS);
 
 			final List<HTMLElement> seeAlsoElements = detailToElementsMap.get(DocDetailType.SEE_ALSO);
 			if (seeAlsoElements != null) {
@@ -65,7 +65,7 @@ public class ClassDoc {
 			}
 		} else {
 			this.detailToElementsMap = null;
-			this.typeParameters = null;
+			this.typeParameterElements = null;
 			this.seeAlso = null;
 		}
 
@@ -140,8 +140,8 @@ public class ClassDoc {
 		fieldDocs.put(fieldDoc.getElementId(), fieldDoc);
 	}
 
-	public HTMLElement getDocTitle() {
-		return docTitle;
+	public HTMLElement getDocTitleElement() {
+		return docTitleElement;
 	}
 
 	@Nullable
@@ -158,8 +158,8 @@ public class ClassDoc {
 		return detailToElementsMap;
 	}
 
-	public List<HTMLElement> getTypeParameters() {
-		return typeParameters;
+	public List<HTMLElement> getTypeParameterElements() {
+		return typeParameterElements;
 	}
 
 	public Map<String, FieldDoc> getFieldDocs() {
