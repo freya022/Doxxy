@@ -1,5 +1,6 @@
 package com.freya02.docs;
 
+import com.freya02.bot.utils.DecomposedName;
 import com.freya02.bot.utils.HTMLElement;
 import com.freya02.botcommands.api.Logging;
 import org.jetbrains.annotations.NotNull;
@@ -16,22 +17,25 @@ public class MethodDoc {
 	@NotNull private final ClassDoc classDocs;
 
 	@NotNull private final String elementId;
+	@NotNull private final String url;
 
 	@NotNull private final String methodName;
 	@NotNull private final String methodSignature;
 	@Nullable private final HTMLElement descriptionElement;
 
 	@Nullable private final Map<DocDetailType, List<HTMLElement>> detailToElementsMap;
-	@Nullable private final List<HTMLElement> typeParametersDoc;
-	@Nullable private final List<HTMLElement> parametersDoc;
-	@Nullable private final HTMLElement returnsDoc;
-	@Nullable private final List<HTMLElement> throwsDocs;
-	@Nullable private final HTMLElement incubatingDocs;
+	@Nullable private final List<HTMLElement> typeParameterElements;
+	@Nullable private final List<HTMLElement> parameterElements;
+	@Nullable private final HTMLElement returnsElement;
+	@Nullable private final List<HTMLElement> throwsElements;
+	@Nullable private final HTMLElement incubatingElement;
+	@Nullable private final SeeAlso seeAlso;
 
 	public MethodDoc(@NotNull ClassDoc classDocs, @NotNull Element element) {
 		this.classDocs = classDocs;
 
 		this.elementId = element.id();
+		this.url = classDocs.getURL() + '#' + elementId;
 
 		//Get method name
 		final Element methodNameElement = element.selectFirst("h3");
@@ -57,19 +61,27 @@ public class MethodDoc {
 		if (detailListElement != null) {
 			this.detailToElementsMap = getDetailToElementsMap(detailListElement);
 
-			this.typeParametersDoc = detailToElementsMap.get(DocDetailType.TYPE_PARAMETERS);
-			this.parametersDoc = detailToElementsMap.get(DocDetailType.PARAMETERS);
-			this.returnsDoc = findFirst(detailToElementsMap, DocDetailType.RETURNS);
-			this.throwsDocs = detailToElementsMap.get(DocDetailType.THROWS);
-			this.incubatingDocs = findFirst(detailToElementsMap, DocDetailType.INCUBATING);
+			this.typeParameterElements = detailToElementsMap.get(DocDetailType.TYPE_PARAMETERS);
+			this.parameterElements = detailToElementsMap.get(DocDetailType.PARAMETERS);
+			this.returnsElement = findFirst(detailToElementsMap, DocDetailType.RETURNS);
+			this.throwsElements = detailToElementsMap.get(DocDetailType.THROWS);
+			this.incubatingElement = findFirst(detailToElementsMap, DocDetailType.INCUBATING);
+
+			final List<HTMLElement> seeAlsoElements = detailToElementsMap.get(DocDetailType.SEE_ALSO);
+			if (seeAlsoElements != null) {
+				this.seeAlso = new SeeAlso(seeAlsoElements.get(0));
+			} else {
+				this.seeAlso = null;
+			}
 		} else {
 			this.detailToElementsMap = null;
 
-			this.typeParametersDoc = null;
-			this.parametersDoc = null;
-			this.returnsDoc = null;
-			this.throwsDocs = null;
-			this.incubatingDocs = null;
+			this.typeParameterElements = null;
+			this.parameterElements = null;
+			this.returnsElement = null;
+			this.throwsElements = null;
+			this.incubatingElement = null;
+			this.seeAlso = null;
 		}
 	}
 
@@ -133,37 +145,67 @@ public class MethodDoc {
 		return methodSignature;
 	}
 
+	@NotNull
+	public String getSimpleSignature() {
+		final StringBuilder simpleSignatureBuilder = new StringBuilder();
+
+		final int index = elementId.indexOf('(');
+		simpleSignatureBuilder.append(elementId, 0, index);
+
+		final StringJoiner parameterJoiner = new StringJoiner(", ", "(", ")");
+		final String[] parameters = elementId.substring(index + 1, elementId.length() - 1).split(",");
+		for (String parameter : parameters) {
+			if (parameter.isBlank()) continue;
+
+			final String className = DecomposedName.getSimpleClassName(parameter.trim());
+
+			parameterJoiner.add(className);
+		}
+
+		simpleSignatureBuilder.append(parameterJoiner);
+
+		return simpleSignatureBuilder.toString();
+	}
+
 	@Nullable
 	public HTMLElement getDescriptionElement() {
 		return descriptionElement;
 	}
 
 	@Nullable
-	public HTMLElement getReturnsDoc() {
-		return returnsDoc;
+	public HTMLElement getReturnsElement() {
+		return returnsElement;
 	}
 
 	@Nullable
-	public List<HTMLElement> getParametersDoc() {
-		return parametersDoc;
+	public List<HTMLElement> getParameterElements() {
+		return parameterElements;
 	}
 
 	@Nullable
-	public List<HTMLElement> getTypeParametersDoc() {
-		return typeParametersDoc;
+	public List<HTMLElement> getTypeParameterElements() {
+		return typeParameterElements;
 	}
 
 	@Nullable
-	public List<HTMLElement> getThrowsDocs() {
-		return throwsDocs;
+	public List<HTMLElement> getThrowsElements() {
+		return throwsElements;
 	}
 
-	public HTMLElement getIncubatingDocs() {
-		return incubatingDocs;
+	public HTMLElement getIncubatingElement() {
+		return incubatingElement;
+	}
+
+	public SeeAlso getSeeAlso() {
+		return seeAlso;
 	}
 
 	@Override
 	public String toString() {
 		return methodSignature + " : " + descriptionElement;
+	}
+
+	public String getURL() {
+		return url;
 	}
 }
