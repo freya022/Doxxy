@@ -5,6 +5,7 @@ import com.freya02.bot.SQLCodes;
 import com.freya02.bot.tag.Tag;
 import com.freya02.bot.tag.TagCriteria;
 import com.freya02.bot.tag.TagDB;
+import com.freya02.botcommands.api.Logging;
 import com.freya02.botcommands.api.application.ApplicationCommand;
 import com.freya02.botcommands.api.application.CommandPath;
 import com.freya02.botcommands.api.application.annotations.AppOption;
@@ -12,10 +13,10 @@ import com.freya02.botcommands.api.application.slash.GuildSlashEvent;
 import com.freya02.botcommands.api.application.slash.annotations.AutocompletionHandler;
 import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand;
 import com.freya02.botcommands.api.components.Components;
+import com.freya02.botcommands.api.components.InteractionConstraints;
 import com.freya02.botcommands.api.components.event.ButtonEvent;
 import com.freya02.botcommands.api.pagination.paginator.Paginator;
 import com.freya02.botcommands.api.pagination.paginator.PaginatorBuilder;
-import com.freya02.botcommands.internal.Logging;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -165,7 +166,7 @@ public class SlashTag extends ApplicationCommand {
 		final int totalTags = tagDB.getTotalTags(event.getGuild().getIdLong());
 
 		final Paginator paginator = new PaginatorBuilder()
-				.setOwnerId(event.getUser().getIdLong())
+				.setConstraints(InteractionConstraints.ofUsers(event.getUser()))
 				.setMaxPages(totalTags / 10)
 				.setTimeout(5, TimeUnit.MINUTES, (p, message) -> {
 					p.cleanup(event.getContext());

@@ -1,7 +1,7 @@
 package com.freya02.docs;
 
 import com.freya02.bot.utils.HTMLElement;
-import com.freya02.botcommands.internal.Logging;
+import com.freya02.botcommands.api.Logging;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jsoup.nodes.Element;
