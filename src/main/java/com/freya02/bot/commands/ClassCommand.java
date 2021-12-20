@@ -42,6 +42,8 @@ public class ClassCommand extends ApplicationCommand {
 		LOGGER.info("Loading docs");
 		ClassDocs.loadAllDocs("http://localhost:63342/DocsBot/test_docs/allclasses-index.html");
 
+		LOGGER.info("Docs loaded");
+
 		this.classNameList = ClassDocs.getDocNamesMap().values()
 				.stream()
 				.map(ClassDoc::getClassName)

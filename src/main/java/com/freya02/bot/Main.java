@@ -26,8 +26,6 @@ public class Main {
 		try {
 			final Config config = Config.getConfig();
 
-			LOGGER.info("Docs loaded");
-
 			final JDA jda = JDABuilder.createLight(config.getToken())
 					.setActivity(Activity.watching("the docs"))
 					.build()
