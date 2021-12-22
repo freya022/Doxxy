@@ -18,6 +18,7 @@ import java.util.function.Consumer;
 
 public class ClassDoc {
 	private final String URL;
+	private final DocSourceType source;
 
 	@NotNull private final HTMLElement docTitleElement;
 	@Nullable private final HTMLElement descriptionElement;
@@ -31,6 +32,7 @@ public class ClassDoc {
 
 	ClassDoc(@NotNull String url) throws IOException {
 		this.URL = url;
+		this.source = DocSourceType.fromUrl(url);
 
 		final Document document = Utils.getDocument(url);
 
@@ -99,12 +101,8 @@ public class ClassDoc {
 			if (superClassLinkElement != null) {
 				final String superClassLink = superClassLinkElement.absUrl("href");
 
-				//Do not process JDA docs, they are java 9
-				if (superClassLink.startsWith("https://ci.dv8tion.net/job/JDA/javadoc/")) {
-					continue;
-				}
-
-				final ClassDoc superClassDocs = ClassDocs.of(superClassLink);
+				final ClassDoc superClassDocs = ClassDocs.globalCompute(superClassLink);
+				if (superClassDocs == null) continue;
 
 				for (Element element : inheritedBlock.select("code > a")) {
 					final HttpUrl hrefUrl = HttpUrl.get(element.absUrl("href"));
@@ -138,6 +136,10 @@ public class ClassDoc {
 		final FieldDoc fieldDoc = superClassDocs.fieldDocs.get(targetId);
 
 		fieldDocs.put(fieldDoc.getElementId(), fieldDoc);
+	}
+
+	public DocSourceType getSource() {
+		return source;
 	}
 
 	public HTMLElement getDocTitleElement() {

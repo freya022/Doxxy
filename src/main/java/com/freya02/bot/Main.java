@@ -1,5 +1,6 @@
 package com.freya02.bot;
 
+import com.freya02.bot.docs.DocSourceTypeResolver;
 import com.freya02.bot.tag.TagCriteriaResolver;
 import com.freya02.botcommands.api.CommandsBuilder;
 import com.freya02.botcommands.api.Logging;
@@ -40,6 +41,7 @@ public class Main {
 							.registerConstructorParameter(Config.class, commandType -> config)
 							.registerConstructorParameter(Database.class, commandType -> database)
 							.registerParameterResolver(new TagCriteriaResolver())
+							.registerParameterResolver(new DocSourceTypeResolver())
 					)
 					.textCommandBuilder(textCommandsBuilder -> textCommandsBuilder
 							.addPrefix("!")

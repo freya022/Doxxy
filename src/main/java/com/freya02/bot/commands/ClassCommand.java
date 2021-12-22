@@ -1,68 +1,67 @@
 package com.freya02.bot.commands;
 
 import com.freya02.bot.docs.DocEmbeds;
+import com.freya02.bot.docs.DocIndex;
 import com.freya02.botcommands.api.Logging;
 import com.freya02.botcommands.api.annotations.Optional;
 import com.freya02.botcommands.api.application.ApplicationCommand;
+import com.freya02.botcommands.api.application.CommandPath;
 import com.freya02.botcommands.api.application.annotations.AppOption;
 import com.freya02.botcommands.api.application.slash.GuildSlashEvent;
 import com.freya02.botcommands.api.application.slash.annotations.AutocompletionHandler;
 import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand;
 import com.freya02.docs.ClassDoc;
-import com.freya02.docs.ClassDocs;
+import com.freya02.docs.DocSourceType;
 import com.freya02.docs.MethodDoc;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.CommandAutoCompleteEvent;
 import net.dv8tion.jda.api.interactions.Interaction;
+import net.dv8tion.jda.api.interactions.commands.SlashCommand;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyAction;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 public class ClassCommand extends ApplicationCommand {
 	private static final Logger LOGGER = Logging.getLogger();
 //	private static final Emoji CLIPBOARD_EMOJI = EmojiUtils.resolveJDAEmoji("clipboard");
 //	private static final int MAX_CHOICES = 25;
-	private final List<String> classNameList;
-
-	//Performance could be better without nested maps but this is way easier for the autocompletion to understand what to show
-	//Map<Class name, Map<Method short signature, MethodDoc>>
-	private final Map<String, Map<String, MethodDoc>> methodChoiceList = new HashMap<>();
-
-	private static record MapEntry<K, V>(K key, V value) {}
+	private final EnumMap<DocSourceType, DocIndex> docIndexMap = new EnumMap<>(DocSourceType.class);
 
 	public ClassCommand() {
-		LOGGER.info("Loading docs");
-		ClassDocs.loadAllDocs("http://localhost:63342/DocsBot/test_docs/allclasses-index.html");
+		docIndexMap.put(DocSourceType.BOT_COMMANDS, new DocIndex("http://localhost:63342/DocsBot/test_docs/allclasses-index.html"));
+	}
 
-		LOGGER.info("Docs loaded");
-
-		this.classNameList = ClassDocs.getDocNamesMap().values()
-				.stream()
-				.map(ClassDoc::getClassName)
-				.sorted()
-				.toList();
-
-		for (ClassDoc doc : ClassDocs.getDocNamesMap().values()) {
-			methodChoiceList.put(doc.getClassName(), doc.getMethodDocs()
-					.values()
-					.stream()
-					.map(m -> new MapEntry<>(m.getSimpleSignature(), m))
-					.collect(Collectors.toMap(MapEntry::key, MapEntry::value))
-			);
+	@Override
+	@NotNull
+	public List<SlashCommand.Choice> getOptionChoices(@Nullable Guild guild, @NotNull CommandPath commandPath, int optionIndex) {
+		if (commandPath.equals(CommandPath.ofName("docs"))) {
+			if (optionIndex == 0) { //sourceType
+				return List.of(
+						//TODO add more, load their docs, use more caching (JDK has a lot of classes)
+						// Pre-render embeds into JSON files to then read them back ?
+						new SlashCommand.Choice("BotCommands", DocSourceType.BOT_COMMANDS.name())
+				);
+			}
 		}
+
+		return super.getOptionChoices(guild, commandPath, optionIndex);
 	}
 
 	@JDASlashCommand(name = "docs")
 	public void showDocs(GuildSlashEvent event,
+						  @AppOption(description = "The docs to search upon") DocSourceType sourceType,
 	                      @AppOption(description = "Name of the Java class", autocomplete = "autoClass") String className,
 	                      @Optional @AppOption(description = "ID of the Java method for this class", autocomplete = "autoMethod") String methodId) throws IOException {
 
-		final ClassDoc classDoc = ClassDocs.ofName(className);
+		final DocIndex docIndex = docIndexMap.get(sourceType);
+		final ClassDoc classDoc = docIndex.getClassDoc(className);
 
 		if (classDoc == null) {
 			event.reply("Unknown class").setEphemeral(true).queue();
@@ -71,7 +70,7 @@ public class ClassCommand extends ApplicationCommand {
 		}
 
 		if (methodId != null) {
-			final MethodDoc methodDoc = methodChoiceList.getOrDefault(className, Map.of()).get(methodId);
+			final MethodDoc methodDoc = docIndex.getMethodDoc(className, methodId);
 
 			if (methodDoc == null) {
 				event.reply("Unknown method").setEphemeral(true).queue();
@@ -121,13 +120,22 @@ public class ClassCommand extends ApplicationCommand {
 	}
 
 	@AutocompletionHandler(name = "autoClass", showUserInput = false)
-	public List<String> autoClass(CommandAutoCompleteEvent event) {
-		return classNameList;
+	public List<String> autoClass(CommandAutoCompleteEvent event, @AppOption DocSourceType sourceType) {
+		final DocIndex index = docIndexMap.get(sourceType);
+		if (index == null) return List.of();
+
+		return index.getSimpleNameList();
 	}
 
 	@AutocompletionHandler(name = "autoMethod", showUserInput = false)
-	public List<String> autoMethod(CommandAutoCompleteEvent event, @AppOption String className) {
-		return new ArrayList<>(methodChoiceList.getOrDefault(className, Map.of()).keySet());
+	public List<String> autoMethod(CommandAutoCompleteEvent event, @AppOption DocSourceType sourceType, @AppOption String className) {
+		final DocIndex index = docIndexMap.get(sourceType);
+		if (index == null) return List.of();
+
+		final Set<String> set = index.getMethodDocSuggestions(className);
+		if (set == null) return List.of();
+
+		return new ArrayList<>(set);
 	}
 
 //	private void onSeeAlsoClicked(SelectionEvent event, List<SeeAlso.SeeAlsoReference> references) {

@@ -3,6 +3,7 @@ package com.freya02.bot;
 import com.freya02.bot.utils.DecomposedName;
 import com.freya02.docs.ClassDoc;
 import com.freya02.docs.ClassDocs;
+import com.freya02.docs.DocSourceType;
 import net.dv8tion.jda.api.interactions.commands.SlashCommand;
 
 import java.io.IOException;
@@ -33,7 +34,7 @@ public class DocsTest3 {
 
 		ClassDocs.loadAllDocs("http://localhost:63342/DocsBot/test_docs/allclasses-index.html");
 
-		for (ClassDoc doc : ClassDocs.getDocNamesMap().values()) {
+		for (ClassDoc doc : ClassDocs.getSource(DocSourceType.BOT_COMMANDS).getDocNamesMap().values()) {
 			final List<SlashCommand.Choice> choices = doc.getMethodDocs().values().stream().map(m -> {
 				final StringBuilder simpleSignatureBuilder = new StringBuilder();
 
@@ -61,7 +62,7 @@ public class DocsTest3 {
 		}
 
 
-		final ClassDoc doc4 = ClassDocs.of("https://docs.oracle.com/en/java/javase/16/docs/api/java.base/java/util/concurrent/CopyOnWriteArraySet.html");
+		final ClassDoc doc4 = ClassDocs.globalCompute("https://docs.oracle.com/en/java/javase/16/docs/api/java.base/java/util/concurrent/CopyOnWriteArraySet.html");
 		System.out.println(doc4.getDescriptionElement().getMarkdown3());
 	}
 }

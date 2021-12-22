@@ -14,41 +14,56 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class ClassDocs {
-	private static final Set<String> blackList = new HashSet<>();
-	private static final Map<String, ClassDoc> docs = new HashMap<>();
-	private static final Map<String, ClassDoc> docNames = new HashMap<>();
-	private static boolean loaded = false;
+	private static final Set<String> loaded = Collections.synchronizedSet(new HashSet<>());
+	private static final Map<DocSourceType, ClassDocs> sourceMap = Collections.synchronizedMap(new EnumMap<>(DocSourceType.class));
 
-	public static Map<String, ClassDoc> getDocNamesMap() {
-		return Collections.unmodifiableMap(docNames); //TODO should use singleton
+	private final DocSourceType source;
+	private final Set<String> blackList = new HashSet<>();
+	private final Map<String, ClassDoc> urlToDocMap = new HashMap<>();
+	private final Map<String, ClassDoc> simpleNameToDocMap = new HashMap<>();
+
+	public ClassDocs(DocSourceType source) {
+		this.source = source;
 	}
 
-	public static boolean nameExists(@NotNull String name) {
-		return docNames.containsKey(name);
+	public static ClassDocs getSource(String url) {
+		return getSource(DocSourceType.fromUrl(url));
 	}
 
-	public static boolean urlExists(@NotNull String url) {
+	public static ClassDocs getSource(DocSourceType source) {
+		return sourceMap.computeIfAbsent(source, ClassDocs::new);
+	}
+
+	public Map<String, ClassDoc> getDocNamesMap() {
+		return Collections.unmodifiableMap(simpleNameToDocMap);
+	}
+
+	public boolean nameExists(@NotNull String name) {
+		return simpleNameToDocMap.containsKey(name);
+	}
+
+	public boolean urlExists(@NotNull String url) {
 		final String cleanUrl = removeFragment(url);
 
 		return cleanUrlExists(cleanUrl);
 	}
 
-	private static boolean cleanUrlExists(String cleanUrl) {
-		return docs.containsKey(cleanUrl);
+	private boolean cleanUrlExists(String cleanUrl) {
+		return urlToDocMap.containsKey(cleanUrl);
 	}
 
 	@Nullable
-	public static ClassDoc ofName(@NotNull String name) {
-		return docNames.get(name);
+	public ClassDoc getByName(@NotNull String name) {
+		return simpleNameToDocMap.get(name);
 	}
 
 	@Nullable
-	public static ClassDoc getOrNull(@NotNull String url) {
+	public ClassDoc getOrNull(@NotNull String url) {
 		url = removeFragment(url);
 
 		if (!blackList.contains(url)) {
 			try {
-				return of(url);
+				return compute(url);
 			} catch (Exception ignored) {
 				blackList.add(url);
 			}
@@ -57,20 +72,32 @@ public class ClassDocs {
 		return null;
 	}
 
-	@NotNull
-	public static ClassDoc of(@NotNull String url) throws IOException {
+	@Nullable
+	public ClassDoc compute(@NotNull String url) throws IOException {
+		final DocSourceType urlSource = DocSourceType.fromUrl(url);
+		if (urlSource != source) return null;
+		if (urlSource == null) return null;
+
 		url = removeFragment(url);
 
 		if (!cleanUrlExists(url)) {
 			final ClassDoc newDocs = new ClassDoc(url);
 
-			docs.put(url, newDocs);
-			docNames.put(newDocs.getClassName(), newDocs);
+			urlToDocMap.put(url, newDocs);
+			simpleNameToDocMap.put(newDocs.getClassName(), newDocs);
 
 			return newDocs;
 		} else {
-			return docs.get(url);
+			return urlToDocMap.get(url);
 		}
+	}
+
+	/**
+	 * This is nullable if the DocSource of this URL is not recognized
+	 */
+	@Nullable
+	public static ClassDoc globalCompute(@NotNull String url) throws IOException {
+		return getSource(url).compute(url);
 	}
 
 	@NotNull
@@ -83,15 +110,11 @@ public class ClassDocs {
 		return url;
 	}
 
-	public static synchronized void loadAllDocs(String url) {
-		if (loaded) {
-			return;
-		}
-
-		loaded = true;
+	public static synchronized ClassDocs loadAllDocs(String indexUrl) {
+		if (!loaded.add(indexUrl)) return getSource(indexUrl);
 
 		try {
-			final Document document = Utils.getDocument(url);
+			final Document document = Utils.getDocument(indexUrl);
 
 			final Map<String, ClassDoc> docsMap = new ConcurrentHashMap<>();
 
@@ -100,7 +123,7 @@ public class ClassDocs {
 			for (Element element : document.select("#all-classes-table > div > div.summary-table.two-column-summary > div.col-first > a:nth-child(1)")) { //n = 1 needed as type parameters are links and external types
 				service.submit(() -> {
 					try {
-						final ClassDoc docs = ClassDocs.of(element.absUrl("href"));
+						final ClassDoc docs = ClassDocs.globalCompute(element.absUrl("href"));
 
 						final ClassDoc oldVal = docsMap.put(docs.getClassName(), docs);
 
@@ -118,5 +141,7 @@ public class ClassDocs {
 		} catch (IOException | InterruptedException e) {
 			throw new RuntimeException("Unable to find all docs", e);
 		}
+
+		return getSource(indexUrl);
 	}
 }
