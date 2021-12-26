@@ -21,8 +21,8 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.events.interaction.CommandAutoCompleteEvent;
-import net.dv8tion.jda.api.interactions.commands.SlashCommand;
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteEvent;
+import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -45,11 +45,11 @@ public class SlashTag extends ApplicationCommand {
 
 	@Override
 	@NotNull
-	public List<SlashCommand.Choice> getOptionChoices(@Nullable Guild guild, @NotNull CommandPath commandPath, int optionIndex) {
+	public List<Command.Choice> getOptionChoices(@Nullable Guild guild, @NotNull CommandPath commandPath, int optionIndex) {
 		if (commandPath.getFullPath().equals("tags/list") && optionIndex == 0) { //TagCriteria of /tag list
 			return List.of(
-					new SlashCommand.Choice("Name", "NAME"),
-					new SlashCommand.Choice("Uses", "USES")
+					new Command.Choice("Name", "NAME"),
+					new Command.Choice("Uses", "USES")
 			);
 		}
 

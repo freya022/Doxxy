@@ -4,7 +4,7 @@ import com.freya02.bot.utils.DecomposedName;
 import com.freya02.docs.ClassDoc;
 import com.freya02.docs.ClassDocs;
 import com.freya02.docs.DocSourceType;
-import net.dv8tion.jda.api.interactions.commands.SlashCommand;
+import net.dv8tion.jda.api.interactions.commands.Command;
 
 import java.io.IOException;
 import java.util.List;
@@ -35,7 +35,7 @@ public class DocsTest3 {
 		ClassDocs.loadAllDocs("http://localhost:63342/DocsBot/test_docs/allclasses-index.html");
 
 		for (ClassDoc doc : ClassDocs.getSource(DocSourceType.BOT_COMMANDS).getDocNamesMap().values()) {
-			final List<SlashCommand.Choice> choices = doc.getMethodDocs().values().stream().map(m -> {
+			final List<Command.Choice> choices = doc.getMethodDocs().values().stream().map(m -> {
 				final StringBuilder simpleSignatureBuilder = new StringBuilder();
 
 				final String id = m.getElementId();
@@ -55,7 +55,7 @@ public class DocsTest3 {
 
 				simpleSignatureBuilder.append(parameterJoiner);
 
-				return new SlashCommand.Choice(simpleSignatureBuilder.toString(), id);
+				return new Command.Choice(simpleSignatureBuilder.toString(), id);
 			}).toList();
 
 			System.out.println();

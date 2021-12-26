@@ -14,10 +14,10 @@ import com.freya02.docs.ClassDoc;
 import com.freya02.docs.DocSourceType;
 import com.freya02.docs.MethodDoc;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.events.interaction.CommandAutoCompleteEvent;
-import net.dv8tion.jda.api.interactions.Interaction;
-import net.dv8tion.jda.api.interactions.commands.SlashCommand;
-import net.dv8tion.jda.api.requests.restaction.interactions.ReplyAction;
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteEvent;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
+import net.dv8tion.jda.api.interactions.commands.Command;
+import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -40,13 +40,13 @@ public class ClassCommand extends ApplicationCommand {
 
 	@Override
 	@NotNull
-	public List<SlashCommand.Choice> getOptionChoices(@Nullable Guild guild, @NotNull CommandPath commandPath, int optionIndex) {
+	public List<Command.Choice> getOptionChoices(@Nullable Guild guild, @NotNull CommandPath commandPath, int optionIndex) {
 		if (commandPath.equals(CommandPath.ofName("docs"))) {
 			if (optionIndex == 0) { //sourceType
 				return List.of(
 						//TODO add more, load their docs, use more caching (JDK has a lot of classes)
 						// Pre-render embeds into JSON files to then read them back ?
-						new SlashCommand.Choice("BotCommands", DocSourceType.BOT_COMMANDS.name())
+						new Command.Choice("BotCommands", DocSourceType.BOT_COMMANDS.name())
 				);
 			}
 		}
@@ -85,15 +85,15 @@ public class ClassCommand extends ApplicationCommand {
 	}
 
 	private void sendMethod(GuildSlashEvent event, boolean ephemeral, ClassDoc classDoc, MethodDoc methodDoc) {
-		ReplyAction replyAction = event.replyEmbeds(DocEmbeds.toEmbed(classDoc, methodDoc).build());
+		ReplyCallbackAction replyAction = event.replyEmbeds(DocEmbeds.toEmbed(classDoc, methodDoc).build());
 
 		replyAction
 				.setEphemeral(ephemeral)
 				.queue();
 	}
 
-	private void sendClass(Interaction event, boolean ephemeral, ClassDoc docs) {
-		ReplyAction replyAction = event.replyEmbeds(DocEmbeds.toEmbed(docs).build());
+	private void sendClass(IReplyCallback event, boolean ephemeral, ClassDoc docs) {
+		ReplyCallbackAction replyAction = event.replyEmbeds(DocEmbeds.toEmbed(docs).build());
 
 		// Much more work to do for this to really work
 		// The link could target method without knowing it, it could also target weird internal sun classes
