@@ -14,7 +14,7 @@ public class SeeAlso extends HTMLElement {
 	public SeeAlso(HTMLElement element) {
 		super(element.getTargetElement());
 
-		for (Element seeAlsoClassElement : element.getTargetElement().select("dd > a")) {
+		for (Element seeAlsoClassElement : element.getTargetElement().select("dd > ul > li > a")) {
 			references.add(new SeeAlsoReference(seeAlsoClassElement.text(), seeAlsoClassElement.absUrl("href")));
 		}
 	}

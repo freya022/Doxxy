@@ -33,14 +33,7 @@ public class DocEmbeds {
 			builder.addField("Type parameters", typeParameters.stream().map(HTMLElement::getMarkdown3).collect(Collectors.joining("\n")), false);
 		}
 
-		final SeeAlso seeAlso = doc.getSeeAlso();
-		if (seeAlso != null) {
-			final String seeAlsoMd = seeAlso.getMarkdown3();
-
-			if (seeAlsoMd.length() <= MessageEmbed.VALUE_MAX_LENGTH) {
-				builder.addField("See Also", seeAlsoMd, false);
-			}
-		}
+		addSeeAlso(builder, doc.getSeeAlso());
 
 		return builder;
 	}
@@ -86,15 +79,18 @@ public class DocEmbeds {
 			builder.addField("Type parameters", typeParameters.stream().map(HTMLElement::getMarkdown3).collect(Collectors.joining("\n")), false);
 		}
 
-		final SeeAlso seeAlso = methodDoc.getSeeAlso();
+		addSeeAlso(builder, methodDoc.getSeeAlso());
+
+		return builder;
+	}
+
+	private static void addSeeAlso(EmbedBuilder builder, SeeAlso seeAlso) {
 		if (seeAlso != null) {
-			final String seeAlsoMd = seeAlso.getMarkdown3();
+			final String seeAlsoMd = seeAlso.getReferences().stream().map(ref -> "[" + ref.text() + "](" + ref.link() + ")").collect(Collectors.joining(", "));
 
 			if (seeAlsoMd.length() <= MessageEmbed.VALUE_MAX_LENGTH) {
 				builder.addField("See Also", seeAlsoMd, false);
 			}
 		}
-
-		return builder;
 	}
 }

@@ -3,9 +3,9 @@ package com.freya02.docs;
 import org.jetbrains.annotations.Nullable;
 
 public enum DocSourceType {
-	JDA(), //TODO add JDA link once they are built with javadoc 16
+	JDA(), //TODO add JDA link once they are built with javadoc 17
 	BOT_COMMANDS("http://localhost:63342/DocsBot/test_docs"),
-	JAVA("https://docs.oracle.com/en/java/javase/16/docs/api");
+	JAVA("https://docs.oracle.com/en/java/javase/17/docs/api");
 
 	private final String[] sourceUrls;
 

@@ -46,7 +46,7 @@ public class ClassDoc {
 		this.className = segments.get(segments.size() - 1).substring(0, segments.get(segments.size() - 1).length() - 5);
 
 		//Get class description
-		final Element descriptionElement = document.selectFirst("body > div.flex-box > div > main > section.description > div.block");
+		final Element descriptionElement = document.selectFirst("#class-description > div.block");
 		if (descriptionElement != null) {
 			this.descriptionElement = new HTMLElement(descriptionElement);
 		} else {
@@ -54,7 +54,7 @@ public class ClassDoc {
 		}
 
 		//Get class type parameters if they exist
-		final Element detailListElement = document.selectFirst("body > div.flex-box > div > main > section.description > div.block + dl");
+		final Element detailListElement = document.selectFirst("#class-description > div.block + dl");
 		if (detailListElement != null) {
 			this.detailToElementsMap = MethodDoc.getDetailToElementsMap(detailListElement);
 			this.typeParameterElements = detailToElementsMap.get(DocDetailType.TYPE_PARAMETERS);
@@ -127,7 +127,7 @@ public class ClassDoc {
 	private void onInheritedMethod(ClassDoc superClassDocs, String targetId) {
 		//You can inherit a same method multiple times, it will show up multiple times in the docs
 		// As the html is ordered such as the latest overridden method is shown, we can set the already existing doc to the newest one
-		// Example: https://docs.oracle.com/en/java/javase/16/docs/api/java.base/java/util/AbstractCollection.html#method.summary
+		// Example: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/AbstractCollection.html#method.summary
 		final MethodDoc methodDoc = superClassDocs.methodDocs.get(targetId);
 		methodDocs.put(methodDoc.getElementId(), methodDoc);
 	}
