@@ -1,6 +1,6 @@
 package com.freya02.bot;
 
-import com.freya02.bot.utils.Utils;
+import com.freya02.bot.utils.HttpUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
@@ -12,7 +12,7 @@ import java.nio.file.StandardOpenOption;
 
 public class DocsTest2 {
 	public static void main(String[] args) throws Exception {
-		final Document document = Utils.getDocument("https://ci.dv8tion.net/job/JDA/javadoc/allclasses.html");
+		final Document document = HttpUtils.getDocument("https://ci.dv8tion.net/job/JDA/javadoc/allclasses.html");
 
 		final Path input = Main.BOT_FOLDER.resolve("docs_cache\\ci.dv8tion.net\\job\\JDA\\javadoc\\constant-values.html");
 		final Path output = Main.BOT_FOLDER.resolve("docs_cache\\ci.dv8tion.net\\job\\JDA\\javadoc\\test.html");

@@ -1,6 +1,6 @@
 package com.freya02.docs;
 
-import com.freya02.bot.utils.Utils;
+import com.freya02.bot.utils.HttpUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jsoup.nodes.Document;
@@ -114,7 +114,7 @@ public class ClassDocs {
 		if (!loaded.add(indexUrl)) return getSource(indexUrl);
 
 		try {
-			final Document document = Utils.getDocument(indexUrl);
+			final Document document = HttpUtils.getDocument(indexUrl);
 
 			final Map<String, ClassDoc> docsMap = new ConcurrentHashMap<>();
 

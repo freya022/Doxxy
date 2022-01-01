@@ -1,6 +1,7 @@
 package com.freya02.docs;
 
 import com.freya02.bot.utils.HTMLElement;
+import com.freya02.bot.utils.HttpUtils;
 import com.freya02.bot.utils.Utils;
 import okhttp3.HttpUrl;
 import org.jetbrains.annotations.NotNull;
@@ -34,7 +35,7 @@ public class ClassDoc {
 		this.URL = url;
 		this.source = DocSourceType.fromUrl(url);
 
-		final Document document = Utils.getDocument(url);
+		final Document document = HttpUtils.getDocument(url);
 
 		//Get javadoc title
 		final Element docTitle = document.selectFirst("body > div.flex-box > div > main > div > h1");
