@@ -88,6 +88,13 @@ public class ClassDoc {
 
 			this.methodDocs.put(methodDocs.getElementId(), methodDocs);
 		});
+
+		//Try to find annotation "methods" (elements)
+		processDetailElements(document, ClassDetailType.ANNOTATION_ELEMENT, annotationElement -> {
+			final MethodDoc methodDocs = new MethodDoc(this, annotationElement);
+
+			this.methodDocs.put(methodDocs.getElementId(), methodDocs);
+		});
 	}
 
 	private void processInheritedElements(Document document, InheritedType inheritedType, BiConsumer<ClassDoc, String> inheritedElementConsumer) throws IOException {

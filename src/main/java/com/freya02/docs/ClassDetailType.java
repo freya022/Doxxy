@@ -3,7 +3,8 @@ package com.freya02.docs;
 public enum ClassDetailType {
 	FIELD("field-detail"),
 	CONSTRUCTOR("constructor-detail"),
-	METHOD("method-detail");
+	METHOD("method-detail"),
+	ANNOTATION_ELEMENT("annotation-interface-element-detail");
 
 	private final String detailId;
 	ClassDetailType(String detailId) {
