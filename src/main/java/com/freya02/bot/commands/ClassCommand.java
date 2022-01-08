@@ -14,7 +14,7 @@ import com.freya02.docs.ClassDoc;
 import com.freya02.docs.DocSourceType;
 import com.freya02.docs.MethodDoc;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteEvent;
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
@@ -23,7 +23,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Set;
@@ -120,7 +120,7 @@ public class ClassCommand extends ApplicationCommand {
 	}
 
 	@AutocompletionHandler(name = "autoClass", showUserInput = false)
-	public List<String> autoClass(CommandAutoCompleteEvent event, @AppOption DocSourceType sourceType) {
+	public Collection<String> autoClass(CommandAutoCompleteInteractionEvent event, @AppOption DocSourceType sourceType) {
 		final DocIndex index = docIndexMap.get(sourceType);
 		if (index == null) return List.of();
 
@@ -128,14 +128,14 @@ public class ClassCommand extends ApplicationCommand {
 	}
 
 	@AutocompletionHandler(name = "autoMethod", showUserInput = false)
-	public List<String> autoMethod(CommandAutoCompleteEvent event, @AppOption DocSourceType sourceType, @AppOption String className) {
+	public Collection<String> autoMethod(CommandAutoCompleteInteractionEvent event, @AppOption DocSourceType sourceType, @AppOption String className) {
 		final DocIndex index = docIndexMap.get(sourceType);
 		if (index == null) return List.of();
 
 		final Set<String> set = index.getMethodDocSuggestions(className);
 		if (set == null) return List.of();
 
-		return new ArrayList<>(set);
+		return set;
 	}
 
 //	private void onSeeAlsoClicked(SelectionEvent event, List<SeeAlso.SeeAlsoReference> references) {

@@ -1,10 +1,14 @@
 package com.freya02.bot.docs;
 
+import com.freya02.botcommands.api.BContext;
 import com.freya02.botcommands.api.parameters.ParameterResolver;
 import com.freya02.botcommands.api.parameters.SlashParameterResolver;
+import com.freya02.botcommands.internal.application.slash.SlashCommandInfo;
 import com.freya02.docs.DocSourceType;
-import net.dv8tion.jda.api.interactions.commands.CommandPayload;
+import net.dv8tion.jda.api.interactions.commands.CommandInteractionPayload;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class DocSourceTypeResolver extends ParameterResolver implements SlashParameterResolver {
@@ -13,8 +17,14 @@ public class DocSourceTypeResolver extends ParameterResolver implements SlashPar
 	}
 
 	@Override
+	@NotNull
+	public OptionType getOptionType() {
+		return OptionType.STRING;
+	}
+
+	@Override
 	@Nullable
-	public Object resolve(CommandPayload event, OptionMapping optionMapping) {
+	public Object resolve(@NotNull BContext context, @NotNull SlashCommandInfo info, @NotNull CommandInteractionPayload event, @NotNull OptionMapping optionMapping) {
 		return DocSourceType.valueOf(optionMapping.getAsString());
 	}
 }

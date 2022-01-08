@@ -21,7 +21,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteEvent;
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import org.jetbrains.annotations.NotNull;
@@ -228,7 +228,7 @@ public class SlashTag extends ApplicationCommand {
 	}
 
 	@AutocompletionHandler(name = GUILD_TAGS_AUTOCOMPLETE)
-	public List<String> guildTagsAutocomplete(CommandAutoCompleteEvent event) throws SQLException {
+	public List<String> guildTagsAutocomplete(CommandAutoCompleteInteractionEvent event) throws SQLException {
 		final Guild guild = event.getGuild();
 		if (guild == null) throw new IllegalStateException("Tag autocompletion was triggered outside of a Guild");
 
@@ -236,7 +236,7 @@ public class SlashTag extends ApplicationCommand {
 	}
 
 	@AutocompletionHandler(name = USER_TAGS_AUTOCOMPLETE)
-	public List<String> userTagsAutocomplete(CommandAutoCompleteEvent event) throws SQLException {
+	public List<String> userTagsAutocomplete(CommandAutoCompleteInteractionEvent event) throws SQLException {
 		final Guild guild = event.getGuild();
 		if (guild == null) throw new IllegalStateException("Tag autocompletion was triggered outside of a Guild");
 
