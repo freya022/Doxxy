@@ -17,6 +17,9 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+//TODO enumerate direct known subclasses (c.f. AbstractComponentBuilder)
+// Might be interesting to put as an auxiliary info, shown by a button instead of in the main content
+// What about implemented interfaces/classes too ?
 public class ClassDoc {
 	private final String URL;
 	private final DocSourceType source;
@@ -32,10 +35,12 @@ public class ClassDoc {
 	@Nullable private final Map<DocDetailType, List<HTMLElement>> detailToElementsMap;
 
 	ClassDoc(@NotNull String url) throws IOException {
+		this(url, HttpUtils.getDocument(url));
+	}
+
+	public ClassDoc(@NotNull String url, @NotNull Document document) throws IOException {
 		this.URL = url;
 		this.source = DocSourceType.fromUrl(url);
-
-		final Document document = HttpUtils.getDocument(url);
 
 		//Get javadoc title
 		final Element docTitle = document.selectFirst("body > div.flex-box > div > main > div > h1");
@@ -109,7 +114,7 @@ public class ClassDoc {
 			if (superClassLinkElement != null) {
 				final String superClassLink = superClassLinkElement.absUrl("href");
 
-				final ClassDoc superClassDocs = ClassDocs.globalCompute(superClassLink);
+				final ClassDoc superClassDocs = ClassDocs.download(superClassLink);
 				if (superClassDocs == null) continue;
 
 				for (Element element : inheritedBlock.select("code > a")) {

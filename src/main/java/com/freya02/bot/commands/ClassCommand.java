@@ -1,6 +1,5 @@
 package com.freya02.bot.commands;
 
-import com.freya02.bot.docs.DocEmbeds;
 import com.freya02.bot.docs.DocIndex;
 import com.freya02.botcommands.api.Logging;
 import com.freya02.botcommands.api.annotations.Optional;
@@ -10,10 +9,9 @@ import com.freya02.botcommands.api.application.annotations.AppOption;
 import com.freya02.botcommands.api.application.slash.GuildSlashEvent;
 import com.freya02.botcommands.api.application.slash.annotations.AutocompletionHandler;
 import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand;
-import com.freya02.docs.ClassDoc;
 import com.freya02.docs.DocSourceType;
-import com.freya02.docs.MethodDoc;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.Command;
@@ -26,7 +24,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.List;
-import java.util.Set;
 
 public class ClassCommand extends ApplicationCommand {
 	private static final Logger LOGGER = Logging.getLogger();
@@ -34,8 +31,8 @@ public class ClassCommand extends ApplicationCommand {
 //	private static final int MAX_CHOICES = 25;
 	private final EnumMap<DocSourceType, DocIndex> docIndexMap = new EnumMap<>(DocSourceType.class);
 
-	public ClassCommand() {
-		docIndexMap.put(DocSourceType.BOT_COMMANDS, new DocIndex("http://localhost:63342/DocsBot/test_docs/allclasses-index.html"));
+	public ClassCommand() throws IOException {
+		docIndexMap.put(DocSourceType.BOT_COMMANDS, new DocIndex(DocSourceType.BOT_COMMANDS));
 	}
 
 	@Override
@@ -61,7 +58,7 @@ public class ClassCommand extends ApplicationCommand {
 	                      @Optional @AppOption(description = "ID of the Java method for this class", autocomplete = "autoMethod") String methodId) throws IOException {
 
 		final DocIndex docIndex = docIndexMap.get(sourceType);
-		final ClassDoc classDoc = docIndex.getClassDoc(className);
+		final MessageEmbed classDoc = docIndex.getClassDoc(className);
 
 		if (classDoc == null) {
 			event.reply("Unknown class").setEphemeral(true).queue();
@@ -70,7 +67,7 @@ public class ClassCommand extends ApplicationCommand {
 		}
 
 		if (methodId != null) {
-			final MethodDoc methodDoc = docIndex.getMethodDoc(className, methodId);
+			final MessageEmbed methodDoc = docIndex.getMethodDoc(className, methodId);
 
 			if (methodDoc == null) {
 				event.reply("Unknown method").setEphemeral(true).queue();
@@ -78,22 +75,22 @@ public class ClassCommand extends ApplicationCommand {
 				return;
 			}
 
-			sendMethod(event, false, classDoc, methodDoc);
+			sendMethod(event, false, methodDoc);
 		} else {
 			sendClass(event, false, classDoc);
 		}
 	}
 
-	private void sendMethod(GuildSlashEvent event, boolean ephemeral, ClassDoc classDoc, MethodDoc methodDoc) {
-		ReplyCallbackAction replyAction = event.replyEmbeds(DocEmbeds.toEmbed(classDoc, methodDoc).build());
+	private void sendMethod(GuildSlashEvent event, boolean ephemeral, MessageEmbed methodDoc) {
+		ReplyCallbackAction replyAction = event.replyEmbeds(methodDoc);
 
 		replyAction
 				.setEphemeral(ephemeral)
 				.queue();
 	}
 
-	private void sendClass(IReplyCallback event, boolean ephemeral, ClassDoc docs) {
-		ReplyCallbackAction replyAction = event.replyEmbeds(DocEmbeds.toEmbed(docs).build());
+	private void sendClass(IReplyCallback event, boolean ephemeral, MessageEmbed docs) {
+		ReplyCallbackAction replyAction = event.replyEmbeds(docs);
 
 		// Much more work to do for this to really work
 		// The link could target method without knowing it, it could also target weird internal sun classes
@@ -132,7 +129,7 @@ public class ClassCommand extends ApplicationCommand {
 		final DocIndex index = docIndexMap.get(sourceType);
 		if (index == null) return List.of();
 
-		final Set<String> set = index.getMethodDocSuggestions(className);
+		final Collection<String> set = index.getMethodDocSuggestions(className);
 		if (set == null) return List.of();
 
 		return set;

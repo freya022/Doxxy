@@ -1,7 +1,8 @@
 package com.freya02.bot;
 
-import com.freya02.docs.ClassDoc;
+import com.freya02.bot.docs.DocIndex;
 import com.freya02.docs.ClassDocs;
+import com.freya02.docs.DocSourceType;
 
 import java.io.IOException;
 
@@ -29,9 +30,18 @@ public class DocsTest3 {
 
 //		ClassDocs.loadAllDocs("http://localhost:63342/DocsBot/test_docs/allclasses-index.html");
 
-		final ClassDoc doc = ClassDocs.globalCompute("http://localhost:63342/DocsBot/test_docs/com/freya02/botcommands/api/application/slash/annotations/JDASlashCommand.html#annotation-interface-element-detail");
+//		final ClassDoc doc = ClassDocs.globalCompute("http://localhost:63342/DocsBot/test_docs/com/freya02/botcommands/api/application/slash/annotations/JDASlashCommand.html#annotation-interface-element-detail");
+
+//		final String cached = HttpUtils.downloadBodyIfNotCached("http://localhost:63342/DocsBot/test_docs/com/freya02/botcommands/api/application/slash/annotations/JDASlashCommand.html#annotation-interface-element-detail");
+
+		final ClassDocs classDocs = ClassDocs.indexAll(DocSourceType.BOT_COMMANDS);
+
+//		final ClassDoc doc = classDocs.tryRetrieveDoc("AbstractComponentBuilder", true);
+
+		final DocIndex docIndex = new DocIndex(DocSourceType.BOT_COMMANDS);
 
 		System.out.println();
+
 //
 //		for (ClassDoc doc : ClassDocs.getSource(DocSourceType.BOT_COMMANDS).getDocNamesMap().values()) {
 //			final List<Command.Choice> choices = doc.getMethodDocs().values().stream().map(m -> {

@@ -1,28 +1,40 @@
 package com.freya02.docs;
 
+import com.freya02.bot.utils.DecomposedName;
 import com.freya02.bot.utils.HttpUtils;
+import com.freya02.botcommands.api.Logging;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.slf4j.Logger;
 
 import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
 
+//TODO
+// Goal is to not store the docs pages in memory for indefinite durations
+// So, we need to render the pages to JSON documents directly, and write it to the disk
+// But, we need to know when to update those JSON documents, JDA docs might update for example
+// We rely on OkHttp's cache and set the cache control on the website body download request
+// Set the Request.Builder#cacheControl property to something which describes as "Download if not in cache"
+// Use success/fallback callbacks in document downloads in order to determine how to retrieve the rendered embed (as JSON)
+// In case of success then save the rendered embed in the JSON file
 public class ClassDocs {
-	private static final Set<String> loaded = Collections.synchronizedSet(new HashSet<>());
+	private static final Logger LOGGER = Logging.getLogger();
 	private static final Map<DocSourceType, ClassDocs> sourceMap = Collections.synchronizedMap(new EnumMap<>(DocSourceType.class));
 
 	private final DocSourceType source;
-	private final Set<String> blackList = new HashSet<>();
-	private final Map<String, ClassDoc> urlToDocMap = new HashMap<>();
-	private final Map<String, ClassDoc> simpleNameToDocMap = new HashMap<>();
 
-	public ClassDocs(DocSourceType source) {
+	private final Map<String, String> simpleNameToUrlMap = new HashMap<>();
+
+	//Use this map in case there are multiple classes with the same name, use a small package prefix to differentiate them
+//	private final Map<String, String> nameToUrlMap = new HashMap<>();
+
+	private ClassDocs(DocSourceType source) {
 		this.source = source;
 	}
 
@@ -34,70 +46,21 @@ public class ClassDocs {
 		return sourceMap.computeIfAbsent(source, ClassDocs::new);
 	}
 
-	public Map<String, ClassDoc> getDocNamesMap() {
-		return Collections.unmodifiableMap(simpleNameToDocMap);
+	public Map<String, String> getSimpleNameToUrlMap() {
+		return simpleNameToUrlMap;
 	}
 
-	public boolean nameExists(@NotNull String name) {
-		return simpleNameToDocMap.containsKey(name);
-	}
-
-	public boolean urlExists(@NotNull String url) {
-		final String cleanUrl = removeFragment(url);
-
-		return cleanUrlExists(cleanUrl);
-	}
-
-	private boolean cleanUrlExists(String cleanUrl) {
-		return urlToDocMap.containsKey(cleanUrl);
-	}
-
+	/**
+	 * Null if unsupported source
+	 */
 	@Nullable
-	public ClassDoc getByName(@NotNull String name) {
-		return simpleNameToDocMap.get(name);
-	}
-
-	@Nullable
-	public ClassDoc getOrNull(@NotNull String url) {
-		url = removeFragment(url);
-
-		if (!blackList.contains(url)) {
-			try {
-				return compute(url);
-			} catch (Exception ignored) {
-				blackList.add(url);
-			}
-		}
-
-		return null;
-	}
-
-	@Nullable
-	public ClassDoc compute(@NotNull String url) throws IOException {
+	public static ClassDoc download(@NotNull String url) throws IOException {
 		final DocSourceType urlSource = DocSourceType.fromUrl(url);
-		if (urlSource != source) return null;
 		if (urlSource == null) return null;
 
 		url = removeFragment(url);
 
-		if (!cleanUrlExists(url)) {
-			final ClassDoc newDocs = new ClassDoc(url);
-
-			urlToDocMap.put(url, newDocs);
-			simpleNameToDocMap.put(newDocs.getClassName(), newDocs);
-
-			return newDocs;
-		} else {
-			return urlToDocMap.get(url);
-		}
-	}
-
-	/**
-	 * This is nullable if the DocSource of this URL is not recognized
-	 */
-	@Nullable
-	public static ClassDoc globalCompute(@NotNull String url) throws IOException {
-		return getSource(url).compute(url);
+		return new ClassDoc(url);
 	}
 
 	@NotNull
@@ -110,38 +73,55 @@ public class ClassDocs {
 		return url;
 	}
 
-	public static synchronized ClassDocs loadAllDocs(String indexUrl) {
-		if (!loaded.add(indexUrl)) return getSource(indexUrl);
+	public static synchronized ClassDocs indexAll(DocSourceType sourceType) throws IOException {
+		final ClassDocs docs = getSource(sourceType);
+		docs.indexAll();
 
-		try {
-			final Document document = HttpUtils.getDocument(indexUrl);
+		return docs;
+	}
 
-			final Map<String, ClassDoc> docsMap = new ConcurrentHashMap<>();
+	private synchronized void indexAll() throws IOException {
+		final String indexURL = source.getAllClassesIndexURL();
 
-			//Multithreading is rather useless here... only saved 100 ms out of 400 of the time
-			final ExecutorService service = Executors.newFixedThreadPool(4);
-			for (Element element : document.select("#all-classes-table > div > div.summary-table.two-column-summary > div.col-first > a:nth-child(1)")) { //n = 1 needed as type parameters are links and external types
-				service.submit(() -> {
-					try {
-						final ClassDoc docs = ClassDocs.globalCompute(element.absUrl("href"));
+		final Document document = HttpUtils.getDocument(indexURL);
 
-						final ClassDoc oldVal = docsMap.put(docs.getClassName(), docs);
+		simpleNameToUrlMap.clear();
 
-						if (oldVal != null) {
-							throw new IllegalStateException("Duplicated docs: " + element.absUrl("href"));
-						}
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				});
+		//n = 1 needed as type parameters are links and external types
+		// For example in AbstractComponentBuilder<T extends AbstractComponentBuilder<T>>
+		// It could have selected 4 different URLs, except there is only 1 class we want here
+		// Since it's the left most, it's easy to pick the first one
+		for (Element element : document.select("#all-classes-table > div > div.summary-table.two-column-summary > div.col-first > a:nth-child(1)")) {
+			final String classUrl = element.absUrl("href");
+
+			final String rightPart = removeFragment(classUrl.substring(source.getSourceUrl().length() + 1, classUrl.lastIndexOf('.')));
+
+			final DecomposedName decomposition = DecomposedName.getDecomposition(rightPart.replace('/', '.'));
+
+			final String oldUrl = simpleNameToUrlMap.put(decomposition.className(), classUrl);
+			if (oldUrl != null) {
+				LOGGER.warn("Detected a duplicate class name '{}' at '{}' and '{}'", decomposition.className(), classUrl, oldUrl);
 			}
-
-			service.shutdown();
-			service.awaitTermination(1, TimeUnit.DAYS);
-		} catch (IOException | InterruptedException e) {
-			throw new RuntimeException("Unable to find all docs", e);
 		}
+	}
 
-		return getSource(indexUrl);
+	@Nullable
+	public ClassDoc tryRetrieveDoc(String simpleClassName, boolean force) throws IOException {
+		final String classUrl = simpleNameToUrlMap.get(simpleClassName);
+
+		if (classUrl == null)
+			throw new IllegalArgumentException(simpleClassName + " is not a valid class name");
+
+		if (force) {
+			return new ClassDoc(classUrl);
+		} else {
+			final String downloadedBody = HttpUtils.downloadBodyIfNotCached(classUrl);
+
+			if (downloadedBody == null) return null;
+
+			final Document document = HttpUtils.parseDocument(downloadedBody, classUrl);
+
+			return new ClassDoc(classUrl, document);
+		}
 	}
 }

@@ -1,12 +1,21 @@
 package com.freya02.bot.docs;
 
 import com.freya02.bot.utils.HTMLElement;
+import com.freya02.bot.utils.HttpUtils;
+import com.freya02.bot.utils.IOUtils;
 import com.freya02.docs.ClassDoc;
 import com.freya02.docs.MethodDoc;
 import com.freya02.docs.SeeAlso;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.utils.data.DataObject;
+import net.dv8tion.jda.internal.JDAImpl;
+import net.dv8tion.jda.internal.entities.EntityBuilder;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -91,6 +100,27 @@ public class DocEmbeds {
 			if (seeAlsoMd.length() <= MessageEmbed.VALUE_MAX_LENGTH) {
 				builder.addField("See Also", seeAlsoMd, false);
 			}
+		}
+	}
+
+	public static EmbedBuilder retrieveEmbed(JDA jda, String url) throws IOException {
+		final String downloadedBody = HttpUtils.downloadBodyIfNotCached(url);
+
+		//TODO transform url into MD5
+		// Actively get target method and target from the URL
+		// Remove global cache in ClassDocs, OkHttp will cache the actual network resources, however this will waste a bit more CPU for non-cached *requested* classes
+		// No worries for dependencies changing their docs - the dependencies doesn't change if the docs aren't updated
+		final Path cachedJsonPath = IOUtils.changeExtension(HttpUtils.getCachePathForUrl(url), "json");
+		if (downloadedBody == null && Files.exists(cachedJsonPath)) {
+			final EntityBuilder entityBuilder = ((JDAImpl) jda).getEntityBuilder();
+			final DataObject cachedJsonData = DataObject.fromJson(Files.readAllBytes(cachedJsonPath));
+			cachedJsonData.put("type", "rich"); //see EmbedType
+
+			return new EmbedBuilder(entityBuilder.createMessageEmbed(cachedJsonData));
+		} else {
+			//Get with network call
+
+			return toEmbed(new ClassDoc(url, HttpUtils.parseDocument(downloadedBody, url)));
 		}
 	}
 }
