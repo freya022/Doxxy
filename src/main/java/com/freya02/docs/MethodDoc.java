@@ -39,12 +39,12 @@ public class MethodDoc {
 
 		//Get method name
 		final Element methodNameElement = element.selectFirst("h3");
-		if (methodNameElement == null) throw new IllegalArgumentException();
+		if (methodNameElement == null) throw new DocParseException();
 		this.methodName = methodNameElement.text();
 
 		//Get method signature
 		final Element methodSignatureElement = element.selectFirst("div.member-signature");
-		if (methodSignatureElement == null) throw new IllegalArgumentException();
+		if (methodSignatureElement == null) throw new DocParseException();
 
 		this.methodSignature = methodSignatureElement.text();
 

@@ -21,12 +21,12 @@ public class FieldDoc {
 
 		//Get field name
 		final Element fieldNameElement = element.selectFirst("h3");
-		if (fieldNameElement == null) throw new IllegalArgumentException();
+		if (fieldNameElement == null) throw new DocParseException();
 		this.fieldName = fieldNameElement.text();
 
 		//Get field type
 		final Element fieldTypeElement = element.selectFirst("div.member-signature > span.return-type");
-		if (fieldTypeElement == null) throw new IllegalArgumentException();
+		if (fieldTypeElement == null) throw new DocParseException();
 		this.fieldType = fieldTypeElement.text();
 
 		//Get field description

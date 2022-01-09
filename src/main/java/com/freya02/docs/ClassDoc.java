@@ -46,7 +46,7 @@ public class ClassDoc {
 
 		//Get javadoc title
 		final Element docTitle = document.selectFirst("body > div.flex-box > div > main > div > h1");
-		if (docTitle == null) throw new IllegalArgumentException();
+		if (docTitle == null) throw new DocParseException();
 		this.docTitleElement = new HTMLElement(docTitle);
 
 		//Get class name
@@ -112,7 +112,7 @@ public class ClassDoc {
 
 		for (Element inheritedBlock : inheritedBlocks) {
 			final Element title = inheritedBlock.selectFirst("h3");
-			if (title == null) throw new IllegalArgumentException();
+			if (title == null) throw new DocParseException();
 
 			final Element superClassLinkElement = title.selectFirst("a");
 			if (superClassLinkElement != null) {
