@@ -27,14 +27,16 @@ public class ClassDoc {
 	@NotNull private final HTMLElement docTitleElement;
 	@Nullable private final HTMLElement descriptionElement;
 	@NotNull private final String className;
+
+	@Nullable private final Map<DocDetailType, List<HTMLElement>> detailToElementsMap;
 	@Nullable private final List<HTMLElement> typeParameterElements;
 	@Nullable private final SeeAlso seeAlso;
+	@Nullable private final List<HTMLElement> implementingClassesElements;
 
 	@NotNull private final Map<String, FieldDoc> fieldDocs = new HashMap<>();
 	@NotNull private final Map<String, MethodDoc> methodDocs = new HashMap<>();
-	@Nullable private final Map<DocDetailType, List<HTMLElement>> detailToElementsMap;
 
-	ClassDoc(@NotNull String url) throws IOException {
+	public ClassDoc(@NotNull String url) throws IOException {
 		this(url, HttpUtils.getDocument(url));
 	}
 
@@ -60,10 +62,11 @@ public class ClassDoc {
 		}
 
 		//Get class type parameters if they exist
-		final Element detailListElement = document.selectFirst("#class-description > div.block + dl");
+		final Element detailListElement = document.selectFirst("#class-description > dl.notes");
 		if (detailListElement != null) {
 			this.detailToElementsMap = MethodDoc.getDetailToElementsMap(detailListElement);
 			this.typeParameterElements = detailToElementsMap.get(DocDetailType.TYPE_PARAMETERS);
+			this.implementingClassesElements = detailToElementsMap.get(DocDetailType.ALL_KNOWN_IMPLEMENTING_CLASSES);
 
 			final List<HTMLElement> seeAlsoElements = detailToElementsMap.get(DocDetailType.SEE_ALSO);
 			if (seeAlsoElements != null) {
@@ -74,6 +77,7 @@ public class ClassDoc {
 		} else {
 			this.detailToElementsMap = null;
 			this.typeParameterElements = null;
+			this.implementingClassesElements = null;
 			this.seeAlso = null;
 		}
 
@@ -175,6 +179,10 @@ public class ClassDoc {
 
 	public List<HTMLElement> getTypeParameterElements() {
 		return typeParameterElements;
+	}
+
+	public List<HTMLElement> getImplementingClassesElements() {
+		return implementingClassesElements;
 	}
 
 	public Map<String, FieldDoc> getFieldDocs() {

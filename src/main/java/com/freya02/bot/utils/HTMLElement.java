@@ -20,6 +20,7 @@ public class HTMLElement {
 		return targetElement;
 	}
 
+	//<a> inside <code> are not rendered to links :/
 	public String getMarkdown3() {
 		final String html = targetElement.outerHtml();
 //				.replaceAll("<code>([^/]*?)<a href=\"(.*?)\">(\\X*?)</a>([^/]*?)</code>", "<code>$1</code><a href=\"$2\"><code>$1</code></a><code>right</code>");

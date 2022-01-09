@@ -1,7 +1,6 @@
 package com.freya02.bot;
 
-import com.freya02.bot.docs.DocIndex;
-import com.freya02.docs.DocSourceType;
+import com.freya02.docs.ClassDoc;
 
 import java.io.IOException;
 
@@ -37,7 +36,9 @@ public class DocsTest3 {
 
 //		final ClassDoc doc = classDocs.tryRetrieveDoc("AbstractComponentBuilder", true);
 
-		final DocIndex docIndex = new DocIndex(DocSourceType.BOT_COMMANDS);
+		final ClassDoc doc = new ClassDoc("http://localhost:63342/DocsBot/test_docs/com/freya02/botcommands/api/components/builder/LambdaComponentBuilder.html");
+		final ClassDoc doc2 = new ClassDoc("http://localhost:63342/DocsBot/test_docs/com/freya02/botcommands/api/components/builder/AbstractLambdaComponentBuilder.html");
+//		final DocIndex docIndex = new DocIndex(DocSourceType.BOT_COMMANDS);
 
 		System.out.println();
 
