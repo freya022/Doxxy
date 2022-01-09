@@ -98,6 +98,9 @@ public class ClassDocs {
 
 			final DecomposedName decomposition = DecomposedName.getDecomposition(rightPart.replace('/', '.'));
 
+			if (!source.isValidPackage(decomposition.packageName()))
+				continue;
+
 			final String oldUrl = simpleNameToUrlMap.put(decomposition.className(), classUrl);
 			if (oldUrl != null) {
 				LOGGER.warn("Detected a duplicate class name '{}' at '{}' and '{}'", decomposition.className(), classUrl, oldUrl);

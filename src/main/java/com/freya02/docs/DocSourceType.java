@@ -5,13 +5,17 @@ import org.jetbrains.annotations.Nullable;
 
 public enum DocSourceType {
 //	JDA(null), //TODO add JDA link once they are built with javadoc 17
-	BOT_COMMANDS("http://localhost:63342/DocsBot/test_docs");
-//	JAVA("https://docs.oracle.com/en/java/javase/17/docs/api");
+	BOT_COMMANDS("http://localhost:63342/DocsBot/test_docs", "com.freya02.botcommands.api");
+//	JAVA("https://docs.oracle.com/en/java/javase/17/docs/api", "java");
 
 	private final String sourceUrl;
+	private final String[] validPackages;
 
-	DocSourceType(String sourceUrl) {
+	DocSourceType(String sourceUrl, String... validPackages) {
 		this.sourceUrl = sourceUrl;
+		this.validPackages = validPackages.length == 0
+				? new String[]{""}
+				: validPackages;
 	}
 
 	@Nullable
@@ -32,5 +36,15 @@ public enum DocSourceType {
 	@NotNull
 	public String getAllClassesIndexURL() {
 		return sourceUrl + "/allclasses-index.html";
+	}
+
+	public boolean isValidPackage(String packageName) {
+		for (String validPackage : validPackages) {
+			if (packageName.startsWith(validPackage)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }
