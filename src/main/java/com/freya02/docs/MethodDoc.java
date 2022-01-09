@@ -98,27 +98,29 @@ public class MethodDoc {
 	}
 
 	@NotNull
-	static Map<DocDetailType, List<HTMLElement>> getDetailToElementsMap(@NotNull Element detailListElement) {
+	static Map<DocDetailType, List<HTMLElement>> getDetailToElementsMap(@NotNull Element detailTarget) {
 		final Map<DocDetailType, List<HTMLElement>> detailClassNameToElementsMap = new HashMap<>();
 
 		List<HTMLElement> list = null;
-		for (Element child : detailListElement.children()) {
-			final String tagName = child.tag().normalName();
+		for (Element element : detailTarget.select("dl.notes")) {
+			for (Element child : element.children()) {
+				final String tagName = child.tag().normalName();
 
-			if (tagName.equals("dt")) {
-				final String detailName = child.text();
-				final DocDetailType type = DocDetailType.parseType(detailName);
-				if (type == null) {
-					if (warned.add(detailName)) {
-						LOGGER.warn("Unknown method detail type: '{}'", detailName);
+				if (tagName.equals("dt")) {
+					final String detailName = child.text();
+					final DocDetailType type = DocDetailType.parseType(detailName);
+					if (type == null) {
+						if (warned.add(detailName)) {
+							LOGGER.warn("Unknown method detail type: '{}' at {}", detailName, detailTarget.baseUri());
+						}
+
+						list = null;
+					} else {
+						list = detailClassNameToElementsMap.computeIfAbsent(type, s -> new ArrayList<>());
 					}
-
-					list = null;
-				} else {
-					list = detailClassNameToElementsMap.computeIfAbsent(type, s -> new ArrayList<>());
+				} else if (tagName.equals("dd") && list != null) {
+					list.add(new HTMLElement(child));
 				}
-			} else if (tagName.equals("dd") && list != null) {
-				list.add(new HTMLElement(child));
 			}
 		}
 

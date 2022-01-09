@@ -12,6 +12,8 @@ public enum DocDetailType {
 	OVERRIDES("Overrides:"),
 	INCUBATING("Incubating:"),
 	ALL_KNOWN_IMPLEMENTING_CLASSES("All Known Implementing Classes:"),
+	ALL_IMPLEMENTED_INTERFACES("All Implemented Interfaces:"),
+	DIRECT_KNOWN_SUBCLASSES("Direct Known Subclasses:"),
 	THROWS("Throws:");
 
 	private final String elementText;
