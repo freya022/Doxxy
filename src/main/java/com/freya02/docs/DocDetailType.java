@@ -13,7 +13,12 @@ public enum DocDetailType {
 	INCUBATING("Incubating:"),
 	ALL_KNOWN_IMPLEMENTING_CLASSES("All Known Implementing Classes:"),
 	ALL_IMPLEMENTED_INTERFACES("All Implemented Interfaces:"),
+	ALL_KNOWN_SUBINTERFACES("All Known Subinterfaces:"),
 	DIRECT_KNOWN_SUBCLASSES("Direct Known Subclasses:"),
+	DEFAULT("Default:"),
+	SUPER_INTERFACES("All Superinterfaces:"),
+	FUNCTIONAL_INTERFACE("Functional Interface:"),
+	ENCLOSING_CLASS("Enclosing class:"),
 	THROWS("Throws:");
 
 	private final String elementText;

@@ -17,9 +17,6 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-//TODO enumerate direct known subclasses (c.f. AbstractComponentBuilder)
-// Might be interesting to put as an auxiliary info, shown by a button instead of in the main content
-// What about implemented interfaces/classes too ?
 public class ClassDoc {
 	private final String URL;
 	private final DocSourceType source;
