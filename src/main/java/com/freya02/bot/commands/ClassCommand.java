@@ -41,8 +41,7 @@ public class ClassCommand extends ApplicationCommand {
 		if (commandPath.equals(CommandPath.ofName("docs"))) {
 			if (optionIndex == 0) { //sourceType
 				return List.of(
-						//TODO add more, load their docs, use more caching (JDK has a lot of classes)
-						// Pre-render embeds into JSON files to then read them back ?
+						//TODO add more
 						new Command.Choice("BotCommands", DocSourceType.BOT_COMMANDS.name())
 				);
 			}

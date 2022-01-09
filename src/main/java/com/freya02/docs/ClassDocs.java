@@ -15,14 +15,6 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 
-//TODO
-// Goal is to not store the docs pages in memory for indefinite durations
-// So, we need to render the pages to JSON documents directly, and write it to the disk
-// But, we need to know when to update those JSON documents, JDA docs might update for example
-// We rely on OkHttp's cache and set the cache control on the website body download request
-// Set the Request.Builder#cacheControl property to something which describes as "Download if not in cache"
-// Use success/fallback callbacks in document downloads in order to determine how to retrieve the rendered embed (as JSON)
-// In case of success then save the rendered embed in the JSON file
 public class ClassDocs {
 	private static final Logger LOGGER = Logging.getLogger();
 	private static final Map<DocSourceType, ClassDocs> sourceMap = Collections.synchronizedMap(new EnumMap<>(DocSourceType.class));

@@ -59,7 +59,7 @@ public class HttpUtils {
 	@Nullable
 	public static String downloadBodyIfNotCached(String url) throws IOException {
 		try (Response response = CLIENT.newCall(new Request.Builder()
-				.cacheControl(new CacheControl.Builder()
+				.cacheControl(new CacheControl.Builder() //TODO check if it works correctly
 						.maxAge(0, TimeUnit.SECONDS)
 						.build())
 				.url(url)
