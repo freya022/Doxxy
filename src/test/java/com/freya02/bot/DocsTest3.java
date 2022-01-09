@@ -1,7 +1,6 @@
 package com.freya02.bot;
 
 import com.freya02.bot.docs.DocIndex;
-import com.freya02.docs.ClassDocs;
 import com.freya02.docs.DocSourceType;
 
 import java.io.IOException;
@@ -34,7 +33,7 @@ public class DocsTest3 {
 
 //		final String cached = HttpUtils.downloadBodyIfNotCached("http://localhost:63342/DocsBot/test_docs/com/freya02/botcommands/api/application/slash/annotations/JDASlashCommand.html#annotation-interface-element-detail");
 
-		final ClassDocs classDocs = ClassDocs.indexAll(DocSourceType.BOT_COMMANDS);
+//		final ClassDocs classDocs = ClassDocs.indexAll(DocSourceType.BOT_COMMANDS);
 
 //		final ClassDoc doc = classDocs.tryRetrieveDoc("AbstractComponentBuilder", true);
 
