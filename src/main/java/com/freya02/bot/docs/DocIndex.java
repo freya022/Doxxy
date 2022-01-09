@@ -33,16 +33,25 @@ public class DocIndex {
 	private final ClassDocs classDocs;
 
 	private final SimpleNameMap<CachedClass> simpleNameToCachedClassMap = new SimpleNameMap<>();
+	private final Path sourceCacheFolder;
 
 	//TODO Prepare some mechanism to not preload embeds of java classes (?)
 	// Also filter based on java.* packages (yes)
 	public DocIndex(DocSourceType sourceType) throws IOException {
 		LOGGER.info("Loading docs for {}", sourceType.name());
 
-		final Path sourceCacheFolder = RENDERED_DOCS_CACHE_PATH.resolve(sourceType.name());
+		sourceCacheFolder = RENDERED_DOCS_CACHE_PATH.resolve(sourceType.name());
 		Files.createDirectories(sourceCacheFolder);
 
 		this.classDocs = ClassDocs.indexAll(sourceType);
+
+		indexAll();
+
+		LOGGER.info("Docs loaded for {}", sourceType.name());
+	}
+
+	public synchronized void indexAll() throws IOException {
+		simpleNameToCachedClassMap.clear();
 
 		for (String className : classDocs.getSimpleNameToUrlMap().keySet()) {
 			final Path classCacheFolder = sourceCacheFolder.resolve(className);
@@ -74,8 +83,6 @@ public class DocIndex {
 
 			simpleNameToCachedClassMap.put(className, cachedClass);
 		}
-
-		LOGGER.info("Docs loaded for {}", sourceType.name());
 	}
 
 	private MessageEmbed getClassEmbed(ClassDoc doc) {
@@ -118,7 +125,7 @@ public class DocIndex {
 
 	@NotNull
 	public Collection<String> getSimpleNameList() {
-		return classDocs.getSimpleNameToUrlMap().keySet();
+		return simpleNameToCachedClassMap.keySet();
 	}
 
 	public static class SimpleNameMap<V> extends HashMap<String, V> {}
