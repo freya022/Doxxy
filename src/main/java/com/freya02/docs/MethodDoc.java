@@ -30,6 +30,7 @@ public class MethodDoc {
 	@Nullable private final List<HTMLElement> throwsElements;
 	@Nullable private final HTMLElement incubatingElement;
 	@Nullable private final SeeAlso seeAlso;
+	@Nullable private final HTMLElement defaultElement;
 
 	public MethodDoc(@NotNull ClassDoc classDocs, @NotNull Element element) {
 		this.classDocs = classDocs;
@@ -57,30 +58,19 @@ public class MethodDoc {
 		}
 
 		//Need to parse the children of the <dl> tag in order to make a map of dt[class] -> List<Element>
-		final Element detailListElement = element.selectFirst("dl");
-		if (detailListElement != null) {
-			this.detailToElementsMap = getDetailToElementsMap(detailListElement);
+		this.detailToElementsMap = getDetailToElementsMap(element);
 
-			this.typeParameterElements = detailToElementsMap.get(DocDetailType.TYPE_PARAMETERS);
-			this.parameterElements = detailToElementsMap.get(DocDetailType.PARAMETERS);
-			this.returnsElement = findFirst(detailToElementsMap, DocDetailType.RETURNS);
-			this.throwsElements = detailToElementsMap.get(DocDetailType.THROWS);
-			this.incubatingElement = findFirst(detailToElementsMap, DocDetailType.INCUBATING);
+		this.typeParameterElements = detailToElementsMap.get(DocDetailType.TYPE_PARAMETERS);
+		this.parameterElements = detailToElementsMap.get(DocDetailType.PARAMETERS);
+		this.returnsElement = findFirst(detailToElementsMap, DocDetailType.RETURNS);
+		this.defaultElement = findFirst(detailToElementsMap, DocDetailType.DEFAULT);
+		this.throwsElements = detailToElementsMap.get(DocDetailType.THROWS);
+		this.incubatingElement = findFirst(detailToElementsMap, DocDetailType.INCUBATING);
 
-			final List<HTMLElement> seeAlsoElements = detailToElementsMap.get(DocDetailType.SEE_ALSO);
-			if (seeAlsoElements != null) {
-				this.seeAlso = new SeeAlso(seeAlsoElements.get(0));
-			} else {
-				this.seeAlso = null;
-			}
+		final List<HTMLElement> seeAlsoElements = detailToElementsMap.get(DocDetailType.SEE_ALSO);
+		if (seeAlsoElements != null) {
+			this.seeAlso = new SeeAlso(seeAlsoElements.get(0));
 		} else {
-			this.detailToElementsMap = null;
-
-			this.typeParameterElements = null;
-			this.parameterElements = null;
-			this.returnsElement = null;
-			this.throwsElements = null;
-			this.incubatingElement = null;
 			this.seeAlso = null;
 		}
 	}
@@ -211,5 +201,10 @@ public class MethodDoc {
 
 	public String getURL() {
 		return url;
+	}
+
+	@Nullable
+	public HTMLElement getDefaultElement() {
+		return defaultElement;
 	}
 }

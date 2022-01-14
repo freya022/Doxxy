@@ -44,6 +44,7 @@ public class DocsTest3 {
 
 		final ClassDoc doc = new ClassDoc("http://localhost:63342/DocsBot/test_docs/com/freya02/botcommands/api/components/builder/LambdaComponentBuilder.html");
 		final ClassDoc doc2 = new ClassDoc("http://localhost:63342/DocsBot/test_docs/com/freya02/botcommands/api/components/builder/AbstractLambdaComponentBuilder.html");
+		final ClassDoc doc3 = new ClassDoc("http://localhost:63342/DocsBot/test_docs/com/freya02/botcommands/api/application/annotations/AppOption.html#description()");
 //		final DocIndex docIndex = new DocIndex(DocSourceType.BOT_COMMANDS);
 
 		System.out.println();

@@ -69,6 +69,11 @@ public class DocEmbeds {
 			builder.addField("Returns", returnsElement.getMarkdown3(), false);
 		}
 
+		final HTMLElement defaultElement = methodDoc.getDefaultElement();
+		if (defaultElement != null) {
+			builder.addField("Default", defaultElement.getMarkdown3(), false);
+		}
+
 		final HTMLElement incubatingElement = methodDoc.getIncubatingElement();
 		if (incubatingElement != null) {
 			builder.addField("Incubating", incubatingElement.getMarkdown3(), false);

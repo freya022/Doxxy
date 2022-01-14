@@ -6,6 +6,7 @@ import com.freya02.botcommands.api.annotations.Optional;
 import com.freya02.botcommands.api.application.ApplicationCommand;
 import com.freya02.botcommands.api.application.CommandPath;
 import com.freya02.botcommands.api.application.annotations.AppOption;
+import com.freya02.botcommands.api.application.annotations.Test;
 import com.freya02.botcommands.api.application.slash.GuildSlashEvent;
 import com.freya02.botcommands.api.application.slash.annotations.AutocompletionHandler;
 import com.freya02.botcommands.api.application.slash.annotations.CompositeKey;
@@ -47,9 +48,24 @@ public class ClassCommand extends ApplicationCommand {
 						new Command.Choice("BotCommands", DocSourceType.BOT_COMMANDS.name())
 				);
 			}
+		} else if (commandPath.equals(CommandPath.ofName("invalidate"))) {
+			if (optionIndex == 0) {
+				return List.of(
+						new Command.Choice("autoClass", "autoClass"),
+						new Command.Choice("autoMethod", "autoMethod")
+				);
+			}
 		}
 
 		return super.getOptionChoices(guild, commandPath, optionIndex);
+	}
+
+	@Test(guildIds = 722891685755093072L)
+	@JDASlashCommand(
+			name = "invalidate"
+	)
+	public void onSlashInvalidate(GuildSlashEvent event, @AppOption String name) {
+		event.getContext().invalidateAutocompletionCache(name);
 	}
 
 	@JDASlashCommand(name = "docs")
