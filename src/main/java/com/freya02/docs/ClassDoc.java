@@ -37,6 +37,7 @@ public class ClassDoc {
 		this(url, HttpUtils.getDocument(url));
 	}
 
+	@SuppressWarnings("BooleanMethodIsAlwaysInverted")
 	public static boolean isJavadocVersionCorrect(@NotNull Document document) {
 		final Element head = document.selectFirst("head");
 		if (head == null) return false;
@@ -164,6 +165,7 @@ public class ClassDoc {
 		return source;
 	}
 
+	@NotNull
 	public HTMLElement getDocTitleElement() {
 		return docTitleElement;
 	}
@@ -178,18 +180,22 @@ public class ClassDoc {
 		return className;
 	}
 
+	@Nullable
 	public Map<DocDetailType, List<HTMLElement>> getDetailToElementsMap() {
 		return detailToElementsMap;
 	}
 
+	@Nullable
 	public List<HTMLElement> getTypeParameterElements() {
 		return typeParameterElements;
 	}
 
+	@NotNull
 	public Map<String, FieldDoc> getFieldDocs() {
 		return fieldDocs;
 	}
 
+	@NotNull
 	public Map<String, MethodDoc> getMethodDocs() {
 		return methodDocs;
 	}

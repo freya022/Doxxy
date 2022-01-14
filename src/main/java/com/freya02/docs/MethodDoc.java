@@ -194,10 +194,12 @@ public class MethodDoc {
 		return throwsElements;
 	}
 
+	@Nullable
 	public HTMLElement getIncubatingElement() {
 		return incubatingElement;
 	}
 
+	@Nullable
 	public SeeAlso getSeeAlso() {
 		return seeAlso;
 	}
