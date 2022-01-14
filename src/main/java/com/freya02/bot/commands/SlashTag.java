@@ -173,7 +173,7 @@ public class SlashTag extends ApplicationCommand {
 
 					event.getHook().editOriginalComponents().queue();
 				})
-				.setPaginatorSupplier((messageBuilder, components, page) -> {
+				.setPaginatorSupplier((inst, messageBuilder, components, page) -> {
 					try {
 						final List<Tag> tagRange = tagDB.getTagRange(event.getGuild().getIdLong(), finalCriteria, 10 * page, 20);
 
