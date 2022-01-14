@@ -2,7 +2,6 @@ package com.freya02.docs;
 
 import com.freya02.bot.utils.HTMLElement;
 import com.freya02.bot.utils.HttpUtils;
-import com.freya02.bot.utils.Utils;
 import okhttp3.HttpUrl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -134,15 +133,6 @@ public class ClassDoc {
 
 					inheritedElementConsumer.accept(superClassDocs, targetId);
 				}
-			} else {
-				final String[] titleSplit = title.text().split("\\s");
-				final String fullName = titleSplit[titleSplit.length - 1]; //TODO should I still get the full qualification, and parse the package names ? in case the lib has classes the JDK has lol
-
-				String className = Utils.getClassName(fullName);
-
-				System.err.println(className);
-
-				//TODO try to get from global cache
 			}
 		}
 	}
