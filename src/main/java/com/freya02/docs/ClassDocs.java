@@ -52,7 +52,10 @@ public class ClassDocs {
 
 		url = removeFragment(url);
 
-		return new ClassDoc(url);
+		final Document document = HttpUtils.getDocument(url);
+		if (!ClassDoc.isJavadocVersionCorrect(document)) return null;
+
+		return new ClassDoc(url, document);
 	}
 
 	@NotNull
