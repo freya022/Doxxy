@@ -8,7 +8,9 @@ import com.freya02.botcommands.api.application.CommandPath;
 import com.freya02.botcommands.api.application.annotations.AppOption;
 import com.freya02.botcommands.api.application.slash.GuildSlashEvent;
 import com.freya02.botcommands.api.application.slash.annotations.AutocompletionHandler;
+import com.freya02.botcommands.api.application.slash.annotations.CompositeKey;
 import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand;
+import com.freya02.botcommands.api.application.slash.autocomplete.AutocompletionCacheMode;
 import com.freya02.docs.DocSourceType;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -115,7 +117,7 @@ public class ClassCommand extends ApplicationCommand {
 				.queue();
 	}
 
-	@AutocompletionHandler(name = "autoClass", showUserInput = false)
+	@AutocompletionHandler(name = "autoClass", showUserInput = false, cacheMode = AutocompletionCacheMode.CONSTANT_BY_KEY)
 	public Collection<String> autoClass(CommandAutoCompleteInteractionEvent event, @AppOption DocSourceType sourceType) {
 		final DocIndex index = docIndexMap.get(sourceType);
 		if (index == null) return List.of();
@@ -123,8 +125,10 @@ public class ClassCommand extends ApplicationCommand {
 		return index.getSimpleNameList();
 	}
 
-	@AutocompletionHandler(name = "autoMethod", showUserInput = false)
-	public Collection<String> autoMethod(CommandAutoCompleteInteractionEvent event, @AppOption DocSourceType sourceType, @AppOption String className) {
+	@AutocompletionHandler(name = "autoMethod", showUserInput = false, cacheMode = AutocompletionCacheMode.CONSTANT_BY_KEY)
+	public Collection<String> autoMethod(CommandAutoCompleteInteractionEvent event,
+	                                     @AppOption DocSourceType sourceType,
+	                                     @CompositeKey @AppOption String className) {
 		final DocIndex index = docIndexMap.get(sourceType);
 		if (index == null) return List.of();
 
