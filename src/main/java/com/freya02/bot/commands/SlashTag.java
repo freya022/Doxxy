@@ -2,6 +2,7 @@ package com.freya02.bot.commands;
 
 import com.freya02.bot.Database;
 import com.freya02.bot.SQLCodes;
+import com.freya02.bot.tag.ShortTag;
 import com.freya02.bot.tag.Tag;
 import com.freya02.bot.tag.TagCriteria;
 import com.freya02.bot.tag.TagDB;
@@ -10,6 +11,7 @@ import com.freya02.botcommands.api.application.ApplicationCommand;
 import com.freya02.botcommands.api.application.annotations.AppOption;
 import com.freya02.botcommands.api.application.slash.GuildSlashEvent;
 import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand;
+import com.freya02.botcommands.api.application.slash.autocomplete.AutocompleteAlgorithms;
 import com.freya02.botcommands.api.application.slash.autocomplete.annotations.AutocompletionHandler;
 import com.freya02.botcommands.api.components.Components;
 import com.freya02.botcommands.api.components.InteractionConstraints;
@@ -21,6 +23,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -90,10 +93,17 @@ public class SlashTag extends ApplicationCommand {
 	@JDASlashCommand(name = "tags", subcommand = "create", description = "Creates a tag in this guild")
 	public void createTag(GuildSlashEvent event,
 	                      @AppOption(description = "Name of the tag") String name,
+	                      @AppOption(description = "The description of the tag") String description,
 	                      @AppOption(description = "The text to associate with this tag") String text) throws SQLException {
 
 		try {
-			tagDB.create(event.getGuild().getIdLong(), event.getUser().getIdLong(), name, text);
+			if (name.length() > 100) {
+				event.reply("Tag name is too long").setEphemeral(true).queue();
+
+				return;
+			}
+
+			tagDB.create(event.getGuild().getIdLong(), event.getUser().getIdLong(), name, description, text);
 
 			event.replyFormat("Tag '%s' created successfully", name).setEphemeral(true).queue();
 		} catch (SQLException e) {
@@ -108,10 +118,11 @@ public class SlashTag extends ApplicationCommand {
 	@JDASlashCommand(name = "tags", subcommand = "edit", description = "Edits a tag in this guild")
 	public void editTag(GuildSlashEvent event,
 	                    @AppOption(description = "Name of the tag", autocomplete = USER_TAGS_AUTOCOMPLETE) String name,
+	                    @AppOption(description = "The description of the tag") String description,
 	                    @AppOption(description = "The text to associate with this tag") String text) throws SQLException {
 
 		withOwnedTag(event, name, tag -> {
-			tagDB.edit(event.getGuild().getIdLong(), event.getUser().getIdLong(), name, text);
+			tagDB.edit(event.getGuild().getIdLong(), event.getUser().getIdLong(), name, description, text);
 
 			event.replyFormat("Tag '%s' edited successfully", name).setEphemeral(true).queue();
 		});
@@ -165,7 +176,7 @@ public class SlashTag extends ApplicationCommand {
 							builder.setDescription("No tags for this guild");
 						} else {
 							builder.setDescription(tagRange.stream()
-									.map(t -> t.name() + " : <@" + t.ownerId() + "> (" + t.uses() + " uses)")
+									.map(t -> t.name() + " : " + t.description() + " : <@" + t.ownerId() + "> (" + t.uses() + " uses)")
 									.collect(Collectors.joining("\n")));
 						}
 
@@ -200,6 +211,7 @@ public class SlashTag extends ApplicationCommand {
 			}
 
 			builder.setTitle("Tag '" + tag.name() + "'");
+			builder.addField("Description", tag.description(), false);
 			builder.addField("Owner", "<@" + tag.ownerId() + ">", false);
 			builder.addField("Uses", String.valueOf(tag.uses()), false);
 			builder.addField("Rank", String.valueOf(tagDB.getRank(event.getGuild().getIdLong(), name)), false);
@@ -209,19 +221,36 @@ public class SlashTag extends ApplicationCommand {
 	}
 
 	@AutocompletionHandler(name = GUILD_TAGS_AUTOCOMPLETE, showUserInput = false)
-	public List<String> guildTagsAutocomplete(CommandAutoCompleteInteractionEvent event) throws SQLException {
+	public List<Command.Choice> guildTagsAutocomplete(CommandAutoCompleteInteractionEvent event) throws SQLException {
 		final Guild guild = event.getGuild();
 		if (guild == null) throw new IllegalStateException("Tag autocompletion was triggered outside of a Guild");
 
-		return tagDB.getAllNamesSorted(guild.getIdLong(), TagCriteria.USES);
+		return AutocompleteAlgorithms
+				.fuzzyMatching(tagDB.getShortTagsSorted(guild.getIdLong(), TagCriteria.USES),
+						ShortTag::name,
+						event)
+				.stream()
+				.map(r -> new Command.Choice(getChoiceName(r.getReferent()), r.getString()))
+				.toList();
 	}
 
 	@AutocompletionHandler(name = USER_TAGS_AUTOCOMPLETE, showUserInput = false)
-	public List<String> userTagsAutocomplete(CommandAutoCompleteInteractionEvent event) throws SQLException {
+	public List<Command.Choice> userTagsAutocomplete(CommandAutoCompleteInteractionEvent event) throws SQLException {
 		final Guild guild = event.getGuild();
 		if (guild == null) throw new IllegalStateException("Tag autocompletion was triggered outside of a Guild");
 
-		return tagDB.getAllNames(guild.getIdLong(), event.getUser().getIdLong(), TagCriteria.NAME);
+		return AutocompleteAlgorithms
+				.fuzzyMatching(tagDB.getShortTagsSorted(guild.getIdLong(), event.getUser().getIdLong(), TagCriteria.NAME),
+						ShortTag::name,
+						event)
+				.stream()
+				.map(r -> new Command.Choice(getChoiceName(r.getReferent()), r.getString()))
+				.toList();
+	}
+
+	@NotNull
+	private String getChoiceName(ShortTag shortTag) {
+		return shortTag.name() + " - " + shortTag.description();
 	}
 
 	private interface TagConsumer {

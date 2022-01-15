@@ -25,27 +25,29 @@ public class TagDB {
 		}
 	}
 
-	public void create(long guildId, long ownerId, String name, String text) throws SQLException {
+	public void create(long guildId, long ownerId, String name, String description, String text) throws SQLException {
 		try (Connection connection = database.getConnection()) {
-			final PreparedStatement statement = connection.prepareStatement("insert into Tag (guildid, ownerid, name, text) values (?, ?, ?, ?)");
+			final PreparedStatement statement = connection.prepareStatement("insert into Tag (guildid, ownerid, name, description, text) values (?, ?, ?, ?, ?)");
 
 			statement.setLong(1, guildId);
 			statement.setLong(2, ownerId);
 			statement.setString(3, name);
-			statement.setString(4, text);
+			statement.setString(4, description);
+			statement.setString(5, text);
 
 			statement.executeUpdate();
 		}
 	}
 
-	public void edit(long guildId, long ownerId, String name, String text) throws SQLException {
+	public void edit(long guildId, long ownerId, String name, String description, String text) throws SQLException {
 		try (Connection connection = database.getConnection()) {
-			final PreparedStatement statement = connection.prepareStatement("update Tag set text = ? where guildid = ? and ownerid = ? and name = ?");
+			final PreparedStatement statement = connection.prepareStatement("update Tag set description = ?, text = ? where guildid = ? and ownerid = ? and name = ?");
 
-			statement.setString(1, text);
-			statement.setLong(2, guildId);
-			statement.setLong(3, ownerId);
-			statement.setString(4, name);
+			statement.setString(1, description);
+			statement.setString(2, text);
+			statement.setLong(3, guildId);
+			statement.setLong(4, ownerId);
+			statement.setString(5, name);
 
 			statement.executeUpdate();
 		}
@@ -91,12 +93,15 @@ public class TagDB {
 	}
 
 	@NotNull
-	private List<String> readTagNames(PreparedStatement statement) throws SQLException {
-		final ArrayList<String> list = new ArrayList<>();
+	private List<ShortTag> readShortTags(PreparedStatement statement) throws SQLException {
+		final List<ShortTag> list = new ArrayList<>();
 		final ResultSet set = statement.executeQuery();
 
 		while (set.next()) {
-			list.add(set.getString("name"));
+			list.add(new ShortTag(
+					set.getString("name"),
+					set.getString("description")
+			));
 		}
 
 		return list;
@@ -134,22 +139,22 @@ public class TagDB {
 		}
 	}
 
-	public List<String> getAllNamesSorted(long guildId, TagCriteria criteria) throws SQLException {
+	public List<ShortTag> getShortTagsSorted(long guildId, TagCriteria criteria) throws SQLException {
 		try (Connection connection = database.getConnection()) {
-			final PreparedStatement statement = connection.prepareStatement("select name from Tag where guildid = ? order by " + criteria.getKey());
+			final PreparedStatement statement = connection.prepareStatement("select name, description from Tag where guildid = ? order by " + criteria.getKey());
 			statement.setLong(1, guildId);
 
-			return readTagNames(statement);
+			return readShortTags(statement);
 		}
 	}
 
-	public List<String> getAllNames(long guildId, long ownerId, TagCriteria criteria) throws SQLException {
+	public List<ShortTag> getShortTagsSorted(long guildId, long ownerId, TagCriteria criteria) throws SQLException {
 		try (Connection connection = database.getConnection()) {
-			final PreparedStatement statement = connection.prepareStatement("select name from Tag where guildid = ? and ownerid = ? order by " + criteria.getKey());
+			final PreparedStatement statement = connection.prepareStatement("select name, description from Tag where guildid = ? and ownerid = ? order by " + criteria.getKey());
 			statement.setLong(1, guildId);
 			statement.setLong(2, ownerId);
 
-			return readTagNames(statement);
+			return readShortTags(statement);
 		}
 	}
 
