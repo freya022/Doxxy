@@ -7,7 +7,6 @@ import com.freya02.bot.tag.TagCriteria;
 import com.freya02.bot.tag.TagDB;
 import com.freya02.botcommands.api.Logging;
 import com.freya02.botcommands.api.application.ApplicationCommand;
-import com.freya02.botcommands.api.application.CommandPath;
 import com.freya02.botcommands.api.application.annotations.AppOption;
 import com.freya02.botcommands.api.application.slash.GuildSlashEvent;
 import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand;
@@ -22,7 +21,6 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
-import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -41,19 +39,6 @@ public class SlashTag extends ApplicationCommand {
 
 	public SlashTag(Database database) throws SQLException {
 		this.tagDB = new TagDB(database);
-	}
-
-	@Override
-	@NotNull
-	public List<Command.Choice> getOptionChoices(@Nullable Guild guild, @NotNull CommandPath commandPath, int optionIndex) {
-		if (commandPath.getFullPath().equals("tags/list") && optionIndex == 0) { //TagCriteria of /tag list
-			return List.of(
-					new Command.Choice("Name", "NAME"),
-					new Command.Choice("Uses", "USES")
-			);
-		}
-
-		return super.getOptionChoices(guild, commandPath, optionIndex);
 	}
 
 	private void withOwnedTag(@NotNull GuildSlashEvent event, @NotNull String name, TagConsumer consumer) throws SQLException {

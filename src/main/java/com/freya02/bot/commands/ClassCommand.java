@@ -30,6 +30,8 @@ import java.util.List;
 
 public class ClassCommand extends ApplicationCommand {
 	private static final Logger LOGGER = Logging.getLogger();
+	private static final String AUTO_METHOD_AUTOCOMPLETE_NAME = "autoMethod";
+	private static final String AUTO_CLASS_AUTOCOMPLETE_NAME = "autoClass";
 //	private static final Emoji CLIPBOARD_EMOJI = EmojiUtils.resolveJDAEmoji("clipboard");
 //	private static final int MAX_CHOICES = 25;
 	private final EnumMap<DocSourceType, DocIndex> docIndexMap = new EnumMap<>(DocSourceType.class);
@@ -41,18 +43,11 @@ public class ClassCommand extends ApplicationCommand {
 	@Override
 	@NotNull
 	public List<Command.Choice> getOptionChoices(@Nullable Guild guild, @NotNull CommandPath commandPath, int optionIndex) {
-		if (commandPath.equals(CommandPath.ofName("docs"))) {
-			if (optionIndex == 0) { //sourceType
-				return List.of(
-						//TODO add more
-						new Command.Choice("BotCommands", DocSourceType.BOT_COMMANDS.name())
-				);
-			}
-		} else if (commandPath.equals(CommandPath.ofName("invalidate"))) {
+		if (commandPath.equals(CommandPath.ofName("invalidate"))) {
 			if (optionIndex == 0) {
 				return List.of(
-						new Command.Choice("autoClass", "autoClass"),
-						new Command.Choice("autoMethod", "autoMethod")
+						new Command.Choice(AUTO_CLASS_AUTOCOMPLETE_NAME, AUTO_CLASS_AUTOCOMPLETE_NAME),
+						new Command.Choice(AUTO_METHOD_AUTOCOMPLETE_NAME, AUTO_METHOD_AUTOCOMPLETE_NAME)
 				);
 			}
 		}
@@ -71,8 +66,8 @@ public class ClassCommand extends ApplicationCommand {
 	@JDASlashCommand(name = "docs")
 	public void showDocs(GuildSlashEvent event,
 						  @AppOption(description = "The docs to search upon") DocSourceType sourceType,
-	                      @AppOption(description = "Name of the Java class", autocomplete = "autoClass") String className,
-	                      @Optional @AppOption(description = "ID of the Java method for this class", autocomplete = "autoMethod") String methodId) throws IOException {
+	                      @AppOption(description = "Name of the Java class", autocomplete = AUTO_CLASS_AUTOCOMPLETE_NAME) String className,
+	                      @Optional @AppOption(description = "ID of the Java method for this class", autocomplete = AUTO_METHOD_AUTOCOMPLETE_NAME) String methodId) throws IOException {
 
 		final DocIndex docIndex = docIndexMap.get(sourceType);
 		final MessageEmbed classDoc = docIndex.getClassDoc(className);
@@ -134,7 +129,7 @@ public class ClassCommand extends ApplicationCommand {
 	}
 
 	@CacheAutocompletion
-	@AutocompletionHandler(name = "autoClass", showUserInput = false)
+	@AutocompletionHandler(name = AUTO_CLASS_AUTOCOMPLETE_NAME, showUserInput = false)
 	public Collection<String> autoClass(CommandAutoCompleteInteractionEvent event, @AppOption DocSourceType sourceType) {
 		final DocIndex index = docIndexMap.get(sourceType);
 		if (index == null) return List.of();
@@ -143,7 +138,7 @@ public class ClassCommand extends ApplicationCommand {
 	}
 
 	@CacheAutocompletion
-	@AutocompletionHandler(name = "autoMethod", showUserInput = false)
+	@AutocompletionHandler(name = AUTO_METHOD_AUTOCOMPLETE_NAME, showUserInput = false)
 	public Collection<String> autoMethod(CommandAutoCompleteInteractionEvent event,
 	                                     @AppOption DocSourceType sourceType,
 	                                     @CompositeKey @AppOption String className) {
