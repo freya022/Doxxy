@@ -208,7 +208,7 @@ public class SlashTag extends ApplicationCommand {
 		});
 	}
 
-	@AutocompletionHandler(name = GUILD_TAGS_AUTOCOMPLETE)
+	@AutocompletionHandler(name = GUILD_TAGS_AUTOCOMPLETE, showUserInput = false)
 	public List<String> guildTagsAutocomplete(CommandAutoCompleteInteractionEvent event) throws SQLException {
 		final Guild guild = event.getGuild();
 		if (guild == null) throw new IllegalStateException("Tag autocompletion was triggered outside of a Guild");
@@ -216,7 +216,7 @@ public class SlashTag extends ApplicationCommand {
 		return tagDB.getAllNamesSorted(guild.getIdLong(), TagCriteria.USES);
 	}
 
-	@AutocompletionHandler(name = USER_TAGS_AUTOCOMPLETE)
+	@AutocompletionHandler(name = USER_TAGS_AUTOCOMPLETE, showUserInput = false)
 	public List<String> userTagsAutocomplete(CommandAutoCompleteInteractionEvent event) throws SQLException {
 		final Guild guild = event.getGuild();
 		if (guild == null) throw new IllegalStateException("Tag autocompletion was triggered outside of a Guild");
