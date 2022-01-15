@@ -132,14 +132,10 @@ public class SlashTag extends ApplicationCommand {
 		});
 	}
 
-	private void doDeleteTag(GuildSlashEvent event, String name, ButtonEvent btnEvt) {
-		try {
-			tagDB.delete(event.getGuild().getIdLong(), event.getUser().getIdLong(), name);
+	private void doDeleteTag(GuildSlashEvent event, String name, ButtonEvent btnEvt) throws SQLException {
+		tagDB.delete(event.getGuild().getIdLong(), event.getUser().getIdLong(), name);
 
-			btnEvt.editMessageFormat("Tag '%s' deleted successfully", name).setActionRows().queue();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		btnEvt.editMessageFormat("Tag '%s' deleted successfully", name).setActionRows().queue();
 	}
 
 	@JDASlashCommand(name = "tags", subcommand = "list", description = "Creates a tag in this guild")
