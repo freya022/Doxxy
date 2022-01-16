@@ -1,7 +1,7 @@
 package com.freya02.bot.commands;
 
-import com.freya02.bot.docs.DocIndex;
 import com.freya02.bot.docs.DocIndexMap;
+import com.freya02.bot.docs.index.DocIndex;
 import com.freya02.botcommands.api.application.ApplicationCommand;
 import com.freya02.botcommands.api.application.annotations.AppOption;
 import com.freya02.botcommands.api.application.slash.GuildSlashEvent;
@@ -21,20 +21,14 @@ import java.util.List;
 
 public class CommonDocsHandlers extends ApplicationCommand {
 	public static final String CLASS_NAME_AUTOCOMPLETE_NAME = "CommonDocsHandlers: className";
+	public static final String CLASS_NAME_WITH_METHODS_AUTOCOMPLETE_NAME = "CommonDocsHandlers: classNameWithMethods";
+	public static final String CLASS_NAME_WITH_FIELDS_AUTOCOMPLETE_NAME = "CommonDocsHandlers: classNameWithFields";
+
 	public static final String METHOD_NAME_BY_CLASS_AUTOCOMPLETE_NAME = "CommonDocsHandlers: methodNameByClass";
 	public static final String ANY_METHOD_NAME_AUTOCOMPLETE_NAME = "CommonDocsHandlers: anyMethodName";
 	public static final String FIELD_NAME_AUTOCOMPLETE_NAME = "FieldCommand: fieldName";
 	public static final String ANY_FIELD_NAME_AUTOCOMPLETE_NAME = "CommonDocsHandlers: anyFieldName";
 
-	//	private void onSeeAlsoClicked(SelectionEvent event, List<SeeAlso.SeeAlsoReference> references) {
-//		try {
-//			final SeeAlso.SeeAlsoReference reference = references.get(Integer.parseInt(event.getValues().get(0)));
-//
-//			sendDocs(event, true, ClassDocs.of(reference.link()));
-//		} catch (IOException e) {
-//			event.reply("Couldn't send the docs").setEphemeral(true).queue();
-//		}
-//	}
 	private final DocIndexMap docIndexMap;
 
 	public CommonDocsHandlers() throws IOException {
@@ -84,6 +78,16 @@ public class CommonDocsHandlers extends ApplicationCommand {
 				.queue();
 	}
 
+//	private void onSeeAlsoClicked(SelectionEvent event, List<SeeAlso.SeeAlsoReference> references) {
+//		try {
+//			final SeeAlso.SeeAlsoReference reference = references.get(Integer.parseInt(event.getValues().get(0)));
+//
+//			sendDocs(event, true, ClassDocs.of(reference.link()));
+//		} catch (IOException e) {
+//			event.reply("Couldn't send the docs").setEphemeral(true).queue();
+//		}
+//	}
+
 	@CacheAutocompletion
 	@AutocompletionHandler(name = CLASS_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
 	public Collection<String> onClassNameAutocomplete(CommandAutoCompleteInteractionEvent event,
@@ -95,6 +99,26 @@ public class CommonDocsHandlers extends ApplicationCommand {
 	}
 
 	@CacheAutocompletion
+	@AutocompletionHandler(name = CLASS_NAME_WITH_METHODS_AUTOCOMPLETE_NAME, showUserInput = false)
+	public Collection<String> onClassNameWithMethodsAutocomplete(CommandAutoCompleteInteractionEvent event,
+	                                                             @CompositeKey @AppOption DocSourceType sourceType) {
+		final DocIndex index = docIndexMap.get(sourceType);
+		if (index == null) return List.of();
+
+		return index.getClassesWithMethods();
+	}
+
+	@CacheAutocompletion
+	@AutocompletionHandler(name = CLASS_NAME_WITH_FIELDS_AUTOCOMPLETE_NAME, showUserInput = false)
+	public Collection<String> onClassNameWithFieldsAutocomplete(CommandAutoCompleteInteractionEvent event,
+	                                                            @CompositeKey @AppOption DocSourceType sourceType) {
+		final DocIndex index = docIndexMap.get(sourceType);
+		if (index == null) return List.of();
+
+		return index.getClassesWithFields();
+	}
+
+	@CacheAutocompletion
 	@AutocompletionHandler(name = METHOD_NAME_BY_CLASS_AUTOCOMPLETE_NAME, showUserInput = false)
 	public Collection<String> onMethodNameByClassAutocomplete(CommandAutoCompleteInteractionEvent event,
 	                                                          @CompositeKey @AppOption DocSourceType sourceType,
@@ -102,10 +126,7 @@ public class CommonDocsHandlers extends ApplicationCommand {
 		final DocIndex index = docIndexMap.get(sourceType);
 		if (index == null) return List.of();
 
-		final Collection<String> set = index.getMethodDocSuggestions(className);
-		if (set == null) return List.of();
-
-		return set;
+		return index.getMethodDocSuggestions(className);
 	}
 
 	@CacheAutocompletion
@@ -116,7 +137,6 @@ public class CommonDocsHandlers extends ApplicationCommand {
 		if (index == null) return List.of();
 
 		final Collection<String> set = index.getMethodDocSuggestions();
-		if (set == null) return List.of();
 
 		//TODO real fix hopefully
 		return set.stream().filter(s -> s.length() <= OptionData.MAX_CHOICE_VALUE_LENGTH).toList();
@@ -130,10 +150,7 @@ public class CommonDocsHandlers extends ApplicationCommand {
 		final DocIndex index = docIndexMap.get(sourceType);
 		if (index == null) return List.of();
 
-		final Collection<String> set = index.getFieldDocSuggestions(className);
-		if (set == null) return List.of();
-
-		return set;
+		return index.getFieldDocSuggestions(className);
 	}
 
 	@CacheAutocompletion
@@ -143,9 +160,6 @@ public class CommonDocsHandlers extends ApplicationCommand {
 		final DocIndex index = docIndexMap.get(sourceType);
 		if (index == null) return List.of();
 
-		final Collection<String> set = index.getFieldDocSuggestions();
-		if (set == null) return List.of();
-
-		return set;
+		return index.getFieldDocSuggestions();
 	}
 }

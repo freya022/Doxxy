@@ -1,7 +1,7 @@
 package com.freya02.bot.commands;
 
-import com.freya02.bot.docs.DocIndex;
 import com.freya02.bot.docs.DocIndexMap;
+import com.freya02.bot.docs.index.DocIndex;
 import com.freya02.botcommands.api.application.ApplicationCommand;
 import com.freya02.botcommands.api.application.annotations.AppOption;
 import com.freya02.botcommands.api.application.slash.GuildSlashEvent;

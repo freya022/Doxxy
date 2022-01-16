@@ -1,6 +1,6 @@
 package com.freya02.bot;
 
-import com.freya02.bot.docs.DocIndex;
+import com.freya02.bot.docs.index.DocIndex;
 import com.freya02.docs.DocSourceType;
 
 import java.io.IOException;
