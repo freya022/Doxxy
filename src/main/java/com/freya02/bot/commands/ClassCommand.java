@@ -38,6 +38,7 @@ public class ClassCommand extends ApplicationCommand {
 
 	public ClassCommand() throws IOException {
 		docIndexMap.put(DocSourceType.BOT_COMMANDS, new DocIndex(DocSourceType.BOT_COMMANDS));
+		docIndexMap.put(DocSourceType.JDA, new DocIndex(DocSourceType.JDA));
 	}
 
 	@Override

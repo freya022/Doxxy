@@ -3,4 +3,5 @@
 .idea
 Config.json
 /logs
-/test_docs
+/BotCommands_docs
+/JDA_docs

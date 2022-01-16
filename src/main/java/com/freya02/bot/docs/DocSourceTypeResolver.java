@@ -36,7 +36,8 @@ public class DocSourceTypeResolver extends ParameterResolver implements SlashPar
 	public Collection<Command.Choice> getPredefinedChoices() {
 		return List.of(
 				//TODO add more
-				new Command.Choice("BotCommands", DocSourceType.BOT_COMMANDS.name())
+				new Command.Choice("BotCommands", DocSourceType.BOT_COMMANDS.name()),
+				new Command.Choice("JDA", DocSourceType.JDA.name())
 		);
 	}
 }
