@@ -59,49 +59,57 @@ public class DocIndex {
 		return sourceCacheFolder.resolve(className).resolve(getMethodFileName(methodId));
 	}
 
-	public synchronized void indexAll() throws IOException {
+	public synchronized void indexAll() {
 		simpleNameToCachedClassMap.clear();
 
 		for (String className : classDocs.getSimpleNameToUrlMap().keySet()) {
-			final Path classCacheFolder = sourceCacheFolder.resolve(className);
-			Files.createDirectories(classCacheFolder);
+			try {
+				final Path classCacheFolder = sourceCacheFolder.resolve(className);
+				Files.createDirectories(classCacheFolder);
 
-			final Path classMetadataCacheFile = classCacheFolder.resolve("ClassMetadata.json");
-			final Path classEmbedCacheFile = getClassEmbedPath(className);
+				final Path classMetadataCacheFile = classCacheFolder.resolve("ClassMetadata.json");
+				final Path classEmbedCacheFile = getClassEmbedPath(className);
 
-			final boolean forceDownload = Files.notExists(classMetadataCacheFile) || Files.notExists(classEmbedCacheFile);
-			final ClassDoc doc = classDocs.tryRetrieveDoc(className, forceDownload);
+				final boolean forceDownload = Files.notExists(classMetadataCacheFile) || Files.notExists(classEmbedCacheFile);
+				final ClassDoc doc = classDocs.tryRetrieveDoc(className, forceDownload);
 
-			final CachedClassMetadata cachedClassMetadata;
+				final CachedClassMetadata cachedClassMetadata;
 
-			if (doc == null) {
-				//cached, read the files
+				if (doc == null) {
+					//cached, read the files
 
-				final String metadataJson = Files.readString(classMetadataCacheFile);
-				cachedClassMetadata = GSON.fromJson(metadataJson, CachedClassMetadata.class);
-			} else {
-				cachedClassMetadata = new CachedClassMetadata();
+					final String metadataJson = Files.readString(classMetadataCacheFile);
+					cachedClassMetadata = GSON.fromJson(metadataJson, CachedClassMetadata.class);
+				} else {
+					cachedClassMetadata = new CachedClassMetadata();
 
-				final MessageEmbed classEmbed = getClassEmbed(doc);
+					final MessageEmbed classEmbed = getClassEmbed(doc);
 
-				Files.writeString(classEmbedCacheFile, GSON.toJson(classEmbed), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+					Files.writeString(classEmbedCacheFile, GSON.toJson(classEmbed), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
-				for (MethodDoc methodDoc : doc.getMethodDocs().values()) {
-					final MessageEmbed methodEmbed = getMethodEmbed(doc, methodDoc);
+					for (MethodDoc methodDoc : doc.getMethodDocs().values()) {
+						try {
+							final MessageEmbed methodEmbed = getMethodEmbed(doc, methodDoc);
 
-					final String methodFileName = getMethodFileName(methodDoc.getSimpleSignature());
-					cachedClassMetadata.getMethodSignatureToFileNameMap().put(
-							methodDoc.getSimpleSignature(),
-							methodFileName
-					);
+							final String methodFileName = getMethodFileName(methodDoc.getSimpleSignature());
+							cachedClassMetadata.getMethodSignatureToFileNameMap().put(
+									methodDoc.getSimpleSignature(),
+									methodFileName
+							);
 
-					Files.writeString(classCacheFolder.resolve(methodFileName), GSON.toJson(methodEmbed), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+							Files.writeString(classCacheFolder.resolve(methodFileName), GSON.toJson(methodEmbed), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+						} catch (Exception e) {
+							throw new RuntimeException("An exception occurred while reading the docs of " + className + "#" + methodDoc.getSimpleSignature(), e);
+						}
+					}
+
+					Files.writeString(classMetadataCacheFile, GSON.toJson(cachedClassMetadata), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 				}
 
-				Files.writeString(classMetadataCacheFile, GSON.toJson(cachedClassMetadata), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+				simpleNameToCachedClassMap.put(className, cachedClassMetadata);
+			} catch (Exception e) {
+				throw new RuntimeException("An exception occurred while reading the docs of " + className, e);
 			}
-
-			simpleNameToCachedClassMap.put(className, cachedClassMetadata);
 		}
 	}
 
