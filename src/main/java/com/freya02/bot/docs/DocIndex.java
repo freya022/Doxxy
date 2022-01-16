@@ -16,9 +16,7 @@ import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.*;
 
 import static com.freya02.bot.Main.RENDERED_DOCS_CACHE_PATH;
 
@@ -34,6 +32,8 @@ public class DocIndex {
 	private final SimpleNameMap<CachedClassMetadata> methodHolderSimpleNames = new SimpleNameMap<>();
 	private final SimpleNameMap<CachedClassMetadata> fieldHolderSimpleNames = new SimpleNameMap<>();
 	private final Path sourceCacheFolder;
+	private final List<String> allFullMethodSignatures = new ArrayList<>();
+	private final List<String> allFullFieldSignatures = new ArrayList<>();
 
 	public DocIndex(DocSourceType sourceType) throws IOException {
 		LOGGER.info("Loading docs for {}", sourceType.name());
@@ -67,6 +67,9 @@ public class DocIndex {
 		simpleNameToCachedClassMap.clear();
 		methodHolderSimpleNames.clear();
 		fieldHolderSimpleNames.clear();
+
+		allFullMethodSignatures.clear();
+		allFullFieldSignatures.clear();
 
 		for (String className : classDocs.getSimpleNameToUrlMap().keySet()) {
 			try {
@@ -108,6 +111,14 @@ public class DocIndex {
 
 				if (!cachedClassMetadata.getFieldNameToFileNameMap().isEmpty()) {
 					fieldHolderSimpleNames.put(className, cachedClassMetadata);
+				}
+
+				for (String methodSignature : cachedClassMetadata.getMethodSignatureToFileNameMap().keySet()) {
+					allFullMethodSignatures.add(className + "#" + methodSignature);
+				}
+
+				for (String fieldName : cachedClassMetadata.getFieldNameToFileNameMap().keySet()) {
+					allFullFieldSignatures.add(className + "#" + fieldName);
 				}
 			} catch (Exception e) {
 				throw new RuntimeException("An exception occurred while reading the docs of " + className, e);
@@ -189,6 +200,14 @@ public class DocIndex {
 	}
 
 	@Nullable
+	public MessageEmbed getMethodDoc(String fullSignature) throws IOException {
+		final String[] split = fullSignature.split("#");
+		if (split.length != 2) return null;
+
+		return getMethodDoc(split[0], split[1]);
+	}
+
+	@Nullable
 	public MessageEmbed getFieldDoc(String className, String fieldName) throws IOException {
 		final CachedClassMetadata cachedClass = fieldHolderSimpleNames.get(className);
 		if (cachedClass == null) return null;
@@ -197,6 +216,13 @@ public class DocIndex {
 		if (Files.notExists(fieldEmbedPath)) return null;
 
 		return GSON.fromJson(Files.readString(fieldEmbedPath), MessageEmbed.class);
+	}
+
+	public MessageEmbed getFieldDoc(String fullSignature) throws IOException {
+		final String[] split = fullSignature.split("#");
+		if (split.length != 2) return null;
+
+		return getFieldDoc(split[0], split[1]);
 	}
 
 	@Nullable
@@ -218,17 +244,13 @@ public class DocIndex {
 		return cachedClass.getMethodSignatureToFileNameMap().keySet();
 	}
 
+	public Collection<String> getMethodDocSuggestions() {
+		return allFullMethodSignatures;
+	}
+
 	@NotNull
 	public Collection<String> getSimpleNameList() {
 		return simpleNameToCachedClassMap.keySet();
-	}
-
-	public Collection<String> getMethodHolderSimpleNames() {
-		return fieldHolderSimpleNames.keySet();
-	}
-
-	public Collection<String> getFieldHolderSimpleNames() {
-		return fieldHolderSimpleNames.keySet();
 	}
 
 	public Collection<String> getFieldDocSuggestions(String className) {
@@ -236,6 +258,10 @@ public class DocIndex {
 		if (cachedClass == null) return Collections.emptyList();
 
 		return cachedClass.getFieldNameToFileNameMap().keySet();
+	}
+
+	public Collection<String> getFieldDocSuggestions() {
+		return allFullFieldSignatures;
 	}
 
 	public static class SimpleNameMap<V> extends HashMap<String, V> {}
