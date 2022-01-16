@@ -1,6 +1,7 @@
 package com.freya02.bot.commands;
 
 import com.freya02.bot.docs.DocIndex;
+import com.freya02.bot.docs.DocIndexMap;
 import com.freya02.botcommands.api.Logging;
 import com.freya02.botcommands.api.annotations.Optional;
 import com.freya02.botcommands.api.application.ApplicationCommand;
@@ -25,7 +26,6 @@ import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.EnumMap;
 import java.util.List;
 
 public class ClassCommand extends ApplicationCommand {
@@ -34,11 +34,10 @@ public class ClassCommand extends ApplicationCommand {
 	private static final String AUTO_CLASS_AUTOCOMPLETE_NAME = "autoClass";
 //	private static final Emoji CLIPBOARD_EMOJI = EmojiUtils.resolveJDAEmoji("clipboard");
 //	private static final int MAX_CHOICES = 25;
-	private final EnumMap<DocSourceType, DocIndex> docIndexMap = new EnumMap<>(DocSourceType.class);
+	private final DocIndexMap docIndexMap;
 
 	public ClassCommand() throws IOException {
-		docIndexMap.put(DocSourceType.BOT_COMMANDS, new DocIndex(DocSourceType.BOT_COMMANDS));
-		docIndexMap.put(DocSourceType.JDA, new DocIndex(DocSourceType.JDA));
+		docIndexMap = DocIndexMap.getInstance();
 	}
 
 	@Override
