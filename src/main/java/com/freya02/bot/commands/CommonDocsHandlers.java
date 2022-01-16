@@ -12,6 +12,7 @@ import com.freya02.docs.DocSourceType;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 
 import java.io.IOException;
@@ -117,7 +118,8 @@ public class CommonDocsHandlers extends ApplicationCommand {
 		final Collection<String> set = index.getMethodDocSuggestions();
 		if (set == null) return List.of();
 
-		return set;
+		//TODO real fix hopefully
+		return set.stream().filter(s -> s.length() <= OptionData.MAX_CHOICE_VALUE_LENGTH).toList();
 	}
 
 	@CacheAutocompletion
