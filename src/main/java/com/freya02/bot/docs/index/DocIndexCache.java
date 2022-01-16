@@ -101,7 +101,7 @@ public class DocIndexCache {
 						methodFileName
 				);
 
-				Files.writeString(classCacheFolder.resolve(methodFileName), GSON.toJson(methodEmbed), StandardOpenOption.CREATE_NEW, StandardOpenOption.TRUNCATE_EXISTING);
+				Files.writeString(classCacheFolder.resolve(methodFileName), GSON.toJson(methodEmbed), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 			} catch (Exception e) {
 				throw new RuntimeException("An exception occurred while reading the docs of " + className + "#" + methodDoc.getSimpleSignature(), e);
 			}
@@ -124,7 +124,7 @@ public class DocIndexCache {
 						fieldFileName
 				);
 
-				Files.writeString(classCacheFolder.resolve(fieldFileName), GSON.toJson(fieldEmbed), StandardOpenOption.CREATE_NEW, StandardOpenOption.TRUNCATE_EXISTING);
+				Files.writeString(classCacheFolder.resolve(fieldFileName), GSON.toJson(fieldEmbed), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 			} catch (Exception e) {
 				throw new RuntimeException("An exception occurred while reading the docs of " + className + "#" + fieldDoc.getFieldName(), e);
 			}
