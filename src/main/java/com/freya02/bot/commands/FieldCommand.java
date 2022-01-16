@@ -70,7 +70,8 @@ public class FieldCommand extends ApplicationCommand {
 
 	@CacheAutocompletion
 	@AutocompletionHandler(name = CLASS_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
-	public Collection<String> onClassNameAutocomplete(CommandAutoCompleteInteractionEvent event, @AppOption DocSourceType sourceType) {
+	public Collection<String> onClassNameAutocomplete(CommandAutoCompleteInteractionEvent event,
+	                                                  @CompositeKey @AppOption DocSourceType sourceType) {
 		final DocIndex index = docIndexMap.get(sourceType);
 		if (index == null) return List.of();
 
@@ -80,7 +81,7 @@ public class FieldCommand extends ApplicationCommand {
 	@CacheAutocompletion
 	@AutocompletionHandler(name = FIELD_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
 	public Collection<String> onFieldNameAutocomplete(CommandAutoCompleteInteractionEvent event,
-	                                                  @AppOption DocSourceType sourceType,
+	                                                  @CompositeKey @AppOption DocSourceType sourceType,
 	                                                  @CompositeKey @AppOption String className) {
 		final DocIndex index = docIndexMap.get(sourceType);
 		if (index == null) return List.of();

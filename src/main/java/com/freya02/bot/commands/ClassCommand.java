@@ -130,7 +130,8 @@ public class ClassCommand extends ApplicationCommand {
 
 	@CacheAutocompletion
 	@AutocompletionHandler(name = AUTO_CLASS_AUTOCOMPLETE_NAME, showUserInput = false)
-	public Collection<String> autoClass(CommandAutoCompleteInteractionEvent event, @AppOption DocSourceType sourceType) {
+	public Collection<String> autoClass(CommandAutoCompleteInteractionEvent event,
+	                                    @CompositeKey @AppOption DocSourceType sourceType) {
 		final DocIndex index = docIndexMap.get(sourceType);
 		if (index == null) return List.of();
 
@@ -140,7 +141,7 @@ public class ClassCommand extends ApplicationCommand {
 	@CacheAutocompletion
 	@AutocompletionHandler(name = AUTO_METHOD_AUTOCOMPLETE_NAME, showUserInput = false)
 	public Collection<String> autoMethod(CommandAutoCompleteInteractionEvent event,
-	                                     @AppOption DocSourceType sourceType,
+	                                     @CompositeKey @AppOption DocSourceType sourceType,
 	                                     @CompositeKey @AppOption String className) {
 		final DocIndex index = docIndexMap.get(sourceType);
 		if (index == null) return List.of();
