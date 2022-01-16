@@ -33,7 +33,7 @@ public class DocEmbeds {
 			builder.addField("Type parameters", typeParameters.stream().map(HTMLElement::getMarkdown3).collect(Collectors.joining("\n")), false);
 		}
 
-		addSeeAlso(builder, doc.getSeeAlso());
+		addSeeAlso(builder, doc.getSeeAlso(), doc.getURL());
 
 		return builder;
 	}
@@ -50,52 +50,88 @@ public class DocEmbeds {
 		final HTMLElement descriptionElement = methodDoc.getDescriptionElement();
 		if (descriptionElement != null) {
 			final String description = descriptionElement.getMarkdown3();
-			if (description.length() + builder.getDescriptionBuilder().length() > MessageEmbed.DESCRIPTION_MAX_LENGTH) {
-				builder.appendDescription("Description is too long, please look at the [docs page](" + methodDoc.getURL() + ")");
-			} else {
-				builder.appendDescription(description);
-			}
+
+			builder.appendDescription(
+					getDescriptionValue(builder.getDescriptionBuilder().length(),
+							description,
+							methodDoc.getURL())
+			);
 		} else {
 			builder.appendDescription("No description");
 		}
 
 		final List<HTMLElement> parameterElements = methodDoc.getParameterElements();
 		if (parameterElements != null) {
-			builder.addField("Parameters", parameterElements.stream().map(HTMLElement::getMarkdown3).collect(Collectors.joining("\n")), false);
+			addField(builder,
+					"Parameters",
+					parameterElements.stream().map(HTMLElement::getMarkdown3).collect(Collectors.joining("\n")),
+					false,
+					methodDoc.getURL());
 		}
 
 		final HTMLElement returnsElement = methodDoc.getReturnsElement();
 		if (returnsElement != null) {
-			builder.addField("Returns", returnsElement.getMarkdown3(), false);
+			addField(builder,"Returns", returnsElement.getMarkdown3(), false, methodDoc.getURL());
+		}
+
+		final List<HTMLElement> throwsElements = methodDoc.getThrowsElements();
+		if (throwsElements != null) {
+			addField(builder,
+					"Throws",
+					throwsElements.stream().map(HTMLElement::getMarkdown3).collect(Collectors.joining("\n")),
+					false,
+					methodDoc.getURL());
 		}
 
 		final HTMLElement defaultElement = methodDoc.getDefaultElement();
 		if (defaultElement != null) {
-			builder.addField("Default", defaultElement.getMarkdown3(), false);
+			addField(builder,"Default", defaultElement.getMarkdown3(), false, methodDoc.getURL());
 		}
 
 		final HTMLElement incubatingElement = methodDoc.getIncubatingElement();
 		if (incubatingElement != null) {
-			builder.addField("Incubating", incubatingElement.getMarkdown3(), false);
+			addField(builder, "Incubating", incubatingElement.getMarkdown3(), false, methodDoc.getURL());
 		}
 
 		final List<HTMLElement> typeParameters = methodDoc.getTypeParameterElements();
 		if (typeParameters != null) {
-			builder.addField("Type parameters", typeParameters.stream().map(HTMLElement::getMarkdown3).collect(Collectors.joining("\n")), false);
+			addField(builder,
+					"Type parameters",
+					typeParameters.stream().map(HTMLElement::getMarkdown3).collect(Collectors.joining("\n")),
+					false,
+					methodDoc.getURL());
 		}
 
-		addSeeAlso(builder, methodDoc.getSeeAlso());
+		addSeeAlso(builder, methodDoc.getSeeAlso(), methodDoc.getURL());
 
 		return builder;
 	}
 
-	private static void addSeeAlso(EmbedBuilder builder, SeeAlso seeAlso) {
+	private static String getDescriptionValue(int currentLength, String descriptionValue, String onlineTarget) {
+		if (descriptionValue.length() + currentLength > MessageEmbed.DESCRIPTION_MAX_LENGTH) {
+			return "Description is too long. Please look at [the online docs](" + onlineTarget + ")";
+		} else {
+			return descriptionValue;
+		}
+	}
+
+	private static void addField(EmbedBuilder builder, String fieldName, String fieldValue, boolean inline, String onlineDocs) {
+		if (fieldValue.length() > MessageEmbed.VALUE_MAX_LENGTH) {
+			builder.addField(fieldName, "This section is too long" + ". Please look at [the online docs](" + onlineDocs + ")", inline);
+		} else {
+			builder.addField(fieldName, fieldValue, inline);
+		}
+	}
+
+	private static void addSeeAlso(EmbedBuilder builder, SeeAlso seeAlso, String onlineDocs) {
 		if (seeAlso != null) {
 			final String seeAlsoMd = seeAlso.getReferences().stream().map(ref -> "[" + ref.text() + "](" + ref.link() + ")").collect(Collectors.joining(", "));
 
-			if (seeAlsoMd.length() <= MessageEmbed.VALUE_MAX_LENGTH) {
-				builder.addField("See Also", seeAlsoMd, false);
-			}
+			addField(builder,
+					"See Also",
+					seeAlsoMd,
+					false,
+					onlineDocs);
 		}
 	}
 }
