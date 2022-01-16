@@ -15,7 +15,7 @@ public class DocsTest3 {
 //		final ClassDoc docs2 = ClassDocs.of("https://docs.oracle.com/en/java/javase/16/docs/api/java.base/java/util/AbstractCollection.html");
 //		final ClassDoc docs3 = ClassDocs.of("https://docs.oracle.com/en/java/javase/16/docs/api/java.desktop/java/awt/TextField.html");
 
-//		System.out.println(docs2.getDescriptionElement().getMarkdown3());
+//		System.out.println(docs2.getDescriptionElement().getMarkdown());
 //
 //		final String html = Utils.getDocument("https://docs.oracle.com/en/java/javase/16/docs/api/java.base/java/util/AbstractCollection.html").outerHtml();
 //		final String s = html.replaceAll("</(.*)>(\\s+)<(\\1*)>", "</$1>$2<dummy></dummy><$3>");
@@ -84,6 +84,6 @@ public class DocsTest3 {
 
 
 //		final ClassDoc doc4 = ClassDocs.globalCompute("https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/concurrent/CopyOnWriteArraySet.html");
-//		System.out.println(doc4.getDescriptionElement().getMarkdown3());
+//		System.out.println(doc4.getDescriptionElement().getMarkdown());
 	}
 }

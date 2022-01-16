@@ -18,7 +18,7 @@ public class DocEmbeds {
 
 		final HTMLElement descriptionElement = doc.getDescriptionElement();
 		if (descriptionElement != null) {
-			final String description = descriptionElement.getMarkdown3();
+			final String description = descriptionElement.getMarkdown();
 			if (description.length() > MessageEmbed.DESCRIPTION_MAX_LENGTH) {
 				builder.setDescription("Description is too long, please look at the [docs page](" + doc.getURL() + ")");
 			} else {
@@ -30,7 +30,7 @@ public class DocEmbeds {
 
 		final List<HTMLElement> typeParameters = doc.getTypeParameterElements();
 		if (typeParameters != null) {
-			builder.addField("Type parameters", typeParameters.stream().map(HTMLElement::getMarkdown3).collect(Collectors.joining("\n")), false);
+			builder.addField("Type parameters", typeParameters.stream().map(HTMLElement::getMarkdown).collect(Collectors.joining("\n")), false);
 		}
 
 		addSeeAlso(builder, doc.getSeeAlso(), doc.getURL());
@@ -52,7 +52,7 @@ public class DocEmbeds {
 
 		final HTMLElement descriptionElement = methodDoc.getDescriptionElement();
 		if (descriptionElement != null) {
-			final String description = descriptionElement.getMarkdown3();
+			final String description = descriptionElement.getMarkdown();
 
 			builder.appendDescription(
 					getDescriptionValue(builder.getDescriptionBuilder().length(),
@@ -67,40 +67,40 @@ public class DocEmbeds {
 		if (parameterElements != null) {
 			addField(builder,
 					"Parameters",
-					parameterElements.stream().map(HTMLElement::getMarkdown3).collect(Collectors.joining("\n")),
+					parameterElements.stream().map(HTMLElement::getMarkdown).collect(Collectors.joining("\n")),
 					false,
 					methodDoc.getURL());
 		}
 
 		final HTMLElement returnsElement = methodDoc.getReturnsElement();
 		if (returnsElement != null) {
-			addField(builder,"Returns", returnsElement.getMarkdown3(), false, methodDoc.getURL());
+			addField(builder,"Returns", returnsElement.getMarkdown(), false, methodDoc.getURL());
 		}
 
 		final List<HTMLElement> throwsElements = methodDoc.getThrowsElements();
 		if (throwsElements != null) {
 			addField(builder,
 					"Throws",
-					throwsElements.stream().map(HTMLElement::getMarkdown3).collect(Collectors.joining("\n")),
+					throwsElements.stream().map(HTMLElement::getMarkdown).collect(Collectors.joining("\n")),
 					false,
 					methodDoc.getURL());
 		}
 
 		final HTMLElement defaultElement = methodDoc.getDefaultElement();
 		if (defaultElement != null) {
-			addField(builder,"Default", defaultElement.getMarkdown3(), false, methodDoc.getURL());
+			addField(builder,"Default", defaultElement.getMarkdown(), false, methodDoc.getURL());
 		}
 
 		final HTMLElement incubatingElement = methodDoc.getIncubatingElement();
 		if (incubatingElement != null) {
-			addField(builder, "Incubating", incubatingElement.getMarkdown3(), false, methodDoc.getURL());
+			addField(builder, "Incubating", incubatingElement.getMarkdown(), false, methodDoc.getURL());
 		}
 
 		final List<HTMLElement> typeParameters = methodDoc.getTypeParameterElements();
 		if (typeParameters != null) {
 			addField(builder,
 					"Type parameters",
-					typeParameters.stream().map(HTMLElement::getMarkdown3).collect(Collectors.joining("\n")),
+					typeParameters.stream().map(HTMLElement::getMarkdown).collect(Collectors.joining("\n")),
 					false,
 					methodDoc.getURL());
 		}
