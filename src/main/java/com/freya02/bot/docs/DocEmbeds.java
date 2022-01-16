@@ -43,6 +43,9 @@ public class DocEmbeds {
 
 		builder.setTitle(classDoc.getClassName() + '#' + methodDoc.getSimpleSignature(), methodDoc.getURL());
 
+		//Should use that but JB annotations are duplicated, bruh momentum
+//		builder.setTitle(methodDoc.getMethodSignature(), methodDoc.getURL());
+
 		if (classDoc != methodDoc.getClassDocs()) {
 			builder.setDescription("**Inherited from " + methodDoc.getClassDocs().getClassName() + "**\n\n");
 		}
