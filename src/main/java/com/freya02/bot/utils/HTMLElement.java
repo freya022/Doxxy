@@ -1,7 +1,6 @@
 package com.freya02.bot.utils;
 
 import org.jetbrains.annotations.NotNull;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
@@ -13,7 +12,7 @@ public class HTMLElement {
 	private final Element targetElement;
 
 	public HTMLElement(@NotNull Element targetElement) {
-		this.targetElement = Jsoup.parseBodyFragment(targetElement.outerHtml().replaceAll("</(.*)>(\\s*)<(\\1*)>", "</$1>$2<dummy></dummy><$3>"), targetElement.baseUri()).selectFirst("html > body");
+		this.targetElement = targetElement;
 	}
 
 	public Element getTargetElement() {
