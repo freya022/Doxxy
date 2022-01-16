@@ -101,7 +101,7 @@ public class ClassCommand extends ApplicationCommand {
 				.queue();
 	}
 
-	private void sendClass(IReplyCallback event, boolean ephemeral, MessageEmbed docs) {
+	static void sendClass(IReplyCallback event, boolean ephemeral, MessageEmbed docs) {
 		ReplyCallbackAction replyAction = event.replyEmbeds(docs);
 
 		// Much more work to do for this to really work

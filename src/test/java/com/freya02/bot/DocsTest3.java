@@ -52,6 +52,8 @@ public class DocsTest3 {
 		final DocIndex bcIndex = new DocIndex(DocSourceType.BOT_COMMANDS);
 		final DocIndex jdaIndex = new DocIndex(DocSourceType.JDA);
 
+//		final ClassDoc doc4 = new ClassDoc("http://localhost:63342/DocsBot/BotCommands_docs/com/freya02/botcommands/api/pagination/menu/BasicMenuBuilder.html");
+
 		System.out.println();
 
 //

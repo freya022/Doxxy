@@ -2,6 +2,7 @@ package com.freya02.bot.docs;
 
 import com.freya02.bot.utils.HTMLElement;
 import com.freya02.docs.ClassDoc;
+import com.freya02.docs.FieldDoc;
 import com.freya02.docs.MethodDoc;
 import com.freya02.docs.SeeAlso;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -106,6 +107,33 @@ public class DocEmbeds {
 		}
 
 		addSeeAlso(builder, methodDoc.getSeeAlso(), methodDoc.getURL());
+
+		return builder;
+	}
+
+	public static EmbedBuilder toEmbed(ClassDoc classDoc, FieldDoc fieldDoc) {
+		final EmbedBuilder builder = new EmbedBuilder();
+
+		builder.setTitle(classDoc.getClassName() + " : " + fieldDoc.getSimpleSignature(), fieldDoc.getURL());
+
+		if (classDoc != fieldDoc.getClassDocs()) {
+			builder.setDescription("**Inherited from " + fieldDoc.getClassDocs().getClassName() + "**\n\n");
+		}
+
+		final HTMLElement descriptionElement = fieldDoc.getDescriptionElement();
+		if (descriptionElement != null) {
+			final String description = descriptionElement.getMarkdown();
+
+			builder.appendDescription(
+					getDescriptionValue(builder.getDescriptionBuilder().length(),
+							description,
+							fieldDoc.getURL())
+			);
+		} else {
+			builder.appendDescription("No description");
+		}
+
+//		addSeeAlso(builder, fieldDoc.getSeeAlso(), fieldDoc.getURL());
 
 		return builder;
 	}

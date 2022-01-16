@@ -2,10 +2,7 @@ package com.freya02.bot.docs;
 
 import com.freya02.bot.utils.CryptoUtils;
 import com.freya02.botcommands.api.Logging;
-import com.freya02.docs.ClassDoc;
-import com.freya02.docs.ClassDocs;
-import com.freya02.docs.DocSourceType;
-import com.freya02.docs.MethodDoc;
+import com.freya02.docs.*;
 import com.google.gson.*;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.utils.data.DataObject;
@@ -59,6 +56,11 @@ public class DocIndex {
 		return sourceCacheFolder.resolve(className).resolve(getMethodFileName(methodId));
 	}
 
+	@NotNull
+	private Path getFieldEmbedPath(String className, String fieldName) {
+		return sourceCacheFolder.resolve(className).resolve(getFieldFileName(fieldName));
+	}
+
 	public synchronized void indexAll() {
 		simpleNameToCachedClassMap.clear();
 
@@ -87,21 +89,9 @@ public class DocIndex {
 
 					Files.writeString(classEmbedCacheFile, GSON.toJson(classEmbed), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
-					for (MethodDoc methodDoc : doc.getMethodDocs().values()) {
-						try {
-							final MessageEmbed methodEmbed = getMethodEmbed(doc, methodDoc);
+					addMethodDocs(className, classCacheFolder, doc, cachedClassMetadata);
 
-							final String methodFileName = getMethodFileName(methodDoc.getSimpleSignature());
-							cachedClassMetadata.getMethodSignatureToFileNameMap().put(
-									methodDoc.getSimpleSignature(),
-									methodFileName
-							);
-
-							Files.writeString(classCacheFolder.resolve(methodFileName), GSON.toJson(methodEmbed), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-						} catch (Exception e) {
-							throw new RuntimeException("An exception occurred while reading the docs of " + className + "#" + methodDoc.getSimpleSignature(), e);
-						}
-					}
+					addFieldDocs(className, classCacheFolder, doc, cachedClassMetadata);
 
 					Files.writeString(classMetadataCacheFile, GSON.toJson(cachedClassMetadata), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 				}
@@ -113,9 +103,58 @@ public class DocIndex {
 		}
 	}
 
+	private void addMethodDocs(String className, Path classCacheFolder, ClassDoc doc, CachedClassMetadata cachedClassMetadata) {
+		for (MethodDoc methodDoc : doc.getMethodDocs().values()) {
+			try {
+				final MessageEmbed methodEmbed = getMethodEmbed(doc, methodDoc);
+
+				final String methodFileName = getMethodFileName(methodDoc.getSimpleSignature());
+				cachedClassMetadata.getMethodSignatureToFileNameMap().put(
+						methodDoc.getSimpleSignature(),
+						methodFileName
+				);
+
+				Files.writeString(classCacheFolder.resolve(methodFileName), GSON.toJson(methodEmbed), StandardOpenOption.CREATE_NEW, StandardOpenOption.TRUNCATE_EXISTING);
+			} catch (Exception e) {
+				throw new RuntimeException("An exception occurred while reading the docs of " + className + "#" + methodDoc.getSimpleSignature(), e);
+			}
+		}
+	}
+
+	private void addFieldDocs(String className, Path classCacheFolder, ClassDoc doc, CachedClassMetadata cachedClassMetadata) {
+		for (FieldDoc fieldDoc : doc.getFieldDocs().values()) {
+			try {
+				//If not a public constant then skip
+				if (!fieldDoc.getModifiers().equals("public static final")) {
+					continue;
+				}
+
+				final MessageEmbed fieldEmbed = getFieldEmbed(doc, fieldDoc);
+
+				final String fieldFileName = getFieldFileName(fieldDoc.getFieldName());
+				cachedClassMetadata.getFieldNameToFileNameMap().put(
+						fieldDoc.getFieldName(),
+						fieldFileName
+				);
+
+				Files.writeString(classCacheFolder.resolve(fieldFileName), GSON.toJson(fieldEmbed), StandardOpenOption.CREATE_NEW, StandardOpenOption.TRUNCATE_EXISTING);
+			} catch (Exception e) {
+				throw new RuntimeException("An exception occurred while reading the docs of " + className + "#" + fieldDoc.getFieldName(), e);
+			}
+		}
+	}
+
+	private MessageEmbed getFieldEmbed(ClassDoc doc, FieldDoc fieldDoc) {
+		return DocEmbeds.toEmbed(doc, fieldDoc).build();
+	}
+
 	@NotNull
 	private String getMethodFileName(@NotNull String signature) {
 		return CryptoUtils.hash(signature) + ".json";
+	}
+
+	private String getFieldFileName(String fieldName) {
+		return CryptoUtils.hash(fieldName) + ".json";
 	}
 
 	private MessageEmbed getClassEmbed(ClassDoc doc) {
@@ -126,26 +165,37 @@ public class DocIndex {
 		return DocEmbeds.toEmbed(doc, methodDoc).build();
 	}
 
-	/**
-	 * Returns a JSON string of this method doc
-	 */
 	@Nullable
 	public MessageEmbed getMethodDoc(String className, String methodId) throws IOException {
 		final CachedClassMetadata cachedClass = simpleNameToCachedClassMap.get(className);
 		if (cachedClass == null) return null;
 
-		return GSON.fromJson(Files.readString(getMethodEmbedPath(className, methodId)), MessageEmbed.class);
+		final Path methodEmbedPath = getMethodEmbedPath(className, methodId);
+		if (Files.notExists(methodEmbedPath)) return null;
+
+		return GSON.fromJson(Files.readString(methodEmbedPath), MessageEmbed.class);
 	}
 
-	/**
-	 * Returns a JSON string of this class doc
-	 */
+	@Nullable
+	public MessageEmbed getFieldDoc(String className, String fieldName) throws IOException {
+		final CachedClassMetadata cachedClass = simpleNameToCachedClassMap.get(className);
+		if (cachedClass == null) return null;
+
+		final Path fieldEmbedPath = getFieldEmbedPath(className, fieldName);
+		if (Files.notExists(fieldEmbedPath)) return null;
+
+		return GSON.fromJson(Files.readString(fieldEmbedPath), MessageEmbed.class);
+	}
+
 	@Nullable
 	public MessageEmbed getClassDoc(String className) throws IOException {
 		final CachedClassMetadata cachedClass = simpleNameToCachedClassMap.get(className);
 		if (cachedClass == null) return null;
 
-		return GSON.fromJson(Files.readString(getClassEmbedPath(className)), MessageEmbed.class);
+		final Path classEmbedPath = getClassEmbedPath(className);
+		if (Files.notExists(classEmbedPath)) return null;
+
+		return GSON.fromJson(Files.readString(classEmbedPath), MessageEmbed.class);
 	}
 
 	@Nullable
@@ -159,6 +209,13 @@ public class DocIndex {
 	@NotNull
 	public Collection<String> getSimpleNameList() {
 		return simpleNameToCachedClassMap.keySet();
+	}
+
+	public Collection<String> getFieldDocSuggestions(String className) {
+		final CachedClassMetadata cachedClass = simpleNameToCachedClassMap.get(className);
+		if (cachedClass == null) return Collections.emptyList();
+
+		return cachedClass.getFieldNameToFileNameMap().keySet();
 	}
 
 	public static class SimpleNameMap<V> extends HashMap<String, V> {}

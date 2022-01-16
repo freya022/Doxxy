@@ -13,11 +13,19 @@ public class FieldDoc {
 	@Nullable private final HTMLElement descriptionElement;
 
 	@NotNull private final String elementId;
+	@NotNull private final String url;
+	@NotNull private final String modifiers;
 
 	public FieldDoc(@NotNull ClassDoc classDocs, @NotNull Element element) {
 		this.classDocs = classDocs;
 
 		this.elementId = element.id();
+		this.url = classDocs.getURL() + "#" + elementId;
+
+		//Get field modifiers
+		final Element modifiersElement = element.selectFirst("div.member-signature > span.modifiers");
+		if (modifiersElement == null) throw new DocParseException();
+		this.modifiers = modifiersElement.text();
 
 		//Get field name
 		final Element fieldNameElement = element.selectFirst("h3");
@@ -38,12 +46,19 @@ public class FieldDoc {
 		}
 	}
 
+	@NotNull
 	public ClassDoc getClassDocs() {
 		return classDocs;
 	}
 
+	@NotNull
 	public String getElementId() {
 		return elementId;
+	}
+
+	@NotNull
+	public String getModifiers() {
+		return modifiers;
 	}
 
 	@NotNull
@@ -64,5 +79,14 @@ public class FieldDoc {
 	@Override
 	public String toString() {
 		return fieldType + " " + fieldName + " : " + descriptionElement;
+	}
+
+	@NotNull
+	public String getURL() {
+		return url;
+	}
+
+	public String getSimpleSignature() {
+		return fieldType + " " + fieldName;
 	}
 }
