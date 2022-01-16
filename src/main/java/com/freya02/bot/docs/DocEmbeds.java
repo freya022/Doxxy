@@ -42,7 +42,7 @@ public class DocEmbeds {
 	public static EmbedBuilder toEmbed(ClassDoc classDoc, MethodDoc methodDoc) {
 		final EmbedBuilder builder = new EmbedBuilder();
 
-		builder.setTitle(classDoc.getClassName() + '#' + methodDoc.getSimpleSignature(), methodDoc.getURL());
+		builder.setTitle(classDoc.getClassName() + '#' + methodDoc.getSimpleSignature() + " : " + methodDoc.getMethodReturnType(), methodDoc.getURL());
 
 		//Should use that but JB annotations are duplicated, bruh momentum
 //		builder.setTitle(methodDoc.getMethodSignature(), methodDoc.getURL());

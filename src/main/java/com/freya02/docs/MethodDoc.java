@@ -21,6 +21,7 @@ public class MethodDoc {
 
 	@NotNull private final String methodName;
 	@NotNull private final String methodSignature;
+	@NotNull private final String methodReturnType;
 	@Nullable private final HTMLElement descriptionElement;
 
 	@Nullable private final Map<DocDetailType, List<HTMLElement>> detailToElementsMap;
@@ -48,6 +49,10 @@ public class MethodDoc {
 		if (methodSignatureElement == null) throw new DocParseException();
 
 		this.methodSignature = methodSignatureElement.text();
+
+		final Element methodReturnTypeElement = element.selectFirst("div.member-signature > span.return-type");
+		if (methodReturnTypeElement == null) throw new DocParseException();
+		this.methodReturnType = methodReturnTypeElement.text();
 
 		//Get method description
 		final Element descriptionElement = element.selectFirst("section.detail > div.block");
@@ -137,6 +142,11 @@ public class MethodDoc {
 	@NotNull
 	public String getMethodSignature() {
 		return methodSignature;
+	}
+
+	@NotNull
+	public String getMethodReturnType() {
+		return methodReturnType;
 	}
 
 	@NotNull
