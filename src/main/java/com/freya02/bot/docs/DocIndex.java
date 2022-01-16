@@ -31,6 +31,8 @@ public class DocIndex {
 	private final ClassDocs classDocs;
 
 	private final SimpleNameMap<CachedClassMetadata> simpleNameToCachedClassMap = new SimpleNameMap<>();
+	private final SimpleNameMap<CachedClassMetadata> methodHolderSimpleNames = new SimpleNameMap<>();
+	private final SimpleNameMap<CachedClassMetadata> fieldHolderSimpleNames = new SimpleNameMap<>();
 	private final Path sourceCacheFolder;
 
 	public DocIndex(DocSourceType sourceType) throws IOException {
@@ -63,6 +65,8 @@ public class DocIndex {
 
 	public synchronized void indexAll() {
 		simpleNameToCachedClassMap.clear();
+		methodHolderSimpleNames.clear();
+		fieldHolderSimpleNames.clear();
 
 		for (String className : classDocs.getSimpleNameToUrlMap().keySet()) {
 			try {
@@ -97,6 +101,14 @@ public class DocIndex {
 				}
 
 				simpleNameToCachedClassMap.put(className, cachedClassMetadata);
+
+				if (!cachedClassMetadata.getMethodSignatureToFileNameMap().isEmpty()) {
+					methodHolderSimpleNames.put(className, cachedClassMetadata);
+				}
+
+				if (!cachedClassMetadata.getFieldNameToFileNameMap().isEmpty()) {
+					fieldHolderSimpleNames.put(className, cachedClassMetadata);
+				}
 			} catch (Exception e) {
 				throw new RuntimeException("An exception occurred while reading the docs of " + className, e);
 			}
@@ -167,7 +179,7 @@ public class DocIndex {
 
 	@Nullable
 	public MessageEmbed getMethodDoc(String className, String methodId) throws IOException {
-		final CachedClassMetadata cachedClass = simpleNameToCachedClassMap.get(className);
+		final CachedClassMetadata cachedClass = methodHolderSimpleNames.get(className);
 		if (cachedClass == null) return null;
 
 		final Path methodEmbedPath = getMethodEmbedPath(className, methodId);
@@ -178,7 +190,7 @@ public class DocIndex {
 
 	@Nullable
 	public MessageEmbed getFieldDoc(String className, String fieldName) throws IOException {
-		final CachedClassMetadata cachedClass = simpleNameToCachedClassMap.get(className);
+		final CachedClassMetadata cachedClass = fieldHolderSimpleNames.get(className);
 		if (cachedClass == null) return null;
 
 		final Path fieldEmbedPath = getFieldEmbedPath(className, fieldName);
@@ -200,7 +212,7 @@ public class DocIndex {
 
 	@Nullable
 	public Collection<String> getMethodDocSuggestions(String className) {
-		final CachedClassMetadata cachedClass = simpleNameToCachedClassMap.get(className);
+		final CachedClassMetadata cachedClass = methodHolderSimpleNames.get(className);
 		if (cachedClass == null) return Collections.emptyList();
 
 		return cachedClass.getMethodSignatureToFileNameMap().keySet();
@@ -211,8 +223,16 @@ public class DocIndex {
 		return simpleNameToCachedClassMap.keySet();
 	}
 
+	public Collection<String> getMethodHolderSimpleNames() {
+		return fieldHolderSimpleNames.keySet();
+	}
+
+	public Collection<String> getFieldHolderSimpleNames() {
+		return fieldHolderSimpleNames.keySet();
+	}
+
 	public Collection<String> getFieldDocSuggestions(String className) {
-		final CachedClassMetadata cachedClass = simpleNameToCachedClassMap.get(className);
+		final CachedClassMetadata cachedClass = fieldHolderSimpleNames.get(className);
 		if (cachedClass == null) return Collections.emptyList();
 
 		return cachedClass.getFieldNameToFileNameMap().keySet();
@@ -220,8 +240,6 @@ public class DocIndex {
 
 	public static class SimpleNameMap<V> extends HashMap<String, V> {}
 
-	//lmao, decided to keep the MessageEmbed in memory instead of the JSON strings,
-	// don't really want to reconstruct them EVERYTIME its needed so why not, maybe
 	private static class MessageEmbedAdapter implements JsonSerializer<MessageEmbed>, JsonDeserializer<MessageEmbed> {
 		private final EntityBuilder entityBuilder = new EntityBuilder(null);
 

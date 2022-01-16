@@ -74,7 +74,7 @@ public class FieldCommand extends ApplicationCommand {
 		final DocIndex index = docIndexMap.get(sourceType);
 		if (index == null) return List.of();
 
-		return index.getSimpleNameList();
+		return index.getFieldHolderSimpleNames();
 	}
 
 	@CacheAutocompletion
