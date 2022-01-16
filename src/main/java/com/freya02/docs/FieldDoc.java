@@ -54,9 +54,9 @@ public class FieldDoc {
 
 		this.detailToElementsMap = MethodDoc.getDetailToElementsMap(element);
 
-		final List<HTMLElement> seeAlsoElements = detailToElementsMap.get(DocDetailType.SEE_ALSO);
-		if (seeAlsoElements != null) {
-			this.seeAlso = new SeeAlso(seeAlsoElements.get(0));
+		final HTMLElement seeAlsoElement = MethodDoc.findFirst(detailToElementsMap, DocDetailType.SEE_ALSO);
+		if (seeAlsoElement != null) {
+			this.seeAlso = new SeeAlso(seeAlsoElement);
 		} else {
 			this.seeAlso = null;
 		}

@@ -67,9 +67,9 @@ public class MethodDoc {
 		this.throwsElements = detailToElementsMap.get(DocDetailType.THROWS);
 		this.incubatingElement = findFirst(detailToElementsMap, DocDetailType.INCUBATING);
 
-		final List<HTMLElement> seeAlsoElements = detailToElementsMap.get(DocDetailType.SEE_ALSO);
-		if (seeAlsoElements != null) {
-			this.seeAlso = new SeeAlso(seeAlsoElements.get(0));
+		final HTMLElement seeAlsoElement = findFirst(detailToElementsMap, DocDetailType.SEE_ALSO);
+		if (seeAlsoElement != null) {
+			this.seeAlso = new SeeAlso(seeAlsoElement);
 		} else {
 			this.seeAlso = null;
 		}
@@ -80,9 +80,11 @@ public class MethodDoc {
 	}
 
 	@Nullable
-	private HTMLElement findFirst(Map<DocDetailType, List<HTMLElement>> detailToElementsMap, DocDetailType name) {
+	static HTMLElement findFirst(Map<DocDetailType, List<HTMLElement>> detailToElementsMap, DocDetailType name) {
 		final List<HTMLElement> list = detailToElementsMap.get(name);
 		if (list == null || list.isEmpty()) return null;
+
+		if (list.size() > 1) throw new IllegalStateException("findFirst was used on a list with more than 1 element");
 
 		return list.get(0);
 	}
