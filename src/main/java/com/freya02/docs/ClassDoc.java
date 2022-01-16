@@ -113,7 +113,7 @@ public class ClassDoc {
 	}
 
 	private void processInheritedElements(Document document, InheritedType inheritedType, BiConsumer<ClassDoc, String> inheritedElementConsumer) throws IOException {
-		final Elements inheritedBlocks = document.select("section." + inheritedType + "-summary > div.inherited-list");
+		final Elements inheritedBlocks = document.select("section." + inheritedType.getClassSuffix() + "-summary > div.inherited-list");
 
 		for (Element inheritedBlock : inheritedBlocks) {
 			final Element title = inheritedBlock.selectFirst("h3");
