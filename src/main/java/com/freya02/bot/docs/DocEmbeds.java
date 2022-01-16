@@ -133,7 +133,7 @@ public class DocEmbeds {
 			builder.appendDescription("No description");
 		}
 
-//		addSeeAlso(builder, fieldDoc.getSeeAlso(), fieldDoc.getURL());
+		addSeeAlso(builder, fieldDoc.getSeeAlso(), fieldDoc.getURL());
 
 		return builder;
 	}

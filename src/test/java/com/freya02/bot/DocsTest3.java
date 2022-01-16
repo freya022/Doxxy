@@ -53,6 +53,7 @@ public class DocsTest3 {
 		final DocIndex jdaIndex = new DocIndex(DocSourceType.JDA);
 
 //		final ClassDoc doc4 = new ClassDoc("http://localhost:63342/DocsBot/BotCommands_docs/com/freya02/botcommands/api/pagination/menu/BasicMenuBuilder.html");
+//		final ClassDoc doc5 = new ClassDoc("http://localhost:63342/DocsBot/JDA_docs/net/dv8tion/jda/api/entities/MessageEmbed.html#DESCRIPTION_MAX_LENGTH");
 
 		System.out.println();
 

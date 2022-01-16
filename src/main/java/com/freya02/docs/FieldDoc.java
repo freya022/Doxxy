@@ -5,6 +5,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jsoup.nodes.Element;
 
+import java.util.List;
+import java.util.Map;
+
 public class FieldDoc {
 	@NotNull private final ClassDoc classDocs;
 
@@ -15,6 +18,10 @@ public class FieldDoc {
 	@NotNull private final String elementId;
 	@NotNull private final String url;
 	@NotNull private final String modifiers;
+
+	@NotNull private final Map<DocDetailType, List<HTMLElement>> detailToElementsMap;
+
+	@Nullable private final SeeAlso seeAlso;
 
 	public FieldDoc(@NotNull ClassDoc classDocs, @NotNull Element element) {
 		this.classDocs = classDocs;
@@ -43,6 +50,15 @@ public class FieldDoc {
 			this.descriptionElement = new HTMLElement(descriptionElement);
 		} else {
 			this.descriptionElement = null;
+		}
+
+		this.detailToElementsMap = MethodDoc.getDetailToElementsMap(element);
+
+		final List<HTMLElement> seeAlsoElements = detailToElementsMap.get(DocDetailType.SEE_ALSO);
+		if (seeAlsoElements != null) {
+			this.seeAlso = new SeeAlso(seeAlsoElements.get(0));
+		} else {
+			this.seeAlso = null;
 		}
 	}
 
@@ -88,5 +104,14 @@ public class FieldDoc {
 
 	public String getSimpleSignature() {
 		return fieldType + " " + fieldName;
+	}
+
+	public Map<DocDetailType, List<HTMLElement>> getDetailToElementsMap() {
+		return detailToElementsMap;
+	}
+
+	@Nullable
+	public SeeAlso getSeeAlso() {
+		return seeAlso;
 	}
 }
