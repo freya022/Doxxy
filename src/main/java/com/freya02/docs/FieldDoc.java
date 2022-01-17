@@ -5,9 +5,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jsoup.nodes.Element;
 
-import java.util.List;
-import java.util.Map;
-
 public class FieldDoc {
 	@NotNull private final ClassDoc classDocs;
 
@@ -19,8 +16,9 @@ public class FieldDoc {
 	@NotNull private final String url;
 	@NotNull private final String modifiers;
 
-	@NotNull private final Map<DocDetailType, List<HTMLElement>> detailToElementsMap;
+	@NotNull private final DetailToElementsMap detailToElementsMap;
 
+	@Nullable private final HTMLElement incubatingElement;
 	@Nullable private final SeeAlso seeAlso;
 
 	public FieldDoc(@NotNull ClassDoc classDocs, @NotNull Element element) {
@@ -52,14 +50,18 @@ public class FieldDoc {
 			this.descriptionElement = null;
 		}
 
-		this.detailToElementsMap = MethodDoc.getDetailToElementsMap(element);
+		this.detailToElementsMap = new DetailToElementsMap(element);
 
-		final HTMLElement seeAlsoElement = MethodDoc.findFirst(detailToElementsMap, DocDetailType.SEE_ALSO);
+		this.incubatingElement = detailToElementsMap.findFirst(DocDetailType.INCUBATING);
+
+		final HTMLElement seeAlsoElement = detailToElementsMap.findFirst(DocDetailType.SEE_ALSO);
 		if (seeAlsoElement != null) {
 			this.seeAlso = new SeeAlso(seeAlsoElement);
 		} else {
 			this.seeAlso = null;
 		}
+
+		detailToElementsMap.onParseFinished();
 	}
 
 	@NotNull
@@ -106,7 +108,7 @@ public class FieldDoc {
 		return fieldType + " " + fieldName;
 	}
 
-	public Map<DocDetailType, List<HTMLElement>> getDetailToElementsMap() {
+	public DetailToElementsMap getDetailToElementsMap() {
 		return detailToElementsMap;
 	}
 

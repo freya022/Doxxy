@@ -25,8 +25,19 @@ public class ClassDoc {
 	@Nullable private final HTMLElement descriptionElement;
 	@NotNull private final String className;
 
-	@Nullable private final Map<DocDetailType, List<HTMLElement>> detailToElementsMap;
+	@Nullable private final DetailToElementsMap detailToElementsMap;
 	@Nullable private final List<HTMLElement> typeParameterElements;
+	@Nullable private final HTMLElement implementingClassesElement;
+	@Nullable private final HTMLElement directKnownSubclassesElement;
+	@Nullable private final HTMLElement allImplementedInterfacesElement;
+	@Nullable private final HTMLElement allKnownSubinterfacesElement;
+	@Nullable private final HTMLElement enclosingClassElement;
+	@Nullable private final HTMLElement sinceElement;
+	@Nullable private final HTMLElement incubatingElement;
+	@Nullable private final HTMLElement superInterfacesElement;
+	@Nullable private final HTMLElement functionalInterfaceElement;
+	@Nullable private final HTMLElement authorElement;
+	@Nullable private final HTMLElement enclosingInterfaceElement;
 	@Nullable private final SeeAlso seeAlso;
 
 	@NotNull private final Map<String, FieldDoc> fieldDocs = new HashMap<>();
@@ -76,8 +87,19 @@ public class ClassDoc {
 		final Element detailTarget = document.selectFirst("#class-description");
 		if (detailTarget == null) throw new DocParseException();
 
-		this.detailToElementsMap = MethodDoc.getDetailToElementsMap(detailTarget);
+		this.detailToElementsMap = new DetailToElementsMap(detailTarget);
 		this.typeParameterElements = detailToElementsMap.get(DocDetailType.TYPE_PARAMETERS);
+		this.implementingClassesElement = detailToElementsMap.findFirst(DocDetailType.ALL_KNOWN_IMPLEMENTING_CLASSES);
+		this.directKnownSubclassesElement = detailToElementsMap.findFirst(DocDetailType.DIRECT_KNOWN_SUBCLASSES);
+		this.allImplementedInterfacesElement = detailToElementsMap.findFirst(DocDetailType.ALL_IMPLEMENTED_INTERFACES);
+		this.allKnownSubinterfacesElement = detailToElementsMap.findFirst(DocDetailType.ALL_KNOWN_SUBINTERFACES);
+		this.enclosingClassElement = detailToElementsMap.findFirst(DocDetailType.ENCLOSING_CLASS);
+		this.sinceElement = detailToElementsMap.findFirst(DocDetailType.SINCE);
+		this.incubatingElement = detailToElementsMap.findFirst(DocDetailType.INCUBATING);
+		this.superInterfacesElement = detailToElementsMap.findFirst(DocDetailType.SUPER_INTERFACES);
+		this.functionalInterfaceElement = detailToElementsMap.findFirst(DocDetailType.FUNCTIONAL_INTERFACE);
+		this.authorElement = detailToElementsMap.findFirst(DocDetailType.AUTHOR);
+		this.enclosingInterfaceElement = detailToElementsMap.findFirst(DocDetailType.ENCLOSING_INTERFACE);
 
 		final List<HTMLElement> seeAlsoElements = detailToElementsMap.get(DocDetailType.SEE_ALSO);
 		if (seeAlsoElements != null) {
@@ -110,6 +132,8 @@ public class ClassDoc {
 
 			this.methodDocs.put(methodDocs.getElementId(), methodDocs);
 		});
+
+		detailToElementsMap.onParseFinished();
 	}
 
 	private void processInheritedElements(Document document, InheritedType inheritedType, BiConsumer<ClassDoc, String> inheritedElementConsumer) throws IOException {
@@ -171,7 +195,7 @@ public class ClassDoc {
 	}
 
 	@Nullable
-	public Map<DocDetailType, List<HTMLElement>> getDetailToElementsMap() {
+	public DetailToElementsMap getDetailToElementsMap() {
 		return detailToElementsMap;
 	}
 

@@ -19,6 +19,8 @@ public enum DocDetailType {
 	SUPER_INTERFACES("All Superinterfaces:"),
 	FUNCTIONAL_INTERFACE("Functional Interface:"),
 	ENCLOSING_CLASS("Enclosing class:"),
+	AUTHOR("Author:"),
+	ENCLOSING_INTERFACE("Enclosing interface:"),
 	THROWS("Throws:");
 
 	private final String elementText;

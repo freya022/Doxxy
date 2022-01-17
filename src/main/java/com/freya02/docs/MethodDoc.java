@@ -2,18 +2,14 @@ package com.freya02.docs;
 
 import com.freya02.bot.utils.DecomposedName;
 import com.freya02.bot.utils.HTMLElement;
-import com.freya02.botcommands.api.Logging;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jsoup.nodes.Element;
-import org.slf4j.Logger;
 
-import java.util.*;
+import java.util.List;
+import java.util.StringJoiner;
 
 public class MethodDoc {
-	private static final Logger LOGGER = Logging.getLogger();
-	private static final Set<String> warned = Collections.synchronizedSet(new HashSet<>());
-
 	@NotNull private final ClassDoc classDocs;
 
 	@NotNull private final String elementId;
@@ -24,7 +20,7 @@ public class MethodDoc {
 	@NotNull private final String methodReturnType;
 	@Nullable private final HTMLElement descriptionElement;
 
-	@Nullable private final Map<DocDetailType, List<HTMLElement>> detailToElementsMap;
+	@Nullable private final DetailToElementsMap detailToElementsMap;
 	@Nullable private final List<HTMLElement> typeParameterElements;
 	@Nullable private final List<HTMLElement> parameterElements;
 	@Nullable private final HTMLElement returnsElement;
@@ -32,6 +28,9 @@ public class MethodDoc {
 	@Nullable private final HTMLElement incubatingElement;
 	@Nullable private final SeeAlso seeAlso;
 	@Nullable private final HTMLElement defaultElement;
+	@Nullable private final List<HTMLElement> specifiedByElements;
+	@Nullable private final HTMLElement overridesElement;
+	@Nullable private final HTMLElement since;
 
 	public MethodDoc(@NotNull ClassDoc classDocs, @NotNull Element element) {
 		this.classDocs = classDocs;
@@ -63,65 +62,30 @@ public class MethodDoc {
 		}
 
 		//Need to parse the children of the <dl> tag in order to make a map of dt[class] -> List<Element>
-		this.detailToElementsMap = getDetailToElementsMap(element);
+		this.detailToElementsMap = new DetailToElementsMap(element);
 
 		this.typeParameterElements = detailToElementsMap.get(DocDetailType.TYPE_PARAMETERS);
 		this.parameterElements = detailToElementsMap.get(DocDetailType.PARAMETERS);
-		this.returnsElement = findFirst(detailToElementsMap, DocDetailType.RETURNS);
-		this.defaultElement = findFirst(detailToElementsMap, DocDetailType.DEFAULT);
+		this.returnsElement = detailToElementsMap.findFirst(DocDetailType.RETURNS);
+		this.defaultElement = detailToElementsMap.findFirst(DocDetailType.DEFAULT);
 		this.throwsElements = detailToElementsMap.get(DocDetailType.THROWS);
-		this.incubatingElement = findFirst(detailToElementsMap, DocDetailType.INCUBATING);
+		this.incubatingElement = detailToElementsMap.findFirst(DocDetailType.INCUBATING);
+		this.specifiedByElements = detailToElementsMap.get(DocDetailType.SPECIFIED_BY);
+		this.overridesElement = detailToElementsMap.findFirst(DocDetailType.OVERRIDES);
+		this.since = detailToElementsMap.findFirst(DocDetailType.SINCE);
 
-		final HTMLElement seeAlsoElement = findFirst(detailToElementsMap, DocDetailType.SEE_ALSO);
+		final HTMLElement seeAlsoElement = detailToElementsMap.findFirst(DocDetailType.SEE_ALSO);
 		if (seeAlsoElement != null) {
 			this.seeAlso = new SeeAlso(seeAlsoElement);
 		} else {
 			this.seeAlso = null;
 		}
+
+		detailToElementsMap.onParseFinished();
 	}
 
-	public Map<DocDetailType, List<HTMLElement>> getDetailToElementsMap() {
+	public DetailToElementsMap getDetailToElementsMap() {
 		return detailToElementsMap;
-	}
-
-	@Nullable
-	static HTMLElement findFirst(Map<DocDetailType, List<HTMLElement>> detailToElementsMap, DocDetailType name) {
-		final List<HTMLElement> list = detailToElementsMap.get(name);
-		if (list == null || list.isEmpty()) return null;
-
-		if (list.size() > 1) throw new IllegalStateException("findFirst was used on a list with more than 1 element");
-
-		return list.get(0);
-	}
-
-	@NotNull
-	static Map<DocDetailType, List<HTMLElement>> getDetailToElementsMap(@NotNull Element detailTarget) {
-		final Map<DocDetailType, List<HTMLElement>> detailClassNameToElementsMap = new HashMap<>();
-
-		List<HTMLElement> list = null;
-		for (Element element : detailTarget.select("dl.notes")) {
-			for (Element child : element.children()) {
-				final String tagName = child.tag().normalName();
-
-				if (tagName.equals("dt")) {
-					final String detailName = child.text();
-					final DocDetailType type = DocDetailType.parseType(detailName);
-					if (type == null) {
-						if (warned.add(detailName)) {
-							LOGGER.warn("Unknown method detail type: '{}' at {}", detailName, detailTarget.baseUri());
-						}
-
-						list = null;
-					} else {
-						list = detailClassNameToElementsMap.computeIfAbsent(type, s -> new ArrayList<>());
-					}
-				} else if (tagName.equals("dd") && list != null) {
-					list.add(new HTMLElement(child));
-				}
-			}
-		}
-
-		return detailClassNameToElementsMap;
 	}
 
 	@NotNull
