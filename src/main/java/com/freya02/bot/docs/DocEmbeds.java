@@ -17,7 +17,9 @@ public class DocEmbeds {
 
 		fillDescription(doc, builder);
 
-		fillDetails(builder, doc, EnumSet.noneOf(DocDetailType.class));
+		fillDetails(builder, doc, EnumSet.of(
+				DocDetailType.SEE_ALSO
+		));
 
 		addSeeAlso(builder, doc.getSeeAlso(), doc.getURL());
 
@@ -38,7 +40,9 @@ public class DocEmbeds {
 
 		fillDescription(methodDoc, builder);
 
-		fillDetails(builder, methodDoc, EnumSet.noneOf(DocDetailType.class));
+		fillDetails(builder, methodDoc, EnumSet.of(
+				DocDetailType.SEE_ALSO
+		));
 
 		addSeeAlso(builder, methodDoc.getSeeAlso(), methodDoc.getURL());
 
@@ -56,7 +60,9 @@ public class DocEmbeds {
 
 		fillDescription(fieldDoc, builder);
 
-		fillDetails(builder, fieldDoc, EnumSet.noneOf(DocDetailType.class));
+		fillDetails(builder, fieldDoc, EnumSet.of(
+				DocDetailType.SEE_ALSO
+		));
 
 		addSeeAlso(builder, fieldDoc.getSeeAlso(), fieldDoc.getURL());
 
