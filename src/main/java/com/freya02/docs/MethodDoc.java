@@ -6,10 +6,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jsoup.nodes.Element;
 
-import java.util.List;
 import java.util.StringJoiner;
 
-public class MethodDoc {
+public class MethodDoc extends BaseDoc {
 	@NotNull private final ClassDoc classDocs;
 
 	@NotNull private final String elementId;
@@ -20,17 +19,9 @@ public class MethodDoc {
 	@NotNull private final String methodReturnType;
 	@Nullable private final HTMLElement descriptionElement;
 
-	@Nullable private final DetailToElementsMap detailToElementsMap;
-	@Nullable private final List<HTMLElement> typeParameterElements;
-	@Nullable private final List<HTMLElement> parameterElements;
-	@Nullable private final HTMLElement returnsElement;
-	@Nullable private final List<HTMLElement> throwsElements;
-	@Nullable private final HTMLElement incubatingElement;
+	@NotNull private final DetailToElementsMap detailToElementsMap;
+
 	@Nullable private final SeeAlso seeAlso;
-	@Nullable private final HTMLElement defaultElement;
-	@Nullable private final List<HTMLElement> specifiedByElements;
-	@Nullable private final HTMLElement overridesElement;
-	@Nullable private final HTMLElement since;
 
 	public MethodDoc(@NotNull ClassDoc classDocs, @NotNull Element element) {
 		this.classDocs = classDocs;
@@ -62,30 +53,14 @@ public class MethodDoc {
 		}
 
 		//Need to parse the children of the <dl> tag in order to make a map of dt[class] -> List<Element>
-		this.detailToElementsMap = new DetailToElementsMap(element);
+		this.detailToElementsMap = DetailToElementsMap.parseDetails(element);
 
-		this.typeParameterElements = detailToElementsMap.get(DocDetailType.TYPE_PARAMETERS);
-		this.parameterElements = detailToElementsMap.get(DocDetailType.PARAMETERS);
-		this.returnsElement = detailToElementsMap.findFirst(DocDetailType.RETURNS);
-		this.defaultElement = detailToElementsMap.findFirst(DocDetailType.DEFAULT);
-		this.throwsElements = detailToElementsMap.get(DocDetailType.THROWS);
-		this.incubatingElement = detailToElementsMap.findFirst(DocDetailType.INCUBATING);
-		this.specifiedByElements = detailToElementsMap.get(DocDetailType.SPECIFIED_BY);
-		this.overridesElement = detailToElementsMap.findFirst(DocDetailType.OVERRIDES);
-		this.since = detailToElementsMap.findFirst(DocDetailType.SINCE);
-
-		final HTMLElement seeAlsoElement = detailToElementsMap.findFirst(DocDetailType.SEE_ALSO);
-		if (seeAlsoElement != null) {
-			this.seeAlso = new SeeAlso(seeAlsoElement);
+		final DocDetail seeAlsoDetail = detailToElementsMap.getDetail(DocDetailType.SEE_ALSO);
+		if (seeAlsoDetail != null) {
+			this.seeAlso = new SeeAlso(seeAlsoDetail);
 		} else {
 			this.seeAlso = null;
 		}
-
-		detailToElementsMap.onParseFinished();
-	}
-
-	public DetailToElementsMap getDetailToElementsMap() {
-		return detailToElementsMap;
 	}
 
 	@NotNull
@@ -135,34 +110,22 @@ public class MethodDoc {
 		return simpleSignatureBuilder.toString();
 	}
 
+	@Override
+	@NotNull
+	public String getURL() {
+		return url;
+	}
+
+	@Override
 	@Nullable
 	public HTMLElement getDescriptionElement() {
 		return descriptionElement;
 	}
 
-	@Nullable
-	public HTMLElement getReturnsElement() {
-		return returnsElement;
-	}
-
-	@Nullable
-	public List<HTMLElement> getParameterElements() {
-		return parameterElements;
-	}
-
-	@Nullable
-	public List<HTMLElement> getTypeParameterElements() {
-		return typeParameterElements;
-	}
-
-	@Nullable
-	public List<HTMLElement> getThrowsElements() {
-		return throwsElements;
-	}
-
-	@Nullable
-	public HTMLElement getIncubatingElement() {
-		return incubatingElement;
+	@Override
+	@NotNull
+	public DetailToElementsMap getDetailToElementsMap() {
+		return detailToElementsMap;
 	}
 
 	@Nullable
@@ -173,14 +136,5 @@ public class MethodDoc {
 	@Override
 	public String toString() {
 		return methodSignature + " : " + descriptionElement;
-	}
-
-	public String getURL() {
-		return url;
-	}
-
-	@Nullable
-	public HTMLElement getDefaultElement() {
-		return defaultElement;
 	}
 }

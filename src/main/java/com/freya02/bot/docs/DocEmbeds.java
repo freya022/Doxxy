@@ -1,13 +1,11 @@
 package com.freya02.bot.docs;
 
 import com.freya02.bot.utils.HTMLElement;
-import com.freya02.docs.ClassDoc;
-import com.freya02.docs.FieldDoc;
-import com.freya02.docs.MethodDoc;
-import com.freya02.docs.SeeAlso;
+import com.freya02.docs.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,22 +15,9 @@ public class DocEmbeds {
 
 		builder.setTitle(doc.getDocTitleElement().getTargetElement().text(), doc.getURL());
 
-		final HTMLElement descriptionElement = doc.getDescriptionElement();
-		if (descriptionElement != null) {
-			final String description = descriptionElement.getMarkdown();
-			if (description.length() > MessageEmbed.DESCRIPTION_MAX_LENGTH) {
-				builder.setDescription("Description is too long, please look at the [docs page](" + doc.getURL() + ")");
-			} else {
-				builder.setDescription(description);
-			}
-		} else {
-			builder.setDescription("No description");
-		}
+		fillDescription(doc, builder);
 
-		final List<HTMLElement> typeParameters = doc.getTypeParameterElements();
-		if (typeParameters != null) {
-			builder.addField("Type parameters", typeParameters.stream().map(HTMLElement::getMarkdown).collect(Collectors.joining("\n")), false);
-		}
+		fillDetails(builder, doc, EnumSet.noneOf(DocDetailType.class));
 
 		addSeeAlso(builder, doc.getSeeAlso(), doc.getURL());
 
@@ -51,60 +36,9 @@ public class DocEmbeds {
 			builder.setDescription("**Inherited from " + methodDoc.getClassDocs().getClassName() + "**\n\n");
 		}
 
-		final HTMLElement descriptionElement = methodDoc.getDescriptionElement();
-		if (descriptionElement != null) {
-			final String description = descriptionElement.getMarkdown();
+		fillDescription(methodDoc, builder);
 
-			builder.appendDescription(
-					getDescriptionValue(builder.getDescriptionBuilder().length(),
-							description,
-							methodDoc.getURL())
-			);
-		} else {
-			builder.appendDescription("No description");
-		}
-
-		final List<HTMLElement> parameterElements = methodDoc.getParameterElements();
-		if (parameterElements != null) {
-			addField(builder,
-					"Parameters",
-					parameterElements.stream().map(HTMLElement::getMarkdown).collect(Collectors.joining("\n")),
-					false,
-					methodDoc.getURL());
-		}
-
-		final HTMLElement returnsElement = methodDoc.getReturnsElement();
-		if (returnsElement != null) {
-			addField(builder,"Returns", returnsElement.getMarkdown(), false, methodDoc.getURL());
-		}
-
-		final List<HTMLElement> throwsElements = methodDoc.getThrowsElements();
-		if (throwsElements != null) {
-			addField(builder,
-					"Throws",
-					throwsElements.stream().map(HTMLElement::getMarkdown).collect(Collectors.joining("\n")),
-					false,
-					methodDoc.getURL());
-		}
-
-		final HTMLElement defaultElement = methodDoc.getDefaultElement();
-		if (defaultElement != null) {
-			addField(builder,"Default", defaultElement.getMarkdown(), false, methodDoc.getURL());
-		}
-
-		final HTMLElement incubatingElement = methodDoc.getIncubatingElement();
-		if (incubatingElement != null) {
-			addField(builder, "Incubating", incubatingElement.getMarkdown(), false, methodDoc.getURL());
-		}
-
-		final List<HTMLElement> typeParameters = methodDoc.getTypeParameterElements();
-		if (typeParameters != null) {
-			addField(builder,
-					"Type parameters",
-					typeParameters.stream().map(HTMLElement::getMarkdown).collect(Collectors.joining("\n")),
-					false,
-					methodDoc.getURL());
-		}
+		fillDetails(builder, methodDoc, EnumSet.noneOf(DocDetailType.class));
 
 		addSeeAlso(builder, methodDoc.getSeeAlso(), methodDoc.getURL());
 
@@ -120,22 +54,41 @@ public class DocEmbeds {
 			builder.setDescription("**Inherited from " + fieldDoc.getClassDocs().getClassName() + "**\n\n");
 		}
 
-		final HTMLElement descriptionElement = fieldDoc.getDescriptionElement();
+		fillDescription(fieldDoc, builder);
+
+		fillDetails(builder, fieldDoc, EnumSet.noneOf(DocDetailType.class));
+
+		addSeeAlso(builder, fieldDoc.getSeeAlso(), fieldDoc.getURL());
+
+		return builder;
+	}
+
+	private static void fillDescription(BaseDoc doc, EmbedBuilder builder) {
+		final HTMLElement descriptionElement = doc.getDescriptionElement();
+
 		if (descriptionElement != null) {
 			final String description = descriptionElement.getMarkdown();
 
 			builder.appendDescription(
 					getDescriptionValue(builder.getDescriptionBuilder().length(),
 							description,
-							fieldDoc.getURL())
+							doc.getURL())
 			);
 		} else {
 			builder.appendDescription("No description");
 		}
+	}
 
-		addSeeAlso(builder, fieldDoc.getSeeAlso(), fieldDoc.getURL());
+	private static void fillDetails(EmbedBuilder builder, BaseDoc doc, EnumSet<DocDetailType> excludedTypes) {
+		final List<DocDetail> details = doc.getDetails(excludedTypes);
 
-		return builder;
+		for (DocDetail detail : details) {
+			addField(builder,
+					detail.getDetailString(),
+					detail.toMarkdown(),
+					false,
+					doc.getURL());
+		}
 	}
 
 	private static String getDescriptionValue(int currentLength, String descriptionValue, String onlineTarget) {

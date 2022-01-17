@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jsoup.nodes.Element;
 
-public class FieldDoc {
+public class FieldDoc extends BaseDoc {
 	@NotNull private final ClassDoc classDocs;
 
 	@NotNull private final String fieldName;
@@ -18,7 +18,6 @@ public class FieldDoc {
 
 	@NotNull private final DetailToElementsMap detailToElementsMap;
 
-	@Nullable private final HTMLElement incubatingElement;
 	@Nullable private final SeeAlso seeAlso;
 
 	public FieldDoc(@NotNull ClassDoc classDocs, @NotNull Element element) {
@@ -50,18 +49,14 @@ public class FieldDoc {
 			this.descriptionElement = null;
 		}
 
-		this.detailToElementsMap = new DetailToElementsMap(element);
+		this.detailToElementsMap = DetailToElementsMap.parseDetails(element);
 
-		this.incubatingElement = detailToElementsMap.findFirst(DocDetailType.INCUBATING);
-
-		final HTMLElement seeAlsoElement = detailToElementsMap.findFirst(DocDetailType.SEE_ALSO);
-		if (seeAlsoElement != null) {
-			this.seeAlso = new SeeAlso(seeAlsoElement);
+		final DocDetail seeAlsoDetail = detailToElementsMap.getDetail(DocDetailType.SEE_ALSO);
+		if (seeAlsoDetail != null) {
+			this.seeAlso = new SeeAlso(seeAlsoDetail);
 		} else {
 			this.seeAlso = null;
 		}
-
-		detailToElementsMap.onParseFinished();
 	}
 
 	@NotNull
@@ -89,25 +84,29 @@ public class FieldDoc {
 		return fieldType;
 	}
 
-	@Nullable
-	public HTMLElement getDescriptionElement() {
-		return descriptionElement;
-	}
-
 	@Override
 	public String toString() {
 		return fieldType + " " + fieldName + " : " + descriptionElement;
-	}
-
-	@NotNull
-	public String getURL() {
-		return url;
 	}
 
 	public String getSimpleSignature() {
 		return fieldType + " " + fieldName;
 	}
 
+	@Override
+	@NotNull
+	public String getURL() {
+		return url;
+	}
+
+	@Override
+	@Nullable
+	public HTMLElement getDescriptionElement() {
+		return descriptionElement;
+	}
+
+	@Override
+	@NotNull
 	public DetailToElementsMap getDetailToElementsMap() {
 		return detailToElementsMap;
 	}

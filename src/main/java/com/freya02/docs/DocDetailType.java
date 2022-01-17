@@ -28,6 +28,10 @@ public enum DocDetailType {
 		this.elementText = elementText;
 	}
 
+	public String getElementText() {
+		return elementText;
+	}
+
 	@Nullable
 	public static DocDetailType parseType(String elementText) {
 		for (DocDetailType type : values()) {

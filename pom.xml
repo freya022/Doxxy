@@ -92,7 +92,7 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.overzealous</groupId>
+            <groupId>com.kotcrab.remark</groupId>
             <artifactId>remark</artifactId>
             <version>1.2.0</version>
         </dependency>
