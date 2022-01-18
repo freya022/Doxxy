@@ -112,12 +112,13 @@ public class SlashTag extends ApplicationCommand {
 	@JDASlashCommand(name = "tags", subcommand = "edit", description = "Edits a tag in this guild")
 	public void editTag(GuildSlashEvent event,
 	                    @AppOption(description = "Name of the tag", autocomplete = USER_TAGS_AUTOCOMPLETE) String name,
-	                    @AppOption(description = "The description of the tag") String description,
-	                    @AppOption(description = "The content to associate with this tag") String content) throws SQLException {
+	                    @Nullable @AppOption(description = "New name of the tag") String newName,
+	                    @Nullable @AppOption(description = "The description of the tag") String newDescription,
+	                    @Nullable @AppOption(description = "The content to associate with this tag") String newContent) throws SQLException {
 
 		withOwnedTag(event, name, tag -> {
 			try {
-				tagDB.edit(event.getGuild().getIdLong(), event.getUser().getIdLong(), name, description, content);
+				tagDB.edit(event.getGuild().getIdLong(), event.getUser().getIdLong(), name, newName, newDescription, newContent);
 
 				event.replyFormat("Tag '%s' edited successfully", name).setEphemeral(true).queue();
 			} catch (TagException e) {

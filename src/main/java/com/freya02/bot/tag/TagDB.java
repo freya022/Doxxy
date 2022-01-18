@@ -7,6 +7,7 @@ import com.freya02.bot.utils.Utils;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.intellij.lang.annotations.Language;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.sql.ResultSet;
@@ -71,15 +72,41 @@ public class TagDB {
 		}
 	}
 
-	public void edit(long guildId, long ownerId, String name, String description, String content) throws SQLException {
-		try (DBAction action = DBAction.of(database,
-				"update Tag set description = ?, content = ? where guildid = ? and ownerid = ? and name = ?")) {
+	public void edit(long guildId,
+	                 long ownerId,
+	                 @NotNull String name,
+	                 @Nullable String newName,
+	                 @Nullable String newDescription,
+	                 @Nullable String newContent) throws SQLException {
 
-			checkName(name);
-			checkDescription(description);
-			checkContent(content);
+		if (newName != null) checkName(name);
+		if (newDescription != null) checkDescription(newDescription);
+		if (newContent != null) checkContent(newContent);
 
-			action.executeUpdate(description, content, guildId, ownerId, name);
+		if (newName != null) {
+			try (DBAction action = DBAction.of(database,
+					"update Tag set name = ? where guildid = ? and ownerid = ? and name = ?")) {
+
+				action.executeUpdate(newName, guildId, ownerId, name);
+			}
+
+			name = newName;
+		}
+
+		if (newDescription != null) {
+			try (DBAction action = DBAction.of(database,
+					"update Tag set description = ? where guildid = ? and ownerid = ? and name = ?")) {
+
+				action.executeUpdate(newDescription, guildId, ownerId, name);
+			}
+		}
+
+		if (newContent != null) {
+			try (DBAction action = DBAction.of(database,
+					"update Tag set content = ? where guildid = ? and ownerid = ? and name = ?")) {
+
+				action.executeUpdate(newContent, guildId, ownerId, name);
+			}
 		}
 	}
 
