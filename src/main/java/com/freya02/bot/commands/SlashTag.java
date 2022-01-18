@@ -1,11 +1,8 @@
 package com.freya02.bot.commands;
 
-import com.freya02.bot.Database;
-import com.freya02.bot.SQLCodes;
-import com.freya02.bot.tag.ShortTag;
-import com.freya02.bot.tag.Tag;
-import com.freya02.bot.tag.TagCriteria;
-import com.freya02.bot.tag.TagDB;
+import com.freya02.bot.db.Database;
+import com.freya02.bot.db.SQLCodes;
+import com.freya02.bot.tag.*;
 import com.freya02.botcommands.api.Logging;
 import com.freya02.botcommands.api.application.ApplicationCommand;
 import com.freya02.botcommands.api.application.annotations.AppOption;
@@ -24,6 +21,7 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.Command;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -79,7 +77,7 @@ public class SlashTag extends ApplicationCommand {
 		withTag(event, name, tag -> {
 			tagDB.incrementTag(event.getGuild().getIdLong(), tag.name());
 
-			event.reply(tag.text()).queue();
+			event.reply(tag.content()).queue();
 		});
 	}
 
@@ -87,7 +85,7 @@ public class SlashTag extends ApplicationCommand {
 	public void sendRawTag(GuildSlashEvent event,
 	                       @AppOption(description = "Name of the tag", autocomplete = GUILD_TAGS_AUTOCOMPLETE) String name) throws SQLException {
 
-		withTag(event, name, tag -> event.reply(MarkdownSanitizer.escape(tag.text())).queue());
+		withTag(event, name, tag -> event.reply(MarkdownSanitizer.escape(tag.content())).queue());
 	}
 
 	@JDASlashCommand(name = "tags", subcommand = "create", description = "Creates a tag in this guild")
@@ -97,12 +95,6 @@ public class SlashTag extends ApplicationCommand {
 	                      @AppOption(description = "The text to associate with this tag") String text) throws SQLException {
 
 		try {
-			if (name.length() > 100) {
-				event.reply("Tag name is too long").setEphemeral(true).queue();
-
-				return;
-			}
-
 			tagDB.create(event.getGuild().getIdLong(), event.getUser().getIdLong(), name, description, text);
 
 			event.replyFormat("Tag '%s' created successfully", name).setEphemeral(true).queue();
@@ -112,6 +104,8 @@ public class SlashTag extends ApplicationCommand {
 			} else {
 				throw e;
 			}
+		} catch (TagException e) {
+			event.reply(e.getMessage()).setEphemeral(true).queue();
 		}
 	}
 
@@ -122,9 +116,13 @@ public class SlashTag extends ApplicationCommand {
 	                    @AppOption(description = "The text to associate with this tag") String text) throws SQLException {
 
 		withOwnedTag(event, name, tag -> {
-			tagDB.edit(event.getGuild().getIdLong(), event.getUser().getIdLong(), name, description, text);
+			try {
+				tagDB.edit(event.getGuild().getIdLong(), event.getUser().getIdLong(), name, description, text);
 
-			event.replyFormat("Tag '%s' edited successfully", name).setEphemeral(true).queue();
+				event.replyFormat("Tag '%s' edited successfully", name).setEphemeral(true).queue();
+			} catch (TagException e) {
+				event.reply(e.getMessage()).setEphemeral(true).queue();
+			}
 		});
 	}
 
@@ -212,9 +210,10 @@ public class SlashTag extends ApplicationCommand {
 
 			builder.setTitle("Tag '" + tag.name() + "'");
 			builder.addField("Description", tag.description(), false);
-			builder.addField("Owner", "<@" + tag.ownerId() + ">", false);
-			builder.addField("Uses", String.valueOf(tag.uses()), false);
-			builder.addField("Rank", String.valueOf(tagDB.getRank(event.getGuild().getIdLong(), name)), false);
+			builder.addField("Owner", "<@" + tag.ownerId() + ">", true);
+			builder.addField("Uses", String.valueOf(tag.uses()), true);
+			builder.addField("Rank", String.valueOf(tagDB.getRank(event.getGuild().getIdLong(), name)), true);
+			builder.setFooter("Created on").setTimestamp(tag.createdAt());
 
 			event.getHook().sendMessageEmbeds(builder.build()).setEphemeral(true).queue();
 		});
@@ -250,7 +249,12 @@ public class SlashTag extends ApplicationCommand {
 
 	@NotNull
 	private String getChoiceName(ShortTag shortTag) {
-		return shortTag.name() + " - " + shortTag.description();
+		final String choiceName = shortTag.name() + " - " + shortTag.description();
+		if (choiceName.length() > OptionData.MAX_CHOICE_NAME_LENGTH) {
+			return shortTag.name(); //TODO maybe improve
+		}
+
+		return choiceName;
 	}
 
 	private interface TagConsumer {

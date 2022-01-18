@@ -1,4 +1,4 @@
-package com.freya02.bot;
+package com.freya02.bot.db;
 
 import java.sql.SQLException;
 

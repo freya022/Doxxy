@@ -1,5 +1,6 @@
-package com.freya02.bot;
+package com.freya02.bot.db;
 
+import com.freya02.bot.Config;
 import com.zaxxer.hikari.HikariDataSource;
 import org.postgresql.ds.PGSimpleDataSource;
 

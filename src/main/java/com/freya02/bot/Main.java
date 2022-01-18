@@ -1,5 +1,6 @@
 package com.freya02.bot;
 
+import com.freya02.bot.db.Database;
 import com.freya02.bot.docs.DocSourceTypeResolver;
 import com.freya02.bot.tag.TagCriteriaResolver;
 import com.freya02.bot.utils.FileCache;
