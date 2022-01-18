@@ -92,10 +92,10 @@ public class SlashTag extends ApplicationCommand {
 	public void createTag(GuildSlashEvent event,
 	                      @AppOption(description = "Name of the tag") String name,
 	                      @AppOption(description = "The description of the tag") String description,
-	                      @AppOption(description = "The text to associate with this tag") String text) throws SQLException {
+	                      @AppOption(description = "The content to associate with this tag") String content) throws SQLException {
 
 		try {
-			tagDB.create(event.getGuild().getIdLong(), event.getUser().getIdLong(), name, description, text);
+			tagDB.create(event.getGuild().getIdLong(), event.getUser().getIdLong(), name, description, content);
 
 			event.replyFormat("Tag '%s' created successfully", name).setEphemeral(true).queue();
 		} catch (SQLException e) {
@@ -113,11 +113,11 @@ public class SlashTag extends ApplicationCommand {
 	public void editTag(GuildSlashEvent event,
 	                    @AppOption(description = "Name of the tag", autocomplete = USER_TAGS_AUTOCOMPLETE) String name,
 	                    @AppOption(description = "The description of the tag") String description,
-	                    @AppOption(description = "The text to associate with this tag") String text) throws SQLException {
+	                    @AppOption(description = "The content to associate with this tag") String content) throws SQLException {
 
 		withOwnedTag(event, name, tag -> {
 			try {
-				tagDB.edit(event.getGuild().getIdLong(), event.getUser().getIdLong(), name, description, text);
+				tagDB.edit(event.getGuild().getIdLong(), event.getUser().getIdLong(), name, description, content);
 
 				event.replyFormat("Tag '%s' edited successfully", name).setEphemeral(true).queue();
 			} catch (TagException e) {
