@@ -110,6 +110,14 @@ public class TagDB {
 		}
 	}
 
+	public void transfer(long guildId, long ownerId, String name, long newOwnerId) throws SQLException {
+		try (DBAction action = DBAction.of(database,
+				"update Tag set ownerId = ? where guildid = ? and ownerid = ? and name = ?")) {
+
+			action.executeUpdate(newOwnerId, guildId, ownerId, name);
+		}
+	}
+
 	public void delete(long guildId, long ownerId, String name) throws SQLException {
 		try (DBAction action = DBAction.of(database,
 				"delete from Tag where guildid = ? and ownerid = ? and name = ?")) {

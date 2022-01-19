@@ -32,6 +32,9 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static net.dv8tion.jda.api.Permission.MANAGE_ROLES;
+import static net.dv8tion.jda.api.Permission.MANAGE_SERVER;
+
 public class SlashTag extends ApplicationCommand {
 	private static final String GUILD_TAGS_AUTOCOMPLETE = "guildTagsAutocomplete";
 	private static final String USER_TAGS_AUTOCOMPLETE = "userTagsAutocomplete";
@@ -49,7 +52,8 @@ public class SlashTag extends ApplicationCommand {
 			event.reply("Tag '" + name + "' was not found").setEphemeral(true).queue();
 
 			return;
-		} else if (tag.ownerId() != event.getUser().getIdLong()) {
+		} else if (tag.ownerId() != event.getUser().getIdLong()
+				&& !event.getMember().hasPermission(event.getGuildChannel(), MANAGE_SERVER, MANAGE_ROLES)) {
 			event.reply("You do not own this tag").setEphemeral(true).queue();
 
 			return;
@@ -124,6 +128,29 @@ public class SlashTag extends ApplicationCommand {
 			} catch (TagException e) {
 				event.reply(e.getMessage()).setEphemeral(true).queue();
 			}
+		});
+	}
+
+	@JDASlashCommand(name = "tags", subcommand = "transfer", description = "Transfers a tag ownership to someone else in this guild")
+	public void transferTag(GuildSlashEvent event,
+	                        @NotNull @AppOption(description = "Name of the tag", autocomplete = USER_TAGS_AUTOCOMPLETE) String name,
+	                        @NotNull @AppOption(description = "Member to transfer the tag to") Member newOwner) throws SQLException {
+
+		if (newOwner.getUser().isBot()) {
+			event.reply("The member to transfer the tag to cannot be a bot").setEphemeral(true).queue();
+
+			return;
+		}
+
+		withOwnedTag(event, name, tag -> {
+			tagDB.transfer(event.getGuild().getIdLong(),
+					event.getUser().getIdLong(),
+					name,
+					newOwner.getIdLong());
+
+			event.replyFormat("Tag '%s' transfer to %s successfully", name, newOwner.getAsMention())
+					.setEphemeral(true)
+					.queue();
 		});
 	}
 
