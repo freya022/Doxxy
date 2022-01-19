@@ -1,4 +1,4 @@
-package com.freya02.bot.commands;
+package com.freya02.bot.commands.slash;
 
 import com.freya02.botcommands.api.application.ApplicationCommand;
 import com.freya02.botcommands.api.application.CommandPath;
