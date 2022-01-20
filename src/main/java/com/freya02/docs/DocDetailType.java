@@ -11,11 +11,25 @@ public enum DocDetailType {
 	SINCE("Since:"),
 	OVERRIDES("Overrides:"),
 	INCUBATING("Incubating:"),
+	ALL_KNOWN_IMPLEMENTING_CLASSES("All Known Implementing Classes:"),
+	ALL_IMPLEMENTED_INTERFACES("All Implemented Interfaces:"),
+	ALL_KNOWN_SUBINTERFACES("All Known Subinterfaces:"),
+	DIRECT_KNOWN_SUBCLASSES("Direct Known Subclasses:"),
+	DEFAULT("Default:"),
+	SUPER_INTERFACES("All Superinterfaces:"),
+	FUNCTIONAL_INTERFACE("Functional Interface:"),
+	ENCLOSING_CLASS("Enclosing class:"),
+	AUTHOR("Author:"),
+	ENCLOSING_INTERFACE("Enclosing interface:"),
 	THROWS("Throws:");
 
 	private final String elementText;
 	DocDetailType(String elementText) {
 		this.elementText = elementText;
+	}
+
+	public String getElementText() {
+		return elementText;
 	}
 
 	@Nullable

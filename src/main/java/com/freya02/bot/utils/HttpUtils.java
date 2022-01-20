@@ -3,34 +3,31 @@ package com.freya02.bot.utils;
 import com.freya02.bot.Main;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
 
 public class HttpUtils {
-	private static final Path CACHE_PATH = Main.BOT_FOLDER.resolve("docs_cache");
 	private static final OkHttpClient CLIENT;
 
 	static {
-		if (Files.notExists(CACHE_PATH)) {
-			try {
-				Files.createDirectory(CACHE_PATH);
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		}
-
 		CLIENT = new OkHttpClient.Builder()
-				.cache(new Cache(CACHE_PATH.toFile(), Long.MAX_VALUE))
+				.cache(new Cache(Main.CACHE_PATH.toFile(), Long.MAX_VALUE))
 				.build();
 	}
 
 	@NotNull
+	public static synchronized Document parseDocument(@NotNull String downloadedBody, String baseUri) {
+		return Jsoup.parse(downloadedBody, baseUri);
+	}
+
+	@NotNull
 	public static synchronized Document getDocument(@NotNull String url) throws IOException {
-		return Jsoup.parse(downloadBody(url), url);
+		return parseDocument(downloadBody(url), url);
 	}
 
 	private static String downloadBody(String url) throws IOException {
@@ -38,6 +35,38 @@ public class HttpUtils {
 				.url(url)
 				.build()
 		).execute()) {
+			final ResponseBody body = response.body();
+			if (body == null) throw new IllegalArgumentException("Got no body from url: " + url);
+
+			return body.string();
+		}
+	}
+
+	public static Path getCachePathForUrl(String url) {
+		final HttpUrl httpUrl = HttpUrl.get(url);
+
+		Path path = Main.CACHE_PATH.resolve(httpUrl.host());
+		for (String segment : httpUrl.pathSegments()) {
+			path = path.resolve(segment);
+		}
+
+		return path;
+	}
+
+	/**
+	 * Returns null if cache is still OK
+	 */
+	@Nullable
+	public static String downloadBodyIfNotCached(String url) throws IOException {
+		try (Response response = CLIENT.newCall(new Request.Builder()
+				.cacheControl(new CacheControl.Builder() //TODO check if it works correctly
+						.maxAge(0, TimeUnit.SECONDS)
+						.build())
+				.url(url)
+				.build()
+		).execute()) {
+			if (response.cacheResponse() != null) return null;
+
 			final ResponseBody body = response.body();
 			if (body == null) throw new IllegalArgumentException("Got no body from url: " + url);
 

@@ -1,168 +1,220 @@
 package com.freya02.bot.tag;
 
-import com.freya02.bot.Database;
+import com.freya02.bot.db.DBAction;
+import com.freya02.bot.db.DBResult;
+import com.freya02.bot.db.Database;
 import com.freya02.bot.utils.Utils;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 public class TagDB {
+	private static final int CONTENT_MAX_LENGTH = Message.MAX_CONTENT_LENGTH;
+	private static final int DESCRIPTION_MAX_LENGTH = 512;
+	private static final int NAME_MAX_LENGTH = OptionData.MAX_CHOICE_NAME_LENGTH;
+
 	private final Database database;
 
 	public TagDB(Database database) throws SQLException {
 		this.database = database;
 
+		@Language("PostgreSQL") //IJ moment
 		final String setupSql = Utils.readResource("TagDB.sql");
-		try (Connection connection = database.getConnection()) {
-			connection.prepareStatement(setupSql).execute();
+
+		try (DBAction createTableAction = DBAction.of(database, setupSql)) {createTableAction.executeUpdate();}
+
+		//Setting column restrictions to JDA constants
+		//Looks like the driver doesn't understand when we do these 3 alterations in 1 statement
+		applyConstraint("alter table Tag add constraint name check(length(name) <= " + NAME_MAX_LENGTH + ")");
+		applyConstraint("alter table Tag add constraint description check(length(description) <= " + DESCRIPTION_MAX_LENGTH + ")");
+		applyConstraint("alter table Tag add constraint content check(length(content) <= " + CONTENT_MAX_LENGTH + ")");
+	}
+
+	private void applyConstraint(@Language("PostgreSQL") String query) throws SQLException {
+		try (DBAction constraintAction = DBAction.of(database, query)) {
+			constraintAction.executeUpdate();
 		}
 	}
 
-	public void create(long guildId, long ownerId, String name, String text) throws SQLException {
-		try (Connection connection = database.getConnection()) {
-			final PreparedStatement statement = connection.prepareStatement("insert into Tag (guildid, ownerid, name, text) values (?, ?, ?, ?)");
-
-			statement.setLong(1, guildId);
-			statement.setLong(2, ownerId);
-			statement.setString(3, name);
-			statement.setString(4, text);
-
-			statement.executeUpdate();
+	private void checkName(String name) {
+		if (name.length() > NAME_MAX_LENGTH) {
+			throw new TagException("Tag name is too long, it should be under " + NAME_MAX_LENGTH + " characters");
 		}
 	}
 
-	public void edit(long guildId, long ownerId, String name, String text) throws SQLException {
-		try (Connection connection = database.getConnection()) {
-			final PreparedStatement statement = connection.prepareStatement("update Tag set text = ? where guildid = ? and ownerid = ? and name = ?");
+	private void checkDescription(String description) {
+		if (description.length() > DESCRIPTION_MAX_LENGTH) {
+			throw new TagException("Tag description is too long, it should be under " + DESCRIPTION_MAX_LENGTH + " characters");
+		}
+	}
 
-			statement.setString(1, text);
-			statement.setLong(2, guildId);
-			statement.setLong(3, ownerId);
-			statement.setString(4, name);
+	private void checkContent(String content) {
+		if (content.length() > CONTENT_MAX_LENGTH) {
+			throw new TagException("Tag content is too long, it should be under " + CONTENT_MAX_LENGTH + " characters");
+		}
+	}
 
-			statement.executeUpdate();
+	public void create(long guildId, long ownerId, String name, String description, String content) throws SQLException {
+		try (DBAction action = DBAction.of(database, "insert into Tag (guildid, ownerid, name, description, content) " +
+				"values (?, ?, ?, ?, ?)")) {
+
+			checkName(name);
+			checkDescription(description);
+			checkContent(content);
+
+			action.executeUpdate(guildId, ownerId, name, description, content);
+		}
+	}
+
+	public void edit(long guildId,
+	                 long ownerId,
+	                 @NotNull String name,
+	                 @Nullable String newName,
+	                 @Nullable String newDescription,
+	                 @Nullable String newContent) throws SQLException {
+
+		if (newName != null) checkName(name);
+		if (newDescription != null) checkDescription(newDescription);
+		if (newContent != null) checkContent(newContent);
+
+		if (newName != null) {
+			try (DBAction action = DBAction.of(database,
+					"update Tag set name = ? where guildid = ? and ownerid = ? and name = ?")) {
+
+				action.executeUpdate(newName, guildId, ownerId, name);
+			}
+
+			name = newName;
+		}
+
+		if (newDescription != null) {
+			try (DBAction action = DBAction.of(database,
+					"update Tag set description = ? where guildid = ? and ownerid = ? and name = ?")) {
+
+				action.executeUpdate(newDescription, guildId, ownerId, name);
+			}
+		}
+
+		if (newContent != null) {
+			try (DBAction action = DBAction.of(database,
+					"update Tag set content = ? where guildid = ? and ownerid = ? and name = ?")) {
+
+				action.executeUpdate(newContent, guildId, ownerId, name);
+			}
+		}
+	}
+
+	public void transfer(long guildId, long ownerId, String name, long newOwnerId) throws SQLException {
+		try (DBAction action = DBAction.of(database,
+				"update Tag set ownerId = ? where guildid = ? and ownerid = ? and name = ?")) {
+
+			action.executeUpdate(newOwnerId, guildId, ownerId, name);
 		}
 	}
 
 	public void delete(long guildId, long ownerId, String name) throws SQLException {
-		try (Connection connection = database.getConnection()) {
-			final PreparedStatement statement = connection.prepareStatement("delete from Tag where guildid = ? and ownerid = ? and name = ?");
+		try (DBAction action = DBAction.of(database,
+				"delete from Tag where guildid = ? and ownerid = ? and name = ?")) {
 
-			statement.setLong(1, guildId);
-			statement.setLong(2, ownerId);
-			statement.setString(3, name);
-
-			statement.executeUpdate();
+			action.executeUpdate(guildId, ownerId, name);
 		}
 	}
 
 	@Nullable
 	public Tag get(long guildId, String name) throws SQLException {
-		try (Connection connection = database.getConnection()) {
-			final PreparedStatement statement = connection.prepareStatement("select * from Tag where guildid = ? and name = ?");
+		try (DBAction action = DBAction.of(database,
+				"select * from Tag where guildid = ? and name = ?",
+				Tag.COLUMN_NAMES)) {
 
-			statement.setLong(1, guildId);
-			statement.setString(2, name);
+			final DBResult result = action.executeQuery(guildId, name);
 
-			final ResultSet set = statement.executeQuery();
-
-			if (!set.next()) return null;
-
-			return Tag.fromResult(set);
+			return result.readOnce(Tag::fromResult);
 		}
 	}
 
 	public void incrementTag(long guildId, String name) throws SQLException {
-		try (Connection connection = database.getConnection()) {
-			final PreparedStatement statement = connection.prepareStatement("update Tag set uses = uses + 1 where guildid = ? and name = ?");
+		try (DBAction action = DBAction.of(database,
+				"update Tag set uses = uses + 1 where guildid = ? and name = ?")) {
 
-			statement.setLong(1, guildId);
-			statement.setString(2, name);
-
-			statement.executeUpdate();
+			action.executeUpdate(guildId, name);
 		}
-	}
-
-	@NotNull
-	private List<String> readTagNames(PreparedStatement statement) throws SQLException {
-		final ArrayList<String> list = new ArrayList<>();
-		final ResultSet set = statement.executeQuery();
-
-		while (set.next()) {
-			list.add(set.getString("name"));
-		}
-
-		return list;
 	}
 
 	public int getTotalTags(long guildId) throws SQLException {
-		try (Connection connection = database.getConnection()) {
-			final PreparedStatement statement = connection.prepareStatement("select count(*) from Tag where guildid = ?");
+		try (DBAction action = DBAction.of(database,
+				"select count(*) as totalTags from Tag where guildid = ?",
+				"totalTags")) { //Can't use column index on autogenerated values
 
-			statement.setLong(1, guildId);
+			final DBResult result = action.executeQuery(guildId);
 
-			final ResultSet totalSet = statement.executeQuery();
-			totalSet.next();
+			final ResultSet set = result.readOnce();
+			if (set == null) throw new IllegalStateException();
 
-			return totalSet.getInt(1);
+			return set.getInt("totalTags");
 		}
 	}
 
 	public List<Tag> getTagRange(long guildId, TagCriteria criteria, int offset, int amount) throws SQLException {
-		try (Connection connection = database.getConnection()) {
-			final PreparedStatement statement = connection.prepareStatement("select * from Tag where guildid = ? order by " + criteria.getKey() + " offset ? limit ?");
+		try (DBAction action = DBAction.of(database,
+				"select * from Tag " +
+						"where guildid = ? " +
+						"order by " + criteria.getKey() + " " +
+						"offset ? " +
+						"limit ?",
+				Tag.COLUMN_NAMES)) {
 
-			statement.setLong(1, guildId);
-			statement.setInt(2, offset);
-			statement.setInt(3, amount);
+			final DBResult result = action.executeQuery(guildId, offset, amount);
 
-			final List<Tag> list = new ArrayList<>();
-			final ResultSet set = statement.executeQuery();
-
-			while (set.next()) {
-				list.add(Tag.fromResult(set));
-			}
-
-			return list;
+			return result.transformEach(Tag::fromResult);
 		}
 	}
 
-	public List<String> getAllNamesSorted(long guildId, TagCriteria criteria) throws SQLException {
-		try (Connection connection = database.getConnection()) {
-			final PreparedStatement statement = connection.prepareStatement("select name from Tag where guildid = ? order by " + criteria.getKey());
-			statement.setLong(1, guildId);
+	public List<ShortTag> getShortTagsSorted(long guildId, TagCriteria criteria) throws SQLException {
+		try (DBAction action = DBAction.of(database,
+				"select name, description from Tag " +
+						"where guildid = ? " +
+						"order by " + criteria.getKey(),
+				ShortTag.COLUMN_NAMES)) {
 
-			return readTagNames(statement);
+			final DBResult result = action.executeQuery(guildId);
+
+			return result.transformEach(ShortTag::fromResult);
 		}
 	}
 
-	public List<String> getAllNames(long guildId, long ownerId, TagCriteria criteria) throws SQLException {
-		try (Connection connection = database.getConnection()) {
-			final PreparedStatement statement = connection.prepareStatement("select name from Tag where guildid = ? and ownerid = ? order by " + criteria.getKey());
-			statement.setLong(1, guildId);
-			statement.setLong(2, ownerId);
+	public List<ShortTag> getShortTagsSorted(long guildId, long ownerId, TagCriteria criteria) throws SQLException {
+		try (DBAction action = DBAction.of(database,
+				"select name, description from Tag " +
+						"where guildid = ? and ownerid = ? " +
+						"order by " + criteria.getKey(),
+				ShortTag.COLUMN_NAMES)) {
 
-			return readTagNames(statement);
+			final DBResult result = action.executeQuery(guildId, ownerId);
+
+			return result.transformEach(ShortTag::fromResult);
 		}
 	}
 
 	public long getRank(long guildId, String name) throws SQLException {
-		try (Connection connection = database.getConnection()) {
-			final PreparedStatement statement = connection.prepareStatement("select rank from (select name, dense_rank() over (order by uses desc) as rank from Tag where guildid = ?) as ranks where name = ?");
-			statement.setLong(1, guildId);
-			statement.setString(2, name);
+		try (DBAction action = DBAction.of(database,
+				"select rank from " +
+						"(select name, dense_rank() over (order by uses desc) as rank from Tag " +
+						"where guildid = ?) as ranks " +
+						"where name = ?",
+				"rank")) { //Can't use column index on autogenerated values
 
-			final ResultSet set = statement.executeQuery();
-			if (!set.next()) throw new NoSuchElementException();
+			final DBResult result = action.executeQuery(guildId, name);
 
-			return set.getLong("rank");
+			final ResultSet set = result.readOnce();
+			if (set == null) throw new IllegalStateException();
+
+			return set.getLong(1);
 		}
 	}
 }

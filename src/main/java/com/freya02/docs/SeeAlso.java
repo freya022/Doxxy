@@ -1,20 +1,18 @@
 package com.freya02.docs;
 
-import com.freya02.bot.utils.HTMLElement;
+import org.jetbrains.annotations.NotNull;
 import org.jsoup.nodes.Element;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class SeeAlso extends HTMLElement {
-	public static record SeeAlsoReference(String text, String link) {}
+public class SeeAlso {
+	public record SeeAlsoReference(String text, String link) {}
 
 	private final List<SeeAlsoReference> references = new ArrayList<>();
 
-	public SeeAlso(HTMLElement element) {
-		super(element.getTargetElement());
-
-		for (Element seeAlsoClassElement : element.getTargetElement().select("dd > ul > li > a")) {
+	public SeeAlso(@NotNull DocDetail docDetail) {
+		for (Element seeAlsoClassElement : docDetail.getHtmlElements().get(0).getTargetElement().select("dd > ul > li > a")) {
 			references.add(new SeeAlsoReference(seeAlsoClassElement.text(), seeAlsoClassElement.absUrl("href")));
 		}
 	}
