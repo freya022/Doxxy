@@ -69,6 +69,9 @@ public class Main {
 					.textCommandBuilder(textCommandsBuilder -> textCommandsBuilder
 							.addPrefix("!")
 					)
+					.applicationCommandBuilder(applicationCommandsBuilder -> applicationCommandsBuilder
+							.addTestGuilds(722891685755093072L)
+					)
 					.setComponentManager(new DefaultComponentManager(database::getConnection))
 					.build(jda, "com.freya02.bot.commands");
 

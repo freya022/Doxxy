@@ -8,7 +8,7 @@ import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand
 import static com.freya02.bot.commands.slash.CommonDocsHandlers.AUTOCOMPLETE_NAMES;
 
 public class InvalidateCacheCommand extends ApplicationCommand {
-	@Test(guildIds = 722891685755093072L)
+	@Test
 	@JDASlashCommand(
 			name = "invalidate"
 	)
