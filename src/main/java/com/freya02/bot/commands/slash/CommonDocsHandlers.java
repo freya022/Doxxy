@@ -29,6 +29,16 @@ public class CommonDocsHandlers extends ApplicationCommand {
 	public static final String FIELD_NAME_AUTOCOMPLETE_NAME = "FieldCommand: fieldName";
 	public static final String ANY_FIELD_NAME_AUTOCOMPLETE_NAME = "CommonDocsHandlers: anyFieldName";
 
+	public static final String[] AUTOCOMPLETE_NAMES = new String[]{
+			CLASS_NAME_AUTOCOMPLETE_NAME,
+			CLASS_NAME_WITH_METHODS_AUTOCOMPLETE_NAME,
+			CLASS_NAME_WITH_FIELDS_AUTOCOMPLETE_NAME,
+			METHOD_NAME_BY_CLASS_AUTOCOMPLETE_NAME,
+			ANY_METHOD_NAME_AUTOCOMPLETE_NAME,
+			FIELD_NAME_AUTOCOMPLETE_NAME,
+			ANY_FIELD_NAME_AUTOCOMPLETE_NAME
+	};
+
 	private final DocIndexMap docIndexMap;
 
 	public CommonDocsHandlers() throws IOException {
