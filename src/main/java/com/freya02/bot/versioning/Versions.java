@@ -1,55 +1,38 @@
 package com.freya02.bot.versioning;
 
 import com.freya02.bot.utils.HttpUtils;
+import com.freya02.botcommands.api.Logging;
 import net.dv8tion.jda.api.exceptions.ParsingException;
-import net.dv8tion.jda.api.utils.data.DataArray;
-import okhttp3.HttpUrl;
-import okhttp3.Request;
-import okhttp3.Response;
 import org.jetbrains.annotations.NotNull;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.slf4j.Logger;
 
 import java.io.IOException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class Versions {
-	@NotNull
-	private static String getLatestHash(String ownerName, String repoName, String branchName) throws IOException {
-		final HttpUrl url = HttpUrl.get("https://api.github.com/repos/%s/%s/commits".formatted(ownerName, repoName))
-				.newBuilder()
-				.addQueryParameter("page", "1")
-				.addQueryParameter("per_page", "1")
-				.addQueryParameter("sha", branchName)
-				.build();
+	private static final Logger LOGGER = Logging.getLogger();
 
-		try (Response response = HttpUtils.CLIENT.newCall(new Request.Builder()
-						.url(url)
-						.header("Accept", "applications/vnd.github.v3+json")
-						.build())
-				.execute()) {
+	private ArtifactInfo latestBotCommandsVersion;
+	private ArtifactInfo jdaVersionFromBotCommands;
+	private ArtifactInfo latestJDAVersion;
 
-			final String json = response.body().string();
-
-			return DataArray.fromJson(json).getObject(0).getString("sha").substring(0, 10);
-		}
-	}
-
-	private static String getLatestMavenVersion(String groupId, String artifactId) throws IOException {
-		final Document document = getMavenMetadata(groupId, artifactId);
-
-		final Element latestElement = document.selectFirst("metadata > versioning > latest");
-		if (latestElement == null) throw new ParsingException("Unable to parse latest version");
-
-		return latestElement.text();
+	public Versions() {
+		Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(() -> {
+			try {
+				latestBotCommandsVersion = retrieveLatestBotCommandsVersion("2.3.0");
+				jdaVersionFromBotCommands = retrieveJDAVersionFromBotCommands("2.3.0");
+				latestJDAVersion = retrieveLatestJDAVersion();
+			} catch (IOException e) {
+				LOGGER.error("An exception occurred while retrieving versions", e);
+			}
+		}, 0, 30, TimeUnit.MINUTES);
 	}
 
 	@NotNull
-	private static Document getMavenMetadata(String groupId, String artifactId) throws IOException {
-		return HttpUtils.getDocument("https://repo.maven.apache.org/maven2/%s/%s/maven-metadata.xml".formatted(groupId.replace('.', '/'), artifactId));
-	}
-
-	@NotNull
-	public static ArtifactInfo getJDAVersionFromBotCommands(String branchName) throws IOException {
+	private ArtifactInfo retrieveJDAVersionFromBotCommands(String branchName) throws IOException {
 		final Document document = HttpUtils.getDocument("https://raw.githubusercontent.com/freya022/BotCommands/%s/pom.xml".formatted(branchName));
 
 		final Element jdaArtifactElement = document.selectFirst("project > dependencies > dependency > artifactId:matches(JDA)");
@@ -70,23 +53,35 @@ public class Versions {
 	}
 
 	@NotNull
-	public static ArtifactInfo getLatestBotCommands(String branchName) throws IOException {
+	private ArtifactInfo retrieveLatestBotCommandsVersion(String branchName) throws IOException {
 		final String ownerName = "freya022";
 		final String groupId = "com.github." + ownerName;
 		final String artifactId = "BotCommands";
 
 		return new ArtifactInfo(groupId,
 				artifactId,
-				getLatestHash(ownerName, artifactId, branchName));
+				VersionsUtils.getLatestHash(ownerName, artifactId, branchName));
 	}
 
 	@NotNull
-	public static ArtifactInfo getLatestJDAVersion() throws IOException {
+	private ArtifactInfo retrieveLatestJDAVersion() throws IOException {
 		final String groupId = "net.dv8tion";
 		final String artifactId = "JDA";
 
 		return new ArtifactInfo(groupId,
 				artifactId,
-				getLatestMavenVersion(groupId, artifactId));
+				VersionsUtils.getLatestMavenVersion(groupId, artifactId));
+	}
+
+	public ArtifactInfo getLatestBotCommandsVersion() {
+		return latestBotCommandsVersion;
+	}
+
+	public ArtifactInfo getJdaVersionFromBotCommands() {
+		return jdaVersionFromBotCommands;
+	}
+
+	public ArtifactInfo getLatestJDAVersion() {
+		return latestJDAVersion;
 	}
 }

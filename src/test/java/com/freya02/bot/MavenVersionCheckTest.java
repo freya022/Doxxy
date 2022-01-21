@@ -1,7 +1,6 @@
 package com.freya02.bot;
 
 import com.freya02.bot.utils.HttpUtils;
-import com.freya02.bot.versioning.Versions;
 import net.dv8tion.jda.api.exceptions.ParsingException;
 import net.dv8tion.jda.api.utils.data.DataArray;
 import okhttp3.HttpUrl;
@@ -27,10 +26,6 @@ public class MavenVersionCheckTest {
 //		final String hash = getLatestHash("freya022", "BotCommands", "2.3.0");
 //
 //		System.out.println("hash = " + hash);
-
-		System.out.println("Versions.getLatestBotCommands(\"2.3.0\") = " + Versions.getLatestBotCommands("2.3.0"));
-		System.out.println("Versions.getJDAVersionFromBotCommands(\"2.3.0\") = " + Versions.getJDAVersionFromBotCommands("2.3.0"));
-		System.out.println("Versions.getLatestJDAVersion() = " + Versions.getLatestJDAVersion());
 
 		System.exit(0);
 	}
