@@ -12,15 +12,16 @@ import net.dv8tion.jda.api.EmbedBuilder;
 public class SlashLatest extends ApplicationCommand {
 	private final Versions versions;
 
-	public SlashLatest() {
-		this.versions = new Versions();
+	public SlashLatest(Versions versions) {
+		this.versions = versions;
 	}
 
 	@JDASlashCommand(
 			name = "latest",
 			description = "Shows the latest version of the library"
 	)
-	public void onSlashLatest(GuildSlashEvent event, @AppOption LibraryType libraryType) {
+	public void onSlashLatest(GuildSlashEvent event,
+	                          @AppOption(description = "Type of library") LibraryType libraryType) {
 		if (libraryType == LibraryType.BOT_COMMANDS) {
 			final ArtifactInfo latestBotCommands = versions.getLatestBotCommandsVersion();
 			final ArtifactInfo jdaVersionFromBotCommands = versions.getJdaVersionFromBotCommands();

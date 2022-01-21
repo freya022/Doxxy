@@ -5,6 +5,7 @@ import com.freya02.bot.docs.DocSourceTypeResolver;
 import com.freya02.bot.tag.TagCriteriaResolver;
 import com.freya02.bot.utils.FileCache;
 import com.freya02.bot.versioning.LibraryTypeResolver;
+import com.freya02.bot.versioning.Versions;
 import com.freya02.botcommands.api.CommandsBuilder;
 import com.freya02.botcommands.api.Logging;
 import com.freya02.botcommands.api.components.DefaultComponentManager;
@@ -60,12 +61,15 @@ public class Main {
 
 			final Database database = new Database(config);
 
+			final Versions versions = new Versions();
+
 			CommandsBuilder.newBuilder(222046562543468545L)
 					.extensionsBuilder(extensionsBuilder -> extensionsBuilder
 							.registerConstructorParameter(Config.class, commandType -> config)
 							.registerConstructorParameter(Database.class, commandType -> database)
 							.registerParameterResolver(new TagCriteriaResolver())
 							.registerParameterResolver(new DocSourceTypeResolver())
+							.registerConstructorParameter(Versions.class, commandType -> versions)
 							.registerParameterResolver(new LibraryTypeResolver())
 					)
 					.textCommandBuilder(textCommandsBuilder -> textCommandsBuilder
