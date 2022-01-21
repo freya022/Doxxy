@@ -1,4 +1,4 @@
-package com.freya02.bot.commands.slash;
+package com.freya02.bot.commands.slash.docs;
 
 import com.freya02.bot.docs.DocIndexMap;
 import com.freya02.bot.docs.index.DocIndex;

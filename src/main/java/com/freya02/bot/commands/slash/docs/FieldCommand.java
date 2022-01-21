@@ -1,4 +1,4 @@
-package com.freya02.bot.commands.slash;
+package com.freya02.bot.commands.slash.docs;
 
 import com.freya02.bot.docs.DocIndexMap;
 import com.freya02.bot.docs.index.DocIndex;
@@ -12,22 +12,25 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
-public class ClassCommand extends ApplicationCommand {
+public class FieldCommand extends ApplicationCommand {
 	private final DocIndexMap docIndexMap;
 
-	public ClassCommand() throws IOException {
+	public FieldCommand() throws IOException {
 		docIndexMap = DocIndexMap.getInstance();
 	}
 
 	@JDASlashCommand(
-			name = "class",
-			description = "Shows the documentation for a class"
+			name = "field",
+			description = "Shows the documentation for a field of a class"
 	)
-	public void onSlashClass(@NotNull GuildSlashEvent event,
+	public void onSlashField(@NotNull GuildSlashEvent event,
 	                         @NotNull @AppOption(description = "The docs to search upon")
 			                         DocSourceType sourceType,
-	                         @NotNull @AppOption(description = "Name of the Java class", autocomplete = CommonDocsHandlers.CLASS_NAME_AUTOCOMPLETE_NAME)
-			                         String className) throws IOException {
+	                         @NotNull @AppOption(description = "The class to search the field in", autocomplete = CommonDocsHandlers.CLASS_NAME_WITH_FIELDS_AUTOCOMPLETE_NAME)
+			                         String className,
+	                         @NotNull @AppOption(description = "Name of the field", autocomplete = CommonDocsHandlers.FIELD_NAME_AUTOCOMPLETE_NAME)
+			                         String fieldName) throws IOException {
+
 		final DocIndex docIndex = docIndexMap.get(sourceType);
 		final MessageEmbed classDoc = docIndex.getClassDoc(className);
 
@@ -37,6 +40,14 @@ public class ClassCommand extends ApplicationCommand {
 			return;
 		}
 
-		CommonDocsHandlers.sendClass(event, false, classDoc);
+		final MessageEmbed fieldDoc = docIndex.getFieldDoc(className, fieldName);
+
+		if (fieldDoc == null) {
+			event.reply("Unknown field").setEphemeral(true).queue();
+
+			return;
+		}
+
+		CommonDocsHandlers.sendField(event, false, fieldDoc);
 	}
 }

@@ -1,11 +1,11 @@
-package com.freya02.bot.commands.slash;
+package com.freya02.bot.commands.slash.docs;
 
 import com.freya02.botcommands.api.application.ApplicationCommand;
 import com.freya02.botcommands.api.application.annotations.Test;
 import com.freya02.botcommands.api.application.slash.GuildSlashEvent;
 import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand;
 
-import static com.freya02.bot.commands.slash.CommonDocsHandlers.AUTOCOMPLETE_NAMES;
+import static com.freya02.bot.commands.slash.docs.CommonDocsHandlers.AUTOCOMPLETE_NAMES;
 
 public class InvalidateCacheCommand extends ApplicationCommand {
 	@Test
