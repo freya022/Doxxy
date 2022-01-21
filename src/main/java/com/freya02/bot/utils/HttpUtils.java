@@ -12,7 +12,7 @@ import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
 public class HttpUtils {
-	private static final OkHttpClient CLIENT;
+	public static final OkHttpClient CLIENT;
 
 	static {
 		CLIENT = new OkHttpClient.Builder()
@@ -30,7 +30,16 @@ public class HttpUtils {
 		return parseDocument(downloadBody(url), url);
 	}
 
-	private static String downloadBody(String url) throws IOException {
+	public static void sendRequest(String url) throws IOException {
+		CLIENT.newCall(new Request.Builder()
+						.url(url)
+						.build())
+				.execute()
+				.close();
+	}
+
+	@NotNull
+	public static String downloadBody(String url) throws IOException {
 		try (Response response = CLIENT.newCall(new Request.Builder()
 				.url(url)
 				.build()
