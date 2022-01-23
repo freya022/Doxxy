@@ -11,6 +11,57 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import org.intellij.lang.annotations.Language;
 
 public class SlashMaven extends ApplicationCommand {
+	@Language(value = "xml", prefix = "<project>", suffix = "</project>")
+	private static final String BC_XML = """
+			<repositories>
+			    <repository>
+			        <id>jitpack</id>
+			        <url>https://jitpack.io</url>
+			    </repository>
+			</repositories>
+			
+			<dependencies>
+				<dependency>
+					<groupId>%s</groupId>
+					<artifactId>%s</artifactId>
+					<version>%s</version>
+				</dependency>
+				<dependency>
+					<groupId>%s</groupId>
+					<artifactId>%s</artifactId>
+					<version>%s</version>
+				</dependency>
+			</dependencies>
+			""";
+
+	@Language(value = "xml", prefix = "<project>", suffix = "</project>")
+	private static final String JDA4_XML = """
+			<repository>
+			    <id>dv8tion</id>
+			    <name>m2-dv8tion</name>
+			    <url>https://m2.dv8tion.net/releases</url>
+			</repository>
+            
+			<dependencies>
+				<dependency>
+					<groupId>%s</groupId>
+					<artifactId>%s</artifactId>
+					<version>%s</version>
+				</dependency>
+			</dependencies>
+			""";
+
+	@Language(value = "xml", prefix = "<project>", suffix = "</project>")
+	private static final String JDA5_XML = """
+			<dependencies>
+				<dependency>
+					<groupId>%s</groupId>
+					<artifactId>%s</artifactId>
+					<version>%s</version>
+				</dependency>
+			</dependencies>
+			""";
+
 	private final Versions versions;
 
 	public SlashMaven(Versions versions) {
@@ -25,78 +76,34 @@ public class SlashMaven extends ApplicationCommand {
 	                         @AppOption(description = "Type of library") LibraryType libraryType) {
 		final EmbedBuilder builder = new EmbedBuilder();
 
+		final String xml;
 		if (libraryType == LibraryType.BOT_COMMANDS) {
 			final ArtifactInfo latestBotCommands = versions.getLatestBotCommandsVersion();
 			final ArtifactInfo jdaVersionFromBotCommands = versions.getJdaVersionFromBotCommands();
 
 			builder.setTitle("Maven dependencies for BotCommands");
-			@Language("xml")
-			final String xml = """
-					<repositories>
-					    <repository>
-					        <id>dv8tion</id>
-					        <name>m2-dv8tion</name>
-					        <url>https://m2.dv8tion.net/releases</url>
-					    </repository>
-					    <repository>
-					        <id>jitpack</id>
-					        <url>https://jitpack.io</url>
-					    </repository>
-					</repositories>
-					
-					...
-					
-					<dependencies>
-						<dependency>
-							<groupId>%s</groupId>
-							<artifactId>%s</artifactId>
-							<version>%s</version>
-						</dependency>
-						<dependency>
-							<groupId>%s</groupId>
-							<artifactId>%s</artifactId>
-							<version>%s</version>
-						</dependency>
-					</dependencies>
-					""".formatted(jdaVersionFromBotCommands.groupId(), jdaVersionFromBotCommands.artifactId(), jdaVersionFromBotCommands.version(),
+			xml = BC_XML.formatted(jdaVersionFromBotCommands.groupId(), jdaVersionFromBotCommands.artifactId(), jdaVersionFromBotCommands.version(),
 					latestBotCommands.groupId(), latestBotCommands.artifactId(), latestBotCommands.version());
+		} else if (libraryType == LibraryType.JDA5) {
+			final ArtifactInfo latestJDAVersion = versions.getLatestJDA5Version();
 
-			builder.setDescription("```xml\n" + xml + "```");
+			builder.setTitle("Maven dependencies for JDA 5");
 
-			event.replyEmbeds(builder.build())
-//					.setEphemeral(true)
-					.queue();
-		} else if (libraryType == LibraryType.JDA) {
-			final ArtifactInfo latestJDAVersion = versions.getLatestJDAVersion();
+			xml = JDA5_XML.formatted(latestJDAVersion.groupId(), latestJDAVersion.artifactId(), latestJDAVersion.version());
+		} else if (libraryType == LibraryType.JDA4) {
+			final ArtifactInfo latestJDAVersion = versions.getLatestJDA4Version();
 
-			builder.setTitle("Maven dependencies for JDA");
+			builder.setTitle("Maven dependencies for JDA 4");
 
-			@Language("xml")
-			final String xml = """
-					<repositories>
-					    <repository>
-					        <id>m2-dv8tion</id>
-					        <name>m2-dv8tion</name>
-					        <url>https://m2.dv8tion.net/releases</url>
-					    </repository>
-					</repositories>
-					
-					...
-					
-					<dependencies>
-						<dependency>
-							<groupId>%s</groupId>
-							<artifactId>%s</artifactId>
-							<version>%s</version>
-						</dependency>
-					</dependencies>
-					""".formatted(latestJDAVersion.groupId(), latestJDAVersion.artifactId(), latestJDAVersion.version());
-
-			builder.setDescription("```xml\n" + xml + "```");
-
-			event.replyEmbeds(builder.build())
-//					.setEphemeral(true)
-					.queue();
+			xml = JDA4_XML.formatted(latestJDAVersion.groupId(), latestJDAVersion.artifactId(), latestJDAVersion.version());
+		} else {
+			throw new IllegalArgumentException();
 		}
+
+		builder.setDescription("```xml\n" + xml + "```");
+
+		event.replyEmbeds(builder.build())
+//				.setEphemeral(true)
+				.queue();
 	}
 }

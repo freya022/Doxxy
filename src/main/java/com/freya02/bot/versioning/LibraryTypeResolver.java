@@ -29,7 +29,8 @@ public class LibraryTypeResolver extends ParameterResolver implements SlashParam
 	public Collection<Command.Choice> getPredefinedChoices() {
 		return List.of(
 				new Command.Choice("BotCommands", LibraryType.BOT_COMMANDS.name()),
-				new Command.Choice("JDA", LibraryType.JDA.name())
+				new Command.Choice("JDA 5", LibraryType.JDA5.name()),
+				new Command.Choice("JDA 4", LibraryType.JDA4.name())
 		);
 	}
 

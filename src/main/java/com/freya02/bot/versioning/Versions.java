@@ -17,14 +17,16 @@ public class Versions {
 
 	private ArtifactInfo latestBotCommandsVersion;
 	private ArtifactInfo jdaVersionFromBotCommands;
-	private ArtifactInfo latestJDAVersion;
+	private ArtifactInfo latestJDA4Version;
+	private ArtifactInfo latestJDA5Version;
 
 	public Versions() {
 		Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(() -> {
 			try {
 				latestBotCommandsVersion = retrieveLatestBotCommandsVersion("2.3.0");
 				jdaVersionFromBotCommands = retrieveJDAVersionFromBotCommands("2.3.0");
-				latestJDAVersion = retrieveLatestJDAVersion();
+				latestJDA4Version = retrieveLatestJDA4Version();
+				latestJDA5Version = retrieveLatestJDA5Version();
 			} catch (IOException e) {
 				LOGGER.error("An exception occurred while retrieving versions", e);
 			}
@@ -64,13 +66,23 @@ public class Versions {
 	}
 
 	@NotNull
-	private ArtifactInfo retrieveLatestJDAVersion() throws IOException {
+	private ArtifactInfo retrieveLatestJDA4Version() throws IOException {
 		final String groupId = "net.dv8tion";
 		final String artifactId = "JDA";
 
 		return new ArtifactInfo(groupId,
 				artifactId,
-				VersionsUtils.getLatestMavenVersion(groupId, artifactId));
+				VersionsUtils.getLatestMavenVersion(VersionsUtils.M2_METADATA_FORMAT, groupId, artifactId));
+	}
+
+	@NotNull
+	private ArtifactInfo retrieveLatestJDA5Version() throws IOException {
+		final String groupId = "net.dv8tion";
+		final String artifactId = "JDA";
+
+		return new ArtifactInfo(groupId,
+				artifactId,
+				VersionsUtils.getLatestMavenVersion(VersionsUtils.MAVEN_METADATA_FORMAT, groupId, artifactId));
 	}
 
 	public ArtifactInfo getLatestBotCommandsVersion() {
@@ -81,7 +93,11 @@ public class Versions {
 		return jdaVersionFromBotCommands;
 	}
 
-	public ArtifactInfo getLatestJDAVersion() {
-		return latestJDAVersion;
+	public ArtifactInfo getLatestJDA4Version() {
+		return latestJDA4Version;
+	}
+
+	public ArtifactInfo getLatestJDA5Version() {
+		return latestJDA5Version;
 	}
 }

@@ -13,6 +13,9 @@ import org.jsoup.nodes.Element;
 import java.io.IOException;
 
 class VersionsUtils {
+	public static final String MAVEN_METADATA_FORMAT = "https://repo.maven.apache.org/maven2/%s/%s/maven-metadata.xml";
+	public static final String M2_METADATA_FORMAT = "https://m2.dv8tion.net/releases/%s/%s/maven-metadata.xml";
+
 	@NotNull
 	static String getLatestHash(String ownerName, String repoName, String branchName) throws IOException {
 		final HttpUrl url = HttpUrl.get("https://api.github.com/repos/%s/%s/commits".formatted(ownerName, repoName))
@@ -35,8 +38,8 @@ class VersionsUtils {
 	}
 
 	@NotNull
-	static String getLatestMavenVersion(String groupId, String artifactId) throws IOException {
-		final Document document = getMavenMetadata(groupId, artifactId);
+	static String getLatestMavenVersion(String formatUrl, String groupId, String artifactId) throws IOException {
+		final Document document = getMavenMetadata(formatUrl, groupId, artifactId);
 
 		final Element latestElement = document.selectFirst("metadata > versioning > latest");
 		if (latestElement == null) throw new ParsingException("Unable to parse latest version");
@@ -45,7 +48,7 @@ class VersionsUtils {
 	}
 
 	@NotNull
-	static Document getMavenMetadata(String groupId, String artifactId) throws IOException {
-		return HttpUtils.getDocument("https://repo.maven.apache.org/maven2/%s/%s/maven-metadata.xml".formatted(groupId.replace('.', '/'), artifactId));
+	static Document getMavenMetadata(String formatUrl, String groupId, String artifactId) throws IOException {
+		return HttpUtils.getDocument(formatUrl.formatted(groupId.replace('.', '/'), artifactId));
 	}
 }
