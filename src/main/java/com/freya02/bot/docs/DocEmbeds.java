@@ -1,9 +1,12 @@
 package com.freya02.bot.docs;
 
 import com.freya02.bot.utils.HTMLElement;
+import com.freya02.bot.utils.HttpUtils;
 import com.freya02.docs.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -13,7 +16,7 @@ public class DocEmbeds {
 	public static EmbedBuilder toEmbed(ClassDoc doc) {
 		final EmbedBuilder builder = new EmbedBuilder();
 
-		builder.setTitle(doc.getDocTitleElement().getTargetElement().text(), doc.getURL());
+		builder.setTitle(doc.getDocTitleElement().getTargetElement().text(), getDocURL(doc));
 
 		fillDescription(doc, builder);
 
@@ -21,15 +24,22 @@ public class DocEmbeds {
 				DocDetailType.SEE_ALSO
 		));
 
-		addSeeAlso(builder, doc.getSeeAlso(), doc.getURL());
+		addSeeAlso(builder, doc.getSeeAlso(), getDocURL(doc));
 
 		return builder;
+	}
+
+	@Nullable
+	private static String getDocURL(BaseDoc doc) {
+		return HttpUtils.doesStartByLocalhost(doc.getURL())
+				? null
+				: doc.getURL();
 	}
 
 	public static EmbedBuilder toEmbed(ClassDoc classDoc, MethodDoc methodDoc) {
 		final EmbedBuilder builder = new EmbedBuilder();
 
-		builder.setTitle(classDoc.getClassName() + '#' + methodDoc.getSimpleSignature() + " : " + methodDoc.getMethodReturnType(), methodDoc.getURL());
+		builder.setTitle(classDoc.getClassName() + '#' + methodDoc.getSimpleSignature() + " : " + methodDoc.getMethodReturnType(), getDocURL(methodDoc));
 
 		//Should use that but JB annotations are duplicated, bruh momentum
 //		builder.setTitle(methodDoc.getMethodSignature(), methodDoc.getURL());
@@ -44,7 +54,7 @@ public class DocEmbeds {
 				DocDetailType.SEE_ALSO
 		));
 
-		addSeeAlso(builder, methodDoc.getSeeAlso(), methodDoc.getURL());
+		addSeeAlso(builder, methodDoc.getSeeAlso(), getDocURL(methodDoc));
 
 		return builder;
 	}
@@ -52,7 +62,7 @@ public class DocEmbeds {
 	public static EmbedBuilder toEmbed(ClassDoc classDoc, FieldDoc fieldDoc) {
 		final EmbedBuilder builder = new EmbedBuilder();
 
-		builder.setTitle(classDoc.getClassName() + " : " + fieldDoc.getSimpleSignature(), fieldDoc.getURL());
+		builder.setTitle(classDoc.getClassName() + " : " + fieldDoc.getSimpleSignature(), getDocURL(fieldDoc));
 
 		if (classDoc != fieldDoc.getClassDocs()) {
 			builder.setDescription("**Inherited from " + fieldDoc.getClassDocs().getClassName() + "**\n\n");
@@ -64,7 +74,7 @@ public class DocEmbeds {
 				DocDetailType.SEE_ALSO
 		));
 
-		addSeeAlso(builder, fieldDoc.getSeeAlso(), fieldDoc.getURL());
+		addSeeAlso(builder, fieldDoc.getSeeAlso(), getDocURL(fieldDoc));
 
 		return builder;
 	}
@@ -78,7 +88,7 @@ public class DocEmbeds {
 			builder.appendDescription(
 					getDescriptionValue(builder.getDescriptionBuilder().length(),
 							description,
-							doc.getURL())
+							getDocURL(doc))
 			);
 		} else {
 			builder.appendDescription("No description");
@@ -93,21 +103,29 @@ public class DocEmbeds {
 					detail.getDetailString(),
 					detail.toMarkdown(),
 					false,
-					doc.getURL());
+					getDocURL(doc));
 		}
 	}
 
-	private static String getDescriptionValue(int currentLength, String descriptionValue, String onlineTarget) {
+	private static String getDescriptionValue(int currentLength, @NotNull String descriptionValue, @Nullable String onlineTarget) {
 		if (descriptionValue.length() + currentLength > MessageEmbed.DESCRIPTION_MAX_LENGTH) {
-			return "Description is too long. Please look at [the online docs](" + onlineTarget + ")";
+			if (onlineTarget == null) {
+				return "Description is too long. Please look at the docs in your IDE";
+			} else {
+				return "Description is too long. Please look at [the online docs](" + onlineTarget + ")";
+			}
 		} else {
 			return descriptionValue;
 		}
 	}
 
-	private static void addField(EmbedBuilder builder, String fieldName, String fieldValue, boolean inline, String onlineDocs) {
+	private static void addField(EmbedBuilder builder, String fieldName, @NotNull String fieldValue, boolean inline, @Nullable String onlineDocs) {
 		if (fieldValue.length() > MessageEmbed.VALUE_MAX_LENGTH) {
-			builder.addField(fieldName, "This section is too long" + ". Please look at [the online docs](" + onlineDocs + ")", inline);
+			if (onlineDocs == null) {
+				builder.addField(fieldName, "This section is too long" + ". Please look at the docs in your IDE", inline);
+			} else {
+				builder.addField(fieldName, "This section is too long" + ". Please look at [the online docs](" + onlineDocs + ")", inline);
+			}
 		} else {
 			builder.addField(fieldName, fieldValue, inline);
 		}
@@ -115,7 +133,16 @@ public class DocEmbeds {
 
 	private static void addSeeAlso(EmbedBuilder builder, SeeAlso seeAlso, String onlineDocs) {
 		if (seeAlso != null) {
-			final String seeAlsoMd = seeAlso.getReferences().stream().map(ref -> "[" + ref.text() + "](" + ref.link() + ")").collect(Collectors.joining(", "));
+			final String seeAlsoMd = seeAlso.getReferences()
+					.stream()
+					.map(ref -> {
+						if (HttpUtils.doesStartByLocalhost(ref.link())) {
+							return ref.text();
+						}
+
+						return "[" + ref.text() + "](" + ref.link() + ")";
+					})
+					.collect(Collectors.joining(", "));
 
 			addField(builder,
 					"See Also",
@@ -124,4 +151,5 @@ public class DocEmbeds {
 					onlineDocs);
 		}
 	}
+
 }

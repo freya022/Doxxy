@@ -83,6 +83,10 @@ public class HttpUtils {
 		}
 	}
 
+	public static boolean doesStartByLocalhost(String link) {
+		return link.startsWith("http://localhost");
+	}
+
 	//In case OkHttp caching isn't accurate, use code below and transform it to use ETag(s)
 //	private static Path changeExtension(Path path, String newExtension) {
 //		final String fileName = path.getFileName().toString();
