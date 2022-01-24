@@ -1,7 +1,9 @@
 package com.freya02.bot.versioning;
 
+import com.freya02.bot.docs.DocIndexMap;
 import com.freya02.bot.utils.HttpUtils;
 import com.freya02.botcommands.api.Logging;
+import com.freya02.docs.DocSourceType;
 import net.dv8tion.jda.api.exceptions.ParsingException;
 import org.jetbrains.annotations.NotNull;
 import org.jsoup.nodes.Document;
@@ -23,10 +25,29 @@ public class Versions {
 	public Versions() {
 		Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(() -> {
 			try {
-				latestBotCommandsVersion = retrieveLatestBotCommandsVersion("2.3.0");
-				jdaVersionFromBotCommands = retrieveJDAVersionFromBotCommands("2.3.0");
-				latestJDA4Version = retrieveLatestJDA4Version();
-				latestJDA5Version = retrieveLatestJDA5Version();
+				final ArtifactInfo latestBotCommandsVersion = retrieveLatestBotCommandsVersion("2.3.0");
+				final ArtifactInfo jdaVersionFromBotCommands = retrieveJDAVersionFromBotCommands("2.3.0");
+				final ArtifactInfo latestJDA4Version = retrieveLatestJDA4Version();
+				final ArtifactInfo latestJDA5Version = retrieveLatestJDA5Version();
+
+				if (!latestBotCommandsVersion.equals(this.latestBotCommandsVersion)) {
+					DocIndexMap.refreshIndex(DocSourceType.BOT_COMMANDS);
+
+					//TODO invalidate autocomplete
+				} else if (!jdaVersionFromBotCommands.equals(this.jdaVersionFromBotCommands)) {
+					DocIndexMap.refreshIndex(DocSourceType.JDA);
+
+					//TODO invalidate autocomplete
+				} else if (!latestJDA4Version.equals(this.latestJDA4Version)) {
+					//TODO invalidate autocomplete
+				} else if (!latestJDA5Version.equals(this.latestJDA5Version)) {
+					//TODO invalidate autocomplete
+				}
+
+				this.latestBotCommandsVersion = latestBotCommandsVersion;
+				this.jdaVersionFromBotCommands = jdaVersionFromBotCommands;
+				this.latestJDA4Version = latestJDA4Version;
+				this.latestJDA5Version = latestJDA5Version;
 			} catch (IOException e) {
 				LOGGER.error("An exception occurred while retrieving versions", e);
 			}

@@ -17,10 +17,14 @@ public class DocIndexMap extends EnumMap<DocSourceType, DocIndex> {
 		if (instance == null) {
 			instance = new DocIndexMap();
 
-			instance.put(DocSourceType.BOT_COMMANDS, new DocIndex(DocSourceType.BOT_COMMANDS));
-			instance.put(DocSourceType.JDA, new DocIndex(DocSourceType.JDA));
+			refreshIndex(DocSourceType.BOT_COMMANDS);
+			refreshIndex(DocSourceType.JDA);
 		}
 
 		return instance;
+	}
+
+	public static synchronized void refreshIndex(DocSourceType sourceType) throws IOException {
+		instance.put(sourceType, new DocIndex(sourceType));
 	}
 }
