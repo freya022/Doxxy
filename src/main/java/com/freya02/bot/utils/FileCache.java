@@ -13,15 +13,17 @@ import java.util.Map;
 public class FileCache implements Closeable {
 	private static final Logger LOGGER = Logging.getLogger();
 	private final boolean zip;
+	private final Path outerPath;
 	private final Path cachePath;
 
 	public FileCache(Path where, String cacheName, boolean zip) throws IOException {
 		this.zip = zip;
 
 		if (!zip) {
-			this.cachePath = where.resolve(cacheName);
+			this.cachePath = outerPath = where.resolve(cacheName);
 		} else {
 			final Path zipPath = where.resolve(cacheName + ".zip");
+			this.outerPath = zipPath;
 
 			//https://docs.oracle.com/javase/7/docs/technotes/guides/io/fsp/zipfilesystemprovider.html
 			final Map<String, String> env = Map.of("create", "true",
@@ -30,6 +32,10 @@ public class FileCache implements Closeable {
 
 			this.cachePath = FileSystems.newFileSystem(uri, env).getPath("");
 		}
+	}
+
+	public Path getOuterPath() {
+		return outerPath;
 	}
 
 	public Path getCachePath() {

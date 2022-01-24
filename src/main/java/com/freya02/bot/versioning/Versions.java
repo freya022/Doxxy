@@ -76,7 +76,7 @@ public class Versions {
 			if (!jdaVersionFromBotCommands.equals(this.jdaVersionFromBotCommands)) {
 				LOGGER.info("BotCommands's JDA version updated, went from {} to {}", this.jdaVersionFromBotCommands.version(), jdaVersionFromBotCommands.version());
 
-				DocIndexMap.refreshIndex(DocSourceType.JDA);
+				DocIndexMap.refreshAndInvalidateIndex(DocSourceType.JDA);
 
 				for (String handlerName : CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
 					context.invalidateAutocompletionCache(handlerName);
@@ -96,7 +96,7 @@ public class Versions {
 			if (!latestBotCommandsVersion.equals(this.latestBotCommandsVersion)) {
 				LOGGER.info("BotCommands version updated, went from {} to {}", this.latestBotCommandsVersion.version(), latestBotCommandsVersion.version());
 
-				DocIndexMap.refreshIndex(DocSourceType.BOT_COMMANDS);
+				DocIndexMap.refreshAndInvalidateIndex(DocSourceType.BOT_COMMANDS);
 
 				for (String handlerName : CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
 					context.invalidateAutocompletionCache(handlerName);

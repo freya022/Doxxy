@@ -37,11 +37,23 @@ public class DocIndexMap extends EnumMap<DocSourceType, DocIndex> {
 		return instance;
 	}
 
-	public static synchronized void refreshIndex(DocSourceType sourceType) throws IOException {
+	private static synchronized void refreshIndex(DocSourceType sourceType) throws IOException {
 		final DocIndex oldIndex = instance.put(sourceType, new DocIndex(sourceType));
 
 		if (oldIndex != null) {
 			oldIndex.close();
 		}
+	}
+
+	public static synchronized void refreshAndInvalidateIndex(DocSourceType sourceType) throws IOException {
+		final DocIndex oldIndex = instance.remove(sourceType);
+
+		if (oldIndex != null) {
+			oldIndex.closeAndDelete();
+		}
+
+		//TODO try to rework the invalidation mechanism
+		// This could lead to errors if there are user interactions during the reconstruction
+		instance.put(sourceType, new DocIndex(sourceType));
 	}
 }

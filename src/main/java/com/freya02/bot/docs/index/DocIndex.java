@@ -33,7 +33,7 @@ public class DocIndex {
 	public DocIndex(DocSourceType sourceType) throws IOException {
 		LOGGER.info("Loading docs for {}", sourceType.name());
 
-		this.renderedDocsCache = new FileCache(BOT_FOLDER, "rendered_docs", true);
+		this.renderedDocsCache = new FileCache(BOT_FOLDER, "rendered_docs_" + sourceType.name(), true);
 
 		Path sourceCacheFolder = renderedDocsCache.getCachePath().resolve(sourceType.name());
 		Files.createDirectories(sourceCacheFolder);
@@ -137,5 +137,11 @@ public class DocIndex {
 
 	public void close() throws IOException {
 		renderedDocsCache.close();
+	}
+
+	public void closeAndDelete() throws IOException {
+		renderedDocsCache.close();
+
+		Files.deleteIfExists(renderedDocsCache.getOuterPath());
 	}
 }
