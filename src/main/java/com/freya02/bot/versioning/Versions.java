@@ -1,7 +1,9 @@
 package com.freya02.bot.versioning;
 
+import com.freya02.bot.commands.slash.docs.CommonDocsHandlers;
 import com.freya02.bot.docs.DocIndexMap;
 import com.freya02.bot.utils.HttpUtils;
+import com.freya02.botcommands.api.BContext;
 import com.freya02.botcommands.api.Logging;
 import com.freya02.docs.DocSourceType;
 import net.dv8tion.jda.api.exceptions.ParsingException;
@@ -12,6 +14,7 @@ import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class Versions {
@@ -22,36 +25,88 @@ public class Versions {
 	private ArtifactInfo latestJDA4Version;
 	private ArtifactInfo latestJDA5Version;
 
-	public Versions() {
-		Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(() -> {
-			try {
-				final ArtifactInfo latestBotCommandsVersion = retrieveLatestBotCommandsVersion("2.3.0");
-				final ArtifactInfo jdaVersionFromBotCommands = retrieveJDAVersionFromBotCommands("2.3.0");
-				final ArtifactInfo latestJDA4Version = retrieveLatestJDA4Version();
-				final ArtifactInfo latestJDA5Version = retrieveLatestJDA5Version();
+	public Versions() throws IOException {
+		this.latestBotCommandsVersion = retrieveLatestBotCommandsVersion("2.3.0");
+		this.jdaVersionFromBotCommands = retrieveJDAVersionFromBotCommands("2.3.0");
+		this.latestJDA4Version = retrieveLatestJDA4Version();
+		this.latestJDA5Version = retrieveLatestJDA5Version();
+	}
 
-				if (!latestBotCommandsVersion.equals(this.latestBotCommandsVersion)) {
-					DocIndexMap.refreshIndex(DocSourceType.BOT_COMMANDS);
+	public void initUpdateLoop(BContext context) {
+		final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
 
-					//TODO invalidate autocomplete
-				} else if (!jdaVersionFromBotCommands.equals(this.jdaVersionFromBotCommands)) {
-					DocIndexMap.refreshIndex(DocSourceType.JDA);
+		scheduledExecutorService.scheduleWithFixedDelay(() -> checkLatestBCVersion(context), 30, 30, TimeUnit.MINUTES);
+		scheduledExecutorService.scheduleWithFixedDelay(() -> checkLatestJDAVersionFromBC(context), 30, 30, TimeUnit.MINUTES);
+		scheduledExecutorService.scheduleWithFixedDelay(this::checkLatestJDA4Version, 30, 30, TimeUnit.MINUTES);
+		scheduledExecutorService.scheduleWithFixedDelay(this::checkLatestJDA5Version, 30, 30, TimeUnit.MINUTES);
+	}
 
-					//TODO invalidate autocomplete
-				} else if (!latestJDA4Version.equals(this.latestJDA4Version)) {
-					//TODO invalidate autocomplete
-				} else if (!latestJDA5Version.equals(this.latestJDA5Version)) {
-					//TODO invalidate autocomplete
-				}
+	private void checkLatestJDA5Version() {
+		try {
+			final ArtifactInfo latestJDA5Version = retrieveLatestJDA5Version();
 
-				this.latestBotCommandsVersion = latestBotCommandsVersion;
-				this.jdaVersionFromBotCommands = jdaVersionFromBotCommands;
-				this.latestJDA4Version = latestJDA4Version;
-				this.latestJDA5Version = latestJDA5Version;
-			} catch (IOException e) {
-				LOGGER.error("An exception occurred while retrieving versions", e);
+			if (!latestJDA5Version.equals(this.latestJDA5Version)) {
+				LOGGER.info("JDA 5 version updated, went from {} to {}", this.latestJDA5Version.version(), latestJDA5Version.version());
 			}
-		}, 0, 30, TimeUnit.MINUTES);
+
+			this.latestJDA5Version = latestJDA5Version;
+		} catch (IOException e) {
+			LOGGER.error("An exception occurred while retrieving versions", e);
+		}
+	}
+
+	private void checkLatestJDA4Version() {
+		try {
+			final ArtifactInfo latestJDA4Version = retrieveLatestJDA4Version();
+
+			if (!latestJDA4Version.equals(this.latestJDA4Version)) {
+				LOGGER.info("JDA 4 version updated, went from {} to {}", this.latestJDA4Version.version(), latestJDA4Version.version());
+			}
+
+			this.latestJDA4Version = latestJDA4Version;
+		} catch (IOException e) {
+			LOGGER.error("An exception occurred while retrieving versions", e);
+		}
+	}
+
+	private void checkLatestJDAVersionFromBC(BContext context) {
+		try {
+			final ArtifactInfo jdaVersionFromBotCommands = retrieveJDAVersionFromBotCommands("2.3.0");
+
+			if (!jdaVersionFromBotCommands.equals(this.jdaVersionFromBotCommands)) {
+				LOGGER.info("BotCommands's JDA version updated, went from {} to {}", this.jdaVersionFromBotCommands.version(), jdaVersionFromBotCommands.version());
+
+				DocIndexMap.refreshIndex(DocSourceType.JDA);
+
+				for (String handlerName : CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
+					context.invalidateAutocompletionCache(handlerName);
+				}
+			}
+
+			this.jdaVersionFromBotCommands = jdaVersionFromBotCommands;
+		} catch (IOException e) {
+			LOGGER.error("An exception occurred while retrieving versions", e);
+		}
+	}
+
+	private void checkLatestBCVersion(BContext context) {
+		try {
+			final ArtifactInfo latestBotCommandsVersion = retrieveLatestBotCommandsVersion("2.3.0");
+
+			if (!latestBotCommandsVersion.equals(this.latestBotCommandsVersion)) {
+				LOGGER.info("BotCommands version updated, went from {} to {}", this.latestBotCommandsVersion.version(), latestBotCommandsVersion.version());
+
+				DocIndexMap.refreshIndex(DocSourceType.BOT_COMMANDS);
+
+				for (String handlerName : CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
+					context.invalidateAutocompletionCache(handlerName);
+				}
+			}
+
+			this.latestBotCommandsVersion = latestBotCommandsVersion;
+		} catch (IOException e) {
+			LOGGER.error("An exception occurred while retrieving versions", e);
+		}
 	}
 
 	@NotNull

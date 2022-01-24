@@ -3,7 +3,6 @@ package com.freya02.bot;
 import com.freya02.bot.db.Database;
 import com.freya02.bot.docs.DocSourceTypeResolver;
 import com.freya02.bot.tag.TagCriteriaResolver;
-import com.freya02.bot.utils.FileCache;
 import com.freya02.bot.versioning.LibraryTypeResolver;
 import com.freya02.bot.versioning.Versions;
 import com.freya02.botcommands.api.CommandsBuilder;
@@ -21,7 +20,6 @@ import java.nio.file.Path;
 public class Main {
 	public static final Path BOT_FOLDER = Path.of(System.getProperty("user.home"), "Downloads", "DocsBot");
 	public static final Path CACHE_PATH = BOT_FOLDER.resolve("docs_cache");
-	public static final Path RENDERED_DOCS_CACHE_PATH;
 
 	private static final Logger LOGGER = Logging.getLogger();
 
@@ -32,17 +30,6 @@ public class Main {
 			}
 
 			Files.createDirectories(CACHE_PATH);
-
-			final FileCache renderedDocsCache = new FileCache(BOT_FOLDER, "rendered_docs", true);
-			RENDERED_DOCS_CACHE_PATH = renderedDocsCache.getCachePath();
-
-			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-				try {
-					renderedDocsCache.close();
-				} catch (IOException e) {
-					LOGGER.error("Unable to close cache", e);
-				}
-			}));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -63,7 +50,9 @@ public class Main {
 
 			final Versions versions = new Versions();
 
-			CommandsBuilder.newBuilder(222046562543468545L)
+			final CommandsBuilder commandsBuilder = CommandsBuilder.newBuilder(222046562543468545L);
+
+			commandsBuilder
 					.extensionsBuilder(extensionsBuilder -> extensionsBuilder
 							.registerConstructorParameter(Config.class, commandType -> config)
 							.registerConstructorParameter(Database.class, commandType -> database)
@@ -80,6 +69,8 @@ public class Main {
 					)
 					.setComponentManager(new DefaultComponentManager(database::getConnection))
 					.build(jda, "com.freya02.bot.commands");
+
+			versions.initUpdateLoop(commandsBuilder.getContext());
 
 			LOGGER.info("Loaded commands");
 		} catch (Exception e) {

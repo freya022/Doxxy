@@ -1,6 +1,7 @@
 package com.freya02.bot.docs.index;
 
 import com.freya02.bot.docs.CachedClassMetadata;
+import com.freya02.bot.utils.FileCache;
 import com.freya02.botcommands.api.Logging;
 import com.freya02.docs.ClassDocs;
 import com.freya02.docs.DocSourceType;
@@ -17,7 +18,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 
-import static com.freya02.bot.Main.RENDERED_DOCS_CACHE_PATH;
+import static com.freya02.bot.Main.BOT_FOLDER;
 
 public class DocIndex {
 	private static final Logger LOGGER = Logging.getLogger();
@@ -27,11 +28,14 @@ public class DocIndex {
 
 	private final IndexPaths indexPaths;
 	private final DocIndexCache indexCache;
+	private final FileCache renderedDocsCache;
 
 	public DocIndex(DocSourceType sourceType) throws IOException {
 		LOGGER.info("Loading docs for {}", sourceType.name());
 
-		Path sourceCacheFolder = RENDERED_DOCS_CACHE_PATH.resolve(sourceType.name());
+		this.renderedDocsCache = new FileCache(BOT_FOLDER, "rendered_docs", true);
+
+		Path sourceCacheFolder = renderedDocsCache.getCachePath().resolve(sourceType.name());
 		Files.createDirectories(sourceCacheFolder);
 
 		ClassDocs classDocs = ClassDocs.indexAll(sourceType);
@@ -129,5 +133,9 @@ public class DocIndex {
 	@NotNull
 	public Collection<String> getFieldDocSuggestions() {
 		return indexCache.getAllFullFieldSignatures();
+	}
+
+	public void close() throws IOException {
+		renderedDocsCache.close();
 	}
 }
