@@ -27,23 +27,34 @@ public class DocIndex {
 			.create();
 
 	private final IndexPaths indexPaths;
-	private final DocIndexCache indexCache;
+	private final DocSourceType sourceType;
+
+	private final Path sourceCacheFolder;
+	private DocIndexCache indexCache;
+
 	private final FileCache renderedDocsCache;
 
 	public DocIndex(DocSourceType sourceType) throws IOException {
+		this.sourceType = sourceType;
+
 		LOGGER.info("Loading docs for {}", sourceType.name());
 
 		this.renderedDocsCache = new FileCache(BOT_FOLDER, "rendered_docs_" + sourceType.name(), true);
 
-		Path sourceCacheFolder = renderedDocsCache.getCachePath().resolve(sourceType.name());
+		this.sourceCacheFolder = renderedDocsCache.getCachePath().resolve(sourceType.name());
 		Files.createDirectories(sourceCacheFolder);
 
-		ClassDocs classDocs = ClassDocs.indexAll(sourceType);
-
 		this.indexPaths = new IndexPaths(sourceCacheFolder);
-		this.indexCache = new DocIndexCache(classDocs, sourceCacheFolder, indexPaths);
+
+		//Mostly useless, reindex is going to get called anyway if the version data changed after Versions has been initialized
+		reindex(false);
 
 		LOGGER.info("Docs loaded for {}", sourceType.name());
+	}
+
+	//TODO index as empty cache
+	public void reindex(boolean force) throws IOException {
+		this.indexCache = new DocIndexCache(ClassDocs.indexAll(sourceType), this.sourceCacheFolder, indexPaths, force);
 	}
 
 	@Nullable

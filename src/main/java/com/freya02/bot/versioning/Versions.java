@@ -1,5 +1,6 @@
 package com.freya02.bot.versioning;
 
+import com.freya02.bot.Main;
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers;
 import com.freya02.bot.docs.DocIndexMap;
 import com.freya02.bot.utils.HttpUtils;
@@ -13,12 +14,19 @@ import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class Versions {
 	private static final Logger LOGGER = Logging.getLogger();
+	private final Path lastKnownVersionsFolderPath = Main.BOT_FOLDER.resolve("last_versions");
+	private final Path lastKnownBotCommandsPath = lastKnownVersionsFolderPath.resolve("BC.txt");
+	private final Path lastKnownJDAFromBCPath = lastKnownVersionsFolderPath.resolve("JDA_from_BC.txt");
+	private final Path lastKnownJDA4Path = lastKnownVersionsFolderPath.resolve("JDA4.txt");
+	private final Path lastKnownJDA5Path = lastKnownVersionsFolderPath.resolve("JDA5.txt");
 
 	private ArtifactInfo latestBotCommandsVersion;
 	private ArtifactInfo jdaVersionFromBotCommands;
@@ -26,19 +34,38 @@ public class Versions {
 	private ArtifactInfo latestJDA5Version;
 
 	public Versions() throws IOException {
-		this.latestBotCommandsVersion = retrieveLatestBotCommandsVersion("2.3.0");
-		this.jdaVersionFromBotCommands = retrieveJDAVersionFromBotCommands("2.3.0");
-		this.latestJDA4Version = retrieveLatestJDA4Version();
-		this.latestJDA5Version = retrieveLatestJDA5Version();
+		this.latestBotCommandsVersion = readLastKnownVersion(lastKnownBotCommandsPath);
+		this.jdaVersionFromBotCommands = readLastKnownVersion(lastKnownJDAFromBCPath);
+		this.latestJDA4Version = readLastKnownVersion(lastKnownJDA4Path);
+		this.latestJDA5Version = readLastKnownVersion(lastKnownJDA5Path);
+
+		Runtime.getRuntime().addShutdownHook(new Thread(this::saveLastKnownVersions));
+	}
+
+	private void saveLastKnownVersions() {
+		try {
+			Files.createDirectories(lastKnownVersionsFolderPath);
+
+			Files.writeString(lastKnownBotCommandsPath, latestBotCommandsVersion.toFileString());
+			Files.writeString(lastKnownJDAFromBCPath, jdaVersionFromBotCommands.toFileString());
+			Files.writeString(lastKnownJDA4Path, latestJDA4Version.toFileString());
+			Files.writeString(lastKnownJDA5Path, latestJDA5Version.toFileString());
+		} catch (IOException e) {
+			LOGGER.error("Unable to save last versions", e);
+		}
+	}
+
+	private ArtifactInfo readLastKnownVersion(Path path) throws IOException {
+		return ArtifactInfo.fromFileString(path);
 	}
 
 	public void initUpdateLoop(BContext context) {
 		final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
 
-		scheduledExecutorService.scheduleWithFixedDelay(() -> checkLatestBCVersion(context), 30, 30, TimeUnit.MINUTES);
-		scheduledExecutorService.scheduleWithFixedDelay(() -> checkLatestJDAVersionFromBC(context), 30, 30, TimeUnit.MINUTES);
-		scheduledExecutorService.scheduleWithFixedDelay(this::checkLatestJDA4Version, 30, 30, TimeUnit.MINUTES);
-		scheduledExecutorService.scheduleWithFixedDelay(this::checkLatestJDA5Version, 30, 30, TimeUnit.MINUTES);
+		scheduledExecutorService.scheduleWithFixedDelay(() -> checkLatestBCVersion(context), 0, 30, TimeUnit.MINUTES);
+		scheduledExecutorService.scheduleWithFixedDelay(() -> checkLatestJDAVersionFromBC(context), 0, 30, TimeUnit.MINUTES);
+		scheduledExecutorService.scheduleWithFixedDelay(this::checkLatestJDA4Version, 0, 30, TimeUnit.MINUTES);
+		scheduledExecutorService.scheduleWithFixedDelay(this::checkLatestJDA5Version, 0, 30, TimeUnit.MINUTES);
 	}
 
 	private void checkLatestJDA5Version() {

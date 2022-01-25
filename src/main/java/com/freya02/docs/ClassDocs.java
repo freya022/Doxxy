@@ -69,8 +69,10 @@ public class ClassDocs {
 	}
 
 	public static synchronized ClassDocs indexAll(DocSourceType sourceType) throws IOException {
-		final ClassDocs docs = getSource(sourceType);
+		final ClassDocs docs = new ClassDocs(sourceType);
 		docs.indexAll();
+
+		sourceMap.put(sourceType, docs);
 
 		return docs;
 	}

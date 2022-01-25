@@ -30,30 +30,18 @@ public class DocIndexMap extends EnumMap<DocSourceType, DocIndex> {
 		if (instance == null) {
 			instance = new DocIndexMap();
 
-			refreshIndex(DocSourceType.BOT_COMMANDS);
-			refreshIndex(DocSourceType.JDA);
+			instance.put(DocSourceType.BOT_COMMANDS, new DocIndex(DocSourceType.BOT_COMMANDS));
+			instance.put(DocSourceType.JDA, new DocIndex(DocSourceType.JDA));
 		}
 
 		return instance;
 	}
 
-	private static synchronized void refreshIndex(DocSourceType sourceType) throws IOException {
-		final DocIndex oldIndex = instance.put(sourceType, new DocIndex(sourceType));
-
-		if (oldIndex != null) {
-			oldIndex.close();
-		}
-	}
-
 	public static synchronized void refreshAndInvalidateIndex(DocSourceType sourceType) throws IOException {
-		final DocIndex oldIndex = instance.remove(sourceType);
+		final DocIndex index = instance.get(sourceType);
 
-		if (oldIndex != null) {
-			oldIndex.closeAndDelete();
+		if (index != null) {
+			index.reindex(true);
 		}
-
-		//TODO try to rework the invalidation mechanism
-		// This could lead to errors if there are user interactions during the reconstruction
-		instance.put(sourceType, new DocIndex(sourceType));
 	}
 }

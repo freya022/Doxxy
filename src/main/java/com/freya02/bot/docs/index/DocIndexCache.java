@@ -32,7 +32,8 @@ public class DocIndexCache {
 
 	public DocIndexCache(ClassDocs classDocs,
 	                     Path sourceCacheFolder,
-	                     IndexPaths indexPaths) {
+	                     IndexPaths indexPaths,
+	                     boolean force) {
 		this.indexPaths = indexPaths;
 
 		for (String className : classDocs.getSimpleNameToUrlMap().keySet()) {
@@ -43,7 +44,7 @@ public class DocIndexCache {
 				final Path classMetadataCacheFile = classCacheFolder.resolve("ClassMetadata.json");
 				final Path classEmbedCacheFile = indexPaths.getClassEmbedPath(className);
 
-				final boolean forceDownload = Files.notExists(classMetadataCacheFile) || Files.notExists(classEmbedCacheFile);
+				final boolean forceDownload = force || Files.notExists(classMetadataCacheFile) || Files.notExists(classEmbedCacheFile);
 				final ClassDoc doc = classDocs.tryRetrieveDoc(className, forceDownload);
 
 				final CachedClassMetadata cachedClassMetadata;
