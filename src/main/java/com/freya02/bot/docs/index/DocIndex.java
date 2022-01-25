@@ -46,15 +46,23 @@ public class DocIndex {
 
 		this.indexPaths = new IndexPaths(sourceCacheFolder);
 
-		//Mostly useless, reindex is going to get called anyway if the version data changed after Versions has been initialized
-		reindex(false);
+		//Create an empty index as to not waste resources
+		// As the real reindex is called when the versions checker is going to run
+		this.indexCache = DocIndexCache.emptyIndex(indexPaths);
 
 		LOGGER.info("Docs loaded for {}", sourceType.name());
 	}
 
-	//TODO index as empty cache
-	public void reindex(boolean force) throws IOException {
-		this.indexCache = new DocIndexCache(ClassDocs.indexAll(sourceType), this.sourceCacheFolder, indexPaths, force);
+	//Must be called on startup
+	// Otherwise the index cache will be empty until the next update
+	public DocIndex reindex(boolean force) throws IOException {
+		LOGGER.info("Reindexing docs for {}", sourceType.name());
+
+		this.indexCache = DocIndexCache.indexDocs(ClassDocs.indexAll(sourceType), this.sourceCacheFolder, indexPaths, force);
+
+		LOGGER.info("Reindexed docs for {}", sourceType.name());
+
+		return this;
 	}
 
 	@Nullable
@@ -148,11 +156,5 @@ public class DocIndex {
 
 	public void close() throws IOException {
 		renderedDocsCache.close();
-	}
-
-	public void closeAndDelete() throws IOException {
-		renderedDocsCache.close();
-
-		Files.deleteIfExists(renderedDocsCache.getOuterPath());
 	}
 }

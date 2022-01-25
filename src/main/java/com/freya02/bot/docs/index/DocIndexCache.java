@@ -30,10 +30,16 @@ public class DocIndexCache {
 	private final List<String> allFullFieldSignatures = new ArrayList<>();
 	private final IndexPaths indexPaths;
 
-	public DocIndexCache(ClassDocs classDocs,
-	                     Path sourceCacheFolder,
-	                     IndexPaths indexPaths,
-	                     boolean force) {
+	private DocIndexCache(IndexPaths indexPaths) {
+		this.indexPaths = indexPaths;
+	}
+
+	//Could replace the "force" argument
+	// As to only update if the version has really changed
+	private DocIndexCache(ClassDocs classDocs,
+	                      Path sourceCacheFolder,
+	                      IndexPaths indexPaths,
+	                      boolean force) {
 		this.indexPaths = indexPaths;
 
 		for (String className : classDocs.getSimpleNameToUrlMap().keySet()) {
@@ -89,6 +95,17 @@ public class DocIndexCache {
 				throw new RuntimeException("An exception occurred while reading the docs of " + className, e);
 			}
 		}
+	}
+
+	public static DocIndexCache indexDocs(ClassDocs classDocs,
+	                                      Path sourceCacheFolder,
+	                                      IndexPaths indexPaths,
+	                                      boolean force) {
+		return new DocIndexCache(classDocs, sourceCacheFolder, indexPaths, force);
+	}
+
+	public static DocIndexCache emptyIndex(IndexPaths indexPaths) {
+		return new DocIndexCache(indexPaths);
 	}
 
 	private void addMethodDocs(String className, Path classCacheFolder, ClassDoc doc, CachedClassMetadata cachedClassMetadata) {

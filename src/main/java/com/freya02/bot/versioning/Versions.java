@@ -59,11 +59,23 @@ public class Versions {
 		return ArtifactInfo.fromFileString(path);
 	}
 
-	public void initUpdateLoop(BContext context) {
+	public void initUpdateLoop(BContext context) throws IOException {
 		final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
 
-		scheduledExecutorService.scheduleWithFixedDelay(() -> checkLatestBCVersion(context), 0, 30, TimeUnit.MINUTES);
-		scheduledExecutorService.scheduleWithFixedDelay(() -> checkLatestJDAVersionFromBC(context), 0, 30, TimeUnit.MINUTES);
+		if (!checkLatestBCVersion(context)) {
+			//Load docs normally, version hasn't changed
+
+			DocIndexMap.getInstance().get(DocSourceType.BOT_COMMANDS).reindex(false);
+		}
+
+		if (!checkLatestJDAVersionFromBC(context)) {
+			//Load docs normally, version hasn't changed
+
+			DocIndexMap.getInstance().get(DocSourceType.JDA).reindex(false);
+		}
+
+		scheduledExecutorService.scheduleWithFixedDelay(() -> checkLatestBCVersion(context), 30, 30, TimeUnit.MINUTES);
+		scheduledExecutorService.scheduleWithFixedDelay(() -> checkLatestJDAVersionFromBC(context), 30, 30, TimeUnit.MINUTES);
 		scheduledExecutorService.scheduleWithFixedDelay(this::checkLatestJDA4Version, 0, 30, TimeUnit.MINUTES);
 		scheduledExecutorService.scheduleWithFixedDelay(this::checkLatestJDA5Version, 0, 30, TimeUnit.MINUTES);
 	}
@@ -96,11 +108,12 @@ public class Versions {
 		}
 	}
 
-	private void checkLatestJDAVersionFromBC(BContext context) {
+	private boolean checkLatestJDAVersionFromBC(BContext context) {
 		try {
 			final ArtifactInfo jdaVersionFromBotCommands = retrieveJDAVersionFromBotCommands("2.3.0");
 
-			if (!jdaVersionFromBotCommands.equals(this.jdaVersionFromBotCommands)) {
+			final boolean changed = !jdaVersionFromBotCommands.equals(this.jdaVersionFromBotCommands);
+			if (changed) {
 				LOGGER.info("BotCommands's JDA version updated, went from {} to {}", this.jdaVersionFromBotCommands.version(), jdaVersionFromBotCommands.version());
 
 				DocIndexMap.refreshAndInvalidateIndex(DocSourceType.JDA);
@@ -111,16 +124,21 @@ public class Versions {
 			}
 
 			this.jdaVersionFromBotCommands = jdaVersionFromBotCommands;
+
+			return changed;
 		} catch (IOException e) {
 			LOGGER.error("An exception occurred while retrieving versions", e);
 		}
+
+		return false;
 	}
 
-	private void checkLatestBCVersion(BContext context) {
+	private boolean checkLatestBCVersion(BContext context) {
 		try {
 			final ArtifactInfo latestBotCommandsVersion = retrieveLatestBotCommandsVersion("2.3.0");
 
-			if (!latestBotCommandsVersion.equals(this.latestBotCommandsVersion)) {
+			final boolean changed = !latestBotCommandsVersion.equals(this.latestBotCommandsVersion);
+			if (changed) {
 				LOGGER.info("BotCommands version updated, went from {} to {}", this.latestBotCommandsVersion.version(), latestBotCommandsVersion.version());
 
 				DocIndexMap.refreshAndInvalidateIndex(DocSourceType.BOT_COMMANDS);
@@ -131,9 +149,13 @@ public class Versions {
 			}
 
 			this.latestBotCommandsVersion = latestBotCommandsVersion;
+
+			return changed;
 		} catch (IOException e) {
 			LOGGER.error("An exception occurred while retrieving versions", e);
 		}
+
+		return false;
 	}
 
 	@NotNull
