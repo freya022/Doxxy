@@ -22,8 +22,10 @@ public class SeeAlso {
 				textBuilder.replace(index, index + 1, "#");
 			}
 
-			//TODO maybe add another field to put resolved full methods signatures
+			//TODO maybe add another field to put resolved full methods (and others) signatures
 			// Will be useful for the see also selection menu
+			// Will have to analyse the href target and find out whether it's just a class, a method or a field
+			// So, put a target type and the target full signature
 			references.add(new SeeAlsoReference(textBuilder.toString(), seeAlsoClassElement.absUrl("href")));
 		}
 	}
