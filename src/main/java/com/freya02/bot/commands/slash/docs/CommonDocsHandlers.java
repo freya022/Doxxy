@@ -1,5 +1,6 @@
 package com.freya02.bot.commands.slash.docs;
 
+import com.freya02.bot.commands.slash.DeleteButtonListener;
 import com.freya02.bot.docs.DocIndexMap;
 import com.freya02.bot.docs.index.DocIndex;
 import com.freya02.botcommands.api.application.ApplicationCommand;
@@ -48,6 +49,8 @@ public class CommonDocsHandlers extends ApplicationCommand {
 	static void sendMethod(GuildSlashEvent event, boolean ephemeral, MessageEmbed methodDoc) {
 		ReplyCallbackAction replyAction = event.replyEmbeds(methodDoc);
 
+		if (!ephemeral) replyAction = replyAction.addActionRow(DeleteButtonListener.getDeleteButton(event.getUser()));
+
 		replyAction
 				.setEphemeral(ephemeral)
 				.queue();
@@ -75,6 +78,8 @@ public class CommonDocsHandlers extends ApplicationCommand {
 //			replyAction = replyAction.addActionRow(selectionMenuBuilder.build());
 //		}
 
+		if (!ephemeral) replyAction = replyAction.addActionRow(DeleteButtonListener.getDeleteButton(event.getUser()));
+
 		replyAction
 				.setEphemeral(ephemeral)
 				.queue();
@@ -82,6 +87,8 @@ public class CommonDocsHandlers extends ApplicationCommand {
 
 	static void sendField(GuildSlashEvent event, boolean ephemeral, MessageEmbed fieldDoc) {
 		ReplyCallbackAction replyAction = event.replyEmbeds(fieldDoc);
+
+		if (!ephemeral) replyAction = replyAction.addActionRow(DeleteButtonListener.getDeleteButton(event.getUser()));
 
 		replyAction
 				.setEphemeral(ephemeral)

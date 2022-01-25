@@ -1,5 +1,6 @@
 package com.freya02.bot.commands.slash.versioning;
 
+import com.freya02.bot.commands.slash.DeleteButtonListener;
 import com.freya02.bot.versioning.ArtifactInfo;
 import com.freya02.bot.versioning.LibraryType;
 import com.freya02.bot.versioning.Versions;
@@ -104,6 +105,7 @@ public class SlashMaven extends ApplicationCommand {
 
 		event.replyEmbeds(builder.build())
 //				.setEphemeral(true)
+				.addActionRow(DeleteButtonListener.getDeleteButton(event.getUser()))
 				.queue();
 	}
 }
