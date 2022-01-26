@@ -41,7 +41,7 @@ public class SeeAlso {
 					final String targetAsText = getTargetAsText(seeAlsoClassElement);
 					final SeeAlsoReference ref = switch (javadocUrl.getTargetType()) {
 						case CLASS -> new SeeAlsoReference(targetAsText, href, TargetType.CLASS, className);
-						case METHOD -> new SeeAlsoReference(targetAsText, href, TargetType.METHOD, className + "#" + javadocUrl.getFragment());
+						case METHOD -> new SeeAlsoReference(targetAsText, href, TargetType.METHOD, className + "#" + DocUtils.getSimpleSignature(javadocUrl.getFragment()));
 						case FIELD -> new SeeAlsoReference(targetAsText, href, TargetType.FIELD, className + "#" + javadocUrl.getFragment());
 						default -> throw new IllegalStateException("Unexpected javadoc target type: " + javadocUrl.getTargetType());
 					};
