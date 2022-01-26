@@ -1,6 +1,5 @@
 package com.freya02.bot.commands.slash.docs;
 
-import com.freya02.bot.docs.CachedClass;
 import com.freya02.bot.docs.CachedMethod;
 import com.freya02.bot.docs.DocIndexMap;
 import com.freya02.bot.docs.index.DocIndex;
@@ -33,9 +32,8 @@ public class MethodCommand extends ApplicationCommand {
 			                          String methodId) throws IOException {
 
 		final DocIndex docIndex = docIndexMap.get(sourceType);
-		final CachedClass cachedClass = docIndex.getClassDoc(className); //TODO optimize
 
-		if (cachedClass == null) {
+		if (!docIndex.getClassesWithMethods().contains(className)) {
 			event.reply("Unknown class").setEphemeral(true).queue();
 
 			return;
