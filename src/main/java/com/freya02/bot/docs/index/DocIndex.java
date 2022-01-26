@@ -57,7 +57,7 @@ public class DocIndex {
 	public DocIndex reindex(boolean force) throws IOException {
 		LOGGER.info("Reindexing docs for {}", sourceType.name());
 
-		this.indexCache = DocIndexCache.indexDocs(ClassDocs.indexAll(sourceType), this.sourceCacheFolder, indexPaths, force);
+		this.indexCache = DocIndexCache.indexDocs(ClassDocs.getSource(sourceType), this.sourceCacheFolder, indexPaths, force);
 
 		LOGGER.info("Reindexed docs for {}", sourceType.name());
 

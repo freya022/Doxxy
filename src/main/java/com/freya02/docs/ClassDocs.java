@@ -28,12 +28,18 @@ public class ClassDocs {
 		this.source = source;
 	}
 
-	public static ClassDocs getSource(String url) {
+	@NotNull
+	public static ClassDocs getSource(String url) throws IOException {
 		return getSource(DocSourceType.fromUrl(url));
 	}
 
-	public static ClassDocs getSource(DocSourceType source) {
-		return sourceMap.computeIfAbsent(source, ClassDocs::new);
+	@NotNull
+	public static synchronized ClassDocs getSource(DocSourceType source) throws IOException {
+		final ClassDocs classDocs = sourceMap.computeIfAbsent(source, ClassDocs::new);
+
+		classDocs.tryIndexAll();
+
+		return classDocs;
 	}
 
 	public Map<String, String> getSimpleNameToUrlMap() {
@@ -72,21 +78,26 @@ public class ClassDocs {
 		return url;
 	}
 
-	public static synchronized ClassDocs indexAll(DocSourceType sourceType) throws IOException {
-		final ClassDocs docs = new ClassDocs(sourceType);
-		docs.indexAll();
-
-		sourceMap.put(sourceType, docs);
-
-		return docs;
-	}
-
-	private synchronized void indexAll() throws IOException {
+	private synchronized void tryIndexAll() throws IOException {
 		final String indexURL = source.getAllClassesIndexURL();
 
-		final Document document = HttpUtils.getDocument(indexURL);
+		final String body;
+		if (!simpleNameToUrlMap.isEmpty()) {
+			//We try to "abuse" the OkHttp caching in order to determine if the name-to-URL cache needs to be updated
+			// This allows SeeAlso to get updated sources of all DocSourceType(s) without spamming requests & parsing a lot
+
+			body = HttpUtils.downloadBodyIfNotCached(indexURL);
+			if (body == null) return;
+		} else {
+			body = HttpUtils.downloadBody(indexURL); //If this is the first run (map empty) then always download
+		}
+
+		LOGGER.info("Parsing ClassDocs URLs for: {}", source);
+
+		final Document document = HttpUtils.parseDocument(body, indexURL);
 
 		simpleNameToUrlMap.clear();
+		urlSet.clear();
 
 		//n = 1 needed as type parameters are links and external types
 		// For example in AbstractComponentBuilder<T extends AbstractComponentBuilder<T>>
