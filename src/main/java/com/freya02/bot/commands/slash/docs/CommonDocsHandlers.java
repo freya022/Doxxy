@@ -1,29 +1,39 @@
 package com.freya02.bot.commands.slash.docs;
 
 import com.freya02.bot.commands.slash.DeleteButtonListener;
-import com.freya02.bot.docs.CachedClass;
-import com.freya02.bot.docs.CachedField;
-import com.freya02.bot.docs.CachedMethod;
-import com.freya02.bot.docs.DocIndexMap;
+import com.freya02.bot.docs.*;
 import com.freya02.bot.docs.index.DocIndex;
+import com.freya02.botcommands.api.Logging;
 import com.freya02.botcommands.api.application.ApplicationCommand;
 import com.freya02.botcommands.api.application.annotations.AppOption;
-import com.freya02.botcommands.api.application.slash.GuildSlashEvent;
 import com.freya02.botcommands.api.application.slash.autocomplete.annotations.AutocompletionHandler;
 import com.freya02.botcommands.api.application.slash.autocomplete.annotations.CacheAutocompletion;
 import com.freya02.botcommands.api.application.slash.autocomplete.annotations.CompositeKey;
+import com.freya02.botcommands.api.components.Components;
+import com.freya02.botcommands.api.components.annotations.JDASelectionMenuListener;
+import com.freya02.botcommands.api.components.builder.PersistentSelectionMenuBuilder;
+import com.freya02.botcommands.api.components.event.SelectionEvent;
+import com.freya02.botcommands.api.utils.EmojiUtils;
 import com.freya02.docs.DocSourceType;
+import com.freya02.docs.SeeAlso;
+import com.freya02.docs.TargetType;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
+import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class CommonDocsHandlers extends ApplicationCommand {
+	private static final Logger LOGGER = Logging.getLogger();
+
 	public static final String CLASS_NAME_AUTOCOMPLETE_NAME = "CommonDocsHandlers: className";
 	public static final String CLASS_NAME_WITH_METHODS_AUTOCOMPLETE_NAME = "CommonDocsHandlers: classNameWithMethods";
 	public static final String CLASS_NAME_WITH_FIELDS_AUTOCOMPLETE_NAME = "CommonDocsHandlers: classNameWithFields";
@@ -43,75 +53,105 @@ public class CommonDocsHandlers extends ApplicationCommand {
 			ANY_FIELD_NAME_AUTOCOMPLETE_NAME
 	};
 
+	private static final String SEE_ALSO_SELECT_LISTENER_NAME = "CommonDocsHandlers: seeAlso";
+
 	private final DocIndexMap docIndexMap;
 
 	public CommonDocsHandlers() throws IOException {
 		docIndexMap = DocIndexMap.getInstance();
 	}
 
-	static void sendClass(IReplyCallback event, boolean ephemeral, @NotNull CachedClass docs) {
-		ReplyCallbackAction replyAction = event.replyEmbeds(docs.getClassEmbed());
+	static void sendClass(IReplyCallback event, boolean ephemeral, @NotNull CachedClass cachedClass) {
+		ReplyCallbackAction replyAction = event.replyEmbeds(cachedClass.getClassEmbed());
 
-		// Much more work to do for this to really work
-		// The link could target method without knowing it, it could also target weird internal sun classes
-//		final SeeAlso seeAlso = docs.getSeeAlso();
-//		if (seeAlso != null) {
-//			final List<SeeAlso.SeeAlsoReference> references = seeAlso.getReferences();
-//			final LambdaSelectionMenuBuilder selectionMenuBuilder = Components.selectionMenu(evt -> onSeeAlsoClicked(evt, references));
-//
-//			for (int i = 0, referencesSize = Math.min(MAX_CHOICES, references.size()); i < referencesSize; i++) {
-//				SeeAlso.SeeAlsoReference reference = references.get(i);
-//
-//				final ClassDoc docOpt = ClassDocs.getOrNull(reference.link());
-//				if (docOpt != null) {
-//					selectionMenuBuilder.addOption(reference.text(), String.valueOf(i), CLIPBOARD_EMOJI);
-//				}
-//			}
-//
-//			replyAction = replyAction.addActionRow(selectionMenuBuilder.build());
-//		}
+		replyAction = addSeeAlso(cachedClass, replyAction);
 
 		if (!ephemeral) replyAction = replyAction.addActionRow(DeleteButtonListener.getDeleteButton(event.getUser()));
-
-		//TODO add see also
 
 		replyAction
 				.setEphemeral(ephemeral)
 				.queue();
 	}
 
-	static void sendMethod(GuildSlashEvent event, boolean ephemeral, @NotNull CachedMethod cachedMethod) {
+	static void sendMethod(IReplyCallback event, boolean ephemeral, @NotNull CachedMethod cachedMethod) {
 		ReplyCallbackAction replyAction = event.replyEmbeds(cachedMethod.getMethodEmbed());
 
-		if (!ephemeral) replyAction = replyAction.addActionRow(DeleteButtonListener.getDeleteButton(event.getUser()));
+		replyAction = addSeeAlso(cachedMethod, replyAction);
 
-		//TODO add see also
+		if (!ephemeral) replyAction = replyAction.addActionRow(DeleteButtonListener.getDeleteButton(event.getUser()));
 
 		replyAction
 				.setEphemeral(ephemeral)
 				.queue();
 	}
 
-	static void sendField(GuildSlashEvent event, boolean ephemeral, @NotNull CachedField cachedField) {
+	static void sendField(IReplyCallback event, boolean ephemeral, @NotNull CachedField cachedField) {
 		ReplyCallbackAction replyAction = event.replyEmbeds(cachedField.getFieldEmbed());
 
+		replyAction = addSeeAlso(cachedField, replyAction);
+
 		if (!ephemeral) replyAction = replyAction.addActionRow(DeleteButtonListener.getDeleteButton(event.getUser()));
 
-		//TODO add see also
 		replyAction
 				.setEphemeral(ephemeral)
 				.queue();
 	}
 
-//	private void onSeeAlsoClicked(SelectionEvent event, List<SeeAlso.SeeAlsoReference> references) {
-//		try {
-//			final SeeAlso.SeeAlsoReference reference = references.get(Integer.parseInt(event.getValues().get(0)));
-//
-//			sendDocs(event, true, ClassDocs.of(reference.link()));
-//		} catch (IOException e) {
-//			event.reply("Couldn't send the docs").setEphemeral(true).queue();
-//		}
-//	}
+	private static ReplyCallbackAction addSeeAlso(@NotNull CachedDoc cachedDoc, ReplyCallbackAction replyAction) {
+		final List<SeeAlso.SeeAlsoReference> referenceList = cachedDoc.getSeeAlsoReferences();
+
+		if (referenceList != null && referenceList.stream().anyMatch(s -> s.targetType() != TargetType.UNKNOWN)) {
+			final PersistentSelectionMenuBuilder selectionMenuBuilder = Components.selectionMenu(SEE_ALSO_SELECT_LISTENER_NAME).timeout(15, TimeUnit.MINUTES);
+
+			for (final SeeAlso.SeeAlsoReference reference : referenceList) {
+				if (reference.targetType() != TargetType.UNKNOWN) {
+					final String optionValue = reference.targetType().name() + ":" + reference.fullSignature();
+
+					if (optionValue.length() > SelectMenu.ID_MAX_LENGTH) {
+						LOGGER.warn("Option value was too large ({}) for: '{}'", optionValue.length(), optionValue);
+
+						continue;
+					}
+
+					selectionMenuBuilder.addOption(reference.text(), optionValue, EmojiUtils.resolveJDAEmoji("clipboard"));
+				}
+			}
+
+			return replyAction.addActionRow(selectionMenuBuilder.build());
+		}
+
+		return replyAction;
+	}
+
+	@JDASelectionMenuListener(name = SEE_ALSO_SELECT_LISTENER_NAME)
+	public void onSeeAlsoSelect(SelectionEvent event) throws IOException {
+		final SelectOption option = event.getSelectedOptions().get(0); //Forced to use 1
+
+		final String[] values = option.getValue().split(":");
+
+		final TargetType targetType = TargetType.valueOf(values[0]);
+		final String fullSignature = values[1];
+
+		for (DocIndex index : docIndexMap.values()) {
+			final CachedDoc doc = switch (targetType) {
+				case CLASS -> index.getClassDoc(fullSignature);
+				case METHOD -> index.getMethodDoc(fullSignature);
+				case FIELD -> index.getFieldDoc(fullSignature);
+				default -> throw new IllegalArgumentException("Invalid target type: " + targetType);
+			};
+
+			if (doc != null) {
+				switch (targetType) {
+					case CLASS -> sendClass(event, true, (CachedClass) doc);
+					case METHOD -> sendMethod(event, true, (CachedMethod) doc);
+					case FIELD -> sendField(event, true, (CachedField) doc);
+					default -> throw new IllegalArgumentException("Invalid target type: " + targetType);
+				}
+
+				break;
+			}
+		}
+	}
 
 	@CacheAutocompletion
 	@AutocompletionHandler(name = CLASS_NAME_AUTOCOMPLETE_NAME, showUserInput = false)

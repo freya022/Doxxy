@@ -5,7 +5,7 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 
 import java.util.List;
 
-public final class CachedClass {
+public final class CachedClass implements CachedDoc {
 	private final MessageEmbed classEmbed;
 	private final List<SeeAlso.SeeAlsoReference> seeAlsoReferences;
 
@@ -19,6 +19,7 @@ public final class CachedClass {
 		return classEmbed;
 	}
 
+	@Override
 	public List<SeeAlso.SeeAlsoReference> getSeeAlsoReferences() {
 		return seeAlsoReferences;
 	}

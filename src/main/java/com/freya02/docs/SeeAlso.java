@@ -12,7 +12,27 @@ import java.util.List;
 public class SeeAlso {
 	private static final Logger LOGGER = Logging.getLogger();
 
-	public record SeeAlsoReference(String text, String link, TargetType targetType, @Nullable String fullSignature) {}
+	public static final class SeeAlsoReference {
+		private final String text;
+		private final String link;
+		private final TargetType targetType;
+		private final @Nullable String fullSignature;
+
+		public SeeAlsoReference(String text, String link, TargetType targetType, @Nullable String fullSignature) {
+			this.text = text;
+			this.link = link;
+			this.targetType = targetType;
+			this.fullSignature = fullSignature;
+		}
+
+		public String text() {return text;}
+
+		public String link() {return link;}
+
+		public TargetType targetType() {return targetType;}
+
+		public @Nullable String fullSignature() {return fullSignature;}
+	}
 
 	private final List<SeeAlsoReference> references = new ArrayList<>();
 
