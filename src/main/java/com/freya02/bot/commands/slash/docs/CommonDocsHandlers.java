@@ -219,7 +219,7 @@ public class CommonDocsHandlers extends ApplicationCommand {
 	}
 
 	@CacheAutocompletion
-	@AutocompletionHandler(name = ANY_FIELD_NAME_AUTOCOMPLETE_NAME)
+	@AutocompletionHandler(name = ANY_FIELD_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
 	public Collection<String> onAnyFieldNameAutocomplete(CommandAutoCompleteInteractionEvent event,
 	                                                     @CompositeKey @AppOption DocSourceType sourceType) {
 		final DocIndex index = docIndexMap.get(sourceType);
