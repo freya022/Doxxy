@@ -1,5 +1,6 @@
 package com.freya02.bot.commands.slash.docs;
 
+import com.freya02.bot.docs.CachedMethod;
 import com.freya02.bot.docs.DocIndexMap;
 import com.freya02.bot.docs.index.DocIndex;
 import com.freya02.botcommands.api.application.ApplicationCommand;
@@ -7,7 +8,6 @@ import com.freya02.botcommands.api.application.annotations.AppOption;
 import com.freya02.botcommands.api.application.slash.GuildSlashEvent;
 import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand;
 import com.freya02.docs.DocSourceType;
-import net.dv8tion.jda.api.entities.MessageEmbed;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -31,14 +31,14 @@ public class AnyMethodCommand extends ApplicationCommand {
 
 		final DocIndex docIndex = docIndexMap.get(sourceType);
 
-		final MessageEmbed methodDoc = docIndex.getMethodDoc(fullSignature);
+		final CachedMethod cachedMethod = docIndex.getMethodDoc(fullSignature);
 
-		if (methodDoc == null) {
+		if (cachedMethod == null) {
 			event.reply("Unknown method").setEphemeral(true).queue();
 
 			return;
 		}
 
-		CommonDocsHandlers.sendMethod(event, false, methodDoc);
+		CommonDocsHandlers.sendMethod(event, false, cachedMethod);
 	}
 }

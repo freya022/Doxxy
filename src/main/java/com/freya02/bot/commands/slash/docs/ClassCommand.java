@@ -1,5 +1,6 @@
 package com.freya02.bot.commands.slash.docs;
 
+import com.freya02.bot.docs.CachedClass;
 import com.freya02.bot.docs.DocIndexMap;
 import com.freya02.bot.docs.index.DocIndex;
 import com.freya02.botcommands.api.application.ApplicationCommand;
@@ -7,7 +8,6 @@ import com.freya02.botcommands.api.application.annotations.AppOption;
 import com.freya02.botcommands.api.application.slash.GuildSlashEvent;
 import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand;
 import com.freya02.docs.DocSourceType;
-import net.dv8tion.jda.api.entities.MessageEmbed;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -29,14 +29,14 @@ public class ClassCommand extends ApplicationCommand {
 	                         @NotNull @AppOption(description = "Name of the Java class", autocomplete = CommonDocsHandlers.CLASS_NAME_AUTOCOMPLETE_NAME)
 			                         String className) throws IOException {
 		final DocIndex docIndex = docIndexMap.get(sourceType);
-		final MessageEmbed classDoc = docIndex.getClassDoc(className);
+		final CachedClass cachedClass = docIndex.getClassDoc(className);
 
-		if (classDoc == null) {
+		if (cachedClass == null) {
 			event.reply("Unknown class").setEphemeral(true).queue();
 
 			return;
 		}
 
-		CommonDocsHandlers.sendClass(event, false, classDoc);
+		CommonDocsHandlers.sendClass(event, false, cachedClass);
 	}
 }

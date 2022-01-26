@@ -1,5 +1,6 @@
 package com.freya02.bot.commands.slash.docs;
 
+import com.freya02.bot.docs.CachedField;
 import com.freya02.bot.docs.DocIndexMap;
 import com.freya02.bot.docs.index.DocIndex;
 import com.freya02.botcommands.api.application.ApplicationCommand;
@@ -7,7 +8,6 @@ import com.freya02.botcommands.api.application.annotations.AppOption;
 import com.freya02.botcommands.api.application.slash.GuildSlashEvent;
 import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand;
 import com.freya02.docs.DocSourceType;
-import net.dv8tion.jda.api.entities.MessageEmbed;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -31,14 +31,14 @@ public class AnyFieldCommand extends ApplicationCommand {
 
 		final DocIndex docIndex = docIndexMap.get(sourceType);
 
-		final MessageEmbed fieldDoc = docIndex.getFieldDoc(fullSignature);
+		final CachedField cachedField = docIndex.getFieldDoc(fullSignature);
 
-		if (fieldDoc == null) {
+		if (cachedField == null) {
 			event.reply("Unknown field").setEphemeral(true).queue();
 
 			return;
 		}
 
-		CommonDocsHandlers.sendField(event, false, fieldDoc);
+		CommonDocsHandlers.sendField(event, false, cachedField);
 	}
 }

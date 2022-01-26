@@ -1,7 +1,6 @@
 package com.freya02.bot.docs.index;
 
-import com.freya02.bot.docs.CachedClassMetadata;
-import com.freya02.bot.docs.DocEmbeds;
+import com.freya02.bot.docs.*;
 import com.freya02.docs.ClassDoc;
 import com.freya02.docs.ClassDocs;
 import com.freya02.docs.FieldDoc;
@@ -65,7 +64,11 @@ public class DocIndexCache {
 
 					final MessageEmbed classEmbed = DocEmbeds.toEmbed(doc).build();
 
-					Files.writeString(classEmbedCacheFile, GSON.toJson(classEmbed), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+					final CachedClass cachedClass = new CachedClass(classEmbed, doc.getSeeAlso() == null
+							? null
+							: doc.getSeeAlso().getReferences());
+
+					Files.writeString(classEmbedCacheFile, GSON.toJson(cachedClass), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
 					addMethodDocs(className, classCacheFolder, doc, cachedClassMetadata);
 
@@ -119,7 +122,11 @@ public class DocIndexCache {
 						methodFileName
 				);
 
-				Files.writeString(classCacheFolder.resolve(methodFileName), GSON.toJson(methodEmbed), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+				final CachedMethod cachedMethod = new CachedMethod(methodEmbed, methodDoc.getSeeAlso() == null
+						? null
+						: methodDoc.getSeeAlso().getReferences());
+
+				Files.writeString(classCacheFolder.resolve(methodFileName), GSON.toJson(cachedMethod), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 			} catch (Exception e) {
 				throw new RuntimeException("An exception occurred while reading the docs of " + className + "#" + methodDoc.getSimpleSignature(), e);
 			}
@@ -142,7 +149,11 @@ public class DocIndexCache {
 						fieldFileName
 				);
 
-				Files.writeString(classCacheFolder.resolve(fieldFileName), GSON.toJson(fieldEmbed), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+				final CachedField cachedField = new CachedField(fieldEmbed, fieldDoc.getSeeAlso() == null
+						? null
+						: fieldDoc.getSeeAlso().getReferences());
+
+				Files.writeString(classCacheFolder.resolve(fieldFileName), GSON.toJson(cachedField), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 			} catch (Exception e) {
 				throw new RuntimeException("An exception occurred while reading the docs of " + className + "#" + fieldDoc.getFieldName(), e);
 			}

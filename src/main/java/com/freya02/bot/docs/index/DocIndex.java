@@ -1,6 +1,9 @@
 package com.freya02.bot.docs.index;
 
+import com.freya02.bot.docs.CachedClass;
 import com.freya02.bot.docs.CachedClassMetadata;
+import com.freya02.bot.docs.CachedField;
+import com.freya02.bot.docs.CachedMethod;
 import com.freya02.bot.utils.FileCache;
 import com.freya02.botcommands.api.Logging;
 import com.freya02.docs.ClassDocs;
@@ -37,7 +40,7 @@ public class DocIndex {
 	public DocIndex(DocSourceType sourceType) throws IOException {
 		this.sourceType = sourceType;
 
-		LOGGER.info("Loading docs for {}", sourceType.name());
+		LOGGER.info("Loading docs for {}", sourceType.name()); //TODO remove, meaningless
 
 		this.renderedDocsCache = new FileCache(BOT_FOLDER, "rendered_docs_" + sourceType.name(), true);
 
@@ -66,18 +69,18 @@ public class DocIndex {
 	}
 
 	@Nullable
-	public MessageEmbed getMethodDoc(String className, String methodId) throws IOException {
+	public CachedMethod getMethodDoc(String className, String methodId) throws IOException {
 		final CachedClassMetadata cachedClass = indexCache.getMethodHolderSimpleNames().get(className);
 		if (cachedClass == null) return null;
 
 		final Path methodEmbedPath = indexPaths.getMethodEmbedPath(className, methodId);
 		if (Files.notExists(methodEmbedPath)) return null;
 
-		return GSON.fromJson(Files.readString(methodEmbedPath), MessageEmbed.class);
+		return GSON.fromJson(Files.readString(methodEmbedPath), CachedMethod.class);
 	}
 
 	@Nullable
-	public MessageEmbed getMethodDoc(String fullSignature) throws IOException {
+	public CachedMethod getMethodDoc(String fullSignature) throws IOException {
 		final String[] split = fullSignature.split("#");
 		if (split.length != 2) return null;
 
@@ -85,17 +88,17 @@ public class DocIndex {
 	}
 
 	@Nullable
-	public MessageEmbed getFieldDoc(String className, String fieldName) throws IOException {
+	public CachedField getFieldDoc(String className, String fieldName) throws IOException {
 		final CachedClassMetadata cachedClass = indexCache.getFieldHolderSimpleNames().get(className);
 		if (cachedClass == null) return null;
 
 		final Path fieldEmbedPath = indexPaths.getFieldEmbedPath(className, fieldName);
 		if (Files.notExists(fieldEmbedPath)) return null;
 
-		return GSON.fromJson(Files.readString(fieldEmbedPath), MessageEmbed.class);
+		return GSON.fromJson(Files.readString(fieldEmbedPath), CachedField.class);
 	}
 
-	public MessageEmbed getFieldDoc(String fullSignature) throws IOException {
+	public CachedField getFieldDoc(String fullSignature) throws IOException {
 		final String[] split = fullSignature.split("#");
 		if (split.length != 2) return null;
 
@@ -103,14 +106,14 @@ public class DocIndex {
 	}
 
 	@Nullable
-	public MessageEmbed getClassDoc(String className) throws IOException {
+	public CachedClass getClassDoc(String className) throws IOException {
 		final CachedClassMetadata cachedClass = indexCache.getSimpleNameToCachedClassMap().get(className);
 		if (cachedClass == null) return null;
 
 		final Path classEmbedPath = indexPaths.getClassEmbedPath(className);
 		if (Files.notExists(classEmbedPath)) return null;
 
-		return GSON.fromJson(Files.readString(classEmbedPath), MessageEmbed.class);
+		return GSON.fromJson(Files.readString(classEmbedPath), CachedClass.class);
 	}
 
 	@NotNull

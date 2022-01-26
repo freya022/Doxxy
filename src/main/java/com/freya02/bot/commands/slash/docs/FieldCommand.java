@@ -1,5 +1,7 @@
 package com.freya02.bot.commands.slash.docs;
 
+import com.freya02.bot.docs.CachedClass;
+import com.freya02.bot.docs.CachedField;
 import com.freya02.bot.docs.DocIndexMap;
 import com.freya02.bot.docs.index.DocIndex;
 import com.freya02.botcommands.api.application.ApplicationCommand;
@@ -7,7 +9,6 @@ import com.freya02.botcommands.api.application.annotations.AppOption;
 import com.freya02.botcommands.api.application.slash.GuildSlashEvent;
 import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand;
 import com.freya02.docs.DocSourceType;
-import net.dv8tion.jda.api.entities.MessageEmbed;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -32,22 +33,22 @@ public class FieldCommand extends ApplicationCommand {
 			                         String fieldName) throws IOException {
 
 		final DocIndex docIndex = docIndexMap.get(sourceType);
-		final MessageEmbed classDoc = docIndex.getClassDoc(className);
+		final CachedClass cachedClass = docIndex.getClassDoc(className); //TODO optimize
 
-		if (classDoc == null) {
+		if (cachedClass == null) {
 			event.reply("Unknown class").setEphemeral(true).queue();
 
 			return;
 		}
 
-		final MessageEmbed fieldDoc = docIndex.getFieldDoc(className, fieldName);
+		final CachedField cachedField = docIndex.getFieldDoc(className, fieldName);
 
-		if (fieldDoc == null) {
+		if (cachedField == null) {
 			event.reply("Unknown field").setEphemeral(true).queue();
 
 			return;
 		}
 
-		CommonDocsHandlers.sendField(event, false, fieldDoc);
+		CommonDocsHandlers.sendField(event, false, cachedField);
 	}
 }

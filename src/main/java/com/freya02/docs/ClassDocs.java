@@ -10,10 +10,7 @@ import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class ClassDocs {
 	private static final Logger LOGGER = Logging.getLogger();
@@ -22,6 +19,7 @@ public class ClassDocs {
 	private final DocSourceType source;
 
 	private final Map<String, String> simpleNameToUrlMap = new HashMap<>();
+	private final Set<String> urlSet = new HashSet<>();
 
 	//Use this map in case there are multiple classes with the same name, use a small package prefix to differentiate them
 //	private final Map<String, String> nameToUrlMap = new HashMap<>();
@@ -40,6 +38,12 @@ public class ClassDocs {
 
 	public Map<String, String> getSimpleNameToUrlMap() {
 		return simpleNameToUrlMap;
+	}
+
+	public boolean isValidURL(String url) {
+		final String cleanURL = removeFragment(url);
+
+		return urlSet.contains(cleanURL);
 	}
 
 	/**
@@ -98,6 +102,7 @@ public class ClassDocs {
 			if (!source.isValidPackage(decomposition.packageName()))
 				continue;
 
+			urlSet.add(classUrl);
 			final String oldUrl = simpleNameToUrlMap.put(decomposition.className(), classUrl);
 			if (oldUrl != null) {
 				LOGGER.warn("Detected a duplicate class name '{}' at '{}' and '{}'", decomposition.className(), classUrl, oldUrl);

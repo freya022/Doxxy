@@ -1,6 +1,9 @@
 package com.freya02.bot.commands.slash.docs;
 
 import com.freya02.bot.commands.slash.DeleteButtonListener;
+import com.freya02.bot.docs.CachedClass;
+import com.freya02.bot.docs.CachedField;
+import com.freya02.bot.docs.CachedMethod;
 import com.freya02.bot.docs.DocIndexMap;
 import com.freya02.bot.docs.index.DocIndex;
 import com.freya02.botcommands.api.application.ApplicationCommand;
@@ -10,11 +13,11 @@ import com.freya02.botcommands.api.application.slash.autocomplete.annotations.Au
 import com.freya02.botcommands.api.application.slash.autocomplete.annotations.CacheAutocompletion;
 import com.freya02.botcommands.api.application.slash.autocomplete.annotations.CompositeKey;
 import com.freya02.docs.DocSourceType;
-import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -46,18 +49,8 @@ public class CommonDocsHandlers extends ApplicationCommand {
 		docIndexMap = DocIndexMap.getInstance();
 	}
 
-	static void sendMethod(GuildSlashEvent event, boolean ephemeral, MessageEmbed methodDoc) {
-		ReplyCallbackAction replyAction = event.replyEmbeds(methodDoc);
-
-		if (!ephemeral) replyAction = replyAction.addActionRow(DeleteButtonListener.getDeleteButton(event.getUser()));
-
-		replyAction
-				.setEphemeral(ephemeral)
-				.queue();
-	}
-
-	static void sendClass(IReplyCallback event, boolean ephemeral, MessageEmbed docs) {
-		ReplyCallbackAction replyAction = event.replyEmbeds(docs);
+	static void sendClass(IReplyCallback event, boolean ephemeral, @NotNull CachedClass docs) {
+		ReplyCallbackAction replyAction = event.replyEmbeds(docs.getClassEmbed());
 
 		// Much more work to do for this to really work
 		// The link could target method without knowing it, it could also target weird internal sun classes
@@ -80,16 +73,31 @@ public class CommonDocsHandlers extends ApplicationCommand {
 
 		if (!ephemeral) replyAction = replyAction.addActionRow(DeleteButtonListener.getDeleteButton(event.getUser()));
 
+		//TODO add see also
+
 		replyAction
 				.setEphemeral(ephemeral)
 				.queue();
 	}
 
-	static void sendField(GuildSlashEvent event, boolean ephemeral, MessageEmbed fieldDoc) {
-		ReplyCallbackAction replyAction = event.replyEmbeds(fieldDoc);
+	static void sendMethod(GuildSlashEvent event, boolean ephemeral, @NotNull CachedMethod cachedMethod) {
+		ReplyCallbackAction replyAction = event.replyEmbeds(cachedMethod.getMethodEmbed());
 
 		if (!ephemeral) replyAction = replyAction.addActionRow(DeleteButtonListener.getDeleteButton(event.getUser()));
 
+		//TODO add see also
+
+		replyAction
+				.setEphemeral(ephemeral)
+				.queue();
+	}
+
+	static void sendField(GuildSlashEvent event, boolean ephemeral, @NotNull CachedField cachedField) {
+		ReplyCallbackAction replyAction = event.replyEmbeds(cachedField.getFieldEmbed());
+
+		if (!ephemeral) replyAction = replyAction.addActionRow(DeleteButtonListener.getDeleteButton(event.getUser()));
+
+		//TODO add see also
 		replyAction
 				.setEphemeral(ephemeral)
 				.queue();

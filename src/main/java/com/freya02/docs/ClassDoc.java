@@ -49,8 +49,7 @@ public class ClassDoc extends BaseDoc {
 		this.docTitleElement = new HTMLElement(docTitle);
 
 		//Get class name
-		final List<String> segments = HttpUrl.get(url).pathSegments();
-		this.className = segments.get(segments.size() - 1).substring(0, segments.get(segments.size() - 1).length() - 5);
+		this.className = getClassName(url);
 
 		//Get class description
 		final Element descriptionElement = document.selectFirst("#class-description > div.block");
@@ -99,7 +98,13 @@ public class ClassDoc extends BaseDoc {
 		});
 	}
 
+	@NotNull
+	private String getClassName(@NotNull String url) {
+		final List<String> segments = HttpUrl.get(url).pathSegments();
+		final String lastFragment = segments.get(segments.size() - 1);
 
+		return lastFragment.substring(0, lastFragment.length() - 5); //Remove .html
+	}
 
 	@SuppressWarnings("BooleanMethodIsAlwaysInverted")
 	public static boolean isJavadocVersionCorrect(@NotNull Document document) {
