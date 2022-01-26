@@ -117,6 +117,8 @@ public class CommonDocsHandlers extends ApplicationCommand {
 				}
 			}
 
+			selectionMenuBuilder.setPlaceholder("See also");
+
 			return replyAction.addActionRow(selectionMenuBuilder.build());
 		}
 
