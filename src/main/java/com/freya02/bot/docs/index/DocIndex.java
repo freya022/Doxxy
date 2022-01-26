@@ -40,8 +40,6 @@ public class DocIndex {
 	public DocIndex(DocSourceType sourceType) throws IOException {
 		this.sourceType = sourceType;
 
-		LOGGER.info("Loading docs for {}", sourceType.name()); //TODO remove, meaningless
-
 		this.renderedDocsCache = new FileCache(BOT_FOLDER, "rendered_docs_" + sourceType.name(), true);
 
 		this.sourceCacheFolder = renderedDocsCache.getCachePath().resolve(sourceType.name());
@@ -52,8 +50,6 @@ public class DocIndex {
 		//Create an empty index as to not waste resources
 		// As the real reindex is called when the versions checker is going to run
 		this.indexCache = DocIndexCache.emptyIndex(indexPaths);
-
-		LOGGER.info("Docs loaded for {}", sourceType.name());
 	}
 
 	//Must be called on startup
