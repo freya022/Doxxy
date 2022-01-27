@@ -1,5 +1,6 @@
 package com.freya02.docs;
 
+import com.freya02.docs.data.TargetType;
 import okhttp3.HttpUrl;
 
 import java.util.List;

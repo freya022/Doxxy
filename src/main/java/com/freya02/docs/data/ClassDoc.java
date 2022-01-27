@@ -1,7 +1,10 @@
-package com.freya02.docs;
+package com.freya02.docs.data;
 
 import com.freya02.bot.utils.HTMLElement;
 import com.freya02.bot.utils.HttpUtils;
+import com.freya02.docs.ClassDocs;
+import com.freya02.docs.DocParseException;
+import com.freya02.docs.DocSourceType;
 import okhttp3.HttpUrl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -35,7 +38,18 @@ public class ClassDoc extends BaseDoc {
 		this(url, HttpUtils.getDocument(url));
 	}
 
+	private static final Object lock = new Object();
+	private static int docCount = 0;
+
+	public static int getDocCount() {
+		return docCount;
+	}
+
 	public ClassDoc(@NotNull String url, @NotNull Document document) throws IOException {
+		synchronized (lock) { //TODO remove
+			docCount++;
+		}
+
 		this.URL = url;
 		this.source = DocSourceType.fromUrl(url);
 

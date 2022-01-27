@@ -1,6 +1,6 @@
 package com.freya02.bot.docs.cached;
 
-import com.freya02.docs.SeeAlso;
+import com.freya02.docs.data.SeeAlso;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
 import java.util.List;

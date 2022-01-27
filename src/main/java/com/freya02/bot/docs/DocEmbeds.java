@@ -2,7 +2,7 @@ package com.freya02.bot.docs;
 
 import com.freya02.bot.utils.HTMLElement;
 import com.freya02.bot.utils.HttpUtils;
-import com.freya02.docs.*;
+import com.freya02.docs.data.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import org.jetbrains.annotations.NotNull;

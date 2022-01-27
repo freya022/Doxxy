@@ -1,6 +1,8 @@
-package com.freya02.docs;
+package com.freya02.docs.data;
 
 import com.freya02.bot.utils.HTMLElement;
+import com.freya02.docs.DocParseException;
+import com.freya02.docs.DocUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jsoup.nodes.Element;

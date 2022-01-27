@@ -1,6 +1,10 @@
-package com.freya02.docs;
+package com.freya02.docs.data;
 
 import com.freya02.botcommands.api.Logging;
+import com.freya02.docs.ClassDocs;
+import com.freya02.docs.DocSourceType;
+import com.freya02.docs.DocUtils;
+import com.freya02.docs.JavadocUrl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jsoup.nodes.Element;

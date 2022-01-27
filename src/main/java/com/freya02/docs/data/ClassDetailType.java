@@ -1,4 +1,4 @@
-package com.freya02.docs;
+package com.freya02.docs.data;
 
 public enum ClassDetailType {
 	FIELD("field-detail"),

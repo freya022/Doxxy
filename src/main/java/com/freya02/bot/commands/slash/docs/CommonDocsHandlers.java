@@ -19,8 +19,8 @@ import com.freya02.botcommands.api.components.builder.PersistentSelectionMenuBui
 import com.freya02.botcommands.api.components.event.SelectionEvent;
 import com.freya02.botcommands.api.utils.EmojiUtils;
 import com.freya02.docs.DocSourceType;
-import com.freya02.docs.SeeAlso;
-import com.freya02.docs.TargetType;
+import com.freya02.docs.data.SeeAlso;
+import com.freya02.docs.data.TargetType;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;

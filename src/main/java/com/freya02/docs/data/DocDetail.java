@@ -1,4 +1,4 @@
-package com.freya02.docs;
+package com.freya02.docs.data;
 
 import com.freya02.bot.utils.HTMLElement;
 

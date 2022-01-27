@@ -1,4 +1,4 @@
-package com.freya02.docs;
+package com.freya02.docs.data;
 
 import org.jetbrains.annotations.Nullable;
 
