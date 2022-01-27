@@ -122,6 +122,15 @@ public class ClassDocs {
 		}
 	}
 
+	//TODO Use doc download "sessions" as to avoid re-downloading and re-parsing docs, for example when traversing superclasses
+	// Proof: there are 645 documented classes in JDA + BC, but ClassDoc.<init> got called around 4500 times
+	// ClassDocs is not a session, sessions should be disposable, meanwhile ClassDocs is stored statically -> ClassDoc(s) stored indefinitely
+	//   Could pass the docs session to all our objects which requires references to other classes
+	// ClassDocs would only remain as a container for Name to URL mappings, and retrieval operations would be on the session
+
+	/**
+	 * Only used to determine whether to regenerate doc indexes
+	 */
 	@Nullable
 	public ClassDoc tryRetrieveDoc(String simpleClassName, boolean force) throws IOException {
 		final String classUrl = simpleNameToUrlMap.get(simpleClassName);
