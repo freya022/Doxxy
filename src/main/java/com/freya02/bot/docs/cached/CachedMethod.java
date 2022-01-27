@@ -1,4 +1,4 @@
-package com.freya02.bot.docs;
+package com.freya02.bot.docs.cached;
 
 import com.freya02.docs.SeeAlso;
 import net.dv8tion.jda.api.entities.MessageEmbed;

@@ -1,7 +1,11 @@
 package com.freya02.bot.commands.slash.docs;
 
 import com.freya02.bot.commands.slash.DeleteButtonListener;
-import com.freya02.bot.docs.*;
+import com.freya02.bot.docs.DocIndexMap;
+import com.freya02.bot.docs.cached.CachedClass;
+import com.freya02.bot.docs.cached.CachedDoc;
+import com.freya02.bot.docs.cached.CachedField;
+import com.freya02.bot.docs.cached.CachedMethod;
 import com.freya02.bot.docs.index.DocIndex;
 import com.freya02.botcommands.api.Logging;
 import com.freya02.botcommands.api.application.ApplicationCommand;

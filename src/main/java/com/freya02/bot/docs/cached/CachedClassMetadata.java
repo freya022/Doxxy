@@ -1,4 +1,4 @@
-package com.freya02.bot.docs;
+package com.freya02.bot.docs.cached;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -1,6 +1,10 @@
 package com.freya02.bot.docs.index;
 
-import com.freya02.bot.docs.*;
+import com.freya02.bot.docs.DocEmbeds;
+import com.freya02.bot.docs.cached.CachedClass;
+import com.freya02.bot.docs.cached.CachedClassMetadata;
+import com.freya02.bot.docs.cached.CachedField;
+import com.freya02.bot.docs.cached.CachedMethod;
 import com.freya02.docs.ClassDoc;
 import com.freya02.docs.ClassDocs;
 import com.freya02.docs.FieldDoc;

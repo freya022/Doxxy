@@ -1,9 +1,9 @@
 package com.freya02.bot.docs.index;
 
-import com.freya02.bot.docs.CachedClass;
-import com.freya02.bot.docs.CachedClassMetadata;
-import com.freya02.bot.docs.CachedField;
-import com.freya02.bot.docs.CachedMethod;
+import com.freya02.bot.docs.cached.CachedClass;
+import com.freya02.bot.docs.cached.CachedClassMetadata;
+import com.freya02.bot.docs.cached.CachedField;
+import com.freya02.bot.docs.cached.CachedMethod;
 import com.freya02.bot.utils.FileCache;
 import com.freya02.botcommands.api.Logging;
 import com.freya02.docs.ClassDocs;

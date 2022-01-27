@@ -1,22 +1,22 @@
-package com.freya02.bot.docs;
+package com.freya02.bot.docs.cached;
 
 import com.freya02.docs.SeeAlso;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
 import java.util.List;
 
-public final class CachedField implements CachedDoc {
-	private final MessageEmbed fieldEmbed;
+public final class CachedClass implements CachedDoc {
+	private final MessageEmbed classEmbed;
 	private final List<SeeAlso.SeeAlsoReference> seeAlsoReferences;
 
-	public CachedField(MessageEmbed fieldEmbed,
+	public CachedClass(MessageEmbed classEmbed,
 	                   List<SeeAlso.SeeAlsoReference> seeAlsoReferences) {
-		this.fieldEmbed = fieldEmbed;
+		this.classEmbed = classEmbed;
 		this.seeAlsoReferences = seeAlsoReferences;
 	}
 
-	public MessageEmbed getFieldEmbed() {
-		return fieldEmbed;
+	public MessageEmbed getClassEmbed() {
+		return classEmbed;
 	}
 
 	@Override

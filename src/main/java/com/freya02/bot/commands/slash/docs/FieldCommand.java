@@ -1,7 +1,7 @@
 package com.freya02.bot.commands.slash.docs;
 
-import com.freya02.bot.docs.CachedField;
 import com.freya02.bot.docs.DocIndexMap;
+import com.freya02.bot.docs.cached.CachedField;
 import com.freya02.bot.docs.index.DocIndex;
 import com.freya02.botcommands.api.application.ApplicationCommand;
 import com.freya02.botcommands.api.application.annotations.AppOption;
