@@ -17,7 +17,7 @@ public class InvalidateCacheCommand extends ApplicationCommand {
 			name = "invalidate"
 	)
 	public void onSlashInvalidate(GuildSlashEvent event) throws IOException {
-		event.deferReply().queue();
+		event.deferReply(true).queue();
 
 		DocIndexMap.refreshAndInvalidateIndex(DocSourceType.BOT_COMMANDS);
 		DocIndexMap.refreshAndInvalidateIndex(DocSourceType.JDA);
@@ -27,6 +27,6 @@ public class InvalidateCacheCommand extends ApplicationCommand {
 			event.getContext().invalidateAutocompletionCache(autocompleteName);
 		}
 
-		event.reply("Done").setEphemeral(true).queue();
+		event.getHook().sendMessage("Done").queue();
 	}
 }

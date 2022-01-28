@@ -3,20 +3,28 @@ package com.freya02.docs;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
+import java.util.regex.Pattern;
+
 public enum DocSourceType {
 //	JDA(null), //TODO add JDA link once they are built with javadoc 17
-	JDA("http://localhost:63342/DocsBot/JDA_docs"),
-	BOT_COMMANDS("http://localhost:63342/DocsBot/BotCommands_docs", "com.freya02.botcommands.api"),
-	JAVA("https://docs.oracle.com/en/java/javase/17/docs/api", "java.io", "java.lang", "java.math", "java.net", "java.nio", "java.sql", "java.time", "java.util");
+	JDA("http://localhost:63342/DocsBot/JDA_docs", "net\\.dv8tion\\.jda.*"),
+	BOT_COMMANDS("http://localhost:63342/DocsBot/BotCommands_docs", "com\\.freya02\\.botcommands\\.api.*"),
+	JAVA("https://docs.oracle.com/en/java/javase/17/docs/api",
+			"java\\.io.*",
+			"java\\.lang", "java\\.lang\\.annotation.*", "java\\.lang\\.invoke.*", "java\\.lang\\.reflect.*", "java\\.lang\\.reflect.*",
+			"java\\.math.*",
+			"java\\.nio", "java\\.nio\\.channels", "java\\.nio\\.file",
+			"java\\.sql.*",
+			"java\\.time.*",
+			"java\\.util", "java\\.util\\.concurrent.*", "java\\.util\\.function", "java\\.util\\.random", "java\\.util\\.regex", "java\\.util\\.stream");
 
 	private final String sourceUrl;
-	private final String[] validPackages;
+	private final Pattern[] validPackagePatterns;
 
-	DocSourceType(String sourceUrl, String... validPackages) {
+	DocSourceType(String sourceUrl, String... validPackagePatterns) {
 		this.sourceUrl = sourceUrl;
-		this.validPackages = validPackages.length == 0
-				? new String[]{""}
-				: validPackages;
+		this.validPackagePatterns = Arrays.stream(validPackagePatterns).map(Pattern::compile).toArray(Pattern[]::new);
 	}
 
 	@Nullable
@@ -40,8 +48,8 @@ public enum DocSourceType {
 	}
 
 	public boolean isValidPackage(String packageName) {
-		for (String validPackage : validPackages) {
-			if (packageName.startsWith(validPackage)) {
+		for (Pattern validPackagePattern : validPackagePatterns) {
+			if (validPackagePattern.matcher(packageName).matches()) {
 				return true;
 			}
 		}
