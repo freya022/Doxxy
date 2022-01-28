@@ -49,8 +49,8 @@ public class DocsTest3 {
 //		final ClassDoc doc = new ClassDoc("http://localhost:63342/DocsBot/BotCommands_docs/com/freya02/botcommands/api/components/builder/LambdaComponentBuilder.html");
 //		final ClassDoc doc2 = new ClassDoc("http://localhost:63342/DocsBot/BotCommands_docs/com/freya02/botcommands/api/components/builder/AbstractLambdaComponentBuilder.html");
 //		final ClassDoc doc3 = new ClassDoc("http://localhost:63342/DocsBot/BotCommands_docs/com/freya02/botcommands/api/application/annotations/AppOption.html#description()");
-		final DocIndex bcIndex = new DocIndex(DocSourceType.BOT_COMMANDS).reindex(false);
-		final DocIndex jdaIndex = new DocIndex(DocSourceType.JDA).reindex(false);
+		final DocIndex bcIndex = new DocIndex(DocSourceType.BOT_COMMANDS).reindex();
+		final DocIndex jdaIndex = new DocIndex(DocSourceType.JDA).reindex();
 
 		bcIndex.close();
 		jdaIndex.close();

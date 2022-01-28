@@ -43,8 +43,7 @@ public class DocIndexCache {
 	// As to only update if the version has really changed
 	private DocIndexCache(ClassDocs classDocs,
 	                      Path sourceCacheFolder,
-	                      IndexPaths indexPaths,
-	                      boolean force) {
+	                      IndexPaths indexPaths) {
 		this.indexPaths = indexPaths;
 
 		final DocsSession docsSession = new DocsSession();
@@ -60,7 +59,7 @@ public class DocIndexCache {
 				final Path classMetadataCacheFile = classCacheFolder.resolve("ClassMetadata.json");
 				final Path classEmbedCacheFile = indexPaths.getClassEmbedPath(className);
 
-				final boolean forceDownload = force || Files.notExists(classMetadataCacheFile) || Files.notExists(classEmbedCacheFile);
+				final boolean forceDownload = Files.notExists(classMetadataCacheFile) || Files.notExists(classEmbedCacheFile);
 				final ClassDoc doc = forceDownload
 						? docsSession.retrieveDoc(classUrl)
 						: docsSession.retrieveDocIfNotCached(classUrl);
@@ -115,9 +114,8 @@ public class DocIndexCache {
 
 	public static DocIndexCache indexDocs(ClassDocs classDocs,
 	                                      Path sourceCacheFolder,
-	                                      IndexPaths indexPaths,
-	                                      boolean force) {
-		return new DocIndexCache(classDocs, sourceCacheFolder, indexPaths, force);
+	                                      IndexPaths indexPaths) {
+		return new DocIndexCache(classDocs, sourceCacheFolder, indexPaths);
 	}
 
 	public static DocIndexCache emptyIndex(IndexPaths indexPaths) {

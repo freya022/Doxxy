@@ -41,7 +41,7 @@ public class DocIndexMap extends EnumMap<DocSourceType, DocIndex> {
 		final DocIndex index = instance.get(sourceType);
 
 		if (index != null) {
-			index.reindex(true);
+			index.reindex();
 		}
 	}
 }

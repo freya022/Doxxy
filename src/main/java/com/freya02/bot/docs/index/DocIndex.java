@@ -54,10 +54,10 @@ public class DocIndex {
 
 	//Must be called on startup
 	// Otherwise the index cache will be empty until the next update
-	public DocIndex reindex(boolean force) throws IOException {
+	public DocIndex reindex() throws IOException {
 		LOGGER.info("Re-indexing docs for {}", sourceType.name());
 
-		this.indexCache = DocIndexCache.indexDocs(ClassDocs.getUpdatedSource(sourceType), this.sourceCacheFolder, indexPaths, force);
+		this.indexCache = DocIndexCache.indexDocs(ClassDocs.getUpdatedSource(sourceType), this.sourceCacheFolder, indexPaths);
 
 		LOGGER.info("Re-indexed docs for {}", sourceType.name());
 

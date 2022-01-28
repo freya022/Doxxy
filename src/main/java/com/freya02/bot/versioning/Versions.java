@@ -65,13 +65,13 @@ public class Versions {
 		if (!checkLatestBCVersion(context)) {
 			//Load docs normally, version hasn't changed
 
-			DocIndexMap.getInstance().get(DocSourceType.BOT_COMMANDS).reindex(false);
+			DocIndexMap.getInstance().get(DocSourceType.BOT_COMMANDS).reindex();
 		}
 
 		if (!checkLatestJDAVersionFromBC(context)) {
 			//Load docs normally, version hasn't changed
 
-			DocIndexMap.getInstance().get(DocSourceType.JDA).reindex(false);
+			DocIndexMap.getInstance().get(DocSourceType.JDA).reindex();
 		}
 
 		scheduledExecutorService.scheduleWithFixedDelay(() -> checkLatestBCVersion(context), 30, 30, TimeUnit.MINUTES);
