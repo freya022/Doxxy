@@ -61,9 +61,9 @@ public class DocIndexCache {
 				final Path classEmbedCacheFile = indexPaths.getClassEmbedPath(className);
 
 				final boolean forceDownload = force || Files.notExists(classMetadataCacheFile) || Files.notExists(classEmbedCacheFile);
-				final ClassDoc doc;
-				if (forceDownload) doc = docsSession.retrieveDoc(classUrl);
-				else doc = docsSession.retrieveDocIfNotCached(classUrl);
+				final ClassDoc doc = forceDownload
+						? docsSession.retrieveDoc(classUrl)
+						: docsSession.retrieveDocIfNotCached(classUrl);
 
 				final CachedClassMetadata cachedClassMetadata;
 

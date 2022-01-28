@@ -2,7 +2,6 @@ package com.freya02.bot;
 
 import com.freya02.bot.docs.index.DocIndex;
 import com.freya02.docs.DocSourceType;
-import com.freya02.docs.data.ClassDoc;
 
 import java.io.IOException;
 
@@ -55,8 +54,6 @@ public class DocsTest3 {
 
 		bcIndex.close();
 		jdaIndex.close();
-
-		System.out.println("ClassDoc.getDocCount() = " + ClassDoc.getDocCount());
 
 //		final ClassDoc doc4 = new ClassDoc("http://localhost:63342/DocsBot/BotCommands_docs/com/freya02/botcommands/api/pagination/menu/BasicMenuBuilder.html");
 //		final ClassDoc doc5 = new ClassDoc("http://localhost:63342/DocsBot/JDA_docs/net/dv8tion/jda/api/entities/MessageEmbed.html#DESCRIPTION_MAX_LENGTH");

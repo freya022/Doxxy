@@ -17,58 +17,72 @@ public class DocsSession {
 	private final Map<String, ClassDoc> docMap = new HashMap<>();
 
 	/**
-	 * Null if unsupported source or invalid javadoc version
+	 * Retrieves the ClassDoc for this URL
+	 *
+	 * @param classUrl URL of the class
+	 * @return <code>null</code> if:
+	 * <ul>
+	 *     <li>The URL's DocSourceType is not known</li>
+	 *     <li>The javadoc version is incorrect</li>
+	 * </ul>
+	 * <p>
+	 * Always returns a ClassDoc otherwise
 	 */
 	@Nullable
-	public ClassDoc retrieveDoc(@NotNull String classUrl) {
-		return docMap.computeIfAbsent(classUrl, s -> {
-			try {
+	public ClassDoc retrieveDoc(@NotNull String classUrl) throws IOException {
+		synchronized (docMap) {
+			final ClassDoc doc = docMap.get(classUrl); //Can't use computeIfAbsent as it could be recursively called, throwing a ConcurrentModificationException
+
+			if (doc == null) {
 				final DocSourceType urlSource = DocSourceType.fromUrl(classUrl);
 				if (urlSource == null) return null;
 
 				final Document document = HttpUtils.getDocument(classUrl);
 				if (!DocUtils.isJavadocVersionCorrect(document)) return null;
 
-				return new ClassDoc(this, HttpUtils.removeFragment(classUrl), document);
-			} catch (IOException e) {
-				throw new RuntimeException("Error while computing value for doc @ " + classUrl, e);
+				final ClassDoc classDoc = new ClassDoc(this, HttpUtils.removeFragment(classUrl), document);
+
+				docMap.put(classUrl, classDoc);
+
+				return classDoc;
 			}
-		});
+
+			return doc;
+		}
 	}
 
 	/**
-	 * Null if unsupported source or invalid javadoc version or html body cached
+	 * Retrieves the ClassDoc for this URL
+	 *
+	 * @param classUrl URL of the class
+	 * @return <code>null</code> if:
+	 * <ul>
+	 *     <li>The URL's DocSourceType is not known</li>
+	 *     <li>The javadoc version is incorrect</li>
+	 *     <li>The doc was already cached</li>
+	 * </ul>
+	 * <p>
+	 * Always returns a ClassDoc otherwise
 	 */
 	@Nullable
 	public ClassDoc retrieveDocIfNotCached(@NotNull String classUrl) throws IOException {
+		final DocSourceType urlSource = DocSourceType.fromUrl(classUrl);
+		if (urlSource == null) return null;
+
 		final String downloadedBody = HttpUtils.downloadBodyIfNotCached(classUrl);
 
 		if (downloadedBody == null) return null;
 
 		final Document document = HttpUtils.parseDocument(downloadedBody, classUrl);
 
+		if (!DocUtils.isJavadocVersionCorrect(document)) return null;
+
 		final ClassDoc newDoc = new ClassDoc(this, classUrl, document);
 
-		docMap.put(classUrl, newDoc);
+		synchronized (docMap) {
+			docMap.put(classUrl, newDoc);
+		}
 
 		return newDoc;
 	}
-
-//	/**
-//	 * Only used to determine whether to regenerate doc indexes
-//	 */
-//	@Nullable
-//	public ClassDoc tryRetrieveDoc(@NotNull String classUrl, boolean force) {
-//		if (force) {
-//			return retrieveDoc(classUrl);
-//		} else {
-//			return docMap.computeIfAbsent(classUrl, x -> {
-//				try {
-//					return new ClassDoc(classUrl);
-//				} catch (IOException e) {
-//					throw new RuntimeException("", e);
-//				}
-//			});
-//		}
-//	}
 }

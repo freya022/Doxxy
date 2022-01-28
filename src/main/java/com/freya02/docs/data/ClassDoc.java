@@ -38,18 +38,7 @@ public class ClassDoc extends BaseDoc {
 		this(docsSession, url, HttpUtils.getDocument(url));
 	}
 
-	private static final Object lock = new Object();
-	private static int docCount = 0;
-
-	public static int getDocCount() {
-		return docCount;
-	}
-
 	public ClassDoc(@NotNull DocsSession docsSession, @NotNull String url, @NotNull Document document) throws IOException {
-		synchronized (lock) { //TODO remove
-			docCount++;
-		}
-
 		this.URL = url;
 		this.source = DocSourceType.fromUrl(url);
 
@@ -120,7 +109,7 @@ public class ClassDoc extends BaseDoc {
 		return lastFragment.substring(0, lastFragment.length() - 5); //Remove .html
 	}
 
-	private void processInheritedElements(@NotNull DocsSession docsSession, @NotNull Document document, @NotNull InheritedType inheritedType, @NotNull  BiConsumer<ClassDoc, String> inheritedElementConsumer) {
+	private void processInheritedElements(@NotNull DocsSession docsSession, @NotNull Document document, @NotNull InheritedType inheritedType, @NotNull  BiConsumer<ClassDoc, String> inheritedElementConsumer) throws IOException {
 		final Elements inheritedBlocks = document.select("section." + inheritedType.getClassSuffix() + "-summary > div.inherited-list");
 
 		for (Element inheritedBlock : inheritedBlocks) {
