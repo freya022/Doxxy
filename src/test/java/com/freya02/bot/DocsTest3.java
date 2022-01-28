@@ -58,6 +58,11 @@ public class DocsTest3 {
 //		final ClassDoc doc4 = new ClassDoc("http://localhost:63342/DocsBot/BotCommands_docs/com/freya02/botcommands/api/pagination/menu/BasicMenuBuilder.html");
 //		final ClassDoc doc5 = new ClassDoc("http://localhost:63342/DocsBot/JDA_docs/net/dv8tion/jda/api/entities/MessageEmbed.html#DESCRIPTION_MAX_LENGTH");
 
+//		final DocsSession session = new DocsSession();
+//		final ClassDoc deprecationClassTest = session.retrieveDoc("https://docs.oracle.com/en/java/javase/17/docs/api/jdk.jartool/com/sun/jarsigner/ContentSigner.html");
+//		final ClassDoc deprecationMethodTest = session.retrieveDoc("https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/System.html#getSecurityManager()");
+//		final ClassDoc deprecationFieldTest = session.retrieveDoc("https://docs.oracle.com/en/java/javase/17/docs/api/jdk.accessibility/com/sun/java/accessibility/util/AWTEventMonitor.html#containerListener");
+
 		System.out.println();
 
 //

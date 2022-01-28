@@ -15,6 +15,9 @@ public abstract class BaseDoc {
 	@Nullable
 	public abstract HTMLElement getDescriptionElement();
 
+	@Nullable
+	public abstract HTMLElement getDeprecationElement();
+
 	@NotNull
 	protected abstract DetailToElementsMap getDetailToElementsMap();
 

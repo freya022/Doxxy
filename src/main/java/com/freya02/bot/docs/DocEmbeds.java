@@ -20,6 +20,8 @@ public class DocEmbeds {
 
 		fillDescription(doc, builder);
 
+		fillDeprecation(doc, builder);
+
 		fillDetails(builder, doc, EnumSet.of(
 				DocDetailType.SEE_ALSO
 		));
@@ -50,6 +52,8 @@ public class DocEmbeds {
 
 		fillDescription(methodDoc, builder);
 
+		fillDeprecation(methodDoc, builder);
+
 		fillDetails(builder, methodDoc, EnumSet.of(
 				DocDetailType.SEE_ALSO
 		));
@@ -69,6 +73,8 @@ public class DocEmbeds {
 		}
 
 		fillDescription(fieldDoc, builder);
+
+		fillDeprecation(fieldDoc, builder);
 
 		fillDetails(builder, fieldDoc, EnumSet.of(
 				DocDetailType.SEE_ALSO
@@ -92,6 +98,18 @@ public class DocEmbeds {
 			);
 		} else {
 			builder.appendDescription("No description");
+		}
+	}
+
+	private static void fillDeprecation(BaseDoc doc, EmbedBuilder builder) {
+		final HTMLElement deprecationElement = doc.getDeprecationElement();
+
+		if (deprecationElement != null) {
+			addField(builder,
+					"Deprecated",
+					deprecationElement.getMarkdown(),
+					false,
+					getDocURL(doc));
 		}
 	}
 

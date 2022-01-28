@@ -26,6 +26,7 @@ public class ClassDoc extends BaseDoc {
 
 	@NotNull private final HTMLElement docTitleElement;
 	@Nullable private final HTMLElement descriptionElement;
+	@Nullable private final HTMLElement deprecationElement;
 	@NotNull private final String className;
 
 	@NotNull private final DetailToElementsMap detailToElementsMap;
@@ -60,6 +61,13 @@ public class ClassDoc extends BaseDoc {
 			this.descriptionElement = new HTMLElement(descriptionElement);
 		} else {
 			this.descriptionElement = null;
+		}
+
+		final Element deprecationElement = document.selectFirst("#class-description > div.deprecation-block");
+		if (deprecationElement != null) {
+			this.deprecationElement = new HTMLElement(deprecationElement);
+		} else {
+			this.deprecationElement = null;
 		}
 
 		//Get class type parameters if they exist
@@ -202,14 +210,16 @@ public class ClassDoc extends BaseDoc {
 	}
 
 	@Override
+	@Nullable
+	public HTMLElement getDeprecationElement() {
+		return deprecationElement;
+	}
+
+	@Override
 	@NotNull
 	public DetailToElementsMap getDetailToElementsMap() {
 		return detailToElementsMap;
 	}
-
-	//TODO make a class which holds the attribute
-	// In the end the embed should be filled automatically, with a predefined order
-	// Check order of elements
 
 	@Nullable
 	public SeeAlso getSeeAlso() {

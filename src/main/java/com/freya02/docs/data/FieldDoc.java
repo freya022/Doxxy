@@ -20,6 +20,7 @@ public class FieldDoc extends BaseDoc {
 	@NotNull private final DetailToElementsMap detailToElementsMap;
 
 	@Nullable private final SeeAlso seeAlso;
+	@Nullable private final HTMLElement deprecationElement;
 
 	public FieldDoc(@NotNull ClassDoc classDocs, @NotNull Element element) {
 		this.classDocs = classDocs;
@@ -48,6 +49,13 @@ public class FieldDoc extends BaseDoc {
 			this.descriptionElement = new HTMLElement(descriptionElement);
 		} else {
 			this.descriptionElement = null;
+		}
+
+		final Element deprecationElement = element.selectFirst("section.detail > div.deprecation-block");
+		if (deprecationElement != null) {
+			this.deprecationElement = new HTMLElement(deprecationElement);
+		} else {
+			this.deprecationElement = null;
 		}
 
 		this.detailToElementsMap = DetailToElementsMap.parseDetails(element);
@@ -104,6 +112,12 @@ public class FieldDoc extends BaseDoc {
 	@Nullable
 	public HTMLElement getDescriptionElement() {
 		return descriptionElement;
+	}
+
+	@Override
+	@Nullable
+	public HTMLElement getDeprecationElement() {
+		return deprecationElement;
 	}
 
 	@Override

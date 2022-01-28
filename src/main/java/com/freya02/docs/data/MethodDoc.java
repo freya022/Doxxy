@@ -17,6 +17,7 @@ public class MethodDoc extends BaseDoc {
 	@NotNull private final String methodSignature;
 	@NotNull private final String methodReturnType;
 	@Nullable private final HTMLElement descriptionElement;
+	@Nullable private final HTMLElement deprecationElement;
 
 	@NotNull private final DetailToElementsMap detailToElementsMap;
 
@@ -49,6 +50,13 @@ public class MethodDoc extends BaseDoc {
 			this.descriptionElement = new HTMLElement(descriptionElement);
 		} else {
 			this.descriptionElement = null;
+		}
+
+		final Element deprecationElement = element.selectFirst("section.detail > div.deprecation-block");
+		if (deprecationElement != null) {
+			this.deprecationElement = new HTMLElement(deprecationElement);
+		} else {
+			this.deprecationElement = null;
 		}
 
 		//Need to parse the children of the <dl> tag in order to make a map of dt[class] -> List<Element>
@@ -102,6 +110,12 @@ public class MethodDoc extends BaseDoc {
 	@Nullable
 	public HTMLElement getDescriptionElement() {
 		return descriptionElement;
+	}
+
+	@Override
+	@Nullable
+	public HTMLElement getDeprecationElement() {
+		return deprecationElement;
 	}
 
 	@Override
