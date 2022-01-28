@@ -6,6 +6,7 @@ import com.freya02.bot.docs.cached.CachedClassMetadata;
 import com.freya02.bot.docs.cached.CachedField;
 import com.freya02.bot.docs.cached.CachedMethod;
 import com.freya02.docs.ClassDocs;
+import com.freya02.docs.DocsSession;
 import com.freya02.docs.data.ClassDoc;
 import com.freya02.docs.data.FieldDoc;
 import com.freya02.docs.data.MethodDoc;
@@ -18,6 +19,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class DocIndexCache {
 	private static final Gson GSON = new GsonBuilder()
@@ -45,7 +47,12 @@ public class DocIndexCache {
 	                      boolean force) {
 		this.indexPaths = indexPaths;
 
-		for (String className : classDocs.getSimpleNameToUrlMap().keySet()) {
+		final DocsSession docsSession = new DocsSession();
+
+		for (Map.Entry<String, String> entry : classDocs.getSimpleNameToUrlMap().entrySet()) {
+			final String className = entry.getKey();
+			final String classUrl = entry.getValue();
+
 			try {
 				final Path classCacheFolder = sourceCacheFolder.resolve(className);
 				Files.createDirectories(classCacheFolder);
@@ -54,7 +61,9 @@ public class DocIndexCache {
 				final Path classEmbedCacheFile = indexPaths.getClassEmbedPath(className);
 
 				final boolean forceDownload = force || Files.notExists(classMetadataCacheFile) || Files.notExists(classEmbedCacheFile);
-				final ClassDoc doc = classDocs.tryRetrieveDoc(className, forceDownload);
+				final ClassDoc doc;
+				if (forceDownload) doc = docsSession.retrieveDoc(classUrl);
+				else doc = docsSession.retrieveDocIfNotCached(classUrl);
 
 				final CachedClassMetadata cachedClassMetadata;
 

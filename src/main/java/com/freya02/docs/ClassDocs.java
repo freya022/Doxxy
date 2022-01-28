@@ -3,9 +3,7 @@ package com.freya02.docs;
 import com.freya02.bot.utils.DecomposedName;
 import com.freya02.bot.utils.HttpUtils;
 import com.freya02.botcommands.api.Logging;
-import com.freya02.docs.data.ClassDoc;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
@@ -43,41 +41,36 @@ public class ClassDocs {
 		return classDocs;
 	}
 
+	@NotNull
+	public static synchronized ClassDocs getUpdatedSource(DocSourceType source) {
+		return sourceMap.computeIfAbsent(source, ClassDocs::new);
+	}
+
 	public Map<String, String> getSimpleNameToUrlMap() {
 		return simpleNameToUrlMap;
 	}
 
 	public boolean isValidURL(String url) {
-		final String cleanURL = removeFragment(url);
+		final String cleanURL = HttpUtils.removeFragment(url);
 
 		return urlSet.contains(cleanURL);
 	}
 
-	/**
-	 * Null if unsupported source
-	 */
-	@Nullable
-	public static ClassDoc download(@NotNull String url) throws IOException {
-		final DocSourceType urlSource = DocSourceType.fromUrl(url);
-		if (urlSource == null) return null;
-
-		url = removeFragment(url);
-
-		final Document document = HttpUtils.getDocument(url);
-		if (!ClassDoc.isJavadocVersionCorrect(document)) return null;
-
-		return new ClassDoc(url, document);
-	}
-
-	@NotNull
-	private static String removeFragment(@NotNull String url) {
-		final int index = url.indexOf('#');
-		if (index >= 0) {
-			return url.substring(0, index);
-		}
-
-		return url;
-	}
+//	/**
+//	 * Null if unsupported source
+//	 */
+//	@Nullable
+//	public static ClassDoc download(@NotNull String url) throws IOException {
+//		final DocSourceType urlSource = DocSourceType.fromUrl(url);
+//		if (urlSource == null) return null;
+//
+//		url = HttpUtils.removeFragment(url);
+//
+//		final Document document = HttpUtils.getDocument(url);
+//		if (!DocUtils.isJavadocVersionCorrect(document)) return null;
+//
+//		return new ClassDoc(this, url, document);
+//	}
 
 	private synchronized void tryIndexAll() throws IOException {
 		final String indexURL = source.getAllClassesIndexURL();
@@ -107,7 +100,7 @@ public class ClassDocs {
 		for (Element element : document.select("#all-classes-table > div > div.summary-table.two-column-summary > div.col-first > a:nth-child(1)")) {
 			final String classUrl = element.absUrl("href");
 
-			final String rightPart = removeFragment(classUrl.substring(source.getSourceUrl().length() + 1, classUrl.lastIndexOf('.')));
+			final String rightPart = HttpUtils.removeFragment(classUrl.substring(source.getSourceUrl().length() + 1, classUrl.lastIndexOf('.')));
 
 			final DecomposedName decomposition = DecomposedName.getDecomposition(rightPart.replace('/', '.'));
 
@@ -128,26 +121,26 @@ public class ClassDocs {
 	//   Could pass the docs session to all our objects which requires references to other classes
 	// ClassDocs would only remain as a container for Name to URL mappings, and retrieval operations would be on the session
 
-	/**
-	 * Only used to determine whether to regenerate doc indexes
-	 */
-	@Nullable
-	public ClassDoc tryRetrieveDoc(String simpleClassName, boolean force) throws IOException {
-		final String classUrl = simpleNameToUrlMap.get(simpleClassName);
-
-		if (classUrl == null)
-			throw new IllegalArgumentException(simpleClassName + " is not a valid class name");
-
-		if (force) {
-			return new ClassDoc(classUrl);
-		} else {
-			final String downloadedBody = HttpUtils.downloadBodyIfNotCached(classUrl);
-
-			if (downloadedBody == null) return null;
-
-			final Document document = HttpUtils.parseDocument(downloadedBody, classUrl);
-
-			return new ClassDoc(classUrl, document);
-		}
-	}
+//	/**
+//	 * Only used to determine whether to regenerate doc indexes
+//	 */
+//	@Nullable
+//	public ClassDoc tryRetrieveDoc(String simpleClassName, boolean force) throws IOException {
+//		final String classUrl = simpleNameToUrlMap.get(simpleClassName);
+//
+//		if (classUrl == null)
+//			throw new IllegalArgumentException(simpleClassName + " is not a valid class name");
+//
+//		if (force) {
+//			return new ClassDoc(this, classUrl);
+//		} else {
+//			final String downloadedBody = HttpUtils.downloadBodyIfNotCached(classUrl);
+//
+//			if (downloadedBody == null) return null;
+//
+//			final Document document = HttpUtils.parseDocument(downloadedBody, classUrl);
+//
+//			return new ClassDoc(this, classUrl, document);
+//		}
+//	}
 }

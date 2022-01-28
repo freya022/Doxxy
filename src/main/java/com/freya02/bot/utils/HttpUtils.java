@@ -87,6 +87,16 @@ public class HttpUtils {
 		return link.startsWith("http://localhost");
 	}
 
+	@NotNull
+	public static String removeFragment(@NotNull String url) {
+		final int index = url.indexOf('#');
+		if (index >= 0) {
+			return url.substring(0, index);
+		}
+
+		return url;
+	}
+
 	//In case OkHttp caching isn't accurate, use code below and transform it to use ETag(s)
 //	private static Path changeExtension(Path path, String newExtension) {
 //		final String fileName = path.getFileName().toString();
