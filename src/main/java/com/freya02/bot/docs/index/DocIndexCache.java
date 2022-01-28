@@ -5,6 +5,7 @@ import com.freya02.bot.docs.cached.CachedClass;
 import com.freya02.bot.docs.cached.CachedClassMetadata;
 import com.freya02.bot.docs.cached.CachedField;
 import com.freya02.bot.docs.cached.CachedMethod;
+import com.freya02.botcommands.api.Logging;
 import com.freya02.docs.ClassDocs;
 import com.freya02.docs.DocsSession;
 import com.freya02.docs.data.ClassDoc;
@@ -13,6 +14,7 @@ import com.freya02.docs.data.MethodDoc;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import org.slf4j.Logger;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 public class DocIndexCache {
+	private static final Logger LOGGER = Logging.getLogger();
 	private static final Gson GSON = new GsonBuilder()
 			.registerTypeAdapter(MessageEmbed.class, new MessageEmbedAdapter())
 			.create();
@@ -66,12 +69,20 @@ public class DocIndexCache {
 
 				final CachedClassMetadata cachedClassMetadata;
 
+				if (doc == null && forceDownload) {
+					LOGGER.warn("Unable to get docs of '{}' at '{}', javadoc version or source type may be incorrect", className, classUrl);
+
+					continue;
+				}
+
 				if (doc == null) {
 					//cached, read the files
 
 					final String metadataJson = Files.readString(classMetadataCacheFile);
 					cachedClassMetadata = GSON.fromJson(metadataJson, CachedClassMetadata.class);
 				} else {
+					LOGGER.trace("Updated docs of '{}'", className);
+
 					cachedClassMetadata = new CachedClassMetadata();
 
 					final MessageEmbed classEmbed = DocEmbeds.toEmbed(doc).build();
