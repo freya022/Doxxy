@@ -51,9 +51,11 @@ public class DocsTest3 {
 //		final ClassDoc doc3 = new ClassDoc("http://localhost:63342/DocsBot/BotCommands_docs/com/freya02/botcommands/api/application/annotations/AppOption.html#description()");
 		final DocIndex bcIndex = new DocIndex(DocSourceType.BOT_COMMANDS).reindex();
 		final DocIndex jdaIndex = new DocIndex(DocSourceType.JDA).reindex();
+		final DocIndex javaIndex = new DocIndex(DocSourceType.JAVA).reindex();
 
 		bcIndex.close();
 		jdaIndex.close();
+		javaIndex.close();
 
 //		final ClassDoc doc4 = new ClassDoc("http://localhost:63342/DocsBot/BotCommands_docs/com/freya02/botcommands/api/pagination/menu/BasicMenuBuilder.html");
 //		final ClassDoc doc5 = new ClassDoc("http://localhost:63342/DocsBot/JDA_docs/net/dv8tion/jda/api/entities/MessageEmbed.html#DESCRIPTION_MAX_LENGTH");
@@ -62,6 +64,7 @@ public class DocsTest3 {
 //		final ClassDoc deprecationClassTest = session.retrieveDoc("https://docs.oracle.com/en/java/javase/17/docs/api/jdk.jartool/com/sun/jarsigner/ContentSigner.html");
 //		final ClassDoc deprecationMethodTest = session.retrieveDoc("https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/System.html#getSecurityManager()");
 //		final ClassDoc deprecationFieldTest = session.retrieveDoc("https://docs.oracle.com/en/java/javase/17/docs/api/jdk.accessibility/com/sun/java/accessibility/util/AWTEventMonitor.html#containerListener");
+//		final ClassDoc arraysTest = session.retrieveDoc("https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Arrays.html");
 
 		System.out.println();
 

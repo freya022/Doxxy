@@ -55,7 +55,7 @@ public class ClassDocs {
 		final String indexURL = source.getAllClassesIndexURL();
 
 		final String body;
-		if (!simpleNameToUrlMap.isEmpty()) {
+		if (!simpleNameToUrlMap.isEmpty()) { //TODO remove ?
 			//We try to "abuse" the OkHttp caching in order to determine if the name-to-URL cache needs to be updated
 			// This allows SeeAlso to get updated sources of all DocSourceType(s) without spamming requests & parsing a lot
 
@@ -79,17 +79,16 @@ public class ClassDocs {
 		for (Element element : document.select("#all-classes-table > div > div.summary-table.two-column-summary > div.col-first > a:nth-child(1)")) {
 			final String classUrl = element.absUrl("href");
 
-			final String rightPart = HttpUtils.removeFragment(classUrl.substring(source.getSourceUrl().length() + 1, classUrl.lastIndexOf('.')));
-
-			final DecomposedName decomposition = DecomposedName.getDecomposition(rightPart.replace('/', '.'));
+			final DecomposedName decomposition = DecomposedName.getDecompositionFromUrl(source, classUrl);
 
 			if (!source.isValidPackage(decomposition.packageName()))
 				continue;
 
-			urlSet.add(classUrl);
 			final String oldUrl = simpleNameToUrlMap.put(decomposition.className(), classUrl);
 			if (oldUrl != null) {
 				LOGGER.warn("Detected a duplicate class name '{}' at '{}' and '{}'", decomposition.className(), classUrl, oldUrl);
+			} else {
+				urlSet.add(classUrl); //Consistency between URL set and map values
 			}
 		}
 	}

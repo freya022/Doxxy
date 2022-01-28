@@ -62,6 +62,9 @@ public class Versions {
 	public void initUpdateLoop(BContext context) throws IOException {
 		final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
 
+		//First index for Java's docs
+		DocIndexMap.getInstance().get(DocSourceType.JAVA).reindex();
+
 		if (!checkLatestBCVersion(context)) {
 			//Load docs normally, version hasn't changed
 

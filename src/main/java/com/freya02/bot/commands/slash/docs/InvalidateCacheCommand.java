@@ -21,6 +21,7 @@ public class InvalidateCacheCommand extends ApplicationCommand {
 
 		DocIndexMap.refreshAndInvalidateIndex(DocSourceType.BOT_COMMANDS);
 		DocIndexMap.refreshAndInvalidateIndex(DocSourceType.JDA);
+//		DocIndexMap.refreshAndInvalidateIndex(DocSourceType.JAVA); Java's docs dont get updated lol
 
 		for (String autocompleteName : AUTOCOMPLETE_NAMES) {
 			event.getContext().invalidateAutocompletionCache(autocompleteName);

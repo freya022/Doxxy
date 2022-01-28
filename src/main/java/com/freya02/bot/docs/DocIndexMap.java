@@ -32,6 +32,7 @@ public class DocIndexMap extends EnumMap<DocSourceType, DocIndex> {
 
 			instance.put(DocSourceType.BOT_COMMANDS, new DocIndex(DocSourceType.BOT_COMMANDS));
 			instance.put(DocSourceType.JDA, new DocIndex(DocSourceType.JDA));
+			instance.put(DocSourceType.JAVA, new DocIndex(DocSourceType.JAVA));
 		}
 
 		return instance;

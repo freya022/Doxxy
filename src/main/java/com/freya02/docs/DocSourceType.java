@@ -7,7 +7,7 @@ public enum DocSourceType {
 //	JDA(null), //TODO add JDA link once they are built with javadoc 17
 	JDA("http://localhost:63342/DocsBot/JDA_docs"),
 	BOT_COMMANDS("http://localhost:63342/DocsBot/BotCommands_docs", "com.freya02.botcommands.api"),
-	JAVA("https://docs.oracle.com/en/java/javase/17/docs/api", "java");
+	JAVA("https://docs.oracle.com/en/java/javase/17/docs/api", "java.io", "java.lang", "java.math", "java.net", "java.nio", "java.sql", "java.time", "java.util");
 
 	private final String sourceUrl;
 	private final String[] validPackages;
