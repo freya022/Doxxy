@@ -20,6 +20,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static com.freya02.bot.commands.slash.docs.CommonDocsHandlers.AUTOCOMPLETE_NAMES;
+
 public class Versions {
 	private static final Logger LOGGER = Logging.getLogger();
 	private final Path lastKnownVersionsFolderPath = Main.BOT_FOLDER.resolve("last_versions");
@@ -62,9 +64,6 @@ public class Versions {
 	public void initUpdateLoop(BContext context) throws IOException {
 		final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
 
-		//First index for Java's docs
-		DocIndexMap.getInstance().get(DocSourceType.JAVA).reindex();
-
 		if (!checkLatestBCVersion(context)) {
 			//Load docs normally, version hasn't changed
 
@@ -75,6 +74,14 @@ public class Versions {
 			//Load docs normally, version hasn't changed
 
 			DocIndexMap.getInstance().get(DocSourceType.JDA).reindex();
+		}
+
+		//First index for Java's docs
+		DocIndexMap.getInstance().get(DocSourceType.JAVA).reindex();
+
+		//Once we loaded everything, invalidate caches if the user had time to use the commands before docs were loaded
+		for (String autocompleteName : AUTOCOMPLETE_NAMES) {
+			context.invalidateAutocompletionCache(autocompleteName);
 		}
 
 		scheduledExecutorService.scheduleWithFixedDelay(() -> checkLatestBCVersion(context), 30, 30, TimeUnit.MINUTES);
