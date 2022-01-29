@@ -70,9 +70,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.github.freya022</groupId>
+            <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>ce738b9e58</version>
+            <version>5.0.0-alpha.5</version>
             <exclusions>
                 <exclusion>
                     <groupId>club.minnced</groupId>
