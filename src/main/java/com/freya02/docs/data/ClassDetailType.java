@@ -4,7 +4,8 @@ public enum ClassDetailType {
 	FIELD("field-detail"),
 	CONSTRUCTOR("constructor-detail"),
 	METHOD("method-detail"),
-	ANNOTATION_ELEMENT("annotation-interface-element-detail");
+	ANNOTATION_ELEMENT("annotation-interface-element-detail"),
+	ENUM_CONSTANTS("enum-constant-detail");
 
 	private final String detailId;
 	ClassDetailType(String detailId) {

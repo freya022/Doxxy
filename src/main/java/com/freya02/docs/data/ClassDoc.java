@@ -94,6 +94,13 @@ public class ClassDoc extends BaseDoc {
 			this.fieldDocs.put(fieldDocs.getElementId(), fieldDocs);
 		});
 
+		//Try to find enum constants, they're similar to fields it seems
+		processDetailElements(document, ClassDetailType.ENUM_CONSTANTS, fieldElement -> {
+			final FieldDoc fieldDocs = new FieldDoc(this, fieldElement);
+
+			this.fieldDocs.put(fieldDocs.getElementId(), fieldDocs);
+		});
+
 		//Try to find method details
 		processDetailElements(document, ClassDetailType.METHOD, methodElement -> {
 			final MethodDoc methodDocs = new MethodDoc(this, methodElement);
