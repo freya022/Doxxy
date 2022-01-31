@@ -117,7 +117,7 @@ public class CommonDocsHandlers extends ApplicationCommand {
 		sendClass(event, false, cachedClass);
 	}
 
-	static void handleMethodDocs(@NotNull GuildSlashEvent event, @AppOption(description = "Name of the Java class", autocomplete = CLASS_NAME_WITH_METHODS_AUTOCOMPLETE_NAME) @NotNull String className, @NotNull @AppOption(description = "Signature of the method / field name", autocomplete = METHOD_NAME_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME) String identifier, DocIndex docIndex) throws IOException {
+	static void handleMethodDocs(@NotNull GuildSlashEvent event, @NotNull String className, @NotNull String identifier, DocIndex docIndex) throws IOException {
 		if (!docIndex.getClassesWithMethods().contains(className)) {
 			event.reply("Unknown class").setEphemeral(true).queue();
 
