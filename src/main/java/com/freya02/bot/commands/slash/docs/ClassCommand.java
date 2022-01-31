@@ -1,7 +1,6 @@
 package com.freya02.bot.commands.slash.docs;
 
 import com.freya02.bot.docs.DocIndexMap;
-import com.freya02.bot.docs.cached.CachedClass;
 import com.freya02.bot.docs.index.DocIndex;
 import com.freya02.botcommands.api.application.ApplicationCommand;
 import com.freya02.botcommands.api.application.annotations.AppOption;
@@ -29,14 +28,7 @@ public class ClassCommand extends ApplicationCommand {
 	                         @NotNull @AppOption(description = "Name of the Java class", autocomplete = CommonDocsHandlers.CLASS_NAME_AUTOCOMPLETE_NAME)
 			                         String className) throws IOException {
 		final DocIndex docIndex = docIndexMap.get(sourceType);
-		final CachedClass cachedClass = docIndex.getClassDoc(className);
 
-		if (cachedClass == null) {
-			event.reply("Unknown class").setEphemeral(true).queue();
-
-			return;
-		}
-
-		CommonDocsHandlers.sendClass(event, false, cachedClass);
+		CommonDocsHandlers.handleClass(event, className, docIndex);
 	}
 }

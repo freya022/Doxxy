@@ -1,7 +1,6 @@
 package com.freya02.bot.commands.slash.docs;
 
 import com.freya02.bot.docs.DocIndexMap;
-import com.freya02.bot.docs.cached.CachedField;
 import com.freya02.bot.docs.index.DocIndex;
 import com.freya02.botcommands.api.application.ApplicationCommand;
 import com.freya02.botcommands.api.application.annotations.AppOption;
@@ -33,20 +32,6 @@ public class FieldCommand extends ApplicationCommand {
 
 		final DocIndex docIndex = docIndexMap.get(sourceType);
 
-		if (!docIndex.getClassesWithFields().contains(className)) {
-			event.reply("Unknown class").setEphemeral(true).queue();
-
-			return;
-		}
-
-		final CachedField cachedField = docIndex.getFieldDoc(className, fieldName);
-
-		if (cachedField == null) {
-			event.reply("Unknown field").setEphemeral(true).queue();
-
-			return;
-		}
-
-		CommonDocsHandlers.sendField(event, false, cachedField);
+		CommonDocsHandlers.handleFieldDocs(event, className, fieldName, docIndex);
 	}
 }

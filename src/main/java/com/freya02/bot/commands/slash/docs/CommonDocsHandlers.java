@@ -10,6 +10,7 @@ import com.freya02.bot.docs.index.DocIndex;
 import com.freya02.botcommands.api.Logging;
 import com.freya02.botcommands.api.application.ApplicationCommand;
 import com.freya02.botcommands.api.application.annotations.AppOption;
+import com.freya02.botcommands.api.application.slash.GuildSlashEvent;
 import com.freya02.botcommands.api.application.slash.autocomplete.annotations.AutocompletionHandler;
 import com.freya02.botcommands.api.application.slash.autocomplete.annotations.CacheAutocompletion;
 import com.freya02.botcommands.api.application.slash.autocomplete.annotations.CompositeKey;
@@ -36,8 +37,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class CommonDocsHandlers extends ApplicationCommand {
-	private static final Logger LOGGER = Logging.getLogger();
-
 	public static final String CLASS_NAME_AUTOCOMPLETE_NAME = "CommonDocsHandlers: className";
 	public static final String CLASS_NAME_WITH_METHODS_AUTOCOMPLETE_NAME = "CommonDocsHandlers: classNameWithMethods";
 	public static final String CLASS_NAME_WITH_FIELDS_AUTOCOMPLETE_NAME = "CommonDocsHandlers: classNameWithFields";
@@ -46,6 +45,10 @@ public class CommonDocsHandlers extends ApplicationCommand {
 	public static final String ANY_METHOD_NAME_AUTOCOMPLETE_NAME = "CommonDocsHandlers: anyMethodName";
 	public static final String FIELD_NAME_AUTOCOMPLETE_NAME = "FieldCommand: fieldName";
 	public static final String ANY_FIELD_NAME_AUTOCOMPLETE_NAME = "CommonDocsHandlers: anyFieldName";
+
+	public static final String METHOD_NAME_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME = "CommonDocsHandlers: methodNameOrFieldByClass";
+
+	public static final String SEE_ALSO_SELECT_LISTENER_NAME = "CommonDocsHandlers: seeAlso";
 
 	public static final String[] AUTOCOMPLETE_NAMES = new String[]{
 			CLASS_NAME_AUTOCOMPLETE_NAME,
@@ -57,7 +60,7 @@ public class CommonDocsHandlers extends ApplicationCommand {
 			ANY_FIELD_NAME_AUTOCOMPLETE_NAME
 	};
 
-	private static final String SEE_ALSO_SELECT_LISTENER_NAME = "CommonDocsHandlers: seeAlso";
+	private static final Logger LOGGER = Logging.getLogger();
 
 	private final DocIndexMap docIndexMap;
 
@@ -99,6 +102,54 @@ public class CommonDocsHandlers extends ApplicationCommand {
 		replyAction
 				.setEphemeral(ephemeral)
 				.queue();
+	}
+
+	static void handleClass(@NotNull GuildSlashEvent event, @NotNull String className, DocIndex docIndex) throws IOException {
+		final CachedClass cachedClass = docIndex.getClassDoc(className);
+
+		if (cachedClass == null) {
+			event.reply("Unknown class").setEphemeral(true).queue();
+
+			return;
+		}
+
+		sendClass(event, false, cachedClass);
+	}
+
+	static void handleMethodDocs(@NotNull GuildSlashEvent event, @AppOption(description = "Name of the Java class", autocomplete = CLASS_NAME_WITH_METHODS_AUTOCOMPLETE_NAME) @NotNull String className, @NotNull @AppOption(description = "Signature of the method / field name", autocomplete = METHOD_NAME_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME) String identifier, DocIndex docIndex) throws IOException {
+		if (!docIndex.getClassesWithMethods().contains(className)) {
+			event.reply("Unknown class").setEphemeral(true).queue();
+
+			return;
+		}
+
+		final CachedMethod cachedMethod = docIndex.getMethodDoc(className, identifier);
+
+		if (cachedMethod == null) {
+			event.reply("Unknown method").setEphemeral(true).queue();
+
+			return;
+		}
+
+		sendMethod(event, false, cachedMethod);
+	}
+
+	static void handleFieldDocs(@NotNull GuildSlashEvent event, @NotNull String className, @NotNull String identifier, DocIndex docIndex) throws IOException {
+		if (!docIndex.getClassesWithFields().contains(className)) {
+			event.reply("Unknown class").setEphemeral(true).queue();
+
+			return;
+		}
+
+		final CachedField cachedField = docIndex.getFieldDoc(className, identifier);
+
+		if (cachedField == null) {
+			event.reply("Unknown field").setEphemeral(true).queue();
+
+			return;
+		}
+
+		sendField(event, false, cachedField);
 	}
 
 	private static ReplyCallbackAction addSeeAlso(@NotNull CachedDoc cachedDoc, ReplyCallbackAction replyAction) {
@@ -232,5 +283,16 @@ public class CommonDocsHandlers extends ApplicationCommand {
 		if (index == null) return List.of();
 
 		return index.getFieldDocSuggestions();
+	}
+
+	@CacheAutocompletion
+	@AutocompletionHandler(name = METHOD_NAME_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME, showUserInput = false)
+	public Collection<String> onMethodNameOrFieldByClassAutocomplete(CommandAutoCompleteInteractionEvent event,
+	                                                                 @CompositeKey @AppOption DocSourceType sourceType,
+	                                                                 @CompositeKey @AppOption String className) {
+		final DocIndex index = docIndexMap.get(sourceType);
+		if (index == null) return List.of();
+
+		return index.getMethodAndFieldDocSuggestions(className);
 	}
 }

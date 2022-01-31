@@ -8,6 +8,7 @@ import com.freya02.bot.utils.FileCache;
 import com.freya02.botcommands.api.Logging;
 import com.freya02.docs.ClassDocs;
 import com.freya02.docs.DocSourceType;
+import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -155,5 +156,12 @@ public class DocIndex {
 
 	public void close() throws IOException {
 		renderedDocsCache.close();
+	}
+
+	public Collection<String> getMethodAndFieldDocSuggestions(String className) {
+		final CachedClassMetadata cachedClass = indexCache.getFieldHolderSimpleNames().get(className);
+		if (cachedClass == null) return Collections.emptyList();
+
+		return Sets.union(cachedClass.getMethodSignatureToFileNameMap().keySet(), cachedClass.getFieldNameToFileNameMap().keySet());
 	}
 }
