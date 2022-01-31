@@ -159,7 +159,7 @@ public class DocIndex {
 	}
 
 	public Collection<String> getMethodAndFieldDocSuggestions(String className) {
-		final CachedClassMetadata cachedClass = indexCache.getFieldHolderSimpleNames().get(className);
+		final CachedClassMetadata cachedClass = indexCache.getSimpleNameToCachedClassMap().get(className);
 		if (cachedClass == null) return Collections.emptyList();
 
 		return Sets.union(cachedClass.getMethodSignatureToFileNameMap().keySet(), cachedClass.getFieldNameToFileNameMap().keySet());
