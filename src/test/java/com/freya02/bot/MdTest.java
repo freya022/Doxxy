@@ -16,7 +16,7 @@ public class MdTest {
 	}
 
 	private static void testHtml(String html) {
-		final HTMLElement element = new HTMLElement(Jsoup.parseBodyFragment(html, "https://myurl.com").selectFirst("body"));
+		final HTMLElement element = HTMLElement.wrap(Jsoup.parseBodyFragment(html, "https://myurl.com").selectFirst("body"));
 
 		System.out.println(element.getMarkdown());
 	}

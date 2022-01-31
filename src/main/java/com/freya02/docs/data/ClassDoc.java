@@ -48,27 +48,16 @@ public class ClassDoc extends BaseDoc {
 		}
 
 		//Get javadoc title
-		final Element docTitle = document.selectFirst("body > div.flex-box > div > main > div > h1");
-		if (docTitle == null) throw new DocParseException();
-		this.docTitleElement = new HTMLElement(docTitle);
+		this.docTitleElement = HTMLElement.wrap(document.selectFirst("body > div.flex-box > div > main > div > h1"));
 
 		//Get class name
 		this.className = getClassName(url);
 
 		//Get class description
-		final Element descriptionElement = document.selectFirst("#class-description > div.block");
-		if (descriptionElement != null) {
-			this.descriptionElement = new HTMLElement(descriptionElement);
-		} else {
-			this.descriptionElement = null;
-		}
+		this.descriptionElement = HTMLElement.tryWrap(document.selectFirst("#class-description > div.block"));
 
-		final Element deprecationElement = document.selectFirst("#class-description > div.deprecation-block");
-		if (deprecationElement != null) {
-			this.deprecationElement = new HTMLElement(deprecationElement);
-		} else {
-			this.deprecationElement = null;
-		}
+		//Get class possible's deprecation
+		this.deprecationElement = HTMLElement.tryWrap(document.selectFirst("#class-description > div.deprecation-block"));
 
 		//Get class type parameters if they exist
 		final Element detailTarget = document.selectFirst("#class-description");

@@ -35,7 +35,7 @@ public class DetailToElementsMap {
 						list = map.computeIfAbsent(type, s -> new ArrayList<>());
 					}
 				} else if (tagName.equals("dd") && list != null) {
-					list.add(new HTMLElement(child));
+					list.add(HTMLElement.wrap(child));
 				}
 			}
 		}

@@ -45,19 +45,10 @@ public class MethodDoc extends BaseDoc {
 		this.methodReturnType = methodReturnTypeElement.text();
 
 		//Get method description
-		final Element descriptionElement = element.selectFirst("section.detail > div.block");
-		if (descriptionElement != null) {
-			this.descriptionElement = new HTMLElement(descriptionElement);
-		} else {
-			this.descriptionElement = null;
-		}
+		this.descriptionElement = HTMLElement.tryWrap(element.selectFirst("section.detail > div.block"));
 
-		final Element deprecationElement = element.selectFirst("section.detail > div.deprecation-block");
-		if (deprecationElement != null) {
-			this.deprecationElement = new HTMLElement(deprecationElement);
-		} else {
-			this.deprecationElement = null;
-		}
+		//Get method possible's deprecation
+		this.deprecationElement = HTMLElement.tryWrap(element.selectFirst("section.detail > div.deprecation-block"));
 
 		//Need to parse the children of the <dl> tag in order to make a map of dt[class] -> List<Element>
 		this.detailToElementsMap = DetailToElementsMap.parseDetails(element);

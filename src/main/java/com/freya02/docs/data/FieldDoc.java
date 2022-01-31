@@ -44,19 +44,10 @@ public class FieldDoc extends BaseDoc {
 		this.fieldType = fieldTypeElement.text();
 
 		//Get field description
-		final Element descriptionElement = element.selectFirst("section.detail > div.block");
-		if (descriptionElement != null) {
-			this.descriptionElement = new HTMLElement(descriptionElement);
-		} else {
-			this.descriptionElement = null;
-		}
+		this.descriptionElement = HTMLElement.tryWrap(element.selectFirst("section.detail > div.block"));
 
-		final Element deprecationElement = element.selectFirst("section.detail > div.deprecation-block");
-		if (deprecationElement != null) {
-			this.deprecationElement = new HTMLElement(deprecationElement);
-		} else {
-			this.deprecationElement = null;
-		}
+		//Get field possible's deprecation
+		this.deprecationElement = HTMLElement.tryWrap(element.selectFirst("section.detail > div.deprecation-block"));
 
 		this.detailToElementsMap = DetailToElementsMap.parseDetails(element);
 
