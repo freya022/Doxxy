@@ -1,22 +1,52 @@
 package com.freya02.bot.utils;
 
 import com.freya02.bot.Main;
+import com.freya02.botcommands.api.Logging;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
 public class HttpUtils {
 	public static final OkHttpClient CLIENT;
 
+	private static final Logger LOGGER = Logging.getLogger();
+
 	static {
+		final Cache cache = new Cache(Main.CACHE_PATH.toFile(), Long.MAX_VALUE);
+
 		CLIENT = new OkHttpClient.Builder()
-				.cache(new Cache(Main.CACHE_PATH.toFile(), Long.MAX_VALUE))
+				.cache(cache)
+				.addInterceptor(chain -> {
+					final Request request = chain.request();
+					final Response response = chain.proceed(request);
+
+					if (response.code() == 404) {
+						final Iterator<String> urls = cache.urls();
+
+						final String urlStr = request.url().toString();
+						LOGGER.warn("{} threw a 404, removing from cache", urlStr);
+						while (urls.hasNext()) {
+							final String cachedUrl = urls.next();
+
+							if (cachedUrl.equals(urlStr)) {
+								LOGGER.debug("{} has been removed from the cache", urlStr);
+
+								urls.remove();
+								break;
+							}
+						}
+					}
+
+					return response;
+				})
 				.build();
 	}
 
