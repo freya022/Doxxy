@@ -8,6 +8,7 @@ import com.freya02.bot.versioning.Versions;
 import com.freya02.botcommands.api.CommandsBuilder;
 import com.freya02.botcommands.api.Logging;
 import com.freya02.botcommands.api.components.DefaultComponentManager;
+import com.freya02.docs.DocWebServer;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
@@ -20,6 +21,7 @@ import java.nio.file.Path;
 public class Main {
 	public static final Path BOT_FOLDER = Path.of(System.getProperty("user.home"), "Downloads", "DocsBot");
 	public static final Path CACHE_PATH = BOT_FOLDER.resolve("docs_cache");
+	public static final Path JAVADOCS_PATH = BOT_FOLDER.resolve("javadocs");
 
 	private static final Logger LOGGER = Logging.getLogger();
 
@@ -47,6 +49,10 @@ public class Main {
 			LOGGER.info("Loaded JDA");
 
 			final Database database = new Database(config);
+
+			LOGGER.info("Starting docs web server");
+			DocWebServer.startDocWebServer();
+			LOGGER.info("Started docs web server");
 
 			final Versions versions = new Versions();
 

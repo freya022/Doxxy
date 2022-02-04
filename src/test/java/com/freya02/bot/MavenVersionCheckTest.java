@@ -2,6 +2,8 @@ package com.freya02.bot;
 
 import com.freya02.bot.docs.BuildStatus;
 import com.freya02.bot.utils.HttpUtils;
+import com.freya02.bot.versioning.ArtifactInfo;
+import com.freya02.bot.versioning.VersionsUtils;
 import com.google.gson.Gson;
 import net.dv8tion.jda.api.exceptions.ParsingException;
 import net.dv8tion.jda.api.utils.data.DataArray;
@@ -13,6 +15,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import java.io.IOException;
+import java.nio.file.*;
+import java.util.Comparator;
 import java.util.Map;
 
 public class MavenVersionCheckTest {
@@ -26,18 +30,64 @@ public class MavenVersionCheckTest {
 //
 //		System.out.println("getJDAVersion(\"2.3.0\") = " + getJDAVersion("2.3.0"));
 
-		final String hash = getLatestHash("freya022", "BotCommands", "2.3.0");
+//		final String hash = getLatestHash("freya022", "BotCommands", "2.3.0");
+//
+//		System.out.println("hash = " + hash);
+//
+//		BuildStatus buildStatus;
+//		while ((buildStatus = triggerBuild(hash)) == BuildStatus.IN_PROGRESS) {
+//			Thread.sleep(500);
+//		}
+//
+//		System.out.println("buildStatus = " + buildStatus);
 
-		System.out.println("hash = " + hash);
+		final ArtifactInfo latestBotCommandsVersion = retrieveLatestBotCommandsVersion("2.3.0");
 
-		BuildStatus buildStatus;
-		while ((buildStatus = triggerBuild(hash)) == BuildStatus.IN_PROGRESS) {
-			Thread.sleep(500);
+		final BuildStatus buildStatus = VersionsUtils.waitForBuild("freya022", "BotCommands", "2.3.0");
+
+		if (buildStatus != BuildStatus.OK) {
+			return;
 		}
 
-		System.out.println("buildStatus = " + buildStatus);
+		final Path tempZip = Files.createTempFile("BotCommandsDocs", ".zip");
+		VersionsUtils.downloadJitpackDocs(latestBotCommandsVersion, tempZip);
+
+		final Path targetDocsFolder = Main.JAVADOCS_PATH.resolve("BotCommands");
+
+		if (Files.exists(targetDocsFolder)) {
+			for (Path path : Files.walk(targetDocsFolder).sorted(Comparator.reverseOrder()).toList()) {
+				Files.deleteIfExists(path);
+			}
+		}
+
+		try (FileSystem zfs = FileSystems.newFileSystem(tempZip)) {
+			final Path zfsRoot = zfs.getPath("/");
+
+			for (Path sourcePath : Files.walk(zfsRoot)
+					.filter(Files::isRegularFile)
+					.filter(p -> p.getFileName().toString().endsWith("html"))
+					.toList()) {
+				final Path targetPath = targetDocsFolder.resolve(zfsRoot.relativize(sourcePath).toString());
+
+				Files.createDirectories(targetPath.getParent());
+				Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+			}
+		}
+
+		Files.deleteIfExists(tempZip);
 
 		System.exit(0);
+	}
+
+	@NotNull
+	private static ArtifactInfo retrieveLatestBotCommandsVersion(String branchName) throws IOException {
+		final String ownerName = "freya022";
+		final String groupId = "com.github." + ownerName;
+		final String artifactId = "BotCommands";
+
+		return new ArtifactInfo(groupId,
+				artifactId,
+				getLatestHash(ownerName, artifactId, branchName));
 	}
 
 	@NotNull

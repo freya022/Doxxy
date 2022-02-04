@@ -1,5 +1,6 @@
-package com.freya02.bot;
+package com.freya02.docs;
 
+import com.freya02.bot.Main;
 import com.freya02.botcommands.api.Logging;
 import com.sun.net.httpserver.HttpServer;
 import org.slf4j.Logger;
@@ -13,11 +14,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 
-public class WebTest {
+public class DocWebServer {
 	private static final Logger LOGGER = Logging.getLogger();
 
-	public static void main(String[] args) throws IOException {
-		final HttpServer server = HttpServer.create(new InetSocketAddress(63342), 0);
+	public static void startDocWebServer() throws IOException {
+		final HttpServer server = HttpServer.create(new InetSocketAddress(63343), 0);
 
 		server.createContext("/", exchange -> {
 			if (!exchange.getRemoteAddress().getAddress().isLoopbackAddress()) {
