@@ -3,23 +3,19 @@ package com.freya02.bot.versioning;
 import com.freya02.bot.Main;
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers;
 import com.freya02.bot.docs.DocIndexMap;
-import com.freya02.bot.utils.HttpUtils;
 import com.freya02.bot.versioning.github.GithubBranch;
+import com.freya02.bot.versioning.github.GithubUtils;
 import com.freya02.bot.versioning.jitpack.BuildStatus;
+import com.freya02.bot.versioning.jitpack.JitpackUtils;
+import com.freya02.bot.versioning.maven.MavenUtils;
 import com.freya02.botcommands.api.BContext;
 import com.freya02.botcommands.api.Logging;
 import com.freya02.docs.DocSourceType;
-import net.dv8tion.jda.api.exceptions.ParsingException;
-import org.jetbrains.annotations.NotNull;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
-import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -101,7 +97,7 @@ public class Versions {
 
 	private boolean checkLatestJDA5Version(BContext context) {
 		try {
-			final ArtifactInfo latestJDA5Version = retrieveLatestJDA5Version();
+			final ArtifactInfo latestJDA5Version = VersionsUtils.retrieveLatestJDA5Version();
 
 			final boolean changed = !latestJDA5Version.equals(this.latestJDA5Version);
 			if (changed) {
@@ -110,7 +106,7 @@ public class Versions {
 				LOGGER.info("Downloading JDA 5 javadocs");
 
 				final Path tempZip = Files.createTempFile("JDA5Docs", ".zip");
-				VersionsUtils.downloadMavenDocs(latestJDA5Version, tempZip);
+				MavenUtils.downloadMavenDocs(latestJDA5Version, tempZip);
 
 				final Path targetDocsFolder = Main.JAVADOCS_PATH.resolve("JDA");
 
@@ -139,7 +135,7 @@ public class Versions {
 
 	private void checkLatestJDA4Version() {
 		try {
-			final ArtifactInfo latestJDA4Version = retrieveLatestJDA4Version();
+			final ArtifactInfo latestJDA4Version = VersionsUtils.retrieveLatestJDA4Version();
 
 			if (!latestJDA4Version.equals(this.latestJDA4Version)) {
 				LOGGER.info("JDA 4 version updated, went from {} to {}", this.latestJDA4Version.version(), latestJDA4Version.version());
@@ -153,9 +149,9 @@ public class Versions {
 
 	private boolean checkLatestJDAVersionFromBC() {
 		try {
-			final GithubBranch latestBranch = getLatestBranch("freya022", "BotCommands");
+			final GithubBranch latestBranch = GithubUtils.getLatestBranch("freya022", "BotCommands");
 
-			final ArtifactInfo jdaVersionFromBotCommands = retrieveJDAVersionFromBotCommands(latestBranch.branchName());
+			final ArtifactInfo jdaVersionFromBotCommands = VersionsUtils.retrieveJDAVersionFromBotCommands(latestBranch.branchName());
 
 			final boolean changed = !jdaVersionFromBotCommands.equals(this.jdaVersionFromBotCommands);
 			if (changed) {
@@ -174,7 +170,7 @@ public class Versions {
 
 	private boolean checkLatestBCVersion(BContext context) {
 		try {
-			final ArtifactInfo latestBotCommandsVersion = retrieveLatestBotCommandsVersion();
+			final ArtifactInfo latestBotCommandsVersion = VersionsUtils.retrieveLatestBotCommandsVersion();
 
 			final boolean changed = !latestBotCommandsVersion.equals(this.latestBotCommandsVersion);
 			if (changed) {
@@ -182,7 +178,7 @@ public class Versions {
 
 				LOGGER.info("Downloading BC javadocs");
 
-				final BuildStatus buildStatus = VersionsUtils.waitForBuild(latestBotCommandsVersion.version());
+				final BuildStatus buildStatus = JitpackUtils.waitForBuild(latestBotCommandsVersion.version());
 
 				if (buildStatus != BuildStatus.OK) {
 					LOGGER.error("BC build status is not OK, status: {}", buildStatus);
@@ -191,7 +187,7 @@ public class Versions {
 				}
 
 				final Path tempZip = Files.createTempFile("BotCommandsDocs", ".zip");
-				VersionsUtils.downloadJitpackDocs(latestBotCommandsVersion, tempZip);
+				JitpackUtils.downloadJitpackDocs(latestBotCommandsVersion, tempZip);
 
 				final Path targetDocsFolder = Main.JAVADOCS_PATH.resolve("BotCommands");
 
@@ -216,70 +212,6 @@ public class Versions {
 		}
 
 		return false;
-	}
-
-	@NotNull
-	private ArtifactInfo retrieveJDAVersionFromBotCommands(String branchName) throws IOException {
-		final Document document = HttpUtils.getDocument("https://raw.githubusercontent.com/freya022/BotCommands/%s/pom.xml".formatted(branchName));
-
-		final Element jdaArtifactElement = document.selectFirst("project > dependencies > dependency > artifactId:matches(JDA)");
-		if (jdaArtifactElement == null) throw new ParsingException("Unable to get JDA artifact element");
-
-		final Element parent = jdaArtifactElement.parent();
-		final Element jdaGroupIdElement = parent.selectFirst("groupId");
-		if (jdaGroupIdElement == null) throw new ParsingException("Unable to get JDA group ID element");
-
-		final Element jdaVersionElement = parent.selectFirst("version");
-		if (jdaVersionElement == null) throw new ParsingException("Unable to get JDA version element");
-
-		return new ArtifactInfo(
-				jdaGroupIdElement.text(),
-				"JDA",
-				jdaVersionElement.text()
-		);
-	}
-
-	@NotNull
-	private ArtifactInfo retrieveLatestBotCommandsVersion() throws IOException {
-		final String ownerName = "freya022";
-		final String groupId = "com.github." + ownerName;
-		final String artifactId = "BotCommands";
-
-		final GithubBranch latestBranch = getLatestBranch(ownerName, artifactId);
-
-		return new ArtifactInfo(groupId,
-				artifactId,
-				latestBranch.latestCommitSha10());
-	}
-
-	@NotNull
-	public static GithubBranch getLatestBranch(String ownerName, String artifactId) throws IOException {
-		final List<GithubBranch> branches = VersionsUtils.getBranches(ownerName, artifactId);
-
-		return branches.stream()
-				.filter(s -> s.branchName().matches("\\d\\.\\d\\.\\d"))
-				.max(Comparator.comparing(GithubBranch::branchName))
-				.orElseThrow();
-	}
-
-	@NotNull
-	private ArtifactInfo retrieveLatestJDA4Version() throws IOException {
-		final String groupId = "net.dv8tion";
-		final String artifactId = "JDA";
-
-		return new ArtifactInfo(groupId,
-				artifactId,
-				VersionsUtils.getLatestMavenVersion(VersionsUtils.M2_METADATA_FORMAT, groupId, artifactId));
-	}
-
-	@NotNull
-	private ArtifactInfo retrieveLatestJDA5Version() throws IOException {
-		final String groupId = "net.dv8tion";
-		final String artifactId = "JDA";
-
-		return new ArtifactInfo(groupId,
-				artifactId,
-				VersionsUtils.getLatestMavenVersion(VersionsUtils.MAVEN_METADATA_FORMAT, groupId, artifactId));
 	}
 
 	public ArtifactInfo getLatestBotCommandsVersion() {

@@ -2,8 +2,9 @@ package com.freya02.bot;
 
 import com.freya02.bot.utils.HttpUtils;
 import com.freya02.bot.versioning.ArtifactInfo;
-import com.freya02.bot.versioning.VersionsUtils;
+import com.freya02.bot.versioning.github.GithubUtils;
 import com.freya02.bot.versioning.jitpack.BuildStatus;
+import com.freya02.bot.versioning.jitpack.JitpackUtils;
 import com.google.gson.Gson;
 import net.dv8tion.jda.api.exceptions.ParsingException;
 import net.dv8tion.jda.api.utils.data.DataArray;
@@ -43,14 +44,14 @@ public class MavenVersionCheckTest {
 
 		final ArtifactInfo latestBotCommandsVersion = retrieveLatestBotCommandsVersion("2.3.0");
 
-		final BuildStatus buildStatus = VersionsUtils.waitForBuild(VersionsUtils.getLatestHash("freya022", "BotCommands", "2.3.0"));
+		final BuildStatus buildStatus = JitpackUtils.waitForBuild(GithubUtils.getLatestHash("freya022", "BotCommands", "2.3.0"));
 
 		if (buildStatus != BuildStatus.OK) {
 			return;
 		}
 
 		final Path tempZip = Files.createTempFile("BotCommandsDocs", ".zip");
-		VersionsUtils.downloadJitpackDocs(latestBotCommandsVersion, tempZip);
+		JitpackUtils.downloadJitpackDocs(latestBotCommandsVersion, tempZip);
 
 		final Path targetDocsFolder = Main.JAVADOCS_PATH.resolve("BotCommands");
 
