@@ -67,6 +67,10 @@ public class Versions {
 	public void initUpdateLoop(BContext context) throws IOException {
 		final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
 
+		//We need to check if the version has **not** changed between runs
+		// If the version changed then it would have updated in the scheduled executor
+		// But if the version didn't change then the docs wouldn't have been indexed
+		// This is why we index them here, if no update is required
 		if (!checkLatestBCVersion(context)) {
 			//Load docs normally, version hasn't changed
 
@@ -88,9 +92,9 @@ public class Versions {
 		}
 
 		scheduledExecutorService.scheduleWithFixedDelay(() -> checkLatestBCVersion(context), 30, 30, TimeUnit.MINUTES);
-		scheduledExecutorService.scheduleWithFixedDelay(this::checkLatestJDAVersionFromBC, 30, 30, TimeUnit.MINUTES);
-		scheduledExecutorService.scheduleWithFixedDelay(this::checkLatestJDA4Version, 30, 30, TimeUnit.MINUTES);
-		scheduledExecutorService.scheduleWithFixedDelay(() -> checkLatestJDA5Version(context), 300, 30, TimeUnit.MINUTES);
+		scheduledExecutorService.scheduleWithFixedDelay(this::checkLatestJDAVersionFromBC, 0, 30, TimeUnit.MINUTES);
+		scheduledExecutorService.scheduleWithFixedDelay(this::checkLatestJDA4Version, 0, 30, TimeUnit.MINUTES);
+		scheduledExecutorService.scheduleWithFixedDelay(() -> checkLatestJDA5Version(context), 30, 30, TimeUnit.MINUTES);
 	}
 
 	private boolean checkLatestJDA5Version(BContext context) {
