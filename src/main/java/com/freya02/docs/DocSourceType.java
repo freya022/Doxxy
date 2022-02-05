@@ -8,8 +8,8 @@ import java.util.regex.Pattern;
 
 public enum DocSourceType {
 //	JDA(null), //TODO add JDA link once they are built with javadoc 17
-	JDA("http://localhost:63342/DocsBot/JDA_docs", "net\\.dv8tion\\.jda.*"),
-	BOT_COMMANDS("http://localhost:63342/DocsBot/BotCommands_docs", "com\\.freya02\\.botcommands\\.api.*"),
+	JDA("http://localhost:63343/JDA", "net\\.dv8tion\\.jda.*"),
+	BOT_COMMANDS("http://localhost:63343/BotCommands", "com\\.freya02\\.botcommands\\.api.*"),
 	JAVA("https://docs.oracle.com/en/java/javase/17/docs/api",
 			"java\\.io.*",
 			"java\\.lang", "java\\.lang\\.annotation.*", "java\\.lang\\.invoke.*", "java\\.lang\\.reflect.*", "java\\.lang\\.reflect.*",

@@ -1,19 +1,27 @@
 package com.freya02.bot.versioning;
 
+import com.freya02.bot.docs.BuildStatus;
 import com.freya02.bot.utils.HttpUtils;
+import com.google.gson.Gson;
 import net.dv8tion.jda.api.exceptions.ParsingException;
 import net.dv8tion.jda.api.utils.data.DataArray;
 import okhttp3.HttpUrl;
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.jetbrains.annotations.NotNull;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import java.io.IOException;
+import java.nio.file.*;
+import java.rmi.RemoteException;
+import java.util.Comparator;
+import java.util.Map;
 
-class VersionsUtils {
+public class VersionsUtils {
 	public static final String MAVEN_METADATA_FORMAT = "https://repo.maven.apache.org/maven2/%s/%s/maven-metadata.xml";
+	public static final String MAVEN_JAVADOC_FORMAT = "https://repo1.maven.org/maven2/%s/%s/%s/%s-%s-javadoc.jar";
 	public static final String M2_METADATA_FORMAT = "https://m2.dv8tion.net/releases/%s/%s/maven-metadata.xml";
 
 	@NotNull
@@ -50,5 +58,107 @@ class VersionsUtils {
 	@NotNull
 	static Document getMavenMetadata(String formatUrl, String groupId, String artifactId) throws IOException {
 		return HttpUtils.getDocument(formatUrl.formatted(groupId.replace('.', '/'), artifactId));
+	}
+
+	@SuppressWarnings("unchecked")
+	static BuildStatus triggerBuild(String latestCommitHash) throws IOException {
+		try (Response response = HttpUtils.CLIENT.newCall(new Request.Builder()
+						.url("https://jitpack.io/api/builds/com.github.freya022/BotCommands/%s".formatted(latestCommitHash))
+						.build())
+				.execute()) {
+			final Map<String, ?> map = new Gson().fromJson(response.body().string(), Map.class);
+
+			final String status = (String) map.get("status");
+
+			if (response.code() == 200 && status.equalsIgnoreCase("ok")) {
+				return BuildStatus.OK;
+			} else if (response.code() == 404 && status.equalsIgnoreCase("ok")) {
+				return BuildStatus.IN_PROGRESS;
+			} else if (response.code() == 404 && status.equalsIgnoreCase("error")) {
+				return BuildStatus.ERROR;
+			} else {
+				throw new IllegalStateException("Unable to check build status: code = " + response.code() + ", status = '" + status + "'");
+			}
+		}
+	}
+
+	public static BuildStatus waitForBuild(String ownerName, String repoName, String branchName) throws IOException {
+		final String hash = getLatestHash(ownerName, repoName, branchName);
+
+		BuildStatus buildStatus = BuildStatus.IN_PROGRESS;
+		for (int i = 0; i < 3; i++) {
+			while ((buildStatus = triggerBuild(hash)) == BuildStatus.IN_PROGRESS) {
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException e) {
+					throw new RemoteException("Got interrupted while waiting for a jitpack build to finish", e);
+				}
+			}
+
+			//Retry up to 3 time if build status isn't OK, sometimes jitpack may shit itself i don't know
+			if (buildStatus == BuildStatus.OK) {
+				break;
+			}
+		}
+
+		return buildStatus;
+	}
+
+	public static void downloadJitpackDocs(@NotNull ArtifactInfo artifactInfo, @NotNull Path targetPath) throws IOException {
+		try (Response response = HttpUtils.CLIENT.newCall(new Request.Builder()
+						.url("https://jitpack.io/%s/%s/%s/%s-%s-javadoc.jar".formatted(artifactInfo.groupId().replace('.', '/'),
+								artifactInfo.artifactId(),
+								artifactInfo.version(),
+								artifactInfo.artifactId(),
+								artifactInfo.version()))
+						.build())
+				.execute()) {
+			final ResponseBody body = response.body();
+			if (body == null) throw new IOException("Got no ResponseBody for " + response.request().url());
+
+			if (!response.isSuccessful()) throw new IOException("Got an unsuccessful response from " + response.request().url() + ", code: " + response.code());
+
+			Files.copy(body.byteStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+		}
+	}
+
+	public static void downloadMavenDocs(@NotNull ArtifactInfo artifactInfo, @NotNull Path targetPath) throws IOException {
+		try (Response response = HttpUtils.CLIENT.newCall(new Request.Builder()
+						.url(MAVEN_JAVADOC_FORMAT.formatted(artifactInfo.groupId().replace('.', '/'),
+								artifactInfo.artifactId(),
+								artifactInfo.version(),
+								artifactInfo.artifactId(),
+								artifactInfo.version()))
+						.build())
+				.execute()) {
+			final ResponseBody body = response.body();
+			if (body == null) throw new IOException("Got no ResponseBody for " + response.request().url());
+
+			if (!response.isSuccessful()) throw new IOException("Got an unsuccessful response from " + response.request().url() + ", code: " + response.code());
+
+			Files.copy(body.byteStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+		}
+	}
+
+	static void extractZip(Path tempZip, Path targetDocsFolder) throws IOException {
+		if (Files.exists(targetDocsFolder)) {
+			for (Path path : Files.walk(targetDocsFolder).sorted(Comparator.reverseOrder()).toList()) {
+				Files.deleteIfExists(path);
+			}
+		}
+
+		try (FileSystem zfs = FileSystems.newFileSystem(tempZip)) {
+			final Path zfsRoot = zfs.getPath("/");
+
+			for (Path sourcePath : Files.walk(zfsRoot)
+					.filter(Files::isRegularFile)
+					.filter(p -> p.getFileName().toString().endsWith("html"))
+					.toList()) {
+				final Path targetPath = targetDocsFolder.resolve(zfsRoot.relativize(sourcePath).toString());
+
+				Files.createDirectories(targetPath.getParent());
+				Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+			}
+		}
 	}
 }
