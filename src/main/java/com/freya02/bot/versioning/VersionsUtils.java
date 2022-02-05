@@ -5,6 +5,7 @@ import com.freya02.bot.utils.HttpUtils;
 import com.google.gson.Gson;
 import net.dv8tion.jda.api.exceptions.ParsingException;
 import net.dv8tion.jda.api.utils.data.DataArray;
+import net.dv8tion.jda.api.utils.data.DataObject;
 import okhttp3.HttpUrl;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -16,7 +17,9 @@ import org.jsoup.nodes.Element;
 import java.io.IOException;
 import java.nio.file.*;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 
 public class VersionsUtils {
@@ -25,7 +28,7 @@ public class VersionsUtils {
 	public static final String M2_METADATA_FORMAT = "https://m2.dv8tion.net/releases/%s/%s/maven-metadata.xml";
 
 	@NotNull
-	static String getLatestHash(String ownerName, String repoName, String branchName) throws IOException {
+	public static String getLatestHash(String ownerName, String repoName, String branchName) throws IOException {
 		final HttpUrl url = HttpUrl.get("https://api.github.com/repos/%s/%s/commits".formatted(ownerName, repoName))
 				.newBuilder()
 				.addQueryParameter("page", "1")
@@ -42,6 +45,39 @@ public class VersionsUtils {
 			final String json = response.body().string();
 
 			return DataArray.fromJson(json).getObject(0).getString("sha").substring(0, 10);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	@NotNull
+	public static List<GithubBranch> getBranches(String ownerName, String repoName) throws IOException {
+		final HttpUrl url = HttpUrl.get("https://api.github.com/repos/%s/%s/branches".formatted(ownerName, repoName))
+				.newBuilder()
+				.addQueryParameter("page", "1")
+				.addQueryParameter("per_page", "30")
+				.build();
+
+		try (Response response = HttpUtils.CLIENT.newCall(new Request.Builder()
+						.url(url)
+						.header("Accept", "applications/vnd.github.v3+json")
+						.build())
+				.execute()) {
+
+			final String json = response.body().string();
+
+			final List<GithubBranch> branchList = new ArrayList<>();
+
+			final DataArray branches = DataArray.fromJson(json);
+			for (int i = 0; i < branches.length(); i++) {
+				final DataObject branchObject = branches.getObject(i);
+
+				final String name = branchObject.getString("name");
+				final String sha = branchObject.getObject("commit").getString("sha");
+
+				branchList.add(new GithubBranch(name, sha));
+			}
+
+			return branchList;
 		}
 	}
 
@@ -82,9 +118,7 @@ public class VersionsUtils {
 		}
 	}
 
-	public static BuildStatus waitForBuild(String ownerName, String repoName, String branchName) throws IOException {
-		final String hash = getLatestHash(ownerName, repoName, branchName);
-
+	public static BuildStatus waitForBuild(String hash) throws IOException {
 		BuildStatus buildStatus = BuildStatus.IN_PROGRESS;
 		for (int i = 0; i < 3; i++) {
 			while ((buildStatus = triggerBuild(hash)) == BuildStatus.IN_PROGRESS) {

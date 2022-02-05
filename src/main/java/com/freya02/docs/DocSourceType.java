@@ -7,7 +7,6 @@ import java.util.Arrays;
 import java.util.regex.Pattern;
 
 public enum DocSourceType {
-//	JDA(null), //TODO add JDA link once they are built with javadoc 17
 	JDA("http://localhost:63343/JDA", "net\\.dv8tion\\.jda.*"),
 	BOT_COMMANDS("http://localhost:63343/BotCommands", "com\\.freya02\\.botcommands\\.api.*"),
 	JAVA("https://docs.oracle.com/en/java/javase/17/docs/api",

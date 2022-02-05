@@ -17,6 +17,8 @@ import org.slf4j.Logger;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -25,7 +27,6 @@ import static com.freya02.bot.commands.slash.docs.CommonDocsHandlers.AUTOCOMPLET
 
 public class Versions {
 	private static final Logger LOGGER = Logging.getLogger();
-	private static final String BC_CURRENT_BRANCH = "2.3.0"; //TODO try to figure out how to get current branch, based of lexical order and following a version pattern ?
 
 	private final Path lastKnownVersionsFolderPath = Main.BOT_FOLDER.resolve("last_versions");
 	private final Path lastKnownBotCommandsPath = lastKnownVersionsFolderPath.resolve("BC.txt");
@@ -151,7 +152,9 @@ public class Versions {
 
 	private boolean checkLatestJDAVersionFromBC() {
 		try {
-			final ArtifactInfo jdaVersionFromBotCommands = retrieveJDAVersionFromBotCommands(BC_CURRENT_BRANCH);
+			final GithubBranch latestBranch = getLatestBranch("freya022", "BotCommands");
+
+			final ArtifactInfo jdaVersionFromBotCommands = retrieveJDAVersionFromBotCommands(latestBranch.branchName());
 
 			final boolean changed = !jdaVersionFromBotCommands.equals(this.jdaVersionFromBotCommands);
 			if (changed) {
@@ -170,7 +173,7 @@ public class Versions {
 
 	private boolean checkLatestBCVersion(BContext context) {
 		try {
-			final ArtifactInfo latestBotCommandsVersion = retrieveLatestBotCommandsVersion(BC_CURRENT_BRANCH);
+			final ArtifactInfo latestBotCommandsVersion = retrieveLatestBotCommandsVersion();
 
 			final boolean changed = !latestBotCommandsVersion.equals(this.latestBotCommandsVersion);
 			if (changed) {
@@ -178,7 +181,7 @@ public class Versions {
 
 				LOGGER.info("Downloading BC javadocs");
 
-				final BuildStatus buildStatus = VersionsUtils.waitForBuild("freya022", "BotCommands", BC_CURRENT_BRANCH);
+				final BuildStatus buildStatus = VersionsUtils.waitForBuild(latestBotCommandsVersion.version());
 
 				if (buildStatus != BuildStatus.OK) {
 					LOGGER.error("BC build status is not OK, status: {}", buildStatus);
@@ -236,14 +239,26 @@ public class Versions {
 	}
 
 	@NotNull
-	private ArtifactInfo retrieveLatestBotCommandsVersion(String branchName) throws IOException {
+	private ArtifactInfo retrieveLatestBotCommandsVersion() throws IOException {
 		final String ownerName = "freya022";
 		final String groupId = "com.github." + ownerName;
 		final String artifactId = "BotCommands";
 
+		final GithubBranch latestBranch = getLatestBranch(ownerName, artifactId);
+
 		return new ArtifactInfo(groupId,
 				artifactId,
-				VersionsUtils.getLatestHash(ownerName, artifactId, branchName));
+				latestBranch.latestCommitSha10());
+	}
+
+	@NotNull
+	public static GithubBranch getLatestBranch(String ownerName, String artifactId) throws IOException {
+		final List<GithubBranch> branches = VersionsUtils.getBranches(ownerName, artifactId);
+
+		return branches.stream()
+				.filter(s -> s.branchName().matches("\\d\\.\\d\\.\\d"))
+				.max(Comparator.comparing(GithubBranch::branchName))
+				.orElseThrow();
 	}
 
 	@NotNull

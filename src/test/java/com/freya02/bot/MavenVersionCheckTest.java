@@ -43,7 +43,7 @@ public class MavenVersionCheckTest {
 
 		final ArtifactInfo latestBotCommandsVersion = retrieveLatestBotCommandsVersion("2.3.0");
 
-		final BuildStatus buildStatus = VersionsUtils.waitForBuild("freya022", "BotCommands", "2.3.0");
+		final BuildStatus buildStatus = VersionsUtils.waitForBuild(VersionsUtils.getLatestHash("freya022", "BotCommands", "2.3.0"));
 
 		if (buildStatus != BuildStatus.OK) {
 			return;
