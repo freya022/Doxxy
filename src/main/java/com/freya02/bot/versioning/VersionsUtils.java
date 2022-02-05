@@ -1,7 +1,8 @@
 package com.freya02.bot.versioning;
 
-import com.freya02.bot.docs.BuildStatus;
 import com.freya02.bot.utils.HttpUtils;
+import com.freya02.bot.versioning.github.GithubBranch;
+import com.freya02.bot.versioning.jitpack.BuildStatus;
 import com.google.gson.Gson;
 import net.dv8tion.jda.api.exceptions.ParsingException;
 import net.dv8tion.jda.api.utils.data.DataArray;

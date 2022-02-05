@@ -1,4 +1,4 @@
-package com.freya02.bot.docs;
+package com.freya02.bot.versioning.jitpack;
 
 public enum BuildStatus {
 	OK,

@@ -1,4 +1,4 @@
-package com.freya02.bot.versioning;
+package com.freya02.bot.versioning.github;
 
 public record GithubBranch(String branchName, String latestCommitSha) {
 	public String latestCommitSha10() {

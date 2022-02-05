@@ -2,9 +2,10 @@ package com.freya02.bot.versioning;
 
 import com.freya02.bot.Main;
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers;
-import com.freya02.bot.docs.BuildStatus;
 import com.freya02.bot.docs.DocIndexMap;
 import com.freya02.bot.utils.HttpUtils;
+import com.freya02.bot.versioning.github.GithubBranch;
+import com.freya02.bot.versioning.jitpack.BuildStatus;
 import com.freya02.botcommands.api.BContext;
 import com.freya02.botcommands.api.Logging;
 import com.freya02.docs.DocSourceType;
