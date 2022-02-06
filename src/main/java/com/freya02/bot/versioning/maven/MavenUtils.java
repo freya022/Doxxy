@@ -16,9 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 public class MavenUtils {
-	public static final String MAVEN_METADATA_FORMAT = "https://repo.maven.apache.org/maven2/%s/%s/maven-metadata.xml";
 	public static final String MAVEN_JAVADOC_FORMAT = "https://repo1.maven.org/maven2/%s/%s/%s/%s-%s-javadoc.jar";
-	public static final String M2_METADATA_FORMAT = "https://m2.dv8tion.net/releases/%s/%s/maven-metadata.xml";
 
 	@NotNull
 	public static String getLatestMavenVersion(String formatUrl, String groupId, String artifactId) throws IOException {

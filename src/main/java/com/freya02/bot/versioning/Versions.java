@@ -3,11 +3,13 @@ package com.freya02.bot.versioning;
 import com.freya02.bot.Main;
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers;
 import com.freya02.bot.docs.DocIndexMap;
-import com.freya02.bot.versioning.github.GithubBranch;
-import com.freya02.bot.versioning.github.GithubUtils;
 import com.freya02.bot.versioning.jitpack.BuildStatus;
 import com.freya02.bot.versioning.jitpack.JitpackUtils;
+import com.freya02.bot.versioning.jitpack.JitpackVersionChecker;
+import com.freya02.bot.versioning.maven.MavenProjectDependencyVersionChecker;
 import com.freya02.bot.versioning.maven.MavenUtils;
+import com.freya02.bot.versioning.maven.MavenVersionChecker;
+import com.freya02.bot.versioning.maven.RepoType;
 import com.freya02.botcommands.api.BContext;
 import com.freya02.botcommands.api.Logging;
 import com.freya02.docs.DocSourceType;
@@ -25,22 +27,25 @@ import static com.freya02.bot.commands.slash.docs.CommonDocsHandlers.AUTOCOMPLET
 public class Versions {
 	private static final Logger LOGGER = Logging.getLogger();
 
-	private final Path lastKnownVersionsFolderPath = Main.BOT_FOLDER.resolve("last_versions");
-	private final Path lastKnownBotCommandsPath = lastKnownVersionsFolderPath.resolve("BC.txt");
-	private final Path lastKnownJDAFromBCPath = lastKnownVersionsFolderPath.resolve("JDA_from_BC.txt");
-	private final Path lastKnownJDA4Path = lastKnownVersionsFolderPath.resolve("JDA4.txt");
-	private final Path lastKnownJDA5Path = lastKnownVersionsFolderPath.resolve("JDA5.txt");
+	private static final Path lastKnownVersionsFolderPath = Main.BOT_FOLDER.resolve("last_versions");
+	private static final Path lastKnownBotCommandsPath = lastKnownVersionsFolderPath.resolve("BC.txt");
+	private static final Path lastKnownJDAFromBCPath = lastKnownVersionsFolderPath.resolve("JDA_from_BC.txt");
+	private static final Path lastKnownJDA4Path = lastKnownVersionsFolderPath.resolve("JDA4.txt");
+	private static final Path lastKnownJDA5Path = lastKnownVersionsFolderPath.resolve("JDA5.txt");
 
-	private ArtifactInfo latestBotCommandsVersion;
-	private ArtifactInfo jdaVersionFromBotCommands;
-	private ArtifactInfo latestJDA4Version;
-	private ArtifactInfo latestJDA5Version;
+	private static final Path JDA_DOCS_FOLDER = Main.JAVADOCS_PATH.resolve("JDA");
+	private static final Path BC_DOCS_FOLDER = Main.JAVADOCS_PATH.resolve("BotCommands");
+
+	private final JitpackVersionChecker bcChecker;
+	private final MavenProjectDependencyVersionChecker jdaVersionFromBCChecker;
+	private final MavenVersionChecker jda4Checker;
+	private final MavenVersionChecker jda5Checker;
 
 	public Versions() throws IOException {
-		this.latestBotCommandsVersion = readLastKnownVersion(lastKnownBotCommandsPath);
-		this.jdaVersionFromBotCommands = readLastKnownVersion(lastKnownJDAFromBCPath);
-		this.latestJDA4Version = readLastKnownVersion(lastKnownJDA4Path);
-		this.latestJDA5Version = readLastKnownVersion(lastKnownJDA5Path);
+		this.bcChecker = new JitpackVersionChecker(lastKnownBotCommandsPath, "freya022", "com.github.freya022", "BotCommands");
+		this.jdaVersionFromBCChecker = new MavenProjectDependencyVersionChecker(lastKnownJDAFromBCPath, "freya022", "BotCommands", "JDA");
+		this.jda4Checker = new MavenVersionChecker(lastKnownJDA4Path, RepoType.M2, "net.dv8tion", "JDA");
+		this.jda5Checker = new MavenVersionChecker(lastKnownJDA5Path, RepoType.MAVEN, "net.dv8tion", "JDA");
 
 		Runtime.getRuntime().addShutdownHook(new Thread(this::saveLastKnownVersions));
 	}
@@ -49,17 +54,13 @@ public class Versions {
 		try {
 			Files.createDirectories(lastKnownVersionsFolderPath);
 
-			Files.writeString(lastKnownBotCommandsPath, latestBotCommandsVersion.toFileString());
-			Files.writeString(lastKnownJDAFromBCPath, jdaVersionFromBotCommands.toFileString());
-			Files.writeString(lastKnownJDA4Path, latestJDA4Version.toFileString());
-			Files.writeString(lastKnownJDA5Path, latestJDA5Version.toFileString());
+			bcChecker.saveVersion();
+			jdaVersionFromBCChecker.saveVersion();
+			jda4Checker.saveVersion();
+			jda5Checker.saveVersion();
 		} catch (IOException e) {
 			LOGGER.error("Unable to save last versions", e);
 		}
-	}
-
-	private ArtifactInfo readLastKnownVersion(Path path) throws IOException {
-		return ArtifactInfo.fromFileString(path);
 	}
 
 	public void initUpdateLoop(BContext context) throws IOException {
@@ -81,36 +82,33 @@ public class Versions {
 			DocIndexMap.getInstance().get(DocSourceType.JDA).reindex();
 		}
 
-		//First index for Java's docs
+		scheduledExecutorService.scheduleWithFixedDelay(() -> checkLatestBCVersion(context), 30, 30, TimeUnit.MINUTES);
+		scheduledExecutorService.scheduleWithFixedDelay(this::checkLatestJDAVersionFromBC, 0, 30, TimeUnit.MINUTES);
+		scheduledExecutorService.scheduleWithFixedDelay(this::checkLatestJDA4Version, 0, 30, TimeUnit.MINUTES);
+		scheduledExecutorService.scheduleWithFixedDelay(() -> checkLatestJDA5Version(context), 30, 30, TimeUnit.MINUTES);
+
+		//First index for Java's docs, may take some time
 		DocIndexMap.getInstance().get(DocSourceType.JAVA).reindex();
 
 		//Once we loaded everything, invalidate caches if the user had time to use the commands before docs were loaded
 		for (String autocompleteName : AUTOCOMPLETE_NAMES) {
 			context.invalidateAutocompletionCache(autocompleteName);
 		}
-
-		scheduledExecutorService.scheduleWithFixedDelay(() -> checkLatestBCVersion(context), 30, 30, TimeUnit.MINUTES);
-		scheduledExecutorService.scheduleWithFixedDelay(this::checkLatestJDAVersionFromBC, 0, 30, TimeUnit.MINUTES);
-		scheduledExecutorService.scheduleWithFixedDelay(this::checkLatestJDA4Version, 0, 30, TimeUnit.MINUTES);
-		scheduledExecutorService.scheduleWithFixedDelay(() -> checkLatestJDA5Version(context), 30, 30, TimeUnit.MINUTES);
 	}
 
 	private boolean checkLatestJDA5Version(BContext context) {
 		try {
-			final ArtifactInfo latestJDA5Version = VersionsUtils.retrieveLatestJDA5Version();
+			final boolean changed = jda5Checker.checkVersion();
 
-			final boolean changed = !latestJDA5Version.equals(this.latestJDA5Version);
 			if (changed) {
-				LOGGER.info("JDA 5 version updated, went from {} to {}", this.latestJDA5Version.version(), latestJDA5Version.version());
+				LOGGER.info("JDA 5 version updated to {}", jda5Checker.getLatest().version());
 
 				LOGGER.info("Downloading JDA 5 javadocs");
 
 				final Path tempZip = Files.createTempFile("JDA5Docs", ".zip");
-				MavenUtils.downloadMavenDocs(latestJDA5Version, tempZip);
+				MavenUtils.downloadMavenDocs(jda5Checker.getLatest(), tempZip);
 
-				final Path targetDocsFolder = Main.JAVADOCS_PATH.resolve("JDA");
-
-				VersionsUtils.extractZip(tempZip, targetDocsFolder);
+				VersionsUtils.extractZip(tempZip, JDA_DOCS_FOLDER);
 
 				Files.deleteIfExists(tempZip);
 
@@ -123,8 +121,6 @@ public class Versions {
 				}
 			}
 
-			this.latestJDA5Version = latestJDA5Version;
-
 			return changed;
 		} catch (IOException e) {
 			LOGGER.error("An exception occurred while retrieving versions", e);
@@ -135,50 +131,38 @@ public class Versions {
 
 	private void checkLatestJDA4Version() {
 		try {
-			final ArtifactInfo latestJDA4Version = VersionsUtils.retrieveLatestJDA4Version();
+			final boolean changed = jda4Checker.checkVersion();
 
-			if (!latestJDA4Version.equals(this.latestJDA4Version)) {
-				LOGGER.info("JDA 4 version updated, went from {} to {}", this.latestJDA4Version.version(), latestJDA4Version.version());
+			if (changed) {
+				LOGGER.info("JDA 4 version updated to {}", jda4Checker.getLatest().version());
 			}
-
-			this.latestJDA4Version = latestJDA4Version;
 		} catch (IOException e) {
 			LOGGER.error("An exception occurred while retrieving versions", e);
 		}
 	}
 
-	private boolean checkLatestJDAVersionFromBC() {
+	private void checkLatestJDAVersionFromBC() {
 		try {
-			final GithubBranch latestBranch = GithubUtils.getLatestBranch("freya022", "BotCommands");
+			final boolean changed = jdaVersionFromBCChecker.checkVersion();
 
-			final ArtifactInfo jdaVersionFromBotCommands = VersionsUtils.retrieveJDAVersionFromBotCommands(latestBranch.branchName());
-
-			final boolean changed = !jdaVersionFromBotCommands.equals(this.jdaVersionFromBotCommands);
 			if (changed) {
-				LOGGER.info("BotCommands's JDA version updated, went from {} to {}", this.jdaVersionFromBotCommands.version(), jdaVersionFromBotCommands.version());
+				LOGGER.info("BotCommands's JDA version updated to {}", jdaVersionFromBCChecker.getLatest().version());
 			}
-
-			this.jdaVersionFromBotCommands = jdaVersionFromBotCommands;
-
-			return changed;
 		} catch (IOException e) {
 			LOGGER.error("An exception occurred while retrieving versions", e);
 		}
-
-		return false;
 	}
 
 	private boolean checkLatestBCVersion(BContext context) {
 		try {
-			final ArtifactInfo latestBotCommandsVersion = VersionsUtils.retrieveLatestBotCommandsVersion();
+			final boolean changed = bcChecker.checkVersion();
 
-			final boolean changed = !latestBotCommandsVersion.equals(this.latestBotCommandsVersion);
 			if (changed) {
-				LOGGER.info("BotCommands version updated, went from {} to {}", this.latestBotCommandsVersion.version(), latestBotCommandsVersion.version());
+				LOGGER.info("BotCommands version updated to {}", bcChecker.getLatest().version());
 
 				LOGGER.info("Downloading BC javadocs");
 
-				final BuildStatus buildStatus = JitpackUtils.waitForBuild(latestBotCommandsVersion.version());
+				final BuildStatus buildStatus = JitpackUtils.waitForBuild(bcChecker.getLatest().version());
 
 				if (buildStatus != BuildStatus.OK) {
 					LOGGER.error("BC build status is not OK, status: {}", buildStatus);
@@ -187,11 +171,9 @@ public class Versions {
 				}
 
 				final Path tempZip = Files.createTempFile("BotCommandsDocs", ".zip");
-				JitpackUtils.downloadJitpackDocs(latestBotCommandsVersion, tempZip);
+				JitpackUtils.downloadJitpackDocs(bcChecker.getLatest(), tempZip);
 
-				final Path targetDocsFolder = Main.JAVADOCS_PATH.resolve("BotCommands");
-
-				VersionsUtils.extractZip(tempZip, targetDocsFolder);
+				VersionsUtils.extractZip(tempZip, BC_DOCS_FOLDER);
 
 				Files.deleteIfExists(tempZip);
 
@@ -204,8 +186,6 @@ public class Versions {
 				}
 			}
 
-			this.latestBotCommandsVersion = latestBotCommandsVersion;
-
 			return changed;
 		} catch (IOException e) {
 			LOGGER.error("An exception occurred while retrieving versions", e);
@@ -215,18 +195,18 @@ public class Versions {
 	}
 
 	public ArtifactInfo getLatestBotCommandsVersion() {
-		return latestBotCommandsVersion;
+		return bcChecker.getLatest();
 	}
 
 	public ArtifactInfo getJdaVersionFromBotCommands() {
-		return jdaVersionFromBotCommands;
+		return jdaVersionFromBCChecker.getLatest();
 	}
 
 	public ArtifactInfo getLatestJDA4Version() {
-		return latestJDA4Version;
+		return jda4Checker.getLatest();
 	}
 
 	public ArtifactInfo getLatestJDA5Version() {
-		return latestJDA5Version;
+		return jda5Checker.getLatest();
 	}
 }
