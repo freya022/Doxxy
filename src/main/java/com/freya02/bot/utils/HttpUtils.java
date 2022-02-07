@@ -2,6 +2,7 @@ package com.freya02.bot.utils;
 
 import com.freya02.bot.Main;
 import com.freya02.botcommands.api.Logging;
+import com.freya02.docs.DocSourceType;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -10,6 +11,9 @@ import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
@@ -61,15 +65,17 @@ public class HttpUtils {
 
 	@NotNull
 	public static String downloadBody(String url) throws IOException {
-		try (Response response = CLIENT.newCall(new Request.Builder()
-				.url(url)
-				.build()
-		).execute()) {
-			final ResponseBody body = response.body();
-			if (body == null) throw new IllegalArgumentException("Got no body from url: " + url);
+		return retrieveFromCacheOrGet(url, () -> {
+			try (Response response = CLIENT.newCall(new Request.Builder()
+					.url(url)
+					.build()
+			).execute()) {
+				final ResponseBody body = response.body();
+				if (body == null) throw new IllegalArgumentException("Got no body from url: " + url);
 
-			return body.string();
-		}
+				return body.string();
+			}
+		});
 	}
 
 	/**
@@ -77,19 +83,47 @@ public class HttpUtils {
 	 */
 	@Nullable
 	public static String downloadBodyIfNotCached(String url) throws IOException {
-		try (Response response = CLIENT.newCall(new Request.Builder()
-				.cacheControl(new CacheControl.Builder() //TODO check if it works correctly
-						.maxAge(0, TimeUnit.SECONDS)
-						.build())
-				.url(url)
-				.build()
-		).execute()) {
-			if (response.cacheResponse() != null) return null;
+		return retrieveFromCacheOrGet(url, () -> {
+			try (Response response = CLIENT.newCall(new Request.Builder()
+					.cacheControl(new CacheControl.Builder() //TODO check if it works correctly
+							.maxAge(0, TimeUnit.SECONDS)
+							.build())
+					.url(url)
+					.build()
+			).execute()) {
+				if (response.cacheResponse() != null) return null;
 
-			final ResponseBody body = response.body();
-			if (body == null) throw new IllegalArgumentException("Got no body from url: " + url);
+				final ResponseBody body = response.body();
+				if (body == null) throw new IllegalArgumentException("Got no body from url: " + url);
 
-			return body.string();
+				return body.string();
+			}
+		});
+	}
+
+	private static String retrieveFromCacheOrGet(String url, IOSupplier<String> contentSupplier) throws IOException {
+		if (url.startsWith(DocSourceType.JAVA.getSourceUrl())) {
+			Path finalPath = Main.JAVADOCS_PATH.resolve("Java");
+
+			final String[] segments = url.substring(DocSourceType.JAVA.getSourceUrl().length())
+					.split("#")[0]
+					.split("/");
+			for (String segment : segments) {
+				finalPath = finalPath.resolve(segment);
+			}
+
+			if (Files.exists(finalPath)) {
+				return Files.readString(finalPath);
+			} else {
+				final String content = contentSupplier.get();
+
+				Files.createDirectories(finalPath.getParent());
+				Files.writeString(finalPath, content, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+
+				return content;
+			}
+		} else {
+			return contentSupplier.get();
 		}
 	}
 

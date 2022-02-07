@@ -20,6 +20,8 @@ public class DocsTest3 {
 //		final ClassDoc arraysTest = session.retrieveDoc("https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Arrays.html");
 //		final ClassDoc enumTest = session.retrieveDoc("https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/file/StandardCopyOption.html");
 
+//		final Document document = HttpUtils.getDocument("https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/file/StandardCopyOption.html");
+
 		System.out.println();
 	}
 }

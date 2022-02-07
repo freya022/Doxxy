@@ -62,6 +62,8 @@ public class DocIndex {
 
 		LOGGER.info("Re-indexed docs for {}", sourceType.name());
 
+		System.gc(); //Very effective
+
 		return this;
 	}
 
