@@ -28,7 +28,7 @@ public class JitpackUtils {
 
 			if (response.code() == 200 && status.equalsIgnoreCase("ok")) {
 				return BuildStatus.OK;
-			} else if (response.code() == 404 && status.equalsIgnoreCase("ok")) {
+			} else if (response.code() == 404 && (status.equalsIgnoreCase("ok") || status.equalsIgnoreCase("none"))) {
 				return BuildStatus.IN_PROGRESS;
 			} else if (response.code() == 404 && status.equalsIgnoreCase("error")) {
 				return BuildStatus.ERROR;

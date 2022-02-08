@@ -83,7 +83,7 @@ public class HttpUtils {
 	 */
 	@Nullable
 	public static String downloadBodyIfNotCached(String url) throws IOException {
-		return retrieveFromCacheOrGet(url, () -> {
+		return retrieveFromCacheOrGetIfNotCached(url, () -> {
 			try (Response response = CLIENT.newCall(new Request.Builder()
 					.cacheControl(new CacheControl.Builder() //TODO check if it works correctly
 							.maxAge(0, TimeUnit.SECONDS)
@@ -101,7 +101,17 @@ public class HttpUtils {
 		});
 	}
 
+	@NotNull
 	private static String retrieveFromCacheOrGet(String url, IOSupplier<String> contentSupplier) throws IOException {
+		return retrieveFromCacheOrGet(url, contentSupplier, Files::readString);
+	}
+
+	@Nullable
+	private static String retrieveFromCacheOrGetIfNotCached(String url, IOSupplier<String> contentSupplier) throws IOException {
+		return retrieveFromCacheOrGet(url, contentSupplier, p -> null);
+	}
+
+	private static String retrieveFromCacheOrGet(String url, IOSupplier<String> contentSupplier, IOFunction<Path, String> onCacheHitSupplier) throws IOException {
 		if (url.startsWith(DocSourceType.JAVA.getSourceUrl())) {
 			Path finalPath = Main.JAVADOCS_PATH.resolve("Java");
 
@@ -113,7 +123,7 @@ public class HttpUtils {
 			}
 
 			if (Files.exists(finalPath)) {
-				return Files.readString(finalPath);
+				return onCacheHitSupplier.get(finalPath);
 			} else {
 				final String content = contentSupplier.get();
 

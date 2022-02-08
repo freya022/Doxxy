@@ -171,6 +171,7 @@ public class Versions {
 				}
 
 				final Path tempZip = Files.createTempFile("BotCommandsDocs", ".zip");
+				//TODO git clone / fetch and then mvn javadoc:javadoc, grab from target/site/apidocs
 				JitpackUtils.downloadJitpackDocs(bcChecker.getLatest(), tempZip);
 
 				VersionsUtils.extractZip(tempZip, BC_DOCS_FOLDER);

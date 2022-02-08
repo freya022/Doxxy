@@ -18,7 +18,7 @@ public class DocWebServer {
 	private static final Logger LOGGER = Logging.getLogger();
 
 	public static void startDocWebServer() throws IOException {
-		final HttpServer server = HttpServer.create(new InetSocketAddress(63343), 0);
+		final HttpServer server = HttpServer.create(new InetSocketAddress(25566), 0);
 
 		server.createContext("/", exchange -> {
 			if (!exchange.getRemoteAddress().getAddress().isLoopbackAddress()) {

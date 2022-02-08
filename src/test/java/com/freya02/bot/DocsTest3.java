@@ -1,5 +1,9 @@
 package com.freya02.bot;
 
+import com.freya02.docs.ClassDocs;
+import com.freya02.docs.DocSourceType;
+import com.freya02.docs.DocWebServer;
+
 public class DocsTest3 {
 	public static void main(String[] args) throws Exception {
 //		final ClassDoc doc = new ClassDoc("http://localhost:63342/DocsBot/BotCommands_docs/com/freya02/botcommands/api/components/builder/LambdaComponentBuilder.html");
@@ -19,6 +23,9 @@ public class DocsTest3 {
 //		final ClassDoc deprecationFieldTest = session.retrieveDoc("https://docs.oracle.com/en/java/javase/17/docs/api/jdk.accessibility/com/sun/java/accessibility/util/AWTEventMonitor.html#containerListener");
 //		final ClassDoc arraysTest = session.retrieveDoc("https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Arrays.html");
 //		final ClassDoc enumTest = session.retrieveDoc("https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/file/StandardCopyOption.html");
+
+		DocWebServer.startDocWebServer();
+		final ClassDocs updatedSource = ClassDocs.getUpdatedSource(DocSourceType.BOT_COMMANDS);
 
 //		final Document document = HttpUtils.getDocument("https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/file/StandardCopyOption.html");
 
