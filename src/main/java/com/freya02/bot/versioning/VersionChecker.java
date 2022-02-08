@@ -6,7 +6,7 @@ import java.nio.file.Path;
 
 public abstract class VersionChecker {
 	private final Path lastSavedPath;
-	protected ArtifactInfo latest;
+	protected ArtifactInfo latest; //TODO cache latest and write once version update has completed, save to file.
 
 	protected VersionChecker(Path lastSavedPath) throws IOException {
 		this.lastSavedPath = lastSavedPath;

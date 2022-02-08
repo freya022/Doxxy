@@ -3,8 +3,8 @@ package com.freya02.bot.versioning;
 import com.freya02.bot.Main;
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers;
 import com.freya02.bot.docs.DocIndexMap;
-import com.freya02.bot.versioning.jitpack.BuildStatus;
-import com.freya02.bot.versioning.jitpack.JitpackUtils;
+import com.freya02.bot.utils.ProcessUtils;
+import com.freya02.bot.versioning.github.GithubBranch;
 import com.freya02.bot.versioning.jitpack.JitpackVersionChecker;
 import com.freya02.bot.versioning.maven.MavenProjectDependencyVersionChecker;
 import com.freya02.bot.versioning.maven.MavenUtils;
@@ -18,6 +18,8 @@ import org.slf4j.Logger;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Comparator;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -160,25 +162,45 @@ public class Versions {
 			if (changed) {
 				LOGGER.info("BotCommands version updated to {}", bcChecker.getLatest().version());
 
-				LOGGER.info("Downloading BC javadocs");
-
-				final BuildStatus buildStatus = JitpackUtils.waitForBuild(bcChecker.getLatest().version());
-
-				if (buildStatus != BuildStatus.OK) {
-					LOGGER.error("BC build status is not OK, status: {}", buildStatus);
-
-					return false;
+				final Path BCRepoPath = Main.REPOS_PATH.resolve("BotCommands");
+				final boolean needClone = Files.notExists(BCRepoPath);
+				if (needClone) {
+					ProcessUtils.runAndWait("git clone https://github.com/freya022/BotCommands.git", Main.REPOS_PATH);
+				} else {
+					ProcessUtils.runAndWait("git fetch", BCRepoPath);
 				}
 
-				final Path tempZip = Files.createTempFile("BotCommandsDocs", ".zip");
-				//TODO git clone / fetch and then mvn javadoc:javadoc, grab from target/site/apidocs
-				JitpackUtils.downloadJitpackDocs(bcChecker.getLatest(), tempZip);
+				final GithubBranch latestBranch = bcChecker.getLatestBranch();
+				ProcessUtils.runAndWait("git switch " + latestBranch.branchName(), BCRepoPath);
 
-				VersionsUtils.extractZip(tempZip, BC_DOCS_FOLDER);
+				if (!needClone) {
+					ProcessUtils.runAndWait("git pull", BCRepoPath);
+				}
 
-				Files.deleteIfExists(tempZip);
+				if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+					ProcessUtils.runAndWait("mvn.cmd javadoc:javadoc", BCRepoPath);
+				} else {
+					throw new UnsupportedOperationException(); //TODO linux
+				}
 
-				LOGGER.info("Downloaded BC javadocs");
+				final Path targetDocsFolder = BC_DOCS_FOLDER;
+
+				if (Files.exists(targetDocsFolder)) {
+					for (Path path : Files.walk(targetDocsFolder).sorted(Comparator.reverseOrder()).toList()) {
+						Files.deleteIfExists(path);
+					}
+				}
+
+				final Path apiDocsPath = BCRepoPath.resolve("target").resolve("site").resolve("apidocs");
+				for (Path sourcePath : Files.walk(apiDocsPath)
+						.filter(Files::isRegularFile)
+						.filter(p -> p.getFileName().toString().endsWith("html"))
+						.toList()) {
+					final Path targetPath = targetDocsFolder.resolve(apiDocsPath.relativize(sourcePath).toString());
+
+					Files.createDirectories(targetPath.getParent());
+					Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+				}
 
 				DocIndexMap.refreshAndInvalidateIndex(DocSourceType.BOT_COMMANDS);
 
@@ -188,7 +210,7 @@ public class Versions {
 			}
 
 			return changed;
-		} catch (IOException e) {
+		} catch (IOException | InterruptedException e) {
 			LOGGER.error("An exception occurred while retrieving versions", e);
 		}
 

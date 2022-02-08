@@ -38,6 +38,11 @@ public class DocIndexCache {
 	private final List<String> allFullFieldSignatures = new ArrayList<>();
 	private final IndexPaths indexPaths;
 
+	//TODO switch to a custom single-file data solution
+	// Maintain a .index file with offsets and lengths of the json files, a checksum at the start (or end) to check before opening a data file
+	// Reason: ZFS maintains data in memory and can become a memory hog
+	//  This also allows us to close ZIP files when they have been written to
+	// Use ReadWriteReentrantLock ?
 	private DocIndexCache(IndexPaths indexPaths) {
 		this.indexPaths = indexPaths;
 	}

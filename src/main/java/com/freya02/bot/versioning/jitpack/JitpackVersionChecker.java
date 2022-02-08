@@ -13,6 +13,8 @@ public class JitpackVersionChecker extends VersionChecker {
 	private final String groupId;
 	private final String artifactId;
 
+	private GithubBranch latestBranch;
+
 	public JitpackVersionChecker(Path lastSavedPath, String ownerName, String groupId, String artifactId) throws IOException {
 		super(lastSavedPath);
 
@@ -23,7 +25,7 @@ public class JitpackVersionChecker extends VersionChecker {
 
 	@Override
 	public boolean checkVersion() throws IOException {
-		final GithubBranch latestBranch = GithubUtils.getLatestBranch(ownerName, artifactId);
+		this.latestBranch = GithubUtils.getLatestBranch(ownerName, artifactId);
 
 		final ArtifactInfo latestVersion = new ArtifactInfo(groupId,
 				artifactId,
@@ -34,5 +36,9 @@ public class JitpackVersionChecker extends VersionChecker {
 		this.latest = latestVersion;
 
 		return changed;
+	}
+
+	public GithubBranch getLatestBranch() {
+		return latestBranch;
 	}
 }

@@ -22,6 +22,7 @@ public class Main {
 	public static final Path BOT_FOLDER = Path.of(System.getProperty("user.home"), "Downloads", "DocsBot");
 	public static final Path CACHE_PATH = BOT_FOLDER.resolve("docs_cache");
 	public static final Path JAVADOCS_PATH = BOT_FOLDER.resolve("javadocs");
+	public static final Path REPOS_PATH = BOT_FOLDER.resolve("repos");
 
 	private static final Logger LOGGER = Logging.getLogger();
 
@@ -32,6 +33,7 @@ public class Main {
 			}
 
 			Files.createDirectories(CACHE_PATH);
+			Files.createDirectories(REPOS_PATH);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
