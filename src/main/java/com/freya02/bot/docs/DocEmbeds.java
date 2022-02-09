@@ -23,7 +23,9 @@ public class DocEmbeds {
 		fillDeprecation(doc, builder);
 
 		fillDetails(builder, doc, EnumSet.of(
-				DocDetailType.SEE_ALSO
+				DocDetailType.SEE_ALSO, //Excluded because it's already included below
+				DocDetailType.ENCLOSING_CLASS,
+				DocDetailType.ENCLOSING_INTERFACE
 		));
 
 		addSeeAlso(builder, doc.getSeeAlso(), getDocURL(doc));
@@ -55,7 +57,9 @@ public class DocEmbeds {
 		fillDeprecation(methodDoc, builder);
 
 		fillDetails(builder, methodDoc, EnumSet.of(
-				DocDetailType.SEE_ALSO
+				DocDetailType.SEE_ALSO, //Excluded because it's already included below
+				DocDetailType.ENCLOSING_CLASS,
+				DocDetailType.ENCLOSING_INTERFACE
 		));
 
 		addSeeAlso(builder, methodDoc.getSeeAlso(), getDocURL(methodDoc));
@@ -77,7 +81,9 @@ public class DocEmbeds {
 		fillDeprecation(fieldDoc, builder);
 
 		fillDetails(builder, fieldDoc, EnumSet.of(
-				DocDetailType.SEE_ALSO
+				DocDetailType.SEE_ALSO, //Excluded because it's already included below
+				DocDetailType.ENCLOSING_CLASS,
+				DocDetailType.ENCLOSING_INTERFACE
 		));
 
 		addSeeAlso(builder, fieldDoc.getSeeAlso(), getDocURL(fieldDoc));
