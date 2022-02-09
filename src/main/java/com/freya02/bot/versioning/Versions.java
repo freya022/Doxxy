@@ -176,7 +176,7 @@ public class Versions {
 				final GithubBranch latestBranch = bcChecker.getLatestBranch();
 
 				LOGGER.debug("Switching to BC branch {}", latestBranch.branchName());
-				ProcessUtils.runAndWait("git switch " + latestBranch.branchName(), BCRepoPath);
+				ProcessUtils.runAndWait("git checkout " + latestBranch.branchName(), BCRepoPath);
 
 				if (!needClone) {
 					LOGGER.debug("Pulling changes from BC branch {}", latestBranch.branchName());
