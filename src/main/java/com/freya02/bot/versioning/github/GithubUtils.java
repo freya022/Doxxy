@@ -21,7 +21,7 @@ public class GithubUtils {
 		return branches.stream()
 				.filter(s -> s.branchName().matches("\\d\\.\\d\\.\\d"))
 				.max(Comparator.comparing(GithubBranch::branchName))
-				.orElseThrow();
+				.orElseGet(() -> branches.get(0));
 	}
 
 	@NotNull
