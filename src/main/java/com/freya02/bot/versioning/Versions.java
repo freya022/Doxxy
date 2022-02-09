@@ -90,19 +90,19 @@ public class Versions {
 			final boolean changed = jda5Checker.checkVersion();
 
 			if (changed) {
-				LOGGER.info("JDA 5 version updated to {}", jda5Checker.getLatest().version());
+				LOGGER.info("JDA 5 version changed");
 
-				LOGGER.info("Downloading JDA 5 javadocs");
+				LOGGER.debug("Downloading JDA 5 javadocs");
 
 				final Path tempZip = Files.createTempFile("JDA5Docs", ".zip");
 				MavenUtils.downloadMavenDocs(jda5Checker.getLatest(), tempZip);
 
+				LOGGER.debug("Extracting JDA 5 javadocs");
 				VersionsUtils.extractZip(tempZip, JDA_DOCS_FOLDER);
 
 				Files.deleteIfExists(tempZip);
 
-				LOGGER.info("Downloaded JDA 5 javadocs");
-
+				LOGGER.debug("Invalidating JDA 5 index");
 				DocIndexMap.refreshAndInvalidateIndex(DocSourceType.JDA);
 
 				for (String handlerName : CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
@@ -110,6 +110,8 @@ public class Versions {
 				}
 
 				jda5Checker.saveVersion();
+
+				LOGGER.info("JDA 5 version updated to {}", jda5Checker.getLatest().version());
 			}
 
 			return changed;
@@ -125,9 +127,11 @@ public class Versions {
 			final boolean changed = jda4Checker.checkVersion();
 
 			if (changed) {
-				LOGGER.info("JDA 4 version updated to {}", jda4Checker.getLatest().version());
+				LOGGER.info("JDA 4 version changed");
 
 				jda4Checker.saveVersion();
+
+				LOGGER.info("JDA 4 version updated to {}", jda4Checker.getLatest().version());
 			}
 		} catch (IOException e) {
 			LOGGER.error("An exception occurred while retrieving versions", e);
@@ -139,9 +143,11 @@ public class Versions {
 			final boolean changed = jdaVersionFromBCChecker.checkVersion();
 
 			if (changed) {
-				LOGGER.info("BotCommands's JDA version updated to {}", jdaVersionFromBCChecker.getLatest().version());
+				LOGGER.info("BotCommands's JDA version changed");
 
 				jdaVersionFromBCChecker.saveVersion();
+
+				LOGGER.info("BotCommands's JDA version updated to {}", jdaVersionFromBCChecker.getLatest().version());
 			}
 		} catch (IOException e) {
 			LOGGER.error("An exception occurred while retrieving versions", e);
@@ -153,23 +159,31 @@ public class Versions {
 			final boolean changed = bcChecker.checkVersion();
 
 			if (changed) {
-				LOGGER.info("BotCommands version updated to {}", bcChecker.getLatest().version());
+				LOGGER.info("BotCommands version changed");
 
 				final Path BCRepoPath = Main.REPOS_PATH.resolve("BotCommands");
 				final boolean needClone = Files.notExists(BCRepoPath);
 				if (needClone) {
+					LOGGER.debug("Cloning BC repo");
+
 					ProcessUtils.runAndWait("git clone https://github.com/freya022/BotCommands.git", Main.REPOS_PATH);
 				} else {
+					LOGGER.debug("Fetching BC repo");
+
 					ProcessUtils.runAndWait("git fetch", BCRepoPath);
 				}
 
 				final GithubBranch latestBranch = bcChecker.getLatestBranch();
+
+				LOGGER.debug("Switching to BC branch {}", latestBranch.branchName());
 				ProcessUtils.runAndWait("git switch " + latestBranch.branchName(), BCRepoPath);
 
 				if (!needClone) {
+					LOGGER.debug("Pulling changes from BC branch {}", latestBranch.branchName());
 					ProcessUtils.runAndWait("git pull", BCRepoPath);
 				}
 
+				LOGGER.debug("Running mvn javadoc:javadoc");
 				if (System.getProperty("os.name").toLowerCase().contains("windows")) {
 					ProcessUtils.runAndWait("mvn.cmd javadoc:javadoc", BCRepoPath);
 				} else {
@@ -179,12 +193,15 @@ public class Versions {
 				final Path targetDocsFolder = BC_DOCS_FOLDER;
 
 				if (Files.exists(targetDocsFolder)) {
+					LOGGER.debug("Removing old BC docs at {}", targetDocsFolder);
+
 					for (Path path : Files.walk(targetDocsFolder).sorted(Comparator.reverseOrder()).toList()) {
 						Files.deleteIfExists(path);
 					}
 				}
 
 				final Path apiDocsPath = BCRepoPath.resolve("target").resolve("site").resolve("apidocs");
+				LOGGER.debug("Moving docs from {} to {}", apiDocsPath, targetDocsFolder);
 				for (Path sourcePath : Files.walk(apiDocsPath)
 						.filter(Files::isRegularFile)
 						.filter(p -> p.getFileName().toString().endsWith("html"))
@@ -192,9 +209,10 @@ public class Versions {
 					final Path targetPath = targetDocsFolder.resolve(apiDocsPath.relativize(sourcePath).toString());
 
 					Files.createDirectories(targetPath.getParent());
-					Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+					Files.move(sourcePath, targetPath, StandardCopyOption.ATOMIC_MOVE);
 				}
 
+				LOGGER.debug("Invalidating BotCommands index");
 				DocIndexMap.refreshAndInvalidateIndex(DocSourceType.BOT_COMMANDS);
 
 				for (String handlerName : CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
@@ -202,6 +220,8 @@ public class Versions {
 				}
 
 				bcChecker.saveVersion();
+
+				LOGGER.info("BotCommands version updated to {}", bcChecker.getLatest().version());
 			}
 
 			return changed;
