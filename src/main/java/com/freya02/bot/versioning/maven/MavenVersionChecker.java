@@ -26,7 +26,7 @@ public class MavenVersionChecker extends VersionChecker {
 				artifactId,
 				MavenUtils.getLatestMavenVersion(repoType.getUrlFormat(), groupId, artifactId));
 
-		final boolean changed = !latestVersion.equals(this.latest);
+		final boolean changed = !latestVersion.equals(this.diskLatest);
 
 		this.latest = latestVersion;
 

@@ -6,18 +6,21 @@ import java.nio.file.Path;
 
 public abstract class VersionChecker {
 	private final Path lastSavedPath;
-	protected ArtifactInfo latest; //TODO cache latest and write once version update has completed, save to file.
+	protected ArtifactInfo latest;
+	protected ArtifactInfo diskLatest;
 
 	protected VersionChecker(Path lastSavedPath) throws IOException {
 		this.lastSavedPath = lastSavedPath;
 
-		this.latest = ArtifactInfo.fromFileString(lastSavedPath);
+		this.latest = this.diskLatest = ArtifactInfo.fromFileString(lastSavedPath);
 	}
 
 	public abstract boolean checkVersion() throws IOException;
 
 	public void saveVersion() throws IOException {
 		Files.writeString(lastSavedPath, latest.toFileString());
+
+		diskLatest = latest;
 	}
 
 	public ArtifactInfo getLatest() {

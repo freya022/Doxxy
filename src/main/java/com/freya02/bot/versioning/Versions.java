@@ -44,25 +44,12 @@ public class Versions {
 	private final MavenVersionChecker jda5Checker;
 
 	public Versions() throws IOException {
+		Files.createDirectories(lastKnownVersionsFolderPath);
+
 		this.bcChecker = new JitpackVersionChecker(lastKnownBotCommandsPath, "freya022", "com.github.freya022", "BotCommands");
 		this.jdaVersionFromBCChecker = new MavenProjectDependencyVersionChecker(lastKnownJDAFromBCPath, "freya022", "BotCommands", "JDA");
 		this.jda4Checker = new MavenVersionChecker(lastKnownJDA4Path, RepoType.M2, "net.dv8tion", "JDA");
 		this.jda5Checker = new MavenVersionChecker(lastKnownJDA5Path, RepoType.MAVEN, "net.dv8tion", "JDA");
-
-		Runtime.getRuntime().addShutdownHook(new Thread(this::saveLastKnownVersions));
-	}
-
-	private void saveLastKnownVersions() {
-		try {
-			Files.createDirectories(lastKnownVersionsFolderPath);
-
-			bcChecker.saveVersion();
-			jdaVersionFromBCChecker.saveVersion();
-			jda4Checker.saveVersion();
-			jda5Checker.saveVersion();
-		} catch (IOException e) {
-			LOGGER.error("Unable to save last versions", e);
-		}
 	}
 
 	public void initUpdateLoop(BContext context) throws IOException {
@@ -121,6 +108,8 @@ public class Versions {
 				for (String handlerName : CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
 					context.invalidateAutocompletionCache(handlerName);
 				}
+
+				jda5Checker.saveVersion();
 			}
 
 			return changed;
@@ -137,6 +126,8 @@ public class Versions {
 
 			if (changed) {
 				LOGGER.info("JDA 4 version updated to {}", jda4Checker.getLatest().version());
+
+				jda4Checker.saveVersion();
 			}
 		} catch (IOException e) {
 			LOGGER.error("An exception occurred while retrieving versions", e);
@@ -149,6 +140,8 @@ public class Versions {
 
 			if (changed) {
 				LOGGER.info("BotCommands's JDA version updated to {}", jdaVersionFromBCChecker.getLatest().version());
+
+				jdaVersionFromBCChecker.saveVersion();
 			}
 		} catch (IOException e) {
 			LOGGER.error("An exception occurred while retrieving versions", e);
@@ -207,6 +200,8 @@ public class Versions {
 				for (String handlerName : CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
 					context.invalidateAutocompletionCache(handlerName);
 				}
+
+				bcChecker.saveVersion();
 			}
 
 			return changed;

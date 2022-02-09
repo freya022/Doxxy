@@ -35,7 +35,7 @@ public class MavenProjectDependencyVersionChecker extends VersionChecker {
 
 		final ArtifactInfo latestDependencyVersion = retrieveDependencyVersion(latestBranch.branchName());
 
-		final boolean changed = !latestDependencyVersion.equals(this.latest);
+		final boolean changed = !latestDependencyVersion.equals(this.diskLatest);
 
 		this.latest = latestDependencyVersion;
 

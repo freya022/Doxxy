@@ -31,7 +31,7 @@ public class JitpackVersionChecker extends VersionChecker {
 				artifactId,
 				latestBranch.latestCommitSha10());
 
-		final boolean changed = !latestVersion.equals(this.latest);
+		final boolean changed = !latestVersion.equals(this.diskLatest);
 
 		this.latest = latestVersion;
 
