@@ -27,7 +27,6 @@ public abstract class BaseDoc {
 
 		for (DocDetailType detailType : DocDetailType.values()) {
 			if (!excludedTypes.contains(detailType)) {
-				//TODO check order of appearance
 				final DocDetail detail = getDetailToElementsMap().getDetail(detailType);
 				if (detail == null) continue;
 

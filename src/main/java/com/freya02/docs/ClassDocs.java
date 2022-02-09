@@ -55,10 +55,11 @@ public class ClassDocs {
 		final String indexURL = source.getAllClassesIndexURL();
 
 		final String body;
-		if (!simpleNameToUrlMap.isEmpty()) { //TODO remove ?
+		if (!simpleNameToUrlMap.isEmpty()) {
 			//We try to "abuse" the OkHttp caching in order to determine if the name-to-URL cache needs to be updated
 			// This allows SeeAlso to get updated sources of all DocSourceType(s) without spamming requests & parsing a lot
 
+			//Don't reindex if content hasn't changed
 			body = HttpUtils.downloadBodyIfNotCached(indexURL);
 			if (body == null) return;
 		} else {

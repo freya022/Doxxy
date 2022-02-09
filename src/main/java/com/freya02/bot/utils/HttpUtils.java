@@ -85,7 +85,7 @@ public class HttpUtils {
 	public static String downloadBodyIfNotCached(String url) throws IOException {
 		return retrieveFromCacheOrGetIfNotCached(url, () -> {
 			try (Response response = CLIENT.newCall(new Request.Builder()
-					.cacheControl(new CacheControl.Builder() //TODO check if it works correctly
+					.cacheControl(new CacheControl.Builder()
 							.maxAge(0, TimeUnit.SECONDS)
 							.build())
 					.url(url)
