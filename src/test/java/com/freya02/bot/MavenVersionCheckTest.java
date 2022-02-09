@@ -2,9 +2,7 @@ package com.freya02.bot;
 
 import com.freya02.bot.utils.HttpUtils;
 import com.freya02.bot.versioning.ArtifactInfo;
-import com.freya02.bot.versioning.github.GithubUtils;
 import com.freya02.bot.versioning.jitpack.BuildStatus;
-import com.freya02.bot.versioning.jitpack.JitpackUtils;
 import com.google.gson.Gson;
 import net.dv8tion.jda.api.exceptions.ParsingException;
 import net.dv8tion.jda.api.utils.data.DataArray;
@@ -16,8 +14,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import java.io.IOException;
-import java.nio.file.*;
-import java.util.Comparator;
 import java.util.Map;
 
 public class MavenVersionCheckTest {
@@ -42,40 +38,40 @@ public class MavenVersionCheckTest {
 //
 //		System.out.println("buildStatus = " + buildStatus);
 
-		final ArtifactInfo latestBotCommandsVersion = retrieveLatestBotCommandsVersion("2.3.0");
-
-		final BuildStatus buildStatus = JitpackUtils.waitForBuild(GithubUtils.getLatestHash("freya022", "BotCommands", "2.3.0"));
-
-		if (buildStatus != BuildStatus.OK) {
-			return;
-		}
-
-		final Path tempZip = Files.createTempFile("BotCommandsDocs", ".zip");
-		JitpackUtils.downloadJitpackDocs(latestBotCommandsVersion, tempZip);
-
-		final Path targetDocsFolder = Main.JAVADOCS_PATH.resolve("BotCommands");
-
-		if (Files.exists(targetDocsFolder)) {
-			for (Path path : Files.walk(targetDocsFolder).sorted(Comparator.reverseOrder()).toList()) {
-				Files.deleteIfExists(path);
-			}
-		}
-
-		try (FileSystem zfs = FileSystems.newFileSystem(tempZip)) {
-			final Path zfsRoot = zfs.getPath("/");
-
-			for (Path sourcePath : Files.walk(zfsRoot)
-					.filter(Files::isRegularFile)
-					.filter(p -> p.getFileName().toString().endsWith("html"))
-					.toList()) {
-				final Path targetPath = targetDocsFolder.resolve(zfsRoot.relativize(sourcePath).toString());
-
-				Files.createDirectories(targetPath.getParent());
-				Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
-			}
-		}
-
-		Files.deleteIfExists(tempZip);
+//		final ArtifactInfo latestBotCommandsVersion = retrieveLatestBotCommandsVersion("2.3.0");
+//
+//		final BuildStatus buildStatus = JitpackUtils.waitForBuild(GithubUtils.getLatestHash("freya022", "BotCommands", "2.3.0"));
+//
+//		if (buildStatus != BuildStatus.OK) {
+//			return;
+//		}
+//
+//		final Path tempZip = Files.createTempFile("BotCommandsDocs", ".zip");
+//		JitpackUtils.downloadJitpackDocs(latestBotCommandsVersion, tempZip);
+//
+//		final Path targetDocsFolder = Main.JAVADOCS_PATH.resolve("BotCommands");
+//
+//		if (Files.exists(targetDocsFolder)) {
+//			for (Path path : Files.walk(targetDocsFolder).sorted(Comparator.reverseOrder()).toList()) {
+//				Files.deleteIfExists(path);
+//			}
+//		}
+//
+//		try (FileSystem zfs = FileSystems.newFileSystem(tempZip)) {
+//			final Path zfsRoot = zfs.getPath("/");
+//
+//			for (Path sourcePath : Files.walk(zfsRoot)
+//					.filter(Files::isRegularFile)
+//					.filter(p -> p.getFileName().toString().endsWith("html"))
+//					.toList()) {
+//				final Path targetPath = targetDocsFolder.resolve(zfsRoot.relativize(sourcePath).toString());
+//
+//				Files.createDirectories(targetPath.getParent());
+//				Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+//			}
+//		}
+//
+//		Files.deleteIfExists(tempZip);
 
 		System.exit(0);
 	}

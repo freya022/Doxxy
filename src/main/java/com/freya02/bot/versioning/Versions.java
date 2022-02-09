@@ -5,6 +5,7 @@ import com.freya02.bot.commands.slash.docs.CommonDocsHandlers;
 import com.freya02.bot.docs.DocIndexMap;
 import com.freya02.bot.utils.ProcessUtils;
 import com.freya02.bot.versioning.github.GithubBranch;
+import com.freya02.bot.versioning.jitpack.JitpackUtils;
 import com.freya02.bot.versioning.jitpack.JitpackVersionChecker;
 import com.freya02.bot.versioning.maven.MavenProjectDependencyVersionChecker;
 import com.freya02.bot.versioning.maven.MavenUtils;
@@ -222,6 +223,8 @@ public class Versions {
 				bcChecker.saveVersion();
 
 				LOGGER.info("BotCommands version updated to {}", bcChecker.getLatest().version());
+
+				JitpackUtils.triggerBuild(bcChecker.getLatest().groupId(), bcChecker.getLatest().artifactId(), bcChecker.getLatest().version());
 			}
 
 			return changed;
