@@ -173,7 +173,7 @@ public class Versions {
 				if (System.getProperty("os.name").toLowerCase().contains("windows")) {
 					ProcessUtils.runAndWait("mvn.cmd javadoc:javadoc", BCRepoPath);
 				} else {
-					throw new UnsupportedOperationException(); //TODO linux
+					ProcessUtils.runAndWait("mvn javadoc:javadoc", BCRepoPath);
 				}
 
 				final Path targetDocsFolder = BC_DOCS_FOLDER;
