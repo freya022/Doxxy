@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class DocEmbeds {
+	private static final int DESCRIPTION_MAX_LENGTH = 2048; //Description max length / 2 basically, otherwise embeds are HUGE
+
 	public static EmbedBuilder toEmbed(ClassDoc doc) {
 		final EmbedBuilder builder = new EmbedBuilder();
 
@@ -132,7 +134,7 @@ public class DocEmbeds {
 	}
 
 	private static String getDescriptionValue(int currentLength, @NotNull String descriptionValue, @Nullable String onlineTarget) {
-		if (descriptionValue.length() + currentLength > MessageEmbed.DESCRIPTION_MAX_LENGTH) {
+		if (descriptionValue.length() + currentLength > DESCRIPTION_MAX_LENGTH) {
 			if (onlineTarget == null) {
 				return "Description is too long. Please look at the docs in your IDE";
 			} else {
