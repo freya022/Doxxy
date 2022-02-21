@@ -35,7 +35,7 @@ public class HttpUtils {
 						final Iterator<String> urls = cache.urls();
 
 						final String urlStr = request.url().toString();
-						LOGGER.warn("{} threw a 404, removing from cache", urlStr);
+						LOGGER.debug("{} threw a 404, removing from cache", urlStr);
 						while (urls.hasNext()) {
 							final String cachedUrl = urls.next();
 

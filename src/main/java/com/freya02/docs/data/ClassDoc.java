@@ -143,11 +143,22 @@ public class ClassDoc extends BaseDoc {
 		// As the html is ordered such as the latest overridden method is shown, we can set the already existing doc to the newest one
 		// Example: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/AbstractCollection.html#method.summary
 		final MethodDoc methodDoc = superClassDocs.methodDocs.get(targetId);
+
+		//This might happen if the target superclass doesn't expose the same access level of members
+		// So for example this class might expose protected+ members
+		//  but the superclass exposes only public members
+		if (methodDoc == null) return;
+
 		methodDocs.put(methodDoc.getElementId(), methodDoc);
 	}
 
 	private void onInheritedField(ClassDoc superClassDocs, String targetId) {
 		final FieldDoc fieldDoc = superClassDocs.fieldDocs.get(targetId);
+
+		//This might happen if the target superclass doesn't expose the same access level of members
+		// So for example this class might expose protected+ members
+		//  but the superclass exposes only public members
+		if (fieldDoc == null) return;
 
 		fieldDocs.put(fieldDoc.getElementId(), fieldDoc);
 	}
