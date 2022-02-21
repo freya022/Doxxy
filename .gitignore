@@ -2,6 +2,7 @@
 /target/
 .idea
 Config.json
+Test_Config.json
 /logs
 /BotCommands_docs
 /JDA_docs

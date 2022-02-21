@@ -2,7 +2,6 @@ package com.freya02.bot;
 
 import com.google.gson.Gson;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -18,8 +17,14 @@ public class Config {
 	public static Config getConfig() {
 		if (instance == null) {
 			try {
-				instance = new Gson().fromJson(Files.readString(Path.of("Config.json")), Config.class);
-			} catch (IOException e) {
+				final Path classPath = Path.of(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+
+				if (Files.isDirectory(classPath)) { //Target folder prob IJ
+					instance = new Gson().fromJson(Files.readString(Path.of("Test_Config.json")), Config.class);
+				} else {
+					instance = new Gson().fromJson(Files.readString(Path.of("Config.json")), Config.class);
+				}
+			} catch (Exception e) {
 				throw new RuntimeException("Unable to load configs", e);
 			}
 		}
