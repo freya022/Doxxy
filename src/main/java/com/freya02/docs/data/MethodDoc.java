@@ -11,7 +11,6 @@ public class MethodDoc extends BaseDoc {
 	@NotNull private final ClassDoc classDocs;
 
 	@NotNull private final String elementId;
-	@NotNull private final String url;
 
 	@NotNull private final String methodName;
 	@NotNull private final String methodSignature;
@@ -23,11 +22,10 @@ public class MethodDoc extends BaseDoc {
 
 	@Nullable private final SeeAlso seeAlso;
 
-	public MethodDoc(@NotNull ClassDoc classDocs, @NotNull Element element) {
-		this.classDocs = classDocs;
+	public MethodDoc(@NotNull ClassDoc classDoc, @NotNull Element element) {
+		this.classDocs = classDoc;
 
 		this.elementId = element.id();
-		this.url = classDocs.getURL() + '#' + elementId;
 
 		//Get method name
 		final Element methodNameElement = element.selectFirst("h3");
@@ -55,7 +53,7 @@ public class MethodDoc extends BaseDoc {
 
 		final DocDetail seeAlsoDetail = detailToElementsMap.getDetail(DocDetailType.SEE_ALSO);
 		if (seeAlsoDetail != null) {
-			this.seeAlso = new SeeAlso(seeAlsoDetail);
+			this.seeAlso = new SeeAlso(classDoc.getSource(), seeAlsoDetail);
 		} else {
 			this.seeAlso = null;
 		}
@@ -93,8 +91,8 @@ public class MethodDoc extends BaseDoc {
 
 	@Override
 	@NotNull
-	public String getURL() {
-		return url;
+	public String getEffectiveURL() {
+		return classDocs.getEffectiveURL() + '#' + elementId;
 	}
 
 	@Override

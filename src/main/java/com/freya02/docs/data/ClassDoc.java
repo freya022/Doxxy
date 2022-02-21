@@ -21,7 +21,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class ClassDoc extends BaseDoc {
-	private final String URL;
+	private final String sourceURL;
 	private final DocSourceType source;
 
 	@NotNull private final HTMLElement docTitleElement;
@@ -40,7 +40,7 @@ public class ClassDoc extends BaseDoc {
 	}
 
 	public ClassDoc(@NotNull DocsSession docsSession, @NotNull String url, @NotNull Document document) throws IOException {
-		this.URL = url;
+		this.sourceURL = url;
 		this.source = DocSourceType.fromUrl(url);
 
 		if (!DocUtils.isJavadocVersionCorrect(document)) {
@@ -67,7 +67,7 @@ public class ClassDoc extends BaseDoc {
 
 		final DocDetail seeAlsoDetail = detailToElementsMap.getDetail(DocDetailType.SEE_ALSO);
 		if (seeAlsoDetail != null) {
-			this.seeAlso = new SeeAlso(seeAlsoDetail);
+			this.seeAlso = new SeeAlso(source, seeAlsoDetail);
 		} else {
 			this.seeAlso = null;
 		}
@@ -195,8 +195,8 @@ public class ClassDoc extends BaseDoc {
 
 	@Override
 	@NotNull
-	public String getURL() {
-		return URL;
+	public String getEffectiveURL() {
+		return source.toOnlineURL(sourceURL);
 	}
 
 	@Override

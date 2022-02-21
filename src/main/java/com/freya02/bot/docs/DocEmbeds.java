@@ -35,9 +35,9 @@ public class DocEmbeds {
 
 	@Nullable
 	private static String getDocURL(BaseDoc doc) {
-		return HttpUtils.doesStartByLocalhost(doc.getURL())
+		return HttpUtils.doesStartByLocalhost(doc.getEffectiveURL())
 				? null
-				: doc.getURL();
+				: doc.getEffectiveURL();
 	}
 
 	public static EmbedBuilder toEmbed(ClassDoc classDoc, MethodDoc methodDoc) {

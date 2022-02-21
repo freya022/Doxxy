@@ -9,12 +9,12 @@ import org.jsoup.nodes.Element;
 public class FieldDoc extends BaseDoc {
 	@NotNull private final ClassDoc classDocs;
 
+	@NotNull private final String effectiveURL;
 	@NotNull private final String fieldName;
 	@NotNull private final String fieldType;
 	@Nullable private final HTMLElement descriptionElement;
 
 	@NotNull private final String elementId;
-	@NotNull private final String url;
 	@NotNull private final String modifiers;
 
 	@NotNull private final DetailToElementsMap detailToElementsMap;
@@ -22,11 +22,11 @@ public class FieldDoc extends BaseDoc {
 	@Nullable private final SeeAlso seeAlso;
 	@Nullable private final HTMLElement deprecationElement;
 
-	public FieldDoc(@NotNull ClassDoc classDocs, @NotNull Element element) {
-		this.classDocs = classDocs;
+	public FieldDoc(@NotNull ClassDoc classDoc, @NotNull Element element) {
+		this.classDocs = classDoc;
 
 		this.elementId = element.id();
-		this.url = classDocs.getURL() + "#" + elementId;
+		this.effectiveURL = classDoc.getEffectiveURL() + "#" + elementId;
 
 		//Get field modifiers
 		final Element modifiersElement = element.selectFirst("div.member-signature > span.modifiers");
@@ -53,7 +53,7 @@ public class FieldDoc extends BaseDoc {
 
 		final DocDetail seeAlsoDetail = detailToElementsMap.getDetail(DocDetailType.SEE_ALSO);
 		if (seeAlsoDetail != null) {
-			this.seeAlso = new SeeAlso(seeAlsoDetail);
+			this.seeAlso = new SeeAlso(classDoc.getSource(), seeAlsoDetail);
 		} else {
 			this.seeAlso = null;
 		}
@@ -95,8 +95,8 @@ public class FieldDoc extends BaseDoc {
 
 	@Override
 	@NotNull
-	public String getURL() {
-		return url;
+	public String getEffectiveURL() {
+		return effectiveURL;
 	}
 
 	@Override

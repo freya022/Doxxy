@@ -40,10 +40,10 @@ public class SeeAlso {
 
 	private final List<SeeAlsoReference> references = new ArrayList<>();
 
-	public SeeAlso(@NotNull DocDetail docDetail) {
+	public SeeAlso(DocSourceType type, @NotNull DocDetail docDetail) {
 		for (Element seeAlsoClassElement : docDetail.getHtmlElements().get(0).getTargetElement().select("dd > ul > li > a")) {
 			try {
-				final String href = seeAlsoClassElement.absUrl("href");
+				final String href = type.toOnlineURL(seeAlsoClassElement.absUrl("href"));
 				final DocSourceType sourceType = DocSourceType.fromUrl(href);
 				if (sourceType == null) {
 					references.add(new SeeAlsoReference(seeAlsoClassElement.text(), href, TargetType.UNKNOWN, null));

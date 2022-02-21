@@ -10,7 +10,7 @@ import java.util.List;
 
 public abstract class BaseDoc {
 	@NotNull
-	public abstract String getURL();
+	public abstract String getEffectiveURL();
 
 	@Nullable
 	public abstract HTMLElement getDescriptionElement();
