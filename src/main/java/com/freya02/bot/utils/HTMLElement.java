@@ -1,6 +1,7 @@
 package com.freya02.bot.utils;
 
 import com.freya02.docs.DocParseException;
+import com.freya02.docs.DocSourceType;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -44,9 +45,21 @@ public class HTMLElement {
 		targetElement.traverse(new NodeVisitor() {
 			@Override
 			public void head(Node node, int depth) {
-				if (HttpUtils.doesStartByLocalhost(node.absUrl("href"))) {
-					node.removeAttr("href");
+				final String href = node.absUrl("href");
+
+				//Try to resolve into an online link
+				for (DocSourceType type : DocSourceType.values()) {
+					final String onlineURL = type.toOnlineURL(href);
+
+					if (!HttpUtils.doesStartByLocalhost(onlineURL)) { //If it's a valid link then don't remove it
+						node.attr("href", onlineURL);
+
+						return;
+					}
 				}
+
+				//If no online URL has been found then do not link to localhost href(s)
+				node.removeAttr("href");
 			}
 
 			@Override
