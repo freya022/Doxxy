@@ -16,11 +16,16 @@ public class DocEmbeds {
 	private static final int DESCRIPTION_MAX_LENGTH = 2048; //Description max length / 2 basically, otherwise embeds are HUGE
 
 	@NotNull
-	private static EnumSet<DocDetailType> getExcludedTypes() {
-		return EnumSet.of(
-				DocDetailType.SEE_ALSO, //Excluded because it's already included below
-				DocDetailType.ENCLOSING_CLASS,
-				DocDetailType.ENCLOSING_INTERFACE
+	private static EnumSet<DocDetailType> getIncludedTypes() {
+		return EnumSet.of( //SEE_ALSO not needed, already added manually
+				DocDetailType.PARAMETERS,
+				DocDetailType.TYPE_PARAMETERS,
+				DocDetailType.RETURNS,
+				DocDetailType.SPECIFIED_BY,
+				DocDetailType.OVERRIDES,
+				DocDetailType.INCUBATING,
+				DocDetailType.DEFAULT,
+				DocDetailType.THROWS
 		);
 	}
 
@@ -33,7 +38,7 @@ public class DocEmbeds {
 
 		fillDeprecation(doc, builder);
 
-		fillDetails(builder, doc, getExcludedTypes());
+		fillDetails(builder, doc, getIncludedTypes());
 
 		addSeeAlso(builder, doc.getSeeAlso(), getDocURL(doc));
 
@@ -63,7 +68,7 @@ public class DocEmbeds {
 
 		fillDeprecation(methodDoc, builder);
 
-		fillDetails(builder, methodDoc, getExcludedTypes());
+		fillDetails(builder, methodDoc, getIncludedTypes());
 
 		addSeeAlso(builder, methodDoc.getSeeAlso(), getDocURL(methodDoc));
 
@@ -83,7 +88,7 @@ public class DocEmbeds {
 
 		fillDeprecation(fieldDoc, builder);
 
-		fillDetails(builder, fieldDoc, getExcludedTypes());
+		fillDetails(builder, fieldDoc, getIncludedTypes());
 
 		addSeeAlso(builder, fieldDoc.getSeeAlso(), getDocURL(fieldDoc));
 

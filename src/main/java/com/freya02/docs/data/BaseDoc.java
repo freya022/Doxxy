@@ -22,11 +22,11 @@ public abstract class BaseDoc {
 	protected abstract DetailToElementsMap getDetailToElementsMap();
 
 	@NotNull
-	public List<DocDetail> getDetails(EnumSet<DocDetailType> excludedTypes) {
+	public List<DocDetail> getDetails(EnumSet<DocDetailType> includedTypes) {
 		final List<DocDetail> details = new ArrayList<>();
 
 		for (DocDetailType detailType : DocDetailType.values()) {
-			if (!excludedTypes.contains(detailType)) {
+			if (includedTypes.contains(detailType)) {
 				final DocDetail detail = getDetailToElementsMap().getDetail(detailType);
 				if (detail == null) continue;
 
