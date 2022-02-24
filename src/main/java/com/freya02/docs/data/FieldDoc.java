@@ -8,6 +8,7 @@ import org.jsoup.nodes.Element;
 
 public class FieldDoc extends BaseDoc {
 	@NotNull private final ClassDoc classDocs;
+	@NotNull private final ClassDetailType classDetailType;
 
 	@NotNull private final String effectiveURL;
 	@NotNull private final String fieldName;
@@ -22,8 +23,9 @@ public class FieldDoc extends BaseDoc {
 	@Nullable private final SeeAlso seeAlso;
 	@Nullable private final HTMLElement deprecationElement;
 
-	public FieldDoc(@NotNull ClassDoc classDoc, @NotNull Element element) {
+	public FieldDoc(@NotNull ClassDoc classDoc, @NotNull ClassDetailType classDetailType, @NotNull Element element) {
 		this.classDocs = classDoc;
+		this.classDetailType = classDetailType;
 
 		this.elementId = element.id();
 		this.effectiveURL = classDoc.getEffectiveURL() + "#" + elementId;
@@ -62,6 +64,11 @@ public class FieldDoc extends BaseDoc {
 	@NotNull
 	public ClassDoc getClassDocs() {
 		return classDocs;
+	}
+
+	@NotNull
+	public ClassDetailType getClassDetailType() {
+		return classDetailType;
 	}
 
 	@NotNull

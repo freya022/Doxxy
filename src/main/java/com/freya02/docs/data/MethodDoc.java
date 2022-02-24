@@ -9,6 +9,7 @@ import org.jsoup.nodes.Element;
 
 public class MethodDoc extends BaseDoc {
 	@NotNull private final ClassDoc classDocs;
+	@NotNull private final ClassDetailType classDetailType;
 
 	@NotNull private final String elementId;
 
@@ -22,8 +23,9 @@ public class MethodDoc extends BaseDoc {
 
 	@Nullable private final SeeAlso seeAlso;
 
-	public MethodDoc(@NotNull ClassDoc classDoc, @NotNull Element element) {
+	public MethodDoc(@NotNull ClassDoc classDoc, @NotNull ClassDetailType classDetailType, @NotNull Element element) {
 		this.classDocs = classDoc;
+		this.classDetailType = classDetailType;
 
 		this.elementId = element.id();
 
@@ -67,6 +69,11 @@ public class MethodDoc extends BaseDoc {
 	@NotNull
 	public ClassDoc getClassDocs() {
 		return classDocs;
+	}
+
+	@NotNull
+	public ClassDetailType getClassDetailType() {
+		return classDetailType;
 	}
 
 	@NotNull

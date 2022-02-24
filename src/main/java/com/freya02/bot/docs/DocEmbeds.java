@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 public class DocEmbeds {
@@ -37,6 +38,32 @@ public class DocEmbeds {
 		fillDescription(doc, builder);
 
 		fillDeprecation(doc, builder);
+
+		final List<FieldDoc> enumConstants = doc.getEnumConstants();
+		if (!enumConstants.isEmpty()) {
+			final StringJoiner valuesBuilder = new StringJoiner("`\n`", "`", "`");
+
+			for (int i = 0, enumConstantsSize = enumConstants.size(); i < Math.min(10, enumConstantsSize); i++) { //Limit to 10
+				FieldDoc enumConstant = enumConstants.get(i);
+
+				valuesBuilder.add(enumConstant.getFieldName());
+			}
+
+			addField(builder, "Enum values:", valuesBuilder + (enumConstants.size() > 10 ? "\n... and more ..."  : ""), false, getDocURL(doc));
+		}
+
+		final List<MethodDoc> annotationElements = doc.getAnnotationElements();
+		if (!annotationElements.isEmpty()) {
+			final StringJoiner fieldsBuilder = new StringJoiner("`\n`", "`", "`");
+
+			for (int i = 0, annotationElementsSize = annotationElements.size(); i < Math.min(10, annotationElementsSize); i++) { //Limit to 10
+				MethodDoc annotationElement = annotationElements.get(i);
+
+				fieldsBuilder.add("#" + annotationElement.getMethodName() + "()");
+			}
+
+			addField(builder, "Annotation fields:", fieldsBuilder + (annotationElements.size() > 10 ? "\n... and more ..."  : ""), false, getDocURL(doc));
+		}
 
 		fillDetails(builder, doc, getIncludedTypes());
 

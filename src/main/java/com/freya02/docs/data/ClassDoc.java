@@ -78,28 +78,28 @@ public class ClassDoc extends BaseDoc {
 
 		//Try to find field details
 		processDetailElements(document, ClassDetailType.FIELD, fieldElement -> {
-			final FieldDoc fieldDocs = new FieldDoc(this, fieldElement);
+			final FieldDoc fieldDocs = new FieldDoc(this, ClassDetailType.FIELD, fieldElement);
 
 			this.fieldDocs.put(fieldDocs.getElementId(), fieldDocs);
 		});
 
 		//Try to find enum constants, they're similar to fields it seems
 		processDetailElements(document, ClassDetailType.ENUM_CONSTANTS, fieldElement -> {
-			final FieldDoc fieldDocs = new FieldDoc(this, fieldElement);
+			final FieldDoc fieldDocs = new FieldDoc(this, ClassDetailType.ENUM_CONSTANTS, fieldElement);
 
 			this.fieldDocs.put(fieldDocs.getElementId(), fieldDocs);
 		});
 
 		//Try to find method details
 		processDetailElements(document, ClassDetailType.METHOD, methodElement -> {
-			final MethodDoc methodDocs = new MethodDoc(this, methodElement);
+			final MethodDoc methodDocs = new MethodDoc(this, ClassDetailType.METHOD, methodElement);
 
 			this.methodDocs.put(methodDocs.getElementId(), methodDocs);
 		});
 
 		//Try to find annotation "methods" (elements)
 		processDetailElements(document, ClassDetailType.ANNOTATION_ELEMENT, annotationElement -> {
-			final MethodDoc methodDocs = new MethodDoc(this, annotationElement);
+			final MethodDoc methodDocs = new MethodDoc(this, ClassDetailType.ANNOTATION_ELEMENT, annotationElement);
 
 			this.methodDocs.put(methodDocs.getElementId(), methodDocs);
 		});
@@ -231,5 +231,23 @@ public class ClassDoc extends BaseDoc {
 	@Nullable
 	public SeeAlso getSeeAlso() {
 		return seeAlso;
+	}
+
+	@NotNull
+	public List<FieldDoc> getEnumConstants() {
+		return getFieldDocs()
+				.values()
+				.stream()
+				.filter(f -> f.getClassDetailType() == ClassDetailType.ENUM_CONSTANTS)
+				.toList();
+	}
+
+	@NotNull
+	public List<MethodDoc> getAnnotationElements() {
+		return getMethodDocs()
+				.values()
+				.stream()
+				.filter(f -> f.getClassDetailType() == ClassDetailType.ANNOTATION_ELEMENT)
+				.toList();
 	}
 }
