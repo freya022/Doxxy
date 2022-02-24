@@ -15,6 +15,15 @@ import java.util.stream.Collectors;
 public class DocEmbeds {
 	private static final int DESCRIPTION_MAX_LENGTH = 2048; //Description max length / 2 basically, otherwise embeds are HUGE
 
+	@NotNull
+	private static EnumSet<DocDetailType> getExcludedTypes() {
+		return EnumSet.of(
+				DocDetailType.SEE_ALSO, //Excluded because it's already included below
+				DocDetailType.ENCLOSING_CLASS,
+				DocDetailType.ENCLOSING_INTERFACE
+		);
+	}
+
 	public static EmbedBuilder toEmbed(ClassDoc doc) {
 		final EmbedBuilder builder = new EmbedBuilder();
 
@@ -24,11 +33,7 @@ public class DocEmbeds {
 
 		fillDeprecation(doc, builder);
 
-		fillDetails(builder, doc, EnumSet.of(
-				DocDetailType.SEE_ALSO, //Excluded because it's already included below
-				DocDetailType.ENCLOSING_CLASS,
-				DocDetailType.ENCLOSING_INTERFACE
-		));
+		fillDetails(builder, doc, getExcludedTypes());
 
 		addSeeAlso(builder, doc.getSeeAlso(), getDocURL(doc));
 
@@ -58,11 +63,7 @@ public class DocEmbeds {
 
 		fillDeprecation(methodDoc, builder);
 
-		fillDetails(builder, methodDoc, EnumSet.of(
-				DocDetailType.SEE_ALSO, //Excluded because it's already included below
-				DocDetailType.ENCLOSING_CLASS,
-				DocDetailType.ENCLOSING_INTERFACE
-		));
+		fillDetails(builder, methodDoc, getExcludedTypes());
 
 		addSeeAlso(builder, methodDoc.getSeeAlso(), getDocURL(methodDoc));
 
@@ -82,11 +83,7 @@ public class DocEmbeds {
 
 		fillDeprecation(fieldDoc, builder);
 
-		fillDetails(builder, fieldDoc, EnumSet.of(
-				DocDetailType.SEE_ALSO, //Excluded because it's already included below
-				DocDetailType.ENCLOSING_CLASS,
-				DocDetailType.ENCLOSING_INTERFACE
-		));
+		fillDetails(builder, fieldDoc, getExcludedTypes());
 
 		addSeeAlso(builder, fieldDoc.getSeeAlso(), getDocURL(fieldDoc));
 
