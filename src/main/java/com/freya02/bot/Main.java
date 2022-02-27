@@ -23,6 +23,7 @@ public class Main {
 	public static final Path CACHE_PATH = BOT_FOLDER.resolve("docs_cache");
 	public static final Path JAVADOCS_PATH = BOT_FOLDER.resolve("javadocs");
 	public static final Path REPOS_PATH = BOT_FOLDER.resolve("repos");
+	public static final Path LAST_KNOWN_VERSIONS_FOLDER_PATH = BOT_FOLDER.resolve("last_versions");
 
 	private static final Logger LOGGER = Logging.getLogger();
 

@@ -30,11 +30,10 @@ import static com.freya02.bot.commands.slash.docs.CommonDocsHandlers.AUTOCOMPLET
 public class Versions {
 	private static final Logger LOGGER = Logging.getLogger();
 
-	private static final Path lastKnownVersionsFolderPath = Main.BOT_FOLDER.resolve("last_versions");
-	private static final Path lastKnownBotCommandsPath = lastKnownVersionsFolderPath.resolve("BC.txt");
-	private static final Path lastKnownJDAFromBCPath = lastKnownVersionsFolderPath.resolve("JDA_from_BC.txt");
-	private static final Path lastKnownJDA4Path = lastKnownVersionsFolderPath.resolve("JDA4.txt");
-	private static final Path lastKnownJDA5Path = lastKnownVersionsFolderPath.resolve("JDA5.txt");
+	private static final Path lastKnownBotCommandsPath = Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("BC.txt");
+	private static final Path lastKnownJDAFromBCPath = Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("JDA_from_BC.txt");
+	private static final Path lastKnownJDA4Path = Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("JDA4.txt");
+	private static final Path lastKnownJDA5Path = Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("JDA5.txt");
 
 	private static final Path JDA_DOCS_FOLDER = Main.JAVADOCS_PATH.resolve("JDA");
 	private static final Path BC_DOCS_FOLDER = Main.JAVADOCS_PATH.resolve("BotCommands");
@@ -45,7 +44,7 @@ public class Versions {
 	private final MavenVersionChecker jda5Checker;
 
 	public Versions() throws IOException {
-		Files.createDirectories(lastKnownVersionsFolderPath);
+		Files.createDirectories(Main.LAST_KNOWN_VERSIONS_FOLDER_PATH);
 
 		this.bcChecker = new JitpackVersionChecker(lastKnownBotCommandsPath, "freya022", "com.github.freya022", "BotCommands");
 		this.jdaVersionFromBCChecker = new MavenProjectDependencyVersionChecker(lastKnownJDAFromBCPath, "freya022", "BotCommands", "JDA");

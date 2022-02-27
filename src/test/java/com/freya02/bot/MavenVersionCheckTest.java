@@ -2,8 +2,11 @@ package com.freya02.bot;
 
 import com.freya02.bot.utils.HttpUtils;
 import com.freya02.bot.versioning.ArtifactInfo;
+import com.freya02.bot.versioning.github.PullRequest;
+import com.freya02.bot.versioning.github.PullRequestCache;
 import com.freya02.bot.versioning.jitpack.BuildStatus;
 import com.google.gson.Gson;
+import gnu.trove.map.TIntObjectMap;
 import net.dv8tion.jda.api.exceptions.ParsingException;
 import net.dv8tion.jda.api.utils.data.DataArray;
 import okhttp3.HttpUrl;
@@ -72,6 +75,12 @@ public class MavenVersionCheckTest {
 //		}
 //
 //		Files.deleteIfExists(tempZip);
+
+//		final PullRequestCache pullRequestCache = new PullRequestCache("DV8FromTheWorld", "JDA", "master");
+		final PullRequestCache pullRequestCache = new PullRequestCache("freya022", "BotCommands", null);
+		final TIntObjectMap<PullRequest> pullRequests = pullRequestCache.getPullRequests();
+		final TIntObjectMap<PullRequest> pullRequests2 = pullRequestCache.getPullRequests();
+		final TIntObjectMap<PullRequest> pullRequests3 = pullRequestCache.getPullRequests();
 
 		System.exit(0);
 	}

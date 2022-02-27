@@ -29,7 +29,7 @@ public class JitpackVersionChecker extends VersionChecker {
 
 		final ArtifactInfo latestVersion = new ArtifactInfo(groupId,
 				artifactId,
-				latestBranch.latestCommitSha10());
+				latestBranch.latestCommitSha().asSha10());
 
 		final boolean changed = !latestVersion.equals(this.diskLatest);
 
