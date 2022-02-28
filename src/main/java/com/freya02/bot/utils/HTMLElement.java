@@ -45,21 +45,27 @@ public class HTMLElement {
 		targetElement.traverse(new NodeVisitor() {
 			@Override
 			public void head(Node node, int depth) {
-				final String href = node.absUrl("href");
-
-				//Try to resolve into an online link
-				for (DocSourceType type : DocSourceType.values()) {
-					final String onlineURL = type.toOnlineURL(href);
-
-					if (!HttpUtils.doesStartByLocalhost(onlineURL)) { //If it's a valid link then don't remove it
-						node.attr("href", onlineURL);
-
+				if (node instanceof Element e) {
+					if (!e.tagName().equalsIgnoreCase("a")) {
 						return;
 					}
-				}
 
-				//If no online URL has been found then do not link to localhost href(s)
-				node.removeAttr("href");
+					final String href = e.absUrl("href");
+
+					//Try to resolve into an online link
+					for (DocSourceType type : DocSourceType.values()) {
+						final String onlineURL = type.toOnlineURL(href);
+
+						if (!HttpUtils.doesStartByLocalhost(onlineURL)) { //If it's a valid link then don't remove it
+							e.attr("href", onlineURL);
+
+							return;
+						}
+					}
+
+					//If no online URL has been found then do not link to localhost href(s)
+					e.removeAttr("href");
+				}
 			}
 
 			@Override

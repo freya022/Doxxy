@@ -5,6 +5,7 @@ import com.freya02.docs.DocSourceType;
 import com.freya02.docs.DocWebServer;
 import com.freya02.docs.DocsSession;
 import com.freya02.docs.data.ClassDoc;
+import com.freya02.docs.data.DocDetailType;
 import com.freya02.docs.data.MethodDoc;
 
 public class DocsTest3 {
@@ -39,7 +40,8 @@ public class DocsTest3 {
 
 		final MethodDoc methodDoc = classDoc.getMethodDocs().get("createCopy(net.dv8tion.jda.api.entities.Guild)");
 		final String simpleAnnotatedSignature = methodDoc.getSimpleAnnotatedSignature();
-		final String markdown = methodDoc.getDescriptionElement().getMarkdown();
+//		final String markdown = methodDoc.getDescriptionElement().getMarkdown();
+		final String markdown2 = methodDoc.getDetailToElementsMap().getDetail(DocDetailType.SPECIFIED_BY).toMarkdown();
 //
 //		System.out.println("onlineClassDoc.getDescriptionElement().getMarkdown() = " + onlineClassDoc.getDescriptionElement().getMarkdown());
 //		System.out.println("classDoc      .getDescriptionElement().getMarkdown() = " + classDoc.getDescriptionElement().getMarkdown());
