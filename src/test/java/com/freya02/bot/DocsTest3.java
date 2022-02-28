@@ -28,17 +28,18 @@ public class DocsTest3 {
 //		final ClassDoc enumTest = session.retrieveDoc("https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/file/StandardCopyOption.html");
 
 		DocWebServer.startDocWebServer();
-		final ClassDocs updatedSource = ClassDocs.getUpdatedSource(DocSourceType.BOT_COMMANDS);
+		final ClassDocs updatedSource = ClassDocs.getUpdatedSource(DocSourceType.JDA);
 
 //		final Document document = HttpUtils.getDocument("https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/file/StandardCopyOption.html");
 
-		final String url = updatedSource.getSimpleNameToUrlMap().get("GuildApplicationSettings");
+		final String url = updatedSource.getSimpleNameToUrlMap().get("TextChannel");
 //
 //		final ClassDoc onlineClassDoc = new ClassDoc(new DocsSession(), "https://ci.dv8tion.net/job/JDA5/javadoc/net/dv8tion/jda/api/entities/MessageType.html");
 		final ClassDoc classDoc = new ClassDoc(new DocsSession(), url);
 
-		final MethodDoc methodDoc = classDoc.getMethodDocs().get("getCommandPrivileges(net.dv8tion.jda.api.entities.Guild,java.lang.String)");
+		final MethodDoc methodDoc = classDoc.getMethodDocs().get("createCopy(net.dv8tion.jda.api.entities.Guild)");
 		final String simpleAnnotatedSignature = methodDoc.getSimpleAnnotatedSignature();
+		final String markdown = methodDoc.getDescriptionElement().getMarkdown();
 //
 //		System.out.println("onlineClassDoc.getDescriptionElement().getMarkdown() = " + onlineClassDoc.getDescriptionElement().getMarkdown());
 //		System.out.println("classDoc      .getDescriptionElement().getMarkdown() = " + classDoc.getDescriptionElement().getMarkdown());

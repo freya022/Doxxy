@@ -5,7 +5,10 @@ import com.freya02.docs.DocParseException;
 import com.freya02.docs.DocUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
+
+import java.util.stream.Collectors;
 
 public class MethodDoc extends BaseDoc {
 	@NotNull private final ClassDoc classDocs;
@@ -53,7 +56,12 @@ public class MethodDoc extends BaseDoc {
 		this.methodReturnType = methodReturnTypeElement.text();
 
 		//Get method description
-		this.descriptionElement = HTMLElement.tryWrap(element.selectFirst("section.detail > div.block"));
+		this.descriptionElement = HTMLElement.tryWrap(Jsoup.parseBodyFragment(
+				element.select("section.detail > div.block").stream()
+						.map(Element::outerHtml) //Description blocks could be split because of inheritance labels, we need to merge them
+						.collect(Collectors.joining()).trim(),
+				element.baseUri()
+		));
 
 		//Get method possible's deprecation
 		this.deprecationElement = HTMLElement.tryWrap(element.selectFirst("section.detail > div.deprecation-block"));
