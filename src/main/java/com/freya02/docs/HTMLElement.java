@@ -1,7 +1,7 @@
-package com.freya02.bot.utils;
+package com.freya02.docs;
 
-import com.freya02.docs.DocParseException;
-import com.freya02.docs.DocSourceType;
+import com.freya02.bot.utils.HttpUtils;
+import com.freya02.bot.utils.JDocUtil;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

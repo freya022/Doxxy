@@ -40,11 +40,11 @@ public class DocsTest3 {
 
 		final MethodDoc methodDoc = classDoc.getMethodDocs().get("createCopy(net.dv8tion.jda.api.entities.Guild)");
 		final String simpleAnnotatedSignature = methodDoc.getSimpleAnnotatedSignature();
-//		final String markdown = methodDoc.getDescriptionElement().getMarkdown();
-		final String markdown2 = methodDoc.getDetailToElementsMap().getDetail(DocDetailType.SPECIFIED_BY).toMarkdown();
+//		final String markdown = methodDoc.getDescriptionElements().getMarkdown();
+		final String markdown2 = methodDoc.getDetailToElementsMap().getDetail(DocDetailType.SPECIFIED_BY).toMarkdown("\n");
 //
-//		System.out.println("onlineClassDoc.getDescriptionElement().getMarkdown() = " + onlineClassDoc.getDescriptionElement().getMarkdown());
-//		System.out.println("classDoc      .getDescriptionElement().getMarkdown() = " + classDoc.getDescriptionElement().getMarkdown());
+//		System.out.println("onlineClassDoc.getDescriptionElements().getMarkdown() = " + onlineClassDoc.getDescriptionElements().getMarkdown());
+//		System.out.println("classDoc      .getDescriptionElements().getMarkdown() = " + classDoc.getDescriptionElements().getMarkdown());
 
 		System.out.println();
 	}

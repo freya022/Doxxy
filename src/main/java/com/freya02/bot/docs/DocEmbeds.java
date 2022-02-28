@@ -1,8 +1,9 @@
 package com.freya02.bot.docs;
 
-import com.freya02.bot.utils.HTMLElement;
 import com.freya02.bot.utils.HttpUtils;
 import com.freya02.docs.DocUtils;
+import com.freya02.docs.HTMLElement;
+import com.freya02.docs.HTMLElementList;
 import com.freya02.docs.data.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -131,10 +132,10 @@ public class DocEmbeds {
 	}
 
 	private static void fillDescription(BaseDoc doc, EmbedBuilder builder) {
-		final HTMLElement descriptionElement = doc.getDescriptionElement();
+		final HTMLElementList descriptionElement = doc.getDescriptionElements();
 
-		if (descriptionElement != null) {
-			final String description = descriptionElement.getMarkdown();
+		if (!descriptionElement.isEmpty()) {
+			final String description = descriptionElement.toMarkdown("\n\n"); //Description blocks are separated like paragraphs, unlike details such as "Specified by"
 
 			builder.appendDescription(
 					getDescriptionValue(builder.getDescriptionBuilder().length(),
@@ -164,7 +165,7 @@ public class DocEmbeds {
 		for (DocDetail detail : details) {
 			addField(builder,
 					detail.getDetailString(),
-					detail.toMarkdown(),
+					detail.toMarkdown("\n"),
 					false,
 					getDocURL(doc));
 		}

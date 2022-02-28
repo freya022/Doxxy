@@ -1,14 +1,12 @@
 package com.freya02.docs.data;
 
-import com.freya02.bot.utils.HTMLElement;
 import com.freya02.docs.DocParseException;
 import com.freya02.docs.DocUtils;
+import com.freya02.docs.HTMLElement;
+import com.freya02.docs.HTMLElementList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
-
-import java.util.stream.Collectors;
 
 public class MethodDoc extends BaseDoc {
 	@NotNull private final ClassDoc classDocs;
@@ -21,7 +19,7 @@ public class MethodDoc extends BaseDoc {
 	@NotNull private final String methodSignature;
 	@Nullable private final String methodParameters;
 	@NotNull private final String methodReturnType;
-	@Nullable private final HTMLElement descriptionElement;
+	@NotNull private final HTMLElementList descriptionElements;
 	@Nullable private final HTMLElement deprecationElement;
 
 	@NotNull private final DetailToElementsMap detailToElementsMap;
@@ -56,12 +54,7 @@ public class MethodDoc extends BaseDoc {
 		this.methodReturnType = methodReturnTypeElement.text();
 
 		//Get method description
-		this.descriptionElement = HTMLElement.tryWrap(Jsoup.parseBodyFragment(
-				element.select("section.detail > div.block").stream()
-						.map(Element::outerHtml) //Description blocks could be split because of inheritance labels, we need to merge them
-						.collect(Collectors.joining()).trim(),
-				element.baseUri()
-		));
+		this.descriptionElements = HTMLElementList.fromElements(element.select("section.detail > div.block"));
 
 		//Get method possible's deprecation
 		this.deprecationElement = HTMLElement.tryWrap(element.selectFirst("section.detail > div.deprecation-block"));
@@ -124,9 +117,9 @@ public class MethodDoc extends BaseDoc {
 	}
 
 	@Override
-	@Nullable
-	public HTMLElement getDescriptionElement() {
-		return descriptionElement;
+	@NotNull
+	public HTMLElementList getDescriptionElements() {
+		return descriptionElements;
 	}
 
 	@Override
@@ -148,7 +141,7 @@ public class MethodDoc extends BaseDoc {
 
 	@Override
 	public String toString() {
-		return methodSignature + " : " + descriptionElement;
+		return methodSignature + " : " + descriptionElements;
 	}
 
 	@Nullable

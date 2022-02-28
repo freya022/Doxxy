@@ -1,6 +1,6 @@
 package com.freya02.bot;
 
-import com.freya02.bot.utils.HTMLElement;
+import com.freya02.docs.HTMLElement;
 import org.jsoup.Jsoup;
 
 public class MdTest {

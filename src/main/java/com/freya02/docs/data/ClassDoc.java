@@ -1,11 +1,7 @@
 package com.freya02.docs.data;
 
-import com.freya02.bot.utils.HTMLElement;
 import com.freya02.bot.utils.HttpUtils;
-import com.freya02.docs.DocParseException;
-import com.freya02.docs.DocSourceType;
-import com.freya02.docs.DocUtils;
-import com.freya02.docs.DocsSession;
+import com.freya02.docs.*;
 import okhttp3.HttpUrl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,7 +21,7 @@ public class ClassDoc extends BaseDoc {
 	private final DocSourceType source;
 
 	@NotNull private final HTMLElement docTitleElement;
-	@Nullable private final HTMLElement descriptionElement;
+	@NotNull private final HTMLElementList descriptionElements;
 	@Nullable private final HTMLElement deprecationElement;
 	@NotNull private final String className;
 
@@ -54,7 +50,7 @@ public class ClassDoc extends BaseDoc {
 		this.className = getClassName(url);
 
 		//Get class description
-		this.descriptionElement = HTMLElement.tryWrap(document.selectFirst("#class-description > div.block"));
+		this.descriptionElements = HTMLElementList.fromElements(document.select("#class-description > div.block"));
 
 		//Get class possible's deprecation
 		this.deprecationElement = HTMLElement.tryWrap(document.selectFirst("#class-description > div.deprecation-block"));
@@ -201,7 +197,7 @@ public class ClassDoc extends BaseDoc {
 
 	@Override
 	public String toString() {
-		return "%s : %d fields, %d methods%s".formatted(className, fieldDocs.size(), methodDocs.size(), descriptionElement == null ? "" : " : " + descriptionElement.getTargetElement().text());
+		return "%s : %d fields, %d methods%s".formatted(className, fieldDocs.size(), methodDocs.size(), descriptionElements == null ? "" : " : " + descriptionElements.toText());
 	}
 
 	@Override
@@ -211,9 +207,9 @@ public class ClassDoc extends BaseDoc {
 	}
 
 	@Override
-	@Nullable
-	public HTMLElement getDescriptionElement() {
-		return descriptionElement;
+	@NotNull
+	public HTMLElementList getDescriptionElements() {
+		return descriptionElements;
 	}
 
 	@Override

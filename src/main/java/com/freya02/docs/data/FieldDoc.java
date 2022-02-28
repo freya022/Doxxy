@@ -1,7 +1,8 @@
 package com.freya02.docs.data;
 
-import com.freya02.bot.utils.HTMLElement;
 import com.freya02.docs.DocParseException;
+import com.freya02.docs.HTMLElement;
+import com.freya02.docs.HTMLElementList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jsoup.nodes.Element;
@@ -13,7 +14,7 @@ public class FieldDoc extends BaseDoc {
 	@NotNull private final String effectiveURL;
 	@NotNull private final String fieldName;
 	@NotNull private final String fieldType;
-	@Nullable private final HTMLElement descriptionElement;
+	@NotNull private final HTMLElementList descriptionElements;
 
 	@NotNull private final String elementId;
 	@NotNull private final String modifiers;
@@ -46,7 +47,7 @@ public class FieldDoc extends BaseDoc {
 		this.fieldType = fieldTypeElement.text();
 
 		//Get field description
-		this.descriptionElement = HTMLElement.tryWrap(element.selectFirst("section.detail > div.block"));
+		this.descriptionElements = HTMLElementList.fromElements(element.select("section.detail > div.block"));
 
 		//Get field possible's deprecation
 		this.deprecationElement = HTMLElement.tryWrap(element.selectFirst("section.detail > div.deprecation-block"));
@@ -93,7 +94,7 @@ public class FieldDoc extends BaseDoc {
 
 	@Override
 	public String toString() {
-		return fieldType + " " + fieldName + " : " + descriptionElement;
+		return fieldType + " " + fieldName + " : " + descriptionElements;
 	}
 
 	public String getSimpleSignature() {
@@ -107,9 +108,9 @@ public class FieldDoc extends BaseDoc {
 	}
 
 	@Override
-	@Nullable
-	public HTMLElement getDescriptionElement() {
-		return descriptionElement;
+	@NotNull
+	public HTMLElementList getDescriptionElements() {
+		return descriptionElements;
 	}
 
 	@Override

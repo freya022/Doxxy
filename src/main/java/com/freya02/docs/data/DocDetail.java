@@ -1,21 +1,17 @@
 package com.freya02.docs.data;
 
-import com.freya02.bot.utils.HTMLElement;
+import com.freya02.docs.HTMLElement;
+import com.freya02.docs.HTMLElementList;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class DocDetail {
+public class DocDetail extends HTMLElementList {
 	private final DocDetailType detailType;
-	private final List<HTMLElement> htmlElements;
 
 	public DocDetail(DocDetailType detailType, List<HTMLElement> htmlElements) {
-		this.detailType = detailType;
-		this.htmlElements = htmlElements;
-	}
+		super(htmlElements);
 
-	public List<HTMLElement> getHtmlElements() {
-		return htmlElements;
+		this.detailType = detailType;
 	}
 
 	public DocDetailType getDetailType() {
@@ -24,11 +20,5 @@ public class DocDetail {
 
 	public String getDetailString() {
 		return detailType.getElementText();
-	}
-
-	public String toMarkdown() {
-		return htmlElements.stream()
-				.map(HTMLElement::getMarkdown)
-				.collect(Collectors.joining("\n"));
 	}
 }
