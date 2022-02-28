@@ -5,6 +5,7 @@ import com.freya02.docs.DocSourceType;
 import com.freya02.docs.DocWebServer;
 import com.freya02.docs.DocsSession;
 import com.freya02.docs.data.ClassDoc;
+import com.freya02.docs.data.MethodDoc;
 
 public class DocsTest3 {
 	public static void main(String[] args) throws Exception {
@@ -27,17 +28,20 @@ public class DocsTest3 {
 //		final ClassDoc enumTest = session.retrieveDoc("https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/file/StandardCopyOption.html");
 
 		DocWebServer.startDocWebServer();
-		final ClassDocs updatedSource = ClassDocs.getUpdatedSource(DocSourceType.JDA);
+		final ClassDocs updatedSource = ClassDocs.getUpdatedSource(DocSourceType.BOT_COMMANDS);
 
 //		final Document document = HttpUtils.getDocument("https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/file/StandardCopyOption.html");
 
-		final String url = updatedSource.getSimpleNameToUrlMap().get("MessageType");
-
-		final ClassDoc onlineClassDoc = new ClassDoc(new DocsSession(), "https://ci.dv8tion.net/job/JDA5/javadoc/net/dv8tion/jda/api/entities/MessageType.html");
+		final String url = updatedSource.getSimpleNameToUrlMap().get("GuildApplicationSettings");
+//
+//		final ClassDoc onlineClassDoc = new ClassDoc(new DocsSession(), "https://ci.dv8tion.net/job/JDA5/javadoc/net/dv8tion/jda/api/entities/MessageType.html");
 		final ClassDoc classDoc = new ClassDoc(new DocsSession(), url);
 
-		System.out.println("onlineClassDoc.getDescriptionElement().getMarkdown() = " + onlineClassDoc.getDescriptionElement().getMarkdown());
-		System.out.println("classDoc      .getDescriptionElement().getMarkdown() = " + classDoc.getDescriptionElement().getMarkdown());
+		final MethodDoc methodDoc = classDoc.getMethodDocs().get("getCommandPrivileges(net.dv8tion.jda.api.entities.Guild,java.lang.String)");
+		final String simpleAnnotatedSignature = methodDoc.getSimpleAnnotatedSignature();
+//
+//		System.out.println("onlineClassDoc.getDescriptionElement().getMarkdown() = " + onlineClassDoc.getDescriptionElement().getMarkdown());
+//		System.out.println("classDoc      .getDescriptionElement().getMarkdown() = " + classDoc.getDescriptionElement().getMarkdown());
 
 		System.out.println();
 	}

@@ -2,6 +2,7 @@ package com.freya02.bot.docs;
 
 import com.freya02.bot.utils.HTMLElement;
 import com.freya02.bot.utils.HttpUtils;
+import com.freya02.docs.DocUtils;
 import com.freya02.docs.data.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -82,7 +83,14 @@ public class DocEmbeds {
 	public static EmbedBuilder toEmbed(ClassDoc classDoc, MethodDoc methodDoc) {
 		final EmbedBuilder builder = new EmbedBuilder();
 
-		builder.setTitle(classDoc.getClassName() + '#' + methodDoc.getSimpleSignature() + " : " + methodDoc.getMethodReturnType(), getDocURL(methodDoc));
+		final String fixedReturnType = DocUtils.fixReturnType(methodDoc);
+
+		String title = methodDoc.getMethodAnnotations() + "\n" + methodDoc.getSimpleAnnotatedSignature() + " : " + fixedReturnType;
+		if (title.length() > MessageEmbed.TITLE_MAX_LENGTH) {
+			title = "%s#%s : %s - [full signature on online docs]".formatted(methodDoc.getClassDocs().getClassName(), methodDoc.getMethodName(), methodDoc.getMethodReturnType());
+		}
+
+		builder.setTitle(title, getDocURL(methodDoc));
 
 		//Should use that but JB annotations are duplicated, bruh momentum
 //		builder.setTitle(methodDoc.getMethodSignature(), methodDoc.getURL());

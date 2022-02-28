@@ -13,8 +13,10 @@ public class MethodDoc extends BaseDoc {
 
 	@NotNull private final String elementId;
 
+	@Nullable private final String methodAnnotations;
 	@NotNull private final String methodName;
 	@NotNull private final String methodSignature;
+	@Nullable private final String methodParameters;
 	@NotNull private final String methodReturnType;
 	@Nullable private final HTMLElement descriptionElement;
 	@Nullable private final HTMLElement deprecationElement;
@@ -39,6 +41,12 @@ public class MethodDoc extends BaseDoc {
 		if (methodSignatureElement == null) throw new DocParseException();
 
 		this.methodSignature = methodSignatureElement.text();
+
+		final Element methodAnnotationsElement = element.selectFirst("div.member-signature > span.annotations");
+		this.methodAnnotations = methodAnnotationsElement == null ? null : methodAnnotationsElement.text();
+
+		final Element methodParametersElement = element.selectFirst("div.member-signature > span.parameters");
+		this.methodParameters = methodParametersElement == null ? null : methodParametersElement.text();
 
 		final Element methodReturnTypeElement = element.selectFirst("div.member-signature > span.return-type");
 		if (methodReturnTypeElement == null) throw new DocParseException();
@@ -96,6 +104,11 @@ public class MethodDoc extends BaseDoc {
 		return DocUtils.getSimpleSignature(elementId);
 	}
 
+	@NotNull
+	public String getSimpleAnnotatedSignature() {
+		return DocUtils.getSimpleAnnotatedSignature(this);
+	}
+
 	@Override
 	@NotNull
 	public String getEffectiveURL() {
@@ -128,5 +141,15 @@ public class MethodDoc extends BaseDoc {
 	@Override
 	public String toString() {
 		return methodSignature + " : " + descriptionElement;
+	}
+
+	@Nullable
+	public String getMethodParameters() {
+		return methodParameters;
+	}
+
+	@Nullable
+	public String getMethodAnnotations() {
+		return methodAnnotations;
 	}
 }
