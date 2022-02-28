@@ -9,10 +9,12 @@ import org.jsoup.nodes.Node;
 
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DocUtils {
-	private static final Pattern DUPLICATED_ANNOTATION_PATTERN = Pattern.compile("(@.+)? \\1? (.+) (.+)");
+	private static final Pattern PARAMETER_PATTERN = Pattern.compile("(@\\w+)? (?:[^ ]*\\.)?(\\w+) (\\w+)");
+	private static final Pattern ANNOTATION_PATTERN = Pattern.compile("@\\w*");
 
 	@NotNull
 	public static String getSimpleSignature(@NotNull String elementId) {
@@ -43,13 +45,10 @@ public class DocUtils {
 		final StringJoiner parameterJoiner = new StringJoiner(", ", "(", ")").setEmptyValue("()");
 		final String methodParameters = methodDoc.getMethodParameters();
 		if (methodParameters != null) {
-			final String[] parameters = methodParameters.substring(1, methodParameters.length() - 1).split(",");
+			final Matcher parameterMatcher = PARAMETER_PATTERN.matcher(methodParameters);
 
-			for (String parameter : parameters) {
-				if (parameter.isBlank()) continue;
-
-				final String trim = DUPLICATED_ANNOTATION_PATTERN.matcher(parameter.trim()).replaceAll("$1 $2 $3"); //Fix duplicated annotations
-				parameterJoiner.add(trim);
+			while (parameterMatcher.find()) {
+				parameterJoiner.add(parameterMatcher.group(1) + " " + parameterMatcher.group(2) + " " + parameterMatcher.group(3));
 			}
 		}
 
@@ -71,8 +70,8 @@ public class DocUtils {
 
 	@NotNull
 	public static String fixReturnType(MethodDoc methodDoc) {
-		return methodDoc.getMethodReturnType()
-				.replaceAll("@\\w*?", "")
+		return ANNOTATION_PATTERN.matcher(methodDoc.getMethodReturnType())
+				.replaceAll("")
 				.trim();
 	}
 }
