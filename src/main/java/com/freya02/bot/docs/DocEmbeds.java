@@ -86,7 +86,10 @@ public class DocEmbeds {
 
 		final String fixedReturnType = DocUtils.fixReturnType(methodDoc);
 
-		String title = methodDoc.getMethodAnnotations() + "\n" + methodDoc.getSimpleAnnotatedSignature() + " : " + fixedReturnType;
+		final String effectiveAnnotations = methodDoc.getMethodAnnotations() == null
+				? ""
+				: (methodDoc.getMethodAnnotations() + "\n");
+		String title = effectiveAnnotations + methodDoc.getSimpleAnnotatedSignature() + " : " + fixedReturnType;
 		if (title.length() > MessageEmbed.TITLE_MAX_LENGTH) {
 			title = "%s#%s : %s - [full signature on online docs]".formatted(methodDoc.getClassDocs().getClassName(), methodDoc.getMethodName(), methodDoc.getMethodReturnType());
 		}
