@@ -85,7 +85,11 @@ public class SeeAlso {
 		final String text = seeAlsoClassElement.text();
 
 		final StringBuilder textBuilder = new StringBuilder(text);
-		final int index = text.lastIndexOf('.');
+
+		final int parenthesisIndex = text.indexOf('(');
+		final int index = text.lastIndexOf('.', parenthesisIndex == -1
+				? 0
+				: parenthesisIndex);
 
 		if (index > -1) {
 			textBuilder.replace(index, index + 1, "#");
