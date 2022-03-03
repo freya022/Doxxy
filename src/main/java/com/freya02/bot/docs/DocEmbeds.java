@@ -1,7 +1,6 @@
 package com.freya02.bot.docs;
 
 import com.freya02.bot.utils.HttpUtils;
-import com.freya02.docs.DocUtils;
 import com.freya02.docs.HTMLElement;
 import com.freya02.docs.HTMLElementList;
 import com.freya02.docs.data.*;
@@ -84,12 +83,7 @@ public class DocEmbeds {
 	public static EmbedBuilder toEmbed(ClassDoc classDoc, MethodDoc methodDoc) {
 		final EmbedBuilder builder = new EmbedBuilder();
 
-		final String fixedReturnType = DocUtils.fixReturnType(methodDoc);
-
-		final String effectiveAnnotations = methodDoc.getMethodAnnotations() == null
-				? ""
-				: (methodDoc.getMethodAnnotations() + "\n");
-		String title = effectiveAnnotations + methodDoc.getSimpleAnnotatedSignature() + " : " + fixedReturnType;
+		String title = methodDoc.getSimpleAnnotatedSignature(classDoc);
 		if (title.length() > MessageEmbed.TITLE_MAX_LENGTH) {
 			title = "%s#%s : %s - [full signature on online docs]".formatted(methodDoc.getClassDocs().getClassName(), methodDoc.getMethodName(), methodDoc.getMethodReturnType());
 		}

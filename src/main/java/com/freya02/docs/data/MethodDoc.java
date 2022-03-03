@@ -106,8 +106,8 @@ public class MethodDoc extends BaseDoc {
 	}
 
 	@NotNull
-	public String getSimpleAnnotatedSignature() {
-		return DocUtils.getSimpleAnnotatedSignature(this);
+	public String getSimpleAnnotatedSignature(ClassDoc targetClassdoc) {
+		return DocUtils.getSimpleAnnotatedSignature(targetClassdoc, this);
 	}
 
 	@Override

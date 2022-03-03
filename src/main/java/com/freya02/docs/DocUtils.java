@@ -1,6 +1,7 @@
 package com.freya02.docs;
 
 import com.freya02.bot.utils.DecomposedName;
+import com.freya02.docs.data.ClassDoc;
 import com.freya02.docs.data.MethodDoc;
 import org.jetbrains.annotations.NotNull;
 import org.jsoup.nodes.Document;
@@ -9,11 +10,10 @@ import org.jsoup.nodes.Node;
 
 import java.util.List;
 import java.util.StringJoiner;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DocUtils {
-	private static final Pattern PARAMETER_PATTERN = Pattern.compile("(@\\w+)? (?:[^ ]*\\.)?(\\w+) (\\w+)");
+	private static final Pattern DUPLICATED_ANNOTATION_PATTERN = Pattern.compile("(@.+)?\\s+\\1");
 	private static final Pattern ANNOTATION_PATTERN = Pattern.compile("@\\w*");
 
 	@NotNull
@@ -39,22 +39,28 @@ public class DocUtils {
 	}
 
 	@NotNull
-	public static String getSimpleAnnotatedSignature(@NotNull MethodDoc methodDoc) {
-		final StringBuilder simpleSignatureBuilder = new StringBuilder(methodDoc.getClassDocs().getClassName() + "#" + methodDoc.getMethodName());
+	public static String getSimpleAnnotatedSignature(ClassDoc targetClassdoc, @NotNull MethodDoc methodDoc) {
+		final String fixedReturnType = fixReturnType(methodDoc);
 
-		final StringJoiner parameterJoiner = new StringJoiner(", ", "(", ")").setEmptyValue("()");
+		final String effectiveAnnotations = methodDoc.getMethodAnnotations() == null
+				? ""
+				: (methodDoc.getMethodAnnotations() + "\n");
+
+		final StringBuilder simpleSignatureBuilder = new StringBuilder(effectiveAnnotations + targetClassdoc.getClassName() + "#" + methodDoc.getMethodName());
+
+		final StringJoiner parameterJoiner = new StringJoiner(",\n", "(", ")").setEmptyValue("()");
 		final String methodParameters = methodDoc.getMethodParameters();
 		if (methodParameters != null) {
-			final Matcher parameterMatcher = PARAMETER_PATTERN.matcher(methodParameters);
+			final String[] split = methodParameters.substring(1, methodParameters.length() - 1).split(",");
 
-			while (parameterMatcher.find()) {
-				parameterJoiner.add(parameterMatcher.group(1) + " " + parameterMatcher.group(2) + " " + parameterMatcher.group(3));
+			for (String parameter : split) {
+				parameterJoiner.add(DUPLICATED_ANNOTATION_PATTERN.matcher(parameter.trim()).replaceAll("$1"));
 			}
 		}
 
 		simpleSignatureBuilder.append(parameterJoiner);
 
-		return simpleSignatureBuilder.toString();
+		return simpleSignatureBuilder + " : " + fixedReturnType;
 	}
 
 	@SuppressWarnings("BooleanMethodIsAlwaysInverted")
