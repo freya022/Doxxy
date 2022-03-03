@@ -89,7 +89,7 @@ public class ClassDocs {
 			if (oldUrl != null) {
 				LOGGER.warn("Detected a duplicate class name '{}' at '{}' and '{}'", decomposition.className(), classUrl, oldUrl);
 			} else {
-				urlSet.add(classUrl); //Consistency between URL set and map values
+				urlSet.add(source.toOnlineURL(classUrl)); //For quick checks
 			}
 		}
 	}
