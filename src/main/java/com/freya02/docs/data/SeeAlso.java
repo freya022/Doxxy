@@ -62,7 +62,7 @@ public class SeeAlso {
 
 					final String className = javadocUrl.getClassName();
 
-					final String targetAsText = getTargetAsText(seeAlsoClassElement);
+					final String targetAsText = getTargetAsText(seeAlsoClassElement, javadocUrl.getTargetType());
 					final SeeAlsoReference ref = switch (javadocUrl.getTargetType()) {
 						case CLASS -> new SeeAlsoReference(targetAsText, href, TargetType.CLASS, className);
 						case METHOD -> new SeeAlsoReference(targetAsText, href, TargetType.METHOD, className + "#" + DocUtils.getSimpleSignature(javadocUrl.getFragment()));
@@ -81,8 +81,10 @@ public class SeeAlso {
 	}
 
 	@NotNull
-	private String getTargetAsText(Element seeAlsoClassElement) {
+	private String getTargetAsText(Element seeAlsoClassElement, TargetType targetType) {
 		final String text = seeAlsoClassElement.text();
+
+		if (targetType != TargetType.METHOD) return text;
 
 		final StringBuilder textBuilder = new StringBuilder(text);
 
