@@ -5,7 +5,6 @@ import com.freya02.docs.DocSourceType;
 import com.freya02.docs.DocWebServer;
 import com.freya02.docs.DocsSession;
 import com.freya02.docs.data.ClassDoc;
-import com.freya02.docs.data.MethodDoc;
 
 public class DocsTest3 {
 	public static void main(String[] args) throws Exception {
@@ -32,13 +31,13 @@ public class DocsTest3 {
 
 //		final Document document = HttpUtils.getDocument("https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/file/StandardCopyOption.html");
 
-		final String url = updatedSource.getSimpleNameToUrlMap().get("IPermissionContainerManager");
+		final String url = updatedSource.getSimpleNameToUrlMap().get("OptionData");
 //
 //		final ClassDoc onlineClassDoc = new ClassDoc(new DocsSession(), "https://ci.dv8tion.net/job/JDA5/javadoc/net/dv8tion/jda/api/entities/MessageType.html");
 		final ClassDoc classDoc = new ClassDoc(new DocsSession(), url);
 
-		final MethodDoc methodDoc = classDoc.getMethodDocs().get("putRolePermissionOverride(long,long,long)");
-		final String simpleAnnotatedSignature = methodDoc.getSimpleAnnotatedSignature(classDoc);
+//		final MethodDoc methodDoc = classDoc.getMethodDocs().get("putRolePermissionOverride(long,long,long)");
+//		final String simpleAnnotatedSignature = methodDoc.getSimpleAnnotatedSignature(classDoc);
 //		final String markdown = methodDoc.getDescriptionElements().getMarkdown();
 //		final String markdown2 = methodDoc.getDetailToElementsMap().getDetail(DocDetailType.SPECIFIED_BY).toMarkdown("\n");
 //

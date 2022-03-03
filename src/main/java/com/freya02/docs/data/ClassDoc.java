@@ -86,6 +86,13 @@ public class ClassDoc extends BaseDoc {
 			this.fieldDocs.put(fieldDocs.getElementId(), fieldDocs);
 		});
 
+		//Try to find constructor details
+		processDetailElements(document, ClassDetailType.CONSTRUCTOR, methodElement -> {
+			final MethodDoc methodDocs = new MethodDoc(this, ClassDetailType.CONSTRUCTOR, methodElement);
+
+			this.methodDocs.put(methodDocs.getElementId(), methodDocs);
+		});
+
 		//Try to find method details
 		processDetailElements(document, ClassDetailType.METHOD, methodElement -> {
 			final MethodDoc methodDocs = new MethodDoc(this, ClassDetailType.METHOD, methodElement);

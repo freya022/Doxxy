@@ -50,8 +50,15 @@ public class MethodDoc extends BaseDoc {
 		this.methodParameters = methodParametersElement == null ? null : methodParametersElement.text();
 
 		final Element methodReturnTypeElement = element.selectFirst("div.member-signature > span.return-type");
-		if (methodReturnTypeElement == null) throw new DocParseException();
-		this.methodReturnType = methodReturnTypeElement.text();
+		if (methodReturnTypeElement == null) {
+			if (classDetailType == ClassDetailType.CONSTRUCTOR) {
+				this.methodReturnType = classDoc.getClassName();
+			} else {
+				throw new DocParseException();
+			}
+		} else {
+			this.methodReturnType = methodReturnTypeElement.text();
+		}
 
 		//Get method description
 		this.descriptionElements = HTMLElementList.fromElements(element.select("section.detail > div.block"));
