@@ -13,15 +13,21 @@ import com.freya02.botcommands.api.application.slash.autocomplete.annotations.Au
 import com.freya02.botcommands.api.components.Components;
 import com.freya02.botcommands.api.components.InteractionConstraints;
 import com.freya02.botcommands.api.components.event.ButtonEvent;
+import com.freya02.botcommands.api.modals.Modals;
+import com.freya02.botcommands.api.modals.annotations.ModalHandler;
+import com.freya02.botcommands.api.modals.annotations.ModalInput;
 import com.freya02.botcommands.api.pagination.paginator.Paginator;
 import com.freya02.botcommands.api.pagination.paginator.PaginatorBuilder;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.interactions.components.text.Modal;
+import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -39,6 +45,7 @@ public class SlashTag extends ApplicationCommand {
 	private static final String GUILD_TAGS_AUTOCOMPLETE = "guildTagsAutocomplete";
 	private static final String USER_TAGS_AUTOCOMPLETE = "userTagsAutocomplete";
 	private static final Logger LOGGER = Logging.getLogger();
+	private static final String TAGS_CREATE_MODAL_HANDLER = "SlashTag: tagsCreate";
 	private final TagDB tagDB;
 
 	public SlashTag(Database database) throws SQLException {
@@ -93,11 +100,23 @@ public class SlashTag extends ApplicationCommand {
 	}
 
 	@JDASlashCommand(name = "tags", subcommand = "create", description = "Creates a tag in this guild")
-	public void createTag(GuildSlashEvent event,
-	                      @AppOption(description = "Name of the tag") String name,
-	                      @AppOption(description = "The description of the tag") String description,
-	                      @AppOption(description = "The content to associate with this tag") String content) throws SQLException {
+	public void createTag(GuildSlashEvent event) {
+		final Modal modal = Modals.create(TAGS_CREATE_MODAL_HANDLER)
+				.setTitle("Create a tag")
+				.addActionRow(Modals.createTextInput("tagName", "Tag name", TextInputStyle.SHORT).build())
+				.addActionRow(Modals.createTextInput("tagDescription", "Tag description", TextInputStyle.SHORT).build())
+				.addActionRow(Modals.createTextInput("tagContent", "Tag content", TextInputStyle.PARAGRAPH).build())
+				.build();
 
+		event.replyModal(modal).queue();
+	}
+
+	@ModalHandler(name = TAGS_CREATE_MODAL_HANDLER)
+	public void createTag(ModalInteractionEvent event,
+	                      @ModalInput(name = "tagName") String name,
+	                      @ModalInput(name = "tagDescription") String description,
+	                      @ModalInput(name = "tagContent") String content
+	) throws SQLException {
 		try {
 			tagDB.create(event.getGuild().getIdLong(), event.getUser().getIdLong(), name, description, content);
 
