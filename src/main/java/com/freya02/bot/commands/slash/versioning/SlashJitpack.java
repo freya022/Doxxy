@@ -29,6 +29,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -79,7 +80,7 @@ public class SlashJitpack extends ApplicationCommand {
 		if (libraryType == LibraryType.BOT_COMMANDS) { //Default
 			final MavenBranchProjectDependencyVersionChecker checker = branchNameToJdaVersionChecker.computeIfAbsent(pullRequest.headBranchName(), x -> {
 				try {
-					return new MavenBranchProjectDependencyVersionChecker(Main.LAST_KNOWN_VERSIONS_FOLDER_PATH,
+					return new MavenBranchProjectDependencyVersionChecker(getPRFileName(pullRequest),
 							pullRequest.headOwnerName(),
 							pullRequest.headRepoName(),
 							"JDA",
@@ -118,6 +119,13 @@ public class SlashJitpack extends ApplicationCommand {
 		event.replyEmbeds(builder.build())
 				.addActionRow(DeleteButtonListener.getDeleteButton(event.getUser()))
 				.queue();
+	}
+
+	@NotNull
+	private Path getPRFileName(PullRequest pullRequest) {
+		return Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("%s-%s-%s.txt".formatted(pullRequest.headOwnerName(),
+				pullRequest.headRepoName(),
+				pullRequest.headBranchName()));
 	}
 
 	@CacheAutocompletion
