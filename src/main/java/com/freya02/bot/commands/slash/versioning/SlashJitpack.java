@@ -123,9 +123,9 @@ public class SlashJitpack extends ApplicationCommand {
 
 	@NotNull
 	private Path getPRFileName(PullRequest pullRequest) {
-		return Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("%s-%s-%s.txt".formatted(pullRequest.headOwnerName(),
+		return Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("%s-%s-%d.txt".formatted(pullRequest.headOwnerName(),
 				pullRequest.headRepoName(),
-				pullRequest.headBranchName()));
+				pullRequest.number()));
 	}
 
 	@CacheAutocompletion
