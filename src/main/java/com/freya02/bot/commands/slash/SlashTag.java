@@ -116,8 +116,7 @@ public class SlashTag extends ApplicationCommand {
 
 	@JDASlashCommand(name = "tags", subcommand = "create", description = "Creates a tag in this guild")
 	public void createTag(GuildSlashEvent event) {
-		final Modal modal = Modals.create(TAGS_CREATE_MODAL_HANDLER)
-				.setTitle("Create a tag")
+		final Modal modal = Modals.create("Create a tag", TAGS_CREATE_MODAL_HANDLER)
 				.addActionRow(Modals.createTextInput("tagName", "Tag name", TextInputStyle.SHORT).build())
 				.addActionRow(Modals.createTextInput("tagDescription", "Tag description", TextInputStyle.SHORT).build())
 				.addActionRow(Modals.createTextInput("tagContent", "Tag content", TextInputStyle.PARAGRAPH).build())
