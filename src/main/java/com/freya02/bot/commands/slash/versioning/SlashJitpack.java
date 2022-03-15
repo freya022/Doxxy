@@ -111,7 +111,7 @@ public class SlashJitpack extends ApplicationCommand {
 			builder.setTitle("Maven dependencies for JDA for PR #" + pullRequest.number());
 			builder.addField("PR Link", pullRequest.pullUrl(), false);
 
-			xml = VersioningCommons.formatJDA5(latestJDAVersion);
+			xml = VersioningCommons.formatJDA5Jitpack(latestJDAVersion);
 		}
 
 		builder.setDescription("```xml\n" + xml + "```");

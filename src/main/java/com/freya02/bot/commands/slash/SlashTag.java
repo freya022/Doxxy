@@ -13,16 +13,25 @@ import com.freya02.botcommands.api.application.slash.autocomplete.annotations.Au
 import com.freya02.botcommands.api.components.Components;
 import com.freya02.botcommands.api.components.InteractionConstraints;
 import com.freya02.botcommands.api.components.event.ButtonEvent;
+import com.freya02.botcommands.api.modals.Modals;
+import com.freya02.botcommands.api.modals.annotations.ModalData;
+import com.freya02.botcommands.api.modals.annotations.ModalHandler;
+import com.freya02.botcommands.api.modals.annotations.ModalInput;
 import com.freya02.botcommands.api.pagination.paginator.Paginator;
 import com.freya02.botcommands.api.pagination.paginator.PaginatorBuilder;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.interactions.components.text.Modal;
+import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -36,24 +45,37 @@ import static net.dv8tion.jda.api.Permission.MANAGE_ROLES;
 import static net.dv8tion.jda.api.Permission.MANAGE_SERVER;
 
 public class SlashTag extends ApplicationCommand {
+	private static final Logger LOGGER = Logging.getLogger();
+
 	private static final String GUILD_TAGS_AUTOCOMPLETE = "guildTagsAutocomplete";
 	private static final String USER_TAGS_AUTOCOMPLETE = "userTagsAutocomplete";
-	private static final Logger LOGGER = Logging.getLogger();
+
+	private static final String TAGS_CREATE_MODAL_HANDLER = "SlashTag: tagsCreate";
+	private static final String TAGS_EDIT_MODAL_HANDLER = "SlashTag: tagsEdit";
+
 	private final TagDB tagDB;
 
 	public SlashTag(Database database) throws SQLException {
 		this.tagDB = new TagDB(database);
 	}
 
-	private void withOwnedTag(@NotNull GuildSlashEvent event, @NotNull String name, TagConsumer consumer) throws SQLException {
-		final Tag tag = tagDB.get(event.getGuild().getIdLong(), name);
+	@Contract(value = "null -> fail", pure = true)
+	private <T> T checkGuild(@Nullable T obj) {
+		if (obj == null)
+			throw new IllegalArgumentException("Event did not happen in a guild");
+
+		return obj;
+	}
+
+	private void withOwnedTag(@NotNull IReplyCallback event, @NotNull String name, TagConsumer consumer) throws SQLException {
+		final Tag tag = tagDB.get(checkGuild(event.getGuild()).getIdLong(), name);
 
 		if (tag == null) {
 			event.reply("Tag '" + name + "' was not found").setEphemeral(true).queue();
 
 			return;
 		} else if (tag.ownerId() != event.getUser().getIdLong()
-				&& !event.getMember().hasPermission(event.getGuildChannel(), MANAGE_SERVER, MANAGE_ROLES)) {
+				&& !checkGuild(event.getMember()).hasPermission(event.getGuildChannel(), MANAGE_SERVER, MANAGE_ROLES)) {
 			event.reply("You do not own this tag").setEphemeral(true).queue();
 
 			return;
@@ -93,13 +115,24 @@ public class SlashTag extends ApplicationCommand {
 	}
 
 	@JDASlashCommand(name = "tags", subcommand = "create", description = "Creates a tag in this guild")
-	public void createTag(GuildSlashEvent event,
-	                      @AppOption(description = "Name of the tag") String name,
-	                      @AppOption(description = "The description of the tag") String description,
-	                      @AppOption(description = "The content to associate with this tag") String content) throws SQLException {
+	public void createTag(GuildSlashEvent event) {
+		final Modal modal = Modals.create("Create a tag", TAGS_CREATE_MODAL_HANDLER)
+				.addActionRow(Modals.createTextInput("tagName", "Tag name", TextInputStyle.SHORT).build())
+				.addActionRow(Modals.createTextInput("tagDescription", "Tag description", TextInputStyle.SHORT).build())
+				.addActionRow(Modals.createTextInput("tagContent", "Tag content", TextInputStyle.PARAGRAPH).build())
+				.build();
 
+		event.replyModal(modal).queue();
+	}
+
+	@ModalHandler(name = TAGS_CREATE_MODAL_HANDLER)
+	public void createTag(ModalInteractionEvent event,
+	                      @ModalInput(name = "tagName") String name,
+	                      @ModalInput(name = "tagDescription") String description,
+	                      @ModalInput(name = "tagContent") String content
+	) throws SQLException {
 		try {
-			tagDB.create(event.getGuild().getIdLong(), event.getUser().getIdLong(), name, description, content);
+			tagDB.create(checkGuild(event.getGuild()).getIdLong(), event.getUser().getIdLong(), name, description, content);
 
 			event.replyFormat("Tag '%s' created successfully", name).setEphemeral(true).queue();
 		} catch (SQLException e) {
@@ -115,14 +148,36 @@ public class SlashTag extends ApplicationCommand {
 
 	@JDASlashCommand(name = "tags", subcommand = "edit", description = "Edits a tag in this guild")
 	public void editTag(GuildSlashEvent event,
-	                    @AppOption(description = "Name of the tag", autocomplete = USER_TAGS_AUTOCOMPLETE) String name,
-	                    @Nullable @AppOption(description = "New name of the tag") String newName,
-	                    @Nullable @AppOption(description = "The description of the tag") String newDescription,
-	                    @Nullable @AppOption(description = "The content to associate with this tag") String newContent) throws SQLException {
+	                    @AppOption(description = "Name of the tag", autocomplete = USER_TAGS_AUTOCOMPLETE) String name) throws SQLException {
 
 		withOwnedTag(event, name, tag -> {
+			final Modal modal = Modals.create(TAGS_EDIT_MODAL_HANDLER, name)
+					.setTitle("Edit a tag")
+					.addActionRow(Modals.createTextInput("tagName", "Tag name", TextInputStyle.SHORT)
+							.setValue(tag.name())
+							.build())
+					.addActionRow(Modals.createTextInput("tagDescription", "Tag description", TextInputStyle.SHORT)
+							.setValue(tag.description())
+							.build())
+					.addActionRow(Modals.createTextInput("tagContent", "Tag content", TextInputStyle.PARAGRAPH)
+							.setValue(tag.content())
+							.build())
+					.build();
+
+			event.replyModal(modal).queue();
+		});
+	}
+
+	@ModalHandler(name = TAGS_EDIT_MODAL_HANDLER)
+	public void editTag(ModalInteractionEvent event,
+						  @ModalData String name,
+	                      @ModalInput(name = "tagName") String newName,
+	                      @ModalInput(name = "tagDescription") String newDescription,
+	                      @ModalInput(name = "tagContent") String newContent
+	) throws SQLException {
+		withOwnedTag(event, name, tag -> {
 			try {
-				tagDB.edit(event.getGuild().getIdLong(), event.getUser().getIdLong(), name, newName, newDescription, newContent);
+				tagDB.edit(checkGuild(event.getGuild()).getIdLong(), event.getUser().getIdLong(), name, newName, newDescription, newContent);
 
 				event.replyFormat("Tag '%s' edited successfully", name).setEphemeral(true).queue();
 			} catch (TagException e) {
