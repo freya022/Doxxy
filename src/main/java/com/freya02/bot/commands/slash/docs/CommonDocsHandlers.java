@@ -69,7 +69,7 @@ public class CommonDocsHandlers extends ApplicationCommand {
 		docIndexMap = DocIndexMap.getInstance();
 	}
 
-	static void sendClass(IReplyCallback event, boolean ephemeral, @NotNull CachedClass cachedClass) {
+	public static void sendClass(IReplyCallback event, boolean ephemeral, @NotNull CachedClass cachedClass) {
 		ReplyCallbackAction replyAction = event.replyEmbeds(cachedClass.getClassEmbed());
 
 		replyAction = addSeeAlso(cachedClass, replyAction);
@@ -81,7 +81,7 @@ public class CommonDocsHandlers extends ApplicationCommand {
 				.queue();
 	}
 
-	static void sendMethod(IReplyCallback event, boolean ephemeral, @NotNull CachedMethod cachedMethod) {
+	public static void sendMethod(IReplyCallback event, boolean ephemeral, @NotNull CachedMethod cachedMethod) {
 		ReplyCallbackAction replyAction = event.replyEmbeds(cachedMethod.getMethodEmbed());
 
 		replyAction = addSeeAlso(cachedMethod, replyAction);
@@ -93,7 +93,7 @@ public class CommonDocsHandlers extends ApplicationCommand {
 				.queue();
 	}
 
-	static void sendField(IReplyCallback event, boolean ephemeral, @NotNull CachedField cachedField) {
+	public static void sendField(IReplyCallback event, boolean ephemeral, @NotNull CachedField cachedField) {
 		ReplyCallbackAction replyAction = event.replyEmbeds(cachedField.getFieldEmbed());
 
 		replyAction = addSeeAlso(cachedField, replyAction);
@@ -105,7 +105,7 @@ public class CommonDocsHandlers extends ApplicationCommand {
 				.queue();
 	}
 
-	static void handleClass(@NotNull GuildSlashEvent event, @NotNull String className, DocIndex docIndex) throws IOException {
+	public static void handleClass(@NotNull GuildSlashEvent event, @NotNull String className, DocIndex docIndex) throws IOException {
 		final CachedClass cachedClass = docIndex.getClassDoc(className);
 
 		if (cachedClass == null) {
@@ -117,7 +117,7 @@ public class CommonDocsHandlers extends ApplicationCommand {
 		sendClass(event, false, cachedClass);
 	}
 
-	static void handleMethodDocs(@NotNull GuildSlashEvent event, @NotNull String className, @NotNull String identifier, DocIndex docIndex) throws IOException {
+	public static void handleMethodDocs(@NotNull GuildSlashEvent event, @NotNull String className, @NotNull String identifier, DocIndex docIndex) throws IOException {
 		if (!docIndex.getClassesWithMethods().contains(className)) {
 			event.reply("Unknown class").setEphemeral(true).queue();
 
@@ -135,7 +135,7 @@ public class CommonDocsHandlers extends ApplicationCommand {
 		sendMethod(event, false, cachedMethod);
 	}
 
-	static void handleFieldDocs(@NotNull GuildSlashEvent event, @NotNull String className, @NotNull String identifier, DocIndex docIndex) throws IOException {
+	public static void handleFieldDocs(@NotNull GuildSlashEvent event, @NotNull String className, @NotNull String identifier, DocIndex docIndex) throws IOException {
 		if (!docIndex.getClassesWithFields().contains(className)) {
 			event.reply("Unknown class").setEphemeral(true).queue();
 
