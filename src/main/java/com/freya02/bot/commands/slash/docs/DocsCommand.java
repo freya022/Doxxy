@@ -1,6 +1,7 @@
 package com.freya02.bot.commands.slash.docs;
 
-import com.freya02.bot.commands.slash.docs.impl.DocsCommandImpl;
+import com.freya02.bot.docs.DocIndexMap;
+import com.freya02.bot.docs.index.DocIndex;
 import com.freya02.botcommands.api.BContext;
 import com.freya02.botcommands.api.application.ApplicationCommand;
 import com.freya02.botcommands.api.application.CommandPath;
@@ -16,10 +17,10 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 
 public class DocsCommand extends ApplicationCommand {
-	private final DocsCommandImpl commandDef;
+	private final DocIndexMap docIndexMap;
 
 	public DocsCommand() throws IOException {
-		commandDef = new DocsCommandImpl();
+		docIndexMap = DocIndexMap.getInstance();
 	}
 
 	@Override
@@ -53,7 +54,7 @@ public class DocsCommand extends ApplicationCommand {
 			                          String className,
 	                          @Nullable @AppOption(description = "Signature of the method / field name", autocomplete = CommonDocsHandlers.METHOD_NAME_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME)
 			                          String identifier) throws IOException {
-		commandDef.onSlashDocs(event, sourceType, className, identifier);
+		onSlashDocs(event, sourceType, className, identifier);
 	}
 
 	@JDASlashCommand(
@@ -68,7 +69,7 @@ public class DocsCommand extends ApplicationCommand {
 			                           String className,
 	                           @Nullable @AppOption(description = "Signature of the method / field name", autocomplete = CommonDocsHandlers.METHOD_NAME_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME)
 			                           String identifier) throws IOException {
-		commandDef.onSlashDocs(event, sourceType, className, identifier);
+		onSlashDocs(event, sourceType, className, identifier);
 	}
 
 	@JDASlashCommand(
@@ -83,6 +84,22 @@ public class DocsCommand extends ApplicationCommand {
 			                            String className,
 	                            @Nullable @AppOption(description = "Signature of the method / field name", autocomplete = CommonDocsHandlers.METHOD_NAME_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME)
 			                            String identifier) throws IOException {
-		commandDef.onSlashDocs(event, sourceType, className, identifier);
+		onSlashDocs(event, sourceType, className, identifier);
+	}
+
+	private void onSlashDocs(@NotNull GuildSlashEvent event,
+	                         @NotNull DocSourceType sourceType,
+	                         @NotNull String className,
+	                         @Nullable String identifier) throws IOException {
+
+		final DocIndex docIndex = docIndexMap.get(sourceType);
+
+		if (identifier == null) {
+			CommonDocsHandlers.handleClass(event, className, docIndex);
+		} else if (identifier.contains("(")) { //prob a method
+			CommonDocsHandlers.handleMethodDocs(event, className, identifier, docIndex);
+		} else {
+			CommonDocsHandlers.handleFieldDocs(event, className, identifier, docIndex);
+		}
 	}
 }
