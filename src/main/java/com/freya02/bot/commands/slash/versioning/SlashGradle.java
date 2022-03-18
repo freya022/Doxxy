@@ -13,18 +13,18 @@ import com.freya02.botcommands.api.application.slash.GuildSlashEvent;
 import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
 
-public class SlashMaven extends ApplicationCommand {
+public class SlashGradle extends ApplicationCommand {
 	private final Versions versions;
 
-	public SlashMaven(Versions versions) {
+	public SlashGradle(Versions versions) {
 		this.versions = versions;
 	}
 
 	@JDASlashCommand(
-			name = "maven",
-			description = "Shows the Maven dependencies for a library"
+			name = "gradle",
+			description = "Shows the Gradle dependencies for a library"
 	)
-	public void onSlashMaven(GuildSlashEvent event,
+	public void onSlashGradle(GuildSlashEvent event,
 	                         @Optional @AppOption(description = "Type of library") LibraryType libraryType) {
 
 		if (libraryType == null) {
@@ -35,15 +35,15 @@ public class SlashMaven extends ApplicationCommand {
 
 		final EmbedBuilder builder = new EmbedBuilder();
 
-		builder.setTitle("Maven dependencies for " + libraryType.getDisplayString());
+		builder.setTitle("Gradle dependencies for " + libraryType.getDisplayString());
 
-		final String xml = switch (libraryType) {
-			case BOT_COMMANDS -> DependencySupplier.formatBC(BuildToolType.MAVEN, versions.getJdaVersionFromBotCommands(), versions.getLatestBotCommandsVersion());
-			case JDA5 -> DependencySupplier.formatJDA5(BuildToolType.MAVEN, versions.getLatestJDA5Version());
-			case JDA4 -> DependencySupplier.formatJDA4(BuildToolType.MAVEN, versions.getLatestJDA4Version());
+		final String script = switch (libraryType) {
+			case BOT_COMMANDS -> DependencySupplier.formatBC(BuildToolType.GRADLE, versions.getJdaVersionFromBotCommands(), versions.getLatestBotCommandsVersion());
+			case JDA5 -> DependencySupplier.formatJDA5(BuildToolType.GRADLE, versions.getLatestJDA5Version());
+			case JDA4 -> DependencySupplier.formatJDA4(BuildToolType.GRADLE, versions.getLatestJDA4Version());
 		};
 
-		builder.setDescription("```xml\n" + xml + "```");
+		builder.setDescription("```gradle\n" + script + "```");
 
 		event.replyEmbeds(builder.build())
 				.addActionRow(DeleteButtonListener.getDeleteButton(event.getUser()))

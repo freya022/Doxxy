@@ -8,6 +8,8 @@ import com.freya02.bot.versioning.github.PullRequest;
 import com.freya02.bot.versioning.github.PullRequestCache;
 import com.freya02.bot.versioning.github.UpdateCountdown;
 import com.freya02.bot.versioning.maven.MavenBranchProjectDependencyVersionChecker;
+import com.freya02.bot.versioning.supplier.BuildToolType;
+import com.freya02.bot.versioning.supplier.DependencySupplier;
 import com.freya02.botcommands.api.application.ApplicationCommand;
 import com.freya02.botcommands.api.application.CommandPath;
 import com.freya02.botcommands.api.application.annotations.AppOption;
@@ -55,6 +57,7 @@ public class SlashJitpack extends ApplicationCommand {
 		return super.getOptionChoices(guild, commandPath, optionIndex);
 	}
 
+	//TODO enumerate build tools
 	@JDASlashCommand(
 			name = "jitpack",
 			description = "Shows you how to use Pull Requests for your bot"
@@ -77,7 +80,7 @@ public class SlashJitpack extends ApplicationCommand {
 		final EmbedBuilder builder = new EmbedBuilder();
 
 		final String xml;
-		if (libraryType == LibraryType.BOT_COMMANDS) { //Default
+		if (libraryType == LibraryType.BOT_COMMANDS) {
 			final MavenBranchProjectDependencyVersionChecker checker = branchNameToJdaVersionChecker.computeIfAbsent(pullRequest.headBranchName(), x -> {
 				try {
 					return new MavenBranchProjectDependencyVersionChecker(getPRFileName(pullRequest),
@@ -104,14 +107,14 @@ public class SlashJitpack extends ApplicationCommand {
 			builder.setTitle("Maven dependencies for BotCommands for PR #" + pullRequest.number());
 			builder.addField("PR Link", pullRequest.pullUrl(), false);
 
-			xml = VersioningCommons.formatBC(jdaVersionFromBotCommands, latestBotCommands);
+			xml = DependencySupplier.formatBC(BuildToolType.MAVEN, jdaVersionFromBotCommands, latestBotCommands);
 		} else {
 			final ArtifactInfo latestJDAVersion = pullRequest.toJitpackArtifact();
 
 			builder.setTitle("Maven dependencies for JDA for PR #" + pullRequest.number());
 			builder.addField("PR Link", pullRequest.pullUrl(), false);
 
-			xml = VersioningCommons.formatJDA5Jitpack(latestJDAVersion);
+			xml = DependencySupplier.formatJDA5Jitpack(BuildToolType.MAVEN, latestJDAVersion);
 		}
 
 		builder.setDescription("```xml\n" + xml + "```");
