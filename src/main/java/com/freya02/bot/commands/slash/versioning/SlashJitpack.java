@@ -10,9 +10,11 @@ import com.freya02.bot.versioning.github.UpdateCountdown;
 import com.freya02.bot.versioning.maven.MavenBranchProjectDependencyVersionChecker;
 import com.freya02.bot.versioning.supplier.BuildToolType;
 import com.freya02.bot.versioning.supplier.DependencySupplier;
+import com.freya02.botcommands.api.BContext;
 import com.freya02.botcommands.api.application.ApplicationCommand;
 import com.freya02.botcommands.api.application.CommandPath;
 import com.freya02.botcommands.api.application.annotations.AppOption;
+import com.freya02.botcommands.api.application.slash.DefaultValueSupplier;
 import com.freya02.botcommands.api.application.slash.GuildSlashEvent;
 import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand;
 import com.freya02.botcommands.api.application.slash.autocomplete.annotations.AutocompletionHandler;
@@ -35,6 +37,8 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import static com.freya02.bot.utils.Utils.isBCGuild;
+
 public class SlashJitpack extends ApplicationCommand {
 	private static final String BRANCH_NUMBER_AUTOCOMPLETE_NAME = "SlashJitpack: branchNumber";
 
@@ -48,8 +52,14 @@ public class SlashJitpack extends ApplicationCommand {
 	@NotNull
 	public List<Command.Choice> getOptionChoices(@Nullable Guild guild, @NotNull CommandPath commandPath, int optionIndex) {
 		if (optionIndex == 0) {
+			if (isBCGuild(guild)) {
+				return List.of(
+						new Command.Choice("BotCommands", LibraryType.BOT_COMMANDS.name()),
+						new Command.Choice("JDA 5", LibraryType.JDA5.name())
+				);
+			}
+
 			return List.of(
-					new Command.Choice("BotCommands", LibraryType.BOT_COMMANDS.name()),
 					new Command.Choice("JDA 5", LibraryType.JDA5.name())
 			);
 		}
@@ -57,17 +67,60 @@ public class SlashJitpack extends ApplicationCommand {
 		return super.getOptionChoices(guild, commandPath, optionIndex);
 	}
 
-	//TODO enumerate build tools
+	@Override
+	@Nullable //Need to set JDA 5 as a default value if in a non-BC guild
+	public DefaultValueSupplier getDefaultValueSupplier(@NotNull BContext context, @NotNull Guild guild,
+	                                                    @Nullable String commandId, @NotNull CommandPath commandPath,
+	                                                    @NotNull String optionName, @NotNull Class<?> parameterType) {
+		if (optionName.equals("library_type")) {
+			if (!isBCGuild(guild)) {
+				return e -> LibraryType.JDA5;
+			}
+		}
+
+		return super.getDefaultValueSupplier(context, guild, commandId, commandPath, optionName, parameterType);
+	}
+
 	@JDASlashCommand(
 			name = "jitpack",
+			subcommand = "maven",
 			description = "Shows you how to use Pull Requests for your bot"
 	)
-	public void onSlashJitpack(GuildSlashEvent event,
+	public void onSlashJitpackMaven(GuildSlashEvent event,
 	                           @NotNull @AppOption(description = "Type of library") LibraryType libraryType,
-	                           @AppOption(description = "The number of the issue", autocomplete = BRANCH_NUMBER_AUTOCOMPLETE_NAME) long issueNumber) throws IOException {
+	                           @AppOption(description = "The number of the issue", autocomplete = BRANCH_NUMBER_AUTOCOMPLETE_NAME) int issueNumber) throws IOException {
+		onSlashJitpack(event, libraryType, BuildToolType.MAVEN, issueNumber);
+	}
+
+	@JDASlashCommand(
+			name = "jitpack",
+			subcommand = "gradle",
+			description = "Shows you how to use Pull Requests for your bot"
+	)
+	public void onSlashJitpackGradle(GuildSlashEvent event,
+	                           @NotNull @AppOption(description = "Type of library") LibraryType libraryType,
+	                           @AppOption(description = "The number of the issue", autocomplete = BRANCH_NUMBER_AUTOCOMPLETE_NAME) int issueNumber) throws IOException {
+		onSlashJitpack(event, libraryType, BuildToolType.GRADLE, issueNumber);
+	}
+
+	@JDASlashCommand(
+			name = "jitpack",
+			subcommand = "kotlin_gradle",
+			description = "Shows you how to use Pull Requests for your bot"
+	)
+	public void onSlashJitpackKT(GuildSlashEvent event,
+	                           @NotNull @AppOption(description = "Type of library") LibraryType libraryType,
+	                           @AppOption(description = "The number of the issue", autocomplete = BRANCH_NUMBER_AUTOCOMPLETE_NAME) int issueNumber) throws IOException {
+		onSlashJitpack(event, libraryType, BuildToolType.GRADLE_KTS, issueNumber);
+	}
+
+	private void onSlashJitpack(GuildSlashEvent event,
+	                           @NotNull LibraryType libraryType,
+	                           @NotNull BuildToolType buildToolType,
+	                           int issueNumber) throws IOException {
 		final PullRequest pullRequest = switch (libraryType) {
-			case BOT_COMMANDS -> bcPullRequestCache.getPullRequests().get((int) issueNumber);
-			case JDA5 -> jdaPullRequestCache.getPullRequests().get((int) issueNumber);
+			case BOT_COMMANDS -> bcPullRequestCache.getPullRequests().get(issueNumber);
+			case JDA5 -> jdaPullRequestCache.getPullRequests().get(issueNumber);
 			default -> throw new IllegalArgumentException();
 		};
 
@@ -79,7 +132,7 @@ public class SlashJitpack extends ApplicationCommand {
 
 		final EmbedBuilder builder = new EmbedBuilder();
 
-		final String xml;
+		final String dependencyStr;
 		if (libraryType == LibraryType.BOT_COMMANDS) {
 			final MavenBranchProjectDependencyVersionChecker checker = branchNameToJdaVersionChecker.computeIfAbsent(pullRequest.headBranchName(), x -> {
 				try {
@@ -107,17 +160,20 @@ public class SlashJitpack extends ApplicationCommand {
 			builder.setTitle("Maven dependencies for BotCommands for PR #" + pullRequest.number());
 			builder.addField("PR Link", pullRequest.pullUrl(), false);
 
-			xml = DependencySupplier.formatBC(BuildToolType.MAVEN, jdaVersionFromBotCommands, latestBotCommands);
+			dependencyStr = DependencySupplier.formatBC(buildToolType, jdaVersionFromBotCommands, latestBotCommands);
 		} else {
 			final ArtifactInfo latestJDAVersion = pullRequest.toJitpackArtifact();
 
 			builder.setTitle("Maven dependencies for JDA for PR #" + pullRequest.number());
 			builder.addField("PR Link", pullRequest.pullUrl(), false);
 
-			xml = DependencySupplier.formatJDA5Jitpack(BuildToolType.MAVEN, latestJDAVersion);
+			dependencyStr = DependencySupplier.formatJDA5Jitpack(buildToolType, latestJDAVersion);
 		}
 
-		builder.setDescription("```xml\n" + xml + "```");
+		switch (buildToolType) {
+			case MAVEN -> builder.setDescription("```xml\n" + dependencyStr + "```");
+			case GRADLE, GRADLE_KTS -> builder.setDescription("```gradle\n" + dependencyStr + "```");
+		}
 
 		event.replyEmbeds(builder.build())
 				.addActionRow(DeleteButtonListener.getDeleteButton(event.getUser()))
