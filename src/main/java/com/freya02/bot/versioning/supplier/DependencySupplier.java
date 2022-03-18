@@ -7,8 +7,8 @@ import java.util.Map;
 public class DependencySupplier {
 	private static final Map<BuildToolType, BuildToolDependencies> dependenciesMap = Map.of(
 			BuildToolType.MAVEN, new MavenDependencies(),
-			BuildToolType.GRADLE, new GradleDependencies()
-//			, BuildToolType.GRADLE_KTS, new MavenDependencies()
+			BuildToolType.GRADLE, new GradleDependencies(),
+			BuildToolType.GRADLE_KTS, new KotlinGradleDependencies()
 	);
 
 	public static String formatBC(BuildToolType buildToolType, ArtifactInfo jdaVersionFromBotCommands, ArtifactInfo latestBotCommands) {

@@ -33,7 +33,7 @@ public class MavenDependencies implements BuildToolDependencies {
 			    <name>m2-dv8tion</name>
 			    <url>https://m2.dv8tion.net/releases</url>
 			</repository>
-            
+			
 			<dependencies>
 				<dependency>
 					<groupId>%s</groupId>
