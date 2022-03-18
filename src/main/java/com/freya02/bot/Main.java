@@ -77,6 +77,7 @@ public class Main {
 							.addTestGuilds(722891685755093072L)
 					)
 					.setComponentManager(new DefaultComponentManager(database::getConnection))
+					.setSettingsProvider(new DoxxySettings())
 					.build(jda, "com.freya02.bot.commands");
 
 			versions.initUpdateLoop(commandsBuilder.getContext());
