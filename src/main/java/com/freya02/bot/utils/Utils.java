@@ -1,6 +1,9 @@
 package com.freya02.bot.utils;
 
+import net.dv8tion.jda.api.entities.Guild;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,5 +33,14 @@ public class Utils {
 		}
 
 		throw new IllegalArgumentException("Could not get glass name from '" + fullName + "'");
+	}
+
+	@Contract("null -> false")
+	public static boolean isBCGuild(@Nullable Guild guild) {
+		if (guild != null) {
+			return guild.getIdLong() == 848502702731165738L || guild.getIdLong() == 722891685755093072L;
+		}
+
+		return false;
 	}
 }

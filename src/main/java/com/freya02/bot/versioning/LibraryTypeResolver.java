@@ -4,6 +4,7 @@ import com.freya02.botcommands.api.BContext;
 import com.freya02.botcommands.api.parameters.ParameterResolver;
 import com.freya02.botcommands.api.parameters.SlashParameterResolver;
 import com.freya02.botcommands.internal.application.slash.SlashCommandInfo;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.CommandInteractionPayload;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -13,6 +14,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.List;
+
+import static com.freya02.bot.utils.Utils.isBCGuild;
 
 public class LibraryTypeResolver extends ParameterResolver implements SlashParameterResolver {
 	public LibraryTypeResolver() {
@@ -26,9 +29,17 @@ public class LibraryTypeResolver extends ParameterResolver implements SlashParam
 	}
 
 	@Override
-	public Collection<Command.Choice> getPredefinedChoices() {
+	@NotNull
+	public Collection<Command.Choice> getPredefinedChoices(@Nullable Guild guild) {
+		if (isBCGuild(guild)) {
+			return List.of(
+					new Command.Choice("BotCommands", LibraryType.BOT_COMMANDS.name()),
+					new Command.Choice("JDA 5", LibraryType.JDA5.name()),
+					new Command.Choice("JDA 4", LibraryType.JDA4.name())
+			);
+		}
+
 		return List.of(
-				new Command.Choice("BotCommands", LibraryType.BOT_COMMANDS.name()),
 				new Command.Choice("JDA 5", LibraryType.JDA5.name()),
 				new Command.Choice("JDA 4", LibraryType.JDA4.name())
 		);
