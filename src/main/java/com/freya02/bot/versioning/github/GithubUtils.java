@@ -58,6 +58,11 @@ public class GithubUtils {
 	}
 
 	@NotNull
+	public static String getDefaultBranchName(String ownerName, String repoName) {
+		//TODO
+	}
+
+	@NotNull
 	public static List<GithubBranch> getBranches(String ownerName, String repoName) throws IOException {
 		final HttpUrl url = HttpUrl.get("https://api.github.com/repos/%s/%s/branches".formatted(ownerName, repoName))
 				.newBuilder()

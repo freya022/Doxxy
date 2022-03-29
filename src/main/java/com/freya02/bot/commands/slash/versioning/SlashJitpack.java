@@ -11,6 +11,7 @@ import com.freya02.bot.versioning.maven.MavenBranchProjectDependencyVersionCheck
 import com.freya02.bot.versioning.supplier.BuildToolType;
 import com.freya02.bot.versioning.supplier.DependencySupplier;
 import com.freya02.botcommands.api.BContext;
+import com.freya02.botcommands.api.annotations.Optional;
 import com.freya02.botcommands.api.application.ApplicationCommand;
 import com.freya02.botcommands.api.application.CommandPath;
 import com.freya02.botcommands.api.application.annotations.AppOption;
@@ -39,6 +40,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.freya02.bot.utils.Utils.isBCGuild;
 
+//TODO refactor
 public class SlashJitpack extends ApplicationCommand {
 	private static final String BRANCH_NUMBER_AUTOCOMPLETE_NAME = "SlashJitpack: branchNumber";
 
@@ -47,6 +49,41 @@ public class SlashJitpack extends ApplicationCommand {
 
 	private final Map<String, MavenBranchProjectDependencyVersionChecker> branchNameToJdaVersionChecker = new HashMap<>();
 	private final UpdateCountdown updateCountdown = new UpdateCountdown(5, TimeUnit.MINUTES);
+
+	private static List<BoundExtractedResult<PullRequest>> fuzzyMatching(Collection<PullRequest> items, ToStringFunction<PullRequest> toStringFunction, CommandAutoCompleteInteractionEvent event) {
+		final List<PullRequest> list = items
+				.stream()
+				.sorted(Comparator.comparingInt(PullRequest::number).reversed())
+				.toList();
+
+		final AutoCompleteQuery autoCompleteQuery = event.getFocusedOption();
+
+		if (autoCompleteQuery.getValue().isBlank()) {
+			final List<BoundExtractedResult<PullRequest>> l = new ArrayList<>();
+
+			for (int i = 0, listSize = list.size(); i < listSize; i++) {
+				PullRequest request = list.get(i);
+
+				l.add(new BoundExtractedResult<>(request, "", 100, i));
+			}
+
+			return l;
+		}
+
+		//First sort the results by similarities but by taking into account an incomplete input
+		final List<BoundExtractedResult<PullRequest>> bigLengthDiffResults = FuzzySearch.extractTop(autoCompleteQuery.getValue(),
+				list,
+				toStringFunction,
+				FuzzySearch::partialRatio,
+				OptionData.MAX_CHOICES);
+
+		//Then sort the results by similarities but don't take length into account
+		return FuzzySearch.extractTop(autoCompleteQuery.getValue(),
+				bigLengthDiffResults.stream().map(BoundExtractedResult::getReferent).toList(),
+				toStringFunction,
+				FuzzySearch::ratio,
+				OptionData.MAX_CHOICES);
+	}
 
 	@Override
 	@NotNull
@@ -84,40 +121,43 @@ public class SlashJitpack extends ApplicationCommand {
 	@JDASlashCommand(
 			name = "jitpack",
 			subcommand = "maven",
+			group = "pr",
 			description = "Shows you how to use Pull Requests for your bot"
 	)
-	public void onSlashJitpackMaven(GuildSlashEvent event,
-	                           @NotNull @AppOption(description = "Type of library") LibraryType libraryType,
-	                           @AppOption(description = "The number of the issue", autocomplete = BRANCH_NUMBER_AUTOCOMPLETE_NAME) int issueNumber) throws IOException {
-		onSlashJitpack(event, libraryType, BuildToolType.MAVEN, issueNumber);
+	public void onSlashJitpackPRMaven(GuildSlashEvent event,
+	                                  @NotNull @AppOption(description = "Type of library") LibraryType libraryType,
+	                                  @AppOption(description = "The number of the issue", autocomplete = BRANCH_NUMBER_AUTOCOMPLETE_NAME) int issueNumber) throws IOException {
+		onSlashJitpackPR(event, libraryType, BuildToolType.MAVEN, issueNumber);
 	}
 
 	@JDASlashCommand(
 			name = "jitpack",
+			group = "pr",
 			subcommand = "gradle",
 			description = "Shows you how to use Pull Requests for your bot"
 	)
-	public void onSlashJitpackGradle(GuildSlashEvent event,
-	                           @NotNull @AppOption(description = "Type of library") LibraryType libraryType,
-	                           @AppOption(description = "The number of the issue", autocomplete = BRANCH_NUMBER_AUTOCOMPLETE_NAME) int issueNumber) throws IOException {
-		onSlashJitpack(event, libraryType, BuildToolType.GRADLE, issueNumber);
+	public void onSlashJitpackPRGradle(GuildSlashEvent event,
+	                                   @NotNull @AppOption(description = "Type of library") LibraryType libraryType,
+	                                   @AppOption(description = "The number of the issue", autocomplete = BRANCH_NUMBER_AUTOCOMPLETE_NAME) int issueNumber) throws IOException {
+		onSlashJitpackPR(event, libraryType, BuildToolType.GRADLE, issueNumber);
 	}
 
 	@JDASlashCommand(
 			name = "jitpack",
+			group = "pr",
 			subcommand = "kotlin_gradle",
 			description = "Shows you how to use Pull Requests for your bot"
 	)
-	public void onSlashJitpackKT(GuildSlashEvent event,
-	                           @NotNull @AppOption(description = "Type of library") LibraryType libraryType,
-	                           @AppOption(description = "The number of the issue", autocomplete = BRANCH_NUMBER_AUTOCOMPLETE_NAME) int issueNumber) throws IOException {
-		onSlashJitpack(event, libraryType, BuildToolType.GRADLE_KTS, issueNumber);
+	public void onSlashJitpackPRKT(GuildSlashEvent event,
+	                               @NotNull @AppOption(description = "Type of library") LibraryType libraryType,
+	                               @AppOption(description = "The number of the issue", autocomplete = BRANCH_NUMBER_AUTOCOMPLETE_NAME) int issueNumber) throws IOException {
+		onSlashJitpackPR(event, libraryType, BuildToolType.GRADLE_KTS, issueNumber);
 	}
 
-	private void onSlashJitpack(GuildSlashEvent event,
-	                           @NotNull LibraryType libraryType,
-	                           @NotNull BuildToolType buildToolType,
-	                           int issueNumber) throws IOException {
+	private void onSlashJitpackPR(@NotNull GuildSlashEvent event,
+	                              @NotNull LibraryType libraryType,
+	                              @NotNull BuildToolType buildToolType,
+	                              int issueNumber) throws IOException {
 		final PullRequest pullRequest = switch (libraryType) {
 			case BOT_COMMANDS -> bcPullRequestCache.getPullRequests().get(issueNumber);
 			case JDA5 -> jdaPullRequestCache.getPullRequests().get(issueNumber);
@@ -180,6 +220,49 @@ public class SlashJitpack extends ApplicationCommand {
 				.queue();
 	}
 
+	@JDASlashCommand(
+			name = "jitpack",
+			subcommand = "maven",
+			group = "pr",
+			description = "Shows you how to use a branch for your bot"
+	)
+	public void onSlashJitpackBranchMaven(GuildSlashEvent event,
+	                                      @NotNull @AppOption(description = "Type of library") LibraryType libraryType,
+	                                      @Optional @AppOption(description = "The name of the branch") String branchName) throws IOException {
+		onSlashJitpackBranch(event, libraryType, BuildToolType.MAVEN, branchName);
+	}
+
+	@JDASlashCommand(
+			name = "jitpack",
+			group = "pr",
+			subcommand = "gradle",
+			description = "Shows you how to use a branch for your bot"
+	)
+	public void onSlashJitpackBranchGradle(GuildSlashEvent event,
+	                                       @NotNull @AppOption(description = "Type of library") LibraryType libraryType,
+	                                       @Optional @AppOption(description = "The name of the branch") String branchName) throws IOException {
+		onSlashJitpackBranch(event, libraryType, BuildToolType.GRADLE, branchName);
+	}
+
+	@JDASlashCommand(
+			name = "jitpack",
+			group = "pr",
+			subcommand = "kotlin_gradle",
+			description = "Shows you how to use a branch for your bot"
+	)
+	public void onSlashJitpackBranchKT(GuildSlashEvent event,
+	                                   @NotNull @AppOption(description = "Type of library") LibraryType libraryType,
+	                                   @Optional @AppOption(description = "The name of the branch") String branchName) throws IOException {
+		onSlashJitpackBranch(event, libraryType, BuildToolType.GRADLE_KTS, branchName);
+	}
+
+	private void onSlashJitpackBranch(@NotNull GuildSlashEvent event,
+	                                  @NotNull LibraryType libraryType,
+	                                  @NotNull BuildToolType gradleKts,
+	                                  @Nullable String branchName) throws IOException {
+
+	}
+
 	@NotNull
 	private Path getPRFileName(PullRequest pullRequest) {
 		return Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("%s-%s-%d.txt".formatted(pullRequest.headOwnerName(),
@@ -202,41 +285,6 @@ public class SlashJitpack extends ApplicationCommand {
 				.stream()
 				.map(r -> new Command.Choice(pullRequestToString(r.getReferent()), r.getReferent().number()))
 				.toList();
-	}
-
-	private static List<BoundExtractedResult<PullRequest>> fuzzyMatching(Collection<PullRequest> items, ToStringFunction<PullRequest> toStringFunction, CommandAutoCompleteInteractionEvent event) {
-		final List<PullRequest> list = items
-				.stream()
-				.sorted(Comparator.comparingInt(PullRequest::number).reversed())
-				.toList();
-
-		final AutoCompleteQuery autoCompleteQuery = event.getFocusedOption();
-
-		if (autoCompleteQuery.getValue().isBlank()) {
-			final List<BoundExtractedResult<PullRequest>> l = new ArrayList<>();
-
-			for (int i = 0, listSize = list.size(); i < listSize; i++) {
-				PullRequest request = list.get(i);
-
-				l.add(new BoundExtractedResult<>(request, "", 100, i));
-			}
-
-			return l;
-		}
-
-		//First sort the results by similarities but by taking into account an incomplete input
-		final List<BoundExtractedResult<PullRequest>> bigLengthDiffResults = FuzzySearch.extractTop(autoCompleteQuery.getValue(),
-				list,
-				toStringFunction,
-				FuzzySearch::partialRatio,
-				OptionData.MAX_CHOICES);
-
-		//Then sort the results by similarities but don't take length into account
-		return FuzzySearch.extractTop(autoCompleteQuery.getValue(),
-				bigLengthDiffResults.stream().map(BoundExtractedResult::getReferent).toList(),
-				toStringFunction,
-				FuzzySearch::ratio,
-				OptionData.MAX_CHOICES);
 	}
 
 	private String pullRequestToString(PullRequest referent) {
