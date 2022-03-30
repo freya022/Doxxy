@@ -4,9 +4,7 @@ import com.freya02.bot.Main;
 import com.freya02.bot.commands.slash.DeleteButtonListener;
 import com.freya02.bot.versioning.ArtifactInfo;
 import com.freya02.bot.versioning.LibraryType;
-import com.freya02.bot.versioning.github.PullRequest;
-import com.freya02.bot.versioning.github.PullRequestCache;
-import com.freya02.bot.versioning.github.UpdateCountdown;
+import com.freya02.bot.versioning.github.*;
 import com.freya02.bot.versioning.maven.MavenBranchProjectDependencyVersionChecker;
 import com.freya02.bot.versioning.supplier.BuildToolType;
 import com.freya02.bot.versioning.supplier.DependencySupplier;
@@ -49,6 +47,9 @@ public class SlashJitpack extends ApplicationCommand {
 
 	private final Map<String, MavenBranchProjectDependencyVersionChecker> branchNameToJdaVersionChecker = new HashMap<>();
 	private final UpdateCountdown updateCountdown = new UpdateCountdown(5, TimeUnit.MINUTES);
+
+	private final Map<LibraryType, UpdateCountdown> updateMap = new HashMap<>();
+	private final Map<LibraryType, GithubBranchMap> branchMap = new HashMap<>();
 
 	private static List<BoundExtractedResult<PullRequest>> fuzzyMatching(Collection<PullRequest> items, ToStringFunction<PullRequest> toStringFunction, CommandAutoCompleteInteractionEvent event) {
 		final List<PullRequest> list = items
@@ -258,9 +259,86 @@ public class SlashJitpack extends ApplicationCommand {
 
 	private void onSlashJitpackBranch(@NotNull GuildSlashEvent event,
 	                                  @NotNull LibraryType libraryType,
-	                                  @NotNull BuildToolType gradleKts,
+	                                  @NotNull BuildToolType buildToolType,
 	                                  @Nullable String branchName) throws IOException {
 
+		GithubBranchMap githubBranchMap = getBranchMap(libraryType);
+
+		final GithubBranch branch;
+		if (branchName == null) {
+			branch = githubBranchMap.defaultBranch();
+		} else {
+			branch = githubBranchMap.branches().get(branchName);
+		}
+
+		final String dependencyStr = switch (libraryType) {
+			case JDA5 -> DependencySupplier.formatJDA5Jitpack(buildToolType, branch.toJitpackArtifact());
+			case BOT_COMMANDS -> {
+
+
+//				yield DependencySupplier.formatBC(buildToolType, new ArtifactInfo(branch.ownerName(),
+//						branch.repoName(),
+//						branch.latestCommitSha().asSha10()));
+
+				yield null;
+			}
+			default -> throw new IllegalArgumentException("Invalid lib type: " + libraryType);
+		};
+
+		final EmbedBuilder builder = new EmbedBuilder();
+
+		switch (buildToolType) {
+			case MAVEN -> builder.setDescription("```xml\n" + dependencyStr + "```");
+			case GRADLE, GRADLE_KTS -> builder.setDescription("```gradle\n" + dependencyStr + "```");
+		}
+
+		event.replyEmbeds(builder.build())
+				.addActionRow(DeleteButtonListener.getDeleteButton(event.getUser()))
+				.queue();
+	}
+
+	private GithubBranchMap getBranchMap(@NotNull LibraryType libraryType) throws IOException {
+		final UpdateCountdown updateCountdown = updateMap.computeIfAbsent(libraryType, x -> new UpdateCountdown(5, TimeUnit.MINUTES));
+
+		GithubBranchMap githubBranchMap;
+		synchronized (branchMap) {
+			githubBranchMap = branchMap.get(libraryType);
+
+			if (githubBranchMap == null || updateCountdown.needsUpdate()) {
+				githubBranchMap = retrieveBranchList(libraryType);
+
+				branchMap.put(libraryType, githubBranchMap);
+			}
+		}
+
+		return githubBranchMap;
+	}
+
+	private GithubBranchMap retrieveBranchList(LibraryType libraryType) throws IOException {
+		final String ownerName, repoName;
+
+		switch (libraryType) {
+			case JDA5 -> {
+				ownerName = "DV8FromTheWorld";
+				repoName = "JDA";
+			}
+			case BOT_COMMANDS -> {
+				ownerName = "freya022";
+				repoName = "BotCommands";
+			}
+			default -> throw new IllegalArgumentException("No branches for " + libraryType);
+		}
+
+		final Map<String, GithubBranch> map = new HashMap<>();
+
+		for (GithubBranch branch : GithubUtils.getBranches(ownerName, repoName)) {
+			map.put(branch.branchName(), branch);
+		}
+
+		final String defaultBranchName = GithubUtils.getDefaultBranchName(ownerName, repoName);
+		final GithubBranch defaultBranch = map.get(defaultBranchName);
+
+		return new GithubBranchMap(defaultBranch, map);
 	}
 
 	@NotNull

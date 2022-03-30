@@ -58,8 +58,20 @@ public class GithubUtils {
 	}
 
 	@NotNull
-	public static String getDefaultBranchName(String ownerName, String repoName) {
-		//TODO
+	public static String getDefaultBranchName(String ownerName, String repoName) throws IOException {
+		final HttpUrl url = HttpUrl.get("https://api.github.com/repos/%s/%s".formatted(ownerName, repoName))
+				.newBuilder()
+				.build();
+
+		try (Response response = HttpUtils.CLIENT.newCall(newGithubRequest(url)
+						.build())
+				.execute()) {
+			final String json = response.body().string();
+
+			final DataObject dataObject = DataObject.fromJson(json);
+
+			return dataObject.getString("default_branch");
+		}
 	}
 
 	@NotNull
@@ -85,7 +97,7 @@ public class GithubUtils {
 				final String name = branchObject.getString("name");
 				final String sha = branchObject.getObject("commit").getString("sha");
 
-				branchList.add(new GithubBranch(name, new CommitHash(sha)));
+				branchList.add(new GithubBranch(ownerName, repoName, name, new CommitHash(sha)));
 			}
 
 			return branchList;

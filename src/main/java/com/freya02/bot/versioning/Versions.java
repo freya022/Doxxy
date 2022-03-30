@@ -34,7 +34,6 @@ public class Versions {
 	private static final Path lastKnownJDAFromBCPath = Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("JDA_from_BC.txt");
 	private static final Path lastKnownJDA4Path = Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("JDA4.txt");
 	private static final Path lastKnownJDA5Path = Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("JDA5.txt");
-	private static final Path lastKnownJDA5DevPath = Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("JDA5.txt");
 
 	private static final Path JDA_DOCS_FOLDER = Main.JAVADOCS_PATH.resolve("JDA");
 	private static final Path BC_DOCS_FOLDER = Main.JAVADOCS_PATH.resolve("BotCommands");
@@ -43,7 +42,6 @@ public class Versions {
 	private final MavenProjectDependencyVersionChecker jdaVersionFromBCChecker;
 	private final MavenVersionChecker jda4Checker;
 	private final MavenVersionChecker jda5Checker;
-	private final JitpackVersionChecker jda5DevChecker;
 
 	public Versions() throws IOException {
 		Files.createDirectories(Main.LAST_KNOWN_VERSIONS_FOLDER_PATH);
@@ -52,7 +50,6 @@ public class Versions {
 		this.jdaVersionFromBCChecker = new MavenProjectDependencyVersionChecker(lastKnownJDAFromBCPath, "freya022", "BotCommands", "JDA");
 		this.jda4Checker = new MavenVersionChecker(lastKnownJDA4Path, RepoType.M2, "net.dv8tion", "JDA");
 		this.jda5Checker = new MavenVersionChecker(lastKnownJDA5Path, RepoType.MAVEN, "net.dv8tion", "JDA");
-		this.jda5DevChecker = new JitpackVersionChecker(lastKnownJDA5DevPath, "DV8FromTheWorld", "com.github.DV8FromTheWorld", "JDA");
 	}
 
 	public void initUpdateLoop(BContext context) throws IOException {
@@ -78,7 +75,6 @@ public class Versions {
 		scheduledExecutorService.scheduleWithFixedDelay(this::checkLatestJDAVersionFromBC, 0, 30, TimeUnit.MINUTES);
 		scheduledExecutorService.scheduleWithFixedDelay(this::checkLatestJDA4Version, 0, 30, TimeUnit.MINUTES);
 		scheduledExecutorService.scheduleWithFixedDelay(() -> checkLatestJDA5Version(context), 30, 30, TimeUnit.MINUTES);
-		scheduledExecutorService.scheduleWithFixedDelay(this::checkLatestJDA5DevVersion, 30, 30, TimeUnit.MINUTES);
 
 		//First index for Java's docs, may take some time
 		DocIndexMap.getInstance().get(DocSourceType.JAVA).reindex();
@@ -124,22 +120,6 @@ public class Versions {
 		}
 
 		return false;
-	}
-
-	private void checkLatestJDA5DevVersion() {
-		try {
-			final boolean changed = jda5DevChecker.checkVersion();
-
-			if (changed) {
-				LOGGER.info("JDA 5 Dev version changed");
-
-				jda5DevChecker.saveVersion();
-
-				LOGGER.info("JDA 5 Dev version updated to {}", jda5DevChecker.getLatest().version());
-			}
-		} catch (IOException e) {
-			LOGGER.error("An exception occurred while retrieving versions", e);
-		}
 	}
 
 	private void checkLatestJDA4Version() {
@@ -268,9 +248,5 @@ public class Versions {
 
 	public ArtifactInfo getLatestJDA5Version() {
 		return jda5Checker.getLatest();
-	}
-
-	public ArtifactInfo getLatestJDA5DevVersion() {
-		return jda5DevChecker.getLatest();
 	}
 }
