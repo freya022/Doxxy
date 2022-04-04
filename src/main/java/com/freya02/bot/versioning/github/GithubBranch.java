@@ -8,4 +8,8 @@ public record GithubBranch(String ownerName, String repoName, String branchName,
 				repoName,
 				latestCommitSha.asSha10());
 	}
+
+	public String toURL() {
+		return "https://github.com/%s/%s/tree/%s".formatted(ownerName, repoName, branchName);
+	}
 }

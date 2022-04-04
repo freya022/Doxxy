@@ -1,7 +1,7 @@
 package com.freya02.bot.commands.slash.versioning;
 
-import com.freya02.bot.Main;
 import com.freya02.bot.commands.slash.DeleteButtonListener;
+import com.freya02.bot.utils.CryptoUtils;
 import com.freya02.bot.versioning.ArtifactInfo;
 import com.freya02.bot.versioning.LibraryType;
 import com.freya02.bot.versioning.github.*;
@@ -32,24 +32,31 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import static com.freya02.bot.Main.BRANCH_VERSIONS_FOLDER_PATH;
 import static com.freya02.bot.utils.Utils.isBCGuild;
 
 //TODO refactor
 public class SlashJitpack extends ApplicationCommand {
 	private static final String BRANCH_NUMBER_AUTOCOMPLETE_NAME = "SlashJitpack: branchNumber";
+	private static final String BRANCH_NAME_AUTOCOMPLETE_NAME = "SlashJitpack: branchName";
 
 	private final PullRequestCache bcPullRequestCache = new PullRequestCache("freya022", "BotCommands", null);
 	private final PullRequestCache jdaPullRequestCache = new PullRequestCache("DV8FromTheWorld", "JDA", "master");
 
-	private final Map<String, MavenBranchProjectDependencyVersionChecker> branchNameToJdaVersionChecker = new HashMap<>();
-	private final UpdateCountdown updateCountdown = new UpdateCountdown(5, TimeUnit.MINUTES);
+	private final Map<String, MavenBranchProjectDependencyVersionChecker> branchNameToJdaVersionChecker = Collections.synchronizedMap(new HashMap<>());
+	private final Map<String, UpdateCountdown> updateCountdownMap = new HashMap<>();
 
 	private final Map<LibraryType, UpdateCountdown> updateMap = new HashMap<>();
 	private final Map<LibraryType, GithubBranchMap> branchMap = new HashMap<>();
+
+	public SlashJitpack() throws IOException {
+		Files.createDirectories(BRANCH_VERSIONS_FOLDER_PATH);
+	}
 
 	private static List<BoundExtractedResult<PullRequest>> fuzzyMatching(Collection<PullRequest> items, ToStringFunction<PullRequest> toStringFunction, CommandAutoCompleteInteractionEvent event) {
 		final List<PullRequest> list = items
@@ -175,41 +182,34 @@ public class SlashJitpack extends ApplicationCommand {
 
 		final String dependencyStr;
 		if (libraryType == LibraryType.BOT_COMMANDS) {
-			final MavenBranchProjectDependencyVersionChecker checker = branchNameToJdaVersionChecker.computeIfAbsent(pullRequest.headBranchName(), x -> {
+			final GithubBranch branch = pullRequest.branch();
+
+			final MavenBranchProjectDependencyVersionChecker jdaVersionChecker = branchNameToJdaVersionChecker.computeIfAbsent(branch.branchName(), x -> {
 				try {
-					return new MavenBranchProjectDependencyVersionChecker(getPRFileName(pullRequest),
-							pullRequest.headOwnerName(),
-							pullRequest.headRepoName(),
+					return new MavenBranchProjectDependencyVersionChecker(getBranchFileName(branch),
+							branch.ownerName(),
+							branch.repoName(),
 							"JDA",
-							pullRequest.headBranchName());
+							branch.branchName());
 				} catch (IOException e) {
 					throw new RuntimeException("Unable to create branch specific JDA version checker", e);
 				}
 			});
 
-			if (updateCountdown.needsUpdate()) {
-				checker.checkVersion();
-
-				event.getContext().invalidateAutocompletionCache(BRANCH_NUMBER_AUTOCOMPLETE_NAME);
-
-				checker.saveVersion();
-			}
+			checkGithubBranchUpdates(event, branch, jdaVersionChecker);
 
 			final ArtifactInfo latestBotCommands = pullRequest.toJitpackArtifact();
-			final ArtifactInfo jdaVersionFromBotCommands = checker.getLatest();
-
-			builder.setTitle("Maven dependencies for BotCommands for PR #" + pullRequest.number());
-			builder.addField("PR Link", pullRequest.pullUrl(), false);
+			final ArtifactInfo jdaVersionFromBotCommands = jdaVersionChecker.getLatest();
 
 			dependencyStr = DependencySupplier.formatBC(buildToolType, jdaVersionFromBotCommands, latestBotCommands);
 		} else {
 			final ArtifactInfo latestJDAVersion = pullRequest.toJitpackArtifact();
 
-			builder.setTitle("Maven dependencies for JDA for PR #" + pullRequest.number());
-			builder.addField("PR Link", pullRequest.pullUrl(), false);
-
 			dependencyStr = DependencySupplier.formatJDA5Jitpack(buildToolType, latestJDAVersion);
 		}
+
+		builder.setTitle(buildToolType.getHumanName() + " dependencies for " + libraryType.getDisplayString() + " @ PR #" + pullRequest.number(), pullRequest.pullUrl());
+		builder.addField("PR Link", pullRequest.pullUrl(), false);
 
 		switch (buildToolType) {
 			case MAVEN -> builder.setDescription("```xml\n" + dependencyStr + "```");
@@ -224,36 +224,36 @@ public class SlashJitpack extends ApplicationCommand {
 	@JDASlashCommand(
 			name = "jitpack",
 			subcommand = "maven",
-			group = "pr",
+			group = "branch",
 			description = "Shows you how to use a branch for your bot"
 	)
 	public void onSlashJitpackBranchMaven(GuildSlashEvent event,
 	                                      @NotNull @AppOption(description = "Type of library") LibraryType libraryType,
-	                                      @Optional @AppOption(description = "The name of the branch") String branchName) throws IOException {
+	                                      @Optional @AppOption(description = "The name of the branch", autocomplete = BRANCH_NAME_AUTOCOMPLETE_NAME) String branchName) throws IOException {
 		onSlashJitpackBranch(event, libraryType, BuildToolType.MAVEN, branchName);
 	}
 
 	@JDASlashCommand(
 			name = "jitpack",
-			group = "pr",
+			group = "branch",
 			subcommand = "gradle",
 			description = "Shows you how to use a branch for your bot"
 	)
 	public void onSlashJitpackBranchGradle(GuildSlashEvent event,
 	                                       @NotNull @AppOption(description = "Type of library") LibraryType libraryType,
-	                                       @Optional @AppOption(description = "The name of the branch") String branchName) throws IOException {
+	                                       @Optional @AppOption(description = "The name of the branch", autocomplete = BRANCH_NAME_AUTOCOMPLETE_NAME) String branchName) throws IOException {
 		onSlashJitpackBranch(event, libraryType, BuildToolType.GRADLE, branchName);
 	}
 
 	@JDASlashCommand(
 			name = "jitpack",
-			group = "pr",
+			group = "branch",
 			subcommand = "kotlin_gradle",
 			description = "Shows you how to use a branch for your bot"
 	)
 	public void onSlashJitpackBranchKT(GuildSlashEvent event,
 	                                   @NotNull @AppOption(description = "Type of library") LibraryType libraryType,
-	                                   @Optional @AppOption(description = "The name of the branch") String branchName) throws IOException {
+	                                   @Optional @AppOption(description = "The name of the branch", autocomplete = BRANCH_NAME_AUTOCOMPLETE_NAME) String branchName) throws IOException {
 		onSlashJitpackBranch(event, libraryType, BuildToolType.GRADLE_KTS, branchName);
 	}
 
@@ -271,21 +271,43 @@ public class SlashJitpack extends ApplicationCommand {
 			branch = githubBranchMap.branches().get(branchName);
 		}
 
+		if (branch == null) {
+			event.reply("Unknown branch '" + branchName + "'").setEphemeral(true).queue();
+
+			return;
+		}
+
+		final EmbedBuilder builder = new EmbedBuilder();
+
 		final String dependencyStr = switch (libraryType) {
 			case JDA5 -> DependencySupplier.formatJDA5Jitpack(buildToolType, branch.toJitpackArtifact());
 			case BOT_COMMANDS -> {
+				final MavenBranchProjectDependencyVersionChecker jdaVersionChecker = branchNameToJdaVersionChecker.computeIfAbsent(branchName, x -> {
+					try {
+						return new MavenBranchProjectDependencyVersionChecker(getBranchFileName(branch),
+								branch.ownerName(),
+								branch.repoName(),
+								"JDA",
+								branch.branchName());
+					} catch (IOException e) {
+						throw new RuntimeException("Unable to create branch specific JDA version checker", e);
+					}
+				});
 
+				checkGithubBranchUpdates(event, branch, jdaVersionChecker);
 
-//				yield DependencySupplier.formatBC(buildToolType, new ArtifactInfo(branch.ownerName(),
-//						branch.repoName(),
-//						branch.latestCommitSha().asSha10()));
-
-				yield null;
+				yield DependencySupplier.formatBC(buildToolType,
+						jdaVersionChecker.getLatest(),
+						new ArtifactInfo(branch.ownerName(),
+								branch.repoName(),
+								branch.latestCommitSha().asSha10())
+				);
 			}
 			default -> throw new IllegalArgumentException("Invalid lib type: " + libraryType);
 		};
 
-		final EmbedBuilder builder = new EmbedBuilder();
+		builder.setTitle(buildToolType.getHumanName() + " dependencies for " + libraryType.getDisplayString() + " @ branch '" + branchName + "'", branch.toURL());
+		builder.addField("Branch Link", branch.toURL(), false);
 
 		switch (buildToolType) {
 			case MAVEN -> builder.setDescription("```xml\n" + dependencyStr + "```");
@@ -295,6 +317,18 @@ public class SlashJitpack extends ApplicationCommand {
 		event.replyEmbeds(builder.build())
 				.addActionRow(DeleteButtonListener.getDeleteButton(event.getUser()))
 				.queue();
+	}
+
+	private void checkGithubBranchUpdates(@NotNull GuildSlashEvent event, GithubBranch branch, MavenBranchProjectDependencyVersionChecker checker) throws IOException {
+		final UpdateCountdown updateCountdown = updateCountdownMap.computeIfAbsent(branch.branchName(), x -> new UpdateCountdown(5, TimeUnit.MINUTES));
+
+		if (updateCountdown.needsUpdate()) {
+			checker.checkVersion();
+
+			event.getContext().invalidateAutocompletionCache(BRANCH_NUMBER_AUTOCOMPLETE_NAME);
+
+			checker.saveVersion();
+		}
 	}
 
 	private GithubBranchMap getBranchMap(@NotNull LibraryType libraryType) throws IOException {
@@ -342,10 +376,10 @@ public class SlashJitpack extends ApplicationCommand {
 	}
 
 	@NotNull
-	private Path getPRFileName(PullRequest pullRequest) {
-		return Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("%s-%s-%d.txt".formatted(pullRequest.headOwnerName(),
-				pullRequest.headRepoName(),
-				pullRequest.number()));
+	private Path getBranchFileName(GithubBranch branch) {
+		return BRANCH_VERSIONS_FOLDER_PATH.resolve("%s-%s-%s.txt".formatted(branch.ownerName(),
+				branch.repoName(),
+				CryptoUtils.hash(branch.branchName())));
 	}
 
 	@CacheAutocompletion
@@ -365,7 +399,16 @@ public class SlashJitpack extends ApplicationCommand {
 				.toList();
 	}
 
+	@CacheAutocompletion
+	@AutocompletionHandler(name = BRANCH_NAME_AUTOCOMPLETE_NAME)
+	public Collection<String> onBranchNameAutocomplete(CommandAutoCompleteInteractionEvent event,
+	                                                   @CompositeKey @AppOption LibraryType libraryType) throws IOException {
+		GithubBranchMap githubBranchMap = getBranchMap(libraryType);
+
+		return githubBranchMap.branches().keySet();
+	}
+
 	private String pullRequestToString(PullRequest referent) {
-		return "%d - %s (%s)".formatted(referent.number(), referent.title(), referent.headOwnerName());
+		return "%d - %s (%s)".formatted(referent.number(), referent.title(), referent.branch().ownerName());
 	}
 }
