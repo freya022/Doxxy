@@ -1,6 +1,5 @@
 package com.freya02.bot.commands.slash.docs;
 
-import com.freya02.bot.docs.cached.CachedMethod;
 import com.freya02.bot.docs.index.DocIndex;
 import com.freya02.botcommands.api.application.annotations.AppOption;
 import com.freya02.botcommands.api.application.slash.GuildSlashEvent;
@@ -56,16 +55,15 @@ public class AnyMethodCommand extends BaseDocCommand {
 	                              @NotNull DocSourceType sourceType,
 	                              @NotNull String fullSignature) throws IOException {
 
-		final DocIndex docIndex = docIndexMap.get(sourceType);
-
-		final CachedMethod cachedMethod = docIndex.getMethodDoc(fullSignature);
-
-		if (cachedMethod == null) {
-			event.reply("Unknown method").setEphemeral(true).queue();
+		final String[] split = fullSignature.split("#");
+		if (split.length != 2) {
+			event.reply("You must supply a class name and a method signature, separated with a #, e.g. `Object#getClass()`").setEphemeral(true).queue();
 
 			return;
 		}
 
-		CommonDocsHandlers.sendMethod(event, false, cachedMethod);
+		final DocIndex docIndex = docIndexMap.get(sourceType);
+
+		CommonDocsHandlers.handleMethodDocs(event, split[0], split[1], docIndex);
 	}
 }

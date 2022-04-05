@@ -1,6 +1,5 @@
 package com.freya02.bot.commands.slash.docs;
 
-import com.freya02.bot.docs.cached.CachedField;
 import com.freya02.bot.docs.index.DocIndex;
 import com.freya02.botcommands.api.application.annotations.AppOption;
 import com.freya02.botcommands.api.application.slash.GuildSlashEvent;
@@ -56,16 +55,15 @@ public class AnyFieldCommand extends BaseDocCommand {
 	                             @NotNull DocSourceType sourceType,
 	                             @NotNull String fullSignature) throws IOException {
 
-		final DocIndex docIndex = docIndexMap.get(sourceType);
-
-		final CachedField cachedField = docIndex.getFieldDoc(fullSignature);
-
-		if (cachedField == null) {
-			event.reply("Unknown field").setEphemeral(true).queue();
+		final String[] split = fullSignature.split("#");
+		if (split.length != 2) {
+			event.reply("You must supply a class name and a field name, separated with a #, e.g. `Integer#MAX_VALUE`").setEphemeral(true).queue();
 
 			return;
 		}
 
-		CommonDocsHandlers.sendField(event, false, cachedField);
+		final DocIndex docIndex = docIndexMap.get(sourceType);
+
+		CommonDocsHandlers.handleFieldDocs(event, split[0], split[1], docIndex);
 	}
 }

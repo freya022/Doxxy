@@ -109,7 +109,7 @@ public class CommonDocsHandlers extends ApplicationCommand {
 		final CachedClass cachedClass = docIndex.getClassDoc(className);
 
 		if (cachedClass == null) {
-			event.reply("Unknown class").setEphemeral(true).queue();
+			event.reply("Class '" + className + "' does not exist").setEphemeral(true).queue();
 
 			return;
 		}
@@ -119,7 +119,7 @@ public class CommonDocsHandlers extends ApplicationCommand {
 
 	static void handleMethodDocs(@NotNull GuildSlashEvent event, @NotNull String className, @NotNull String identifier, DocIndex docIndex) throws IOException {
 		if (!docIndex.getClassesWithMethods().contains(className)) {
-			event.reply("Unknown class").setEphemeral(true).queue();
+			event.reply("'" + className + "' does not contain methods").setEphemeral(true).queue();
 
 			return;
 		}
@@ -127,7 +127,7 @@ public class CommonDocsHandlers extends ApplicationCommand {
 		final CachedMethod cachedMethod = docIndex.getMethodDoc(className, identifier);
 
 		if (cachedMethod == null) {
-			event.reply("Unknown method").setEphemeral(true).queue();
+			event.reply("'" + className + "' does not contain a '" + identifier + "' method").setEphemeral(true).queue();
 
 			return;
 		}
@@ -137,7 +137,7 @@ public class CommonDocsHandlers extends ApplicationCommand {
 
 	static void handleFieldDocs(@NotNull GuildSlashEvent event, @NotNull String className, @NotNull String identifier, DocIndex docIndex) throws IOException {
 		if (!docIndex.getClassesWithFields().contains(className)) {
-			event.reply("Unknown class").setEphemeral(true).queue();
+			event.reply("'" + className + "' does not contain fields").setEphemeral(true).queue();
 
 			return;
 		}
@@ -145,7 +145,7 @@ public class CommonDocsHandlers extends ApplicationCommand {
 		final CachedField cachedField = docIndex.getFieldDoc(className, identifier);
 
 		if (cachedField == null) {
-			event.reply("Unknown field").setEphemeral(true).queue();
+			event.reply("'" + className + "' does not contain a '" + identifier + "' field").setEphemeral(true).queue();
 
 			return;
 		}
