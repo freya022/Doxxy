@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class SeeAlso {
 	private static final Logger LOGGER = Logging.getLogger();
@@ -36,6 +37,24 @@ public class SeeAlso {
 		public TargetType targetType() {return targetType;}
 
 		public @Nullable String fullSignature() {return fullSignature;}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) return true;
+			if (o == null || getClass() != o.getClass()) return false;
+
+			SeeAlsoReference that = (SeeAlsoReference) o;
+
+			if (targetType != that.targetType) return false;
+			return Objects.equals(fullSignature, that.fullSignature);
+		}
+
+		@Override
+		public int hashCode() {
+			int result = targetType.hashCode();
+			result = 31 * result + (fullSignature != null ? fullSignature.hashCode() : 0);
+			return result;
+		}
 	}
 
 	private final List<SeeAlsoReference> references = new ArrayList<>();
@@ -46,7 +65,7 @@ public class SeeAlso {
 				final String href = type.toOnlineURL(seeAlsoClassElement.absUrl("href"));
 				final DocSourceType sourceType = DocSourceType.fromUrl(href);
 				if (sourceType == null) {
-					references.add(new SeeAlsoReference(seeAlsoClassElement.text(), href, TargetType.UNKNOWN, null));
+					tryAddReference(new SeeAlsoReference(seeAlsoClassElement.text(), href, TargetType.UNKNOWN, null));
 
 					continue;
 				}
@@ -70,13 +89,19 @@ public class SeeAlso {
 						default -> throw new IllegalStateException("Unexpected javadoc target type: " + javadocUrl.getTargetType());
 					};
 
-					references.add(ref);
+					tryAddReference(ref);
 				} else {
-					references.add(new SeeAlsoReference(seeAlsoClassElement.text(), href, TargetType.UNKNOWN, null));
+					tryAddReference(new SeeAlsoReference(seeAlsoClassElement.text(), href, TargetType.UNKNOWN, null));
 				}
 			} catch (Exception e) {
 				LOGGER.error("An exception occurred while retrieving a 'See also' detail", e);
 			}
+		}
+	}
+
+	private void tryAddReference(SeeAlsoReference seeAlsoClassElement) {
+		if (!references.contains(seeAlsoClassElement)) {
+			references.add(seeAlsoClassElement);
 		}
 	}
 
