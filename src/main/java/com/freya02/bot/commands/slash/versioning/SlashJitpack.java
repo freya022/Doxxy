@@ -298,7 +298,7 @@ public class SlashJitpack extends ApplicationCommand {
 
 				yield DependencySupplier.formatBC(buildToolType,
 						jdaVersionChecker.getLatest(),
-						new ArtifactInfo(branch.ownerName(),
+						new ArtifactInfo("com.github." + branch.ownerName(),
 								branch.repoName(),
 								branch.latestCommitSha().asSha10())
 				);
