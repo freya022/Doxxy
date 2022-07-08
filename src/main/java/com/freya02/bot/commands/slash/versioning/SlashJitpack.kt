@@ -239,6 +239,38 @@ class SlashJitpack : ApplicationCommand() {
         onSlashJitpackBranch(event, libraryType, BuildToolType.GRADLE_KTS, branchName)
     }
 
+    @CacheAutocompletion
+    @AutocompletionHandler(name = BRANCH_NUMBER_AUTOCOMPLETE_NAME, showUserInput = false)
+    fun onBranchNumberAutocomplete(
+        event: CommandAutoCompleteInteractionEvent,
+        @CompositeKey @AppOption libraryType: LibraryType?
+    ): Collection<Command.Choice> {
+        val pullRequests = when (libraryType) {
+            LibraryType.BOT_COMMANDS -> bcPullRequestCache.pullRequests.values(arrayOfNulls(0))
+            LibraryType.JDA5 -> jdaPullRequestCache.pullRequests.values(arrayOfNulls(0))
+            else -> throw IllegalArgumentException()
+        }
+        return fuzzyMatching(
+            pullRequests.asList(),
+            { referent: PullRequest -> referent.pullRequestToString() },
+            event
+        ).map { r: BoundExtractedResult<PullRequest> ->
+            Command.Choice(
+                r.referent.pullRequestToString(),
+                r.referent.number().toLong()
+            )
+        }
+    }
+
+    @CacheAutocompletion
+    @AutocompletionHandler(name = BRANCH_NAME_AUTOCOMPLETE_NAME)
+    fun onBranchNameAutocomplete(
+        event: CommandAutoCompleteInteractionEvent,
+        @CompositeKey @AppOption libraryType: LibraryType
+    ): Collection<String> {
+        return getBranchMap(libraryType).branches().keys
+    }
+
     private fun onSlashJitpackBranch(
         event: GuildSlashEvent,
         libraryType: LibraryType,
@@ -352,40 +384,8 @@ class SlashJitpack : ApplicationCommand() {
         )
     }
 
-    @CacheAutocompletion
-    @AutocompletionHandler(name = BRANCH_NUMBER_AUTOCOMPLETE_NAME, showUserInput = false)
-    fun onBranchNumberAutocomplete(
-        event: CommandAutoCompleteInteractionEvent,
-        @CompositeKey @AppOption libraryType: LibraryType?
-    ): Collection<Command.Choice> {
-        val pullRequests = when (libraryType) {
-            LibraryType.BOT_COMMANDS -> bcPullRequestCache.pullRequests.values(arrayOfNulls(0))
-            LibraryType.JDA5 -> jdaPullRequestCache.pullRequests.values(arrayOfNulls(0))
-            else -> throw IllegalArgumentException()
-        }
-        return fuzzyMatching(
-            pullRequests.asList(),
-            { referent: PullRequest -> pullRequestToString(referent) },
-            event
-        ).map { r: BoundExtractedResult<PullRequest> ->
-            Command.Choice(
-                pullRequestToString(r.referent),
-                r.referent.number().toLong()
-            )
-        }
-    }
-
-    @CacheAutocompletion
-    @AutocompletionHandler(name = BRANCH_NAME_AUTOCOMPLETE_NAME)
-    fun onBranchNameAutocomplete(
-        event: CommandAutoCompleteInteractionEvent,
-        @CompositeKey @AppOption libraryType: LibraryType
-    ): Collection<String> {
-        return getBranchMap(libraryType).branches().keys
-    }
-
-    private fun pullRequestToString(referent: PullRequest): String {
-        return "%d - %s (%s)".format(referent.number(), referent.title(), referent.branch().ownerName())
+    private fun PullRequest.pullRequestToString(): String {
+        return "%d - %s (%s)".format(number(), title(), branch().ownerName())
     }
 
     companion object {
