@@ -11,23 +11,36 @@ import com.freya02.botcommands.api.builder.ApplicationCommandsBuilder
 import com.freya02.botcommands.api.builder.ExtensionsBuilder
 import com.freya02.botcommands.api.builder.TextCommandsBuilder
 import com.freya02.botcommands.api.components.DefaultComponentManager
+import com.freya02.botcommands.api.runner.KotlinMethodRunnerFactory
 import com.freya02.docs.DocWebServer
-import net.dv8tion.jda.api.JDABuilder
+import dev.minn.jda.ktx.events.CoroutineEventManager
+import dev.minn.jda.ktx.events.getDefaultScope
+import dev.minn.jda.ktx.jdabuilder.light
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import net.dv8tion.jda.api.entities.Activity
+import net.dv8tion.jda.api.events.ShutdownEvent
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.system.exitProcess
+import kotlin.time.Duration.Companion.minutes
 
 private val LOGGER = Logging.getLogger()
 
 object Main {
-    @JvmField val BOT_FOLDER: Path = Path.of(System.getProperty("user.home"), "Downloads", "DocsBot")
-    @JvmField val CACHE_PATH: Path = BOT_FOLDER.resolve("docs_cache")
-    @JvmField val JAVADOCS_PATH: Path = BOT_FOLDER.resolve("javadocs")
-    @JvmField val REPOS_PATH: Path = BOT_FOLDER.resolve("repos")
-    @JvmField val LAST_KNOWN_VERSIONS_FOLDER_PATH: Path = BOT_FOLDER.resolve("last_versions")
-    @JvmField val BRANCH_VERSIONS_FOLDER_PATH: Path = LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("branch_versions")
+    @JvmField
+    val BOT_FOLDER: Path = Path.of(System.getProperty("user.home"), "Downloads", "DocsBot")
+    @JvmField
+    val CACHE_PATH: Path = BOT_FOLDER.resolve("docs_cache")
+    @JvmField
+    val JAVADOCS_PATH: Path = BOT_FOLDER.resolve("javadocs")
+    @JvmField
+    val REPOS_PATH: Path = BOT_FOLDER.resolve("repos")
+    @JvmField
+    val LAST_KNOWN_VERSIONS_FOLDER_PATH: Path = BOT_FOLDER.resolve("last_versions")
+    @JvmField
+    val BRANCH_VERSIONS_FOLDER_PATH: Path = LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("branch_versions")
 
     init {
         check(BOT_FOLDER.exists()) { "Bot folder at $BOT_FOLDER does not exist !" }
@@ -39,11 +52,18 @@ object Main {
     @JvmStatic
     fun main(args: Array<String>) {
         try {
+            val scope = getDefaultScope()
+            val manager = CoroutineEventManager(scope, 1.minutes)
+            manager.listener<ShutdownEvent> {
+                scope.cancel()
+            }
+
             val config = Config.getConfig()
-            val jda = JDABuilder.createLight(config.token)
-                .setActivity(Activity.watching("the docs"))
-                .build()
-                .awaitReady()
+
+            val jda = light(config.token, enableCoroutines = false) {
+                setActivity(Activity.watching("the docs"))
+                setEventManager(manager)
+            }.awaitReady()
 
             LOGGER.info("Loaded JDA")
 
@@ -65,6 +85,7 @@ object Main {
                         .registerParameterResolver(DocSourceTypeResolver())
                         .registerConstructorParameter(Versions::class.java) { versions }
                         .registerParameterResolver(LibraryTypeResolver())
+                        .setMethodRunnerFactory(KotlinMethodRunnerFactory(Dispatchers.IO, scope))
                 }
                 .textCommandBuilder { textCommandsBuilder: TextCommandsBuilder ->
                     textCommandsBuilder
