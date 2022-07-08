@@ -1,55 +1,63 @@
-package com.freya02.docs.data;
+package com.freya02.docs.data
 
-import com.freya02.botcommands.api.Logging;
-import com.freya02.docs.HTMLElement;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.jsoup.nodes.Element;
-import org.slf4j.Logger;
+import com.freya02.botcommands.api.Logging
+import com.freya02.docs.HTMLElement
+import org.jsoup.nodes.Element
+import java.util.*
 
-import java.util.*;
+private val LOGGER = Logging.getLogger()
+private val warned: MutableSet<String> = hashSetOf()
 
-public class DetailToElementsMap {
-	private static final Logger LOGGER = Logging.getLogger();
-	private static final Set<String> warned = new HashSet<>();
+class DetailToElementsMap private constructor(detailTarget: Element) {
+    private val map: MutableMap<DocDetailType, MutableList<HTMLElement>> = EnumMap(DocDetailType::class.java)
 
-	private final Map<DocDetailType, List<HTMLElement>> map = new HashMap<>();
+    private inner class DetailsState(private val detailTarget: Element) {
+        private var list: MutableList<HTMLElement>? = null
 
-	private DetailToElementsMap(Element detailTarget) {
-		List<HTMLElement> list = null;
+        fun newDetail(detailName: String) {
+            val type = DocDetailType.parseType(detailName)
 
-		for (Element element : detailTarget.select("dl.notes")) {
-			for (Element child : element.children()) {
-				final String tagName = child.tag().normalName();
+            @Suppress("LiftReturnOrAssignment")
+            if (type == null) {
+                if (warned.add(detailName))
+                    LOGGER.warn("Unknown method detail type: '{}' at {}", detailName, detailTarget.baseUri())
 
-				if (tagName.equals("dt")) {
-					final String detailName = child.text();
-					final DocDetailType type = DocDetailType.parseType(detailName);
-					if (type == null) {
-						if (warned.add(detailName)) {
-							LOGGER.warn("Unknown method detail type: '{}' at {}", detailName, detailTarget.baseUri());
-						}
+                list = null
+            } else {
+                list = map.getOrPut(type) { arrayListOf() }
+            }
+        }
 
-						list = null;
-					} else {
-						list = map.computeIfAbsent(type, s -> new ArrayList<>());
-					}
-				} else if (tagName.equals("dd") && list != null) {
-					list.add(HTMLElement.wrap(child));
-				}
-			}
-		}
-	}
+        fun pushDetail(supplier: () -> HTMLElement) {
+            list?.add(supplier())
+        }
+    }
 
-	public static DetailToElementsMap parseDetails(@NotNull Element detailTarget) {
-		return new DetailToElementsMap(detailTarget);
-	}
+    init {
+        val detailsState = DetailsState(detailTarget)
 
-	@Nullable
-	public DocDetail getDetail(DocDetailType detailType) {
-		final List<HTMLElement> elements = map.get(detailType);
-		if (elements == null) return null;
+        for (element in detailTarget.select("dl.notes")) {
+            for (child in element.children()) {
+                val tagName = child.tag().normalName()
+                if (tagName == "dt") {
+                    val detailName = child.text()
 
-		return new DocDetail(detailType, elements);
-	}
+                    detailsState.newDetail(detailName)
+                } else if (tagName == "dd") {
+                    detailsState.pushDetail { HTMLElement.wrap(child) }
+                }
+            }
+        }
+    }
+
+    fun getDetail(detailType: DocDetailType): DocDetail? {
+        val elements = map[detailType] ?: return null
+        return DocDetail(detailType, elements)
+    }
+
+    companion object {
+        fun parseDetails(detailTarget: Element): DetailToElementsMap {
+            return DetailToElementsMap(detailTarget)
+        }
+    }
 }
