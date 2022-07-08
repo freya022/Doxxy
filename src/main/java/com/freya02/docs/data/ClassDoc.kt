@@ -1,256 +1,178 @@
-package com.freya02.docs.data;
+package com.freya02.docs.data
 
-import com.freya02.bot.utils.HttpUtils;
-import com.freya02.docs.*;
-import okhttp3.HttpUrl;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
+import com.freya02.bot.utils.HttpUtils
+import com.freya02.docs.*
+import com.freya02.docs.utils.checkJavadocVersion
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
+import java.io.IOException
+import java.util.*
+import java.util.function.BiConsumer
+import java.util.function.Consumer
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
+class ClassDoc @JvmOverloads constructor(
+    docsSession: DocsSession,
+    private val sourceURL: String,
+    document: Document = HttpUtils.getDocument(sourceURL)
+) : BaseDoc() {
+    val source: DocSourceType = DocSourceType.fromUrl(sourceURL) ?: throw DocParseException()
 
-public class ClassDoc extends BaseDoc {
-	private final String sourceURL;
-	private final DocSourceType source;
+    val docTitleElement: HTMLElement
+    val className: String
+    override val descriptionElements: HTMLElementList
+    override val deprecationElement: HTMLElement?
 
-	@NotNull private final HTMLElement docTitleElement;
-	@NotNull private final HTMLElementList descriptionElements;
-	@Nullable private final HTMLElement deprecationElement;
-	@NotNull private final String className;
+    override val detailToElementsMap: DetailToElementsMap
 
-	@NotNull private final DetailToElementsMap detailToElementsMap;
-	@Nullable private final SeeAlso seeAlso;
+    val seeAlso: SeeAlso?
 
-	@NotNull private final Map<String, FieldDoc> fieldDocs = new HashMap<>();
-	@NotNull private final Map<String, MethodDoc> methodDocs = new HashMap<>();
+    private val fieldDocs: MutableMap<String, FieldDoc> = hashMapOf()
+    private val methodDocs: MutableMap<String, MethodDoc> = hashMapOf()
 
-	public ClassDoc(@NotNull DocsSession docsSession, @NotNull String url) throws IOException {
-		this(docsSession, url, HttpUtils.getDocument(url));
-	}
+    init {
+        document.checkJavadocVersion(sourceURL)
 
-	public ClassDoc(@NotNull DocsSession docsSession, @NotNull String url, @NotNull Document document) throws IOException {
-		this.sourceURL = url;
-		this.source = DocSourceType.fromUrl(url);
+        //Get javadoc title
+        docTitleElement = HTMLElement.wrap(document.selectFirst("body > div.flex-box > div > main > div > h1"))
 
-		if (!DocUtils.isJavadocVersionCorrect(document)) {
-			throw new IllegalArgumentException("Javadoc at '" + url + "' is not javadoc 17");
-		}
+        //Get class name
+        className = getClassName(sourceURL)
 
-		//Get javadoc title
-		this.docTitleElement = HTMLElement.wrap(document.selectFirst("body > div.flex-box > div > main > div > h1"));
+        //Get class description
+        descriptionElements = HTMLElementList.fromElements(document.select("#class-description > div.block"))
 
-		//Get class name
-		this.className = getClassName(url);
+        //Get class possible's deprecation
+        deprecationElement = HTMLElement.tryWrap(document.selectFirst("#class-description > div.deprecation-block"))
 
-		//Get class description
-		this.descriptionElements = HTMLElementList.fromElements(document.select("#class-description > div.block"));
+        //Get class type parameters if they exist
+        val detailTarget = document.selectFirst("#class-description") ?: throw DocParseException()
+        detailToElementsMap = DetailToElementsMap.parseDetails(detailTarget)
 
-		//Get class possible's deprecation
-		this.deprecationElement = HTMLElement.tryWrap(document.selectFirst("#class-description > div.deprecation-block"));
+        //See also
+        val seeAlsoDetail = detailToElementsMap.getDetail(DocDetailType.SEE_ALSO)
+        seeAlso = when {
+            seeAlsoDetail != null -> SeeAlso(source, seeAlsoDetail)
+            else -> null
+        }
 
-		//Get class type parameters if they exist
-		final Element detailTarget = document.selectFirst("#class-description");
-		if (detailTarget == null) throw new DocParseException();
+        processInheritedElements(docsSession, document, InheritedType.FIELD, this::onInheritedField)
 
-		this.detailToElementsMap = DetailToElementsMap.parseDetails(detailTarget);
+        processInheritedElements(docsSession, document, InheritedType.METHOD, this::onInheritedMethod)
 
-		final DocDetail seeAlsoDetail = detailToElementsMap.getDetail(DocDetailType.SEE_ALSO);
-		if (seeAlsoDetail != null) {
-			this.seeAlso = new SeeAlso(source, seeAlsoDetail);
-		} else {
-			this.seeAlso = null;
-		}
+        //Try to find field details
+        processDetailElements(document, ClassDetailType.FIELD) { fieldElement: Element ->
+            val fieldDoc = FieldDoc(this, ClassDetailType.FIELD, fieldElement)
+            this.fieldDocs[fieldDoc.elementId] = fieldDoc
+        }
 
-		processInheritedElements(docsSession, document, InheritedType.FIELD, this::onInheritedField);
+        //Try to find enum constants, they're similar to fields it seems
+        processDetailElements(document, ClassDetailType.ENUM_CONSTANTS) { fieldElement: Element ->
+            val fieldDoc = FieldDoc(this, ClassDetailType.ENUM_CONSTANTS, fieldElement)
+            this.fieldDocs[fieldDoc.elementId] = fieldDoc
+        }
 
-		processInheritedElements(docsSession, document, InheritedType.METHOD, this::onInheritedMethod);
+        //Try to find constructor details
+        processDetailElements(document, ClassDetailType.CONSTRUCTOR) { methodElement: Element ->
+            val methodDoc = MethodDoc(this, ClassDetailType.CONSTRUCTOR, methodElement)
+            this.methodDocs[methodDoc.elementId] = methodDoc
+        }
 
-		//Try to find field details
-		processDetailElements(document, ClassDetailType.FIELD, fieldElement -> {
-			final FieldDoc fieldDocs = new FieldDoc(this, ClassDetailType.FIELD, fieldElement);
+        //Try to find method details
+        processDetailElements(document, ClassDetailType.METHOD) { methodElement: Element ->
+            val methodDoc = MethodDoc(this, ClassDetailType.METHOD, methodElement)
+            this.methodDocs[methodDoc.elementId] = methodDoc
+        }
 
-			this.fieldDocs.put(fieldDocs.getElementId(), fieldDocs);
-		});
+        //Try to find annotation "methods" (elements)
+        processDetailElements(document, ClassDetailType.ANNOTATION_ELEMENT) { annotationElement: Element ->
+            val methodDoc = MethodDoc(this, ClassDetailType.ANNOTATION_ELEMENT, annotationElement)
+            this.methodDocs[methodDoc.elementId] = methodDoc
+        }
+    }
 
-		//Try to find enum constants, they're similar to fields it seems
-		processDetailElements(document, ClassDetailType.ENUM_CONSTANTS, fieldElement -> {
-			final FieldDoc fieldDocs = new FieldDoc(this, ClassDetailType.ENUM_CONSTANTS, fieldElement);
+    private fun getClassName(url: String): String =
+        url.toHttpUrl().pathSegments.last().dropLast(5) //Remove .html
 
-			this.fieldDocs.put(fieldDocs.getElementId(), fieldDocs);
-		});
+    @Throws(IOException::class)
+    private fun processInheritedElements(
+        docsSession: DocsSession,
+        document: Document,
+        inheritedType: InheritedType,
+        inheritedElementConsumer: BiConsumer<ClassDoc, String?>
+    ) {
+        val inheritedBlocks = document.select("section." + inheritedType.classSuffix + "-summary > div.inherited-list")
+        for (inheritedBlock in inheritedBlocks) {
+            val title = inheritedBlock.selectFirst("h3") ?: throw DocParseException()
+            val superClassLinkElement = title.selectFirst("a")
 
-		//Try to find constructor details
-		processDetailElements(document, ClassDetailType.CONSTRUCTOR, methodElement -> {
-			final MethodDoc methodDocs = new MethodDoc(this, ClassDetailType.CONSTRUCTOR, methodElement);
+            if (superClassLinkElement != null) {
+                val superClassLink = superClassLinkElement.absUrl("href")
+                val superClassDocs = docsSession.retrieveDoc(superClassLink) ?: continue
 
-			this.methodDocs.put(methodDocs.getElementId(), methodDocs);
-		});
+                //Probably a bad link or an unsupported javadoc version
+                for (element in inheritedBlock.select("code > a")) {
+                    val targetId = element.absUrl("href").toHttpUrl().fragment
+                    inheritedElementConsumer.accept(superClassDocs, targetId)
+                }
+            }
+        }
+    }
 
-		//Try to find method details
-		processDetailElements(document, ClassDetailType.METHOD, methodElement -> {
-			final MethodDoc methodDocs = new MethodDoc(this, ClassDetailType.METHOD, methodElement);
+    private fun onInheritedMethod(superClassDocs: ClassDoc, targetId: String?) {
+        //You can inherit a same method multiple times, it will show up multiple times in the docs
+        // As the html is ordered such as the latest overridden method is shown, we can set the already existing doc to the newest one
+        // Example: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/AbstractCollection.html#method.summary
+        val methodDoc = superClassDocs.methodDocs[targetId] ?: return
 
-			this.methodDocs.put(methodDocs.getElementId(), methodDocs);
-		});
+        //This might happen if the target superclass doesn't expose the same access level of members
+        // So for example this class might expose protected+ members
+        //  but the superclass exposes only public members
+        methodDocs[methodDoc.elementId] = methodDoc
+    }
 
-		//Try to find annotation "methods" (elements)
-		processDetailElements(document, ClassDetailType.ANNOTATION_ELEMENT, annotationElement -> {
-			final MethodDoc methodDocs = new MethodDoc(this, ClassDetailType.ANNOTATION_ELEMENT, annotationElement);
+    private fun onInheritedField(superClassDocs: ClassDoc, targetId: String?) {
+        val fieldDoc = superClassDocs.fieldDocs[targetId] ?: return
 
-			this.methodDocs.put(methodDocs.getElementId(), methodDocs);
-		});
-	}
+        //This might happen if the target superclass doesn't expose the same access level of members
+        // So for example this class might expose protected+ members
+        //  but the superclass exposes only public members
+        fieldDocs[fieldDoc.elementId] = fieldDoc
+    }
 
-	@NotNull
-	private String getClassName(@NotNull String url) {
-		final List<String> segments = HttpUrl.get(url).pathSegments();
-		final String lastFragment = segments.get(segments.size() - 1);
+    fun getFieldDocs(): Map<String, FieldDoc> = Collections.unmodifiableMap(fieldDocs)
 
-		return lastFragment.substring(0, lastFragment.length() - 5); //Remove .html
-	}
+    fun getMethodDocs(): Map<String, MethodDoc> = Collections.unmodifiableMap(methodDocs)
 
-	private void processInheritedElements(@NotNull DocsSession docsSession, @NotNull Document document, @NotNull InheritedType inheritedType, @NotNull  BiConsumer<ClassDoc, String> inheritedElementConsumer) throws IOException {
-		final Elements inheritedBlocks = document.select("section." + inheritedType.getClassSuffix() + "-summary > div.inherited-list");
+    private fun processDetailElements(document: Document, detailType: ClassDetailType, callback: Consumer<Element>) {
+        val detailId = detailType.detailId
 
-		for (Element inheritedBlock : inheritedBlocks) {
-			final Element title = inheritedBlock.selectFirst("h3");
-			if (title == null) throw new DocParseException();
+        //Get main blocks to determine what details are available (field, constructor (constr), method)
+        val detailsSection = document.getElementById(detailId) ?: return
+        for (element in detailsSection.select("ul.member-list > li > section.detail")) {
+            callback.accept(element)
+        }
+    }
 
-			final Element superClassLinkElement = title.selectFirst("a");
-			if (superClassLinkElement != null) {
-				final String superClassLink = superClassLinkElement.absUrl("href");
+    override fun toString(): String {
+        return "%s : %d fields, %d methods%s".format(
+            className,
+            fieldDocs.size,
+            methodDocs.size,
+            if (descriptionElements.isEmpty()) "" else " : " + descriptionElements.toText()
+        )
+    }
 
-				final ClassDoc superClassDocs = docsSession.retrieveDoc(superClassLink);
-				if (superClassDocs == null) continue; //Probably a bad link or an unsupported javadoc version
+    override val effectiveURL: String
+        get() = source.toOnlineURL(sourceURL)
 
-				for (Element element : inheritedBlock.select("code > a")) {
-					final HttpUrl hrefUrl = HttpUrl.get(element.absUrl("href"));
+    val enumConstants: List<FieldDoc>
+        get() = getFieldDocs()
+            .values
+            .filter { f: FieldDoc -> f.classDetailType == ClassDetailType.ENUM_CONSTANTS }
 
-					String targetId = hrefUrl.fragment();
-
-					inheritedElementConsumer.accept(superClassDocs, targetId);
-				}
-			}
-		}
-	}
-
-	private void onInheritedMethod(ClassDoc superClassDocs, String targetId) {
-		//You can inherit a same method multiple times, it will show up multiple times in the docs
-		// As the html is ordered such as the latest overridden method is shown, we can set the already existing doc to the newest one
-		// Example: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/AbstractCollection.html#method.summary
-		final MethodDoc methodDoc = superClassDocs.methodDocs.get(targetId);
-
-		//This might happen if the target superclass doesn't expose the same access level of members
-		// So for example this class might expose protected+ members
-		//  but the superclass exposes only public members
-		if (methodDoc == null) return;
-
-		methodDocs.put(methodDoc.getElementId(), methodDoc);
-	}
-
-	private void onInheritedField(ClassDoc superClassDocs, String targetId) {
-		final FieldDoc fieldDoc = superClassDocs.fieldDocs.get(targetId);
-
-		//This might happen if the target superclass doesn't expose the same access level of members
-		// So for example this class might expose protected+ members
-		//  but the superclass exposes only public members
-		if (fieldDoc == null) return;
-
-		fieldDocs.put(fieldDoc.getElementId(), fieldDoc);
-	}
-
-	public DocSourceType getSource() {
-		return source;
-	}
-
-	@NotNull
-	public HTMLElement getDocTitleElement() {
-		return docTitleElement;
-	}
-
-	@NotNull
-	public String getClassName() {
-		return className;
-	}
-
-	@NotNull
-	public Map<String, FieldDoc> getFieldDocs() {
-		return fieldDocs;
-	}
-
-	@NotNull
-	public Map<String, MethodDoc> getMethodDocs() {
-		return methodDocs;
-	}
-
-	private void processDetailElements(@NotNull Document document, @NotNull ClassDetailType detailType, Consumer<@NotNull Element> callback) {
-		final String detailId = detailType.getDetailId();
-
-		//Get main blocks to determine what details are available (field, constructor (constr), method)
-		final Element detailsSection = document.getElementById(detailId);
-		if (detailsSection == null) return;
-
-		for (Element element : detailsSection.select("ul.member-list > li > section.detail")) {
-			callback.accept(element);
-		}
-	}
-
-	@Override
-	public String toString() {
-		return "%s : %d fields, %d methods%s".formatted(className, fieldDocs.size(), methodDocs.size(), descriptionElements == null ? "" : " : " + descriptionElements.toText());
-	}
-
-	@Override
-	@NotNull
-	public String getEffectiveURL() {
-		return source.toOnlineURL(sourceURL);
-	}
-
-	@Override
-	@NotNull
-	public HTMLElementList getDescriptionElements() {
-		return descriptionElements;
-	}
-
-	@Override
-	@Nullable
-	public HTMLElement getDeprecationElement() {
-		return deprecationElement;
-	}
-
-	@Override
-	@NotNull
-	public DetailToElementsMap getDetailToElementsMap() {
-		return detailToElementsMap;
-	}
-
-	@Nullable
-	public SeeAlso getSeeAlso() {
-		return seeAlso;
-	}
-
-	@NotNull
-	public List<FieldDoc> getEnumConstants() {
-		return getFieldDocs()
-				.values()
-				.stream()
-				.filter(f -> f.getClassDetailType() == ClassDetailType.ENUM_CONSTANTS)
-				.toList();
-	}
-
-	@NotNull
-	public List<MethodDoc> getAnnotationElements() {
-		return getMethodDocs()
-				.values()
-				.stream()
-				.filter(f -> f.getClassDetailType() == ClassDetailType.ANNOTATION_ELEMENT)
-				.toList();
-	}
+    val annotationElements: List<MethodDoc>
+        get() = getMethodDocs()
+            .values
+            .filter { f: MethodDoc -> f.classDetailType == ClassDetailType.ANNOTATION_ELEMENT }
 }
