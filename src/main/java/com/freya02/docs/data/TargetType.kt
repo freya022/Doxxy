@@ -1,20 +1,16 @@
-package com.freya02.docs.data;
+package com.freya02.docs.data
 
-import org.jetbrains.annotations.Nullable;
+enum class TargetType {
+    CLASS, METHOD, FIELD, UNKNOWN;
 
-public enum TargetType {
-	CLASS,
-	METHOD,
-	FIELD,
-	UNKNOWN;
-
-	public static TargetType fromFragment(@Nullable String fragment) {
-		if (fragment == null) {
-			return CLASS;
-		} else if (fragment.contains("(")) {
-			return METHOD;
-		} else {
-			return FIELD;
-		}
-	}
+    companion object {
+        @JvmStatic
+        fun fromFragment(fragment: String?): TargetType {
+            return when {
+                fragment == null -> CLASS
+                fragment.contains("(") -> METHOD
+                else -> FIELD
+            }
+        }
+    }
 }
