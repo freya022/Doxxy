@@ -1,131 +1,104 @@
-package com.freya02.docs.data;
+package com.freya02.docs.data
 
-import com.freya02.botcommands.api.Logging;
-import com.freya02.docs.ClassDocs;
-import com.freya02.docs.DocSourceType;
-import com.freya02.docs.DocUtils;
-import com.freya02.docs.JavadocUrl;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.jsoup.nodes.Element;
-import org.slf4j.Logger;
+import com.freya02.botcommands.api.Logging
+import com.freya02.docs.ClassDocs
+import com.freya02.docs.DocSourceType
+import com.freya02.docs.DocUtils
+import com.freya02.docs.JavadocUrl
+import org.jsoup.nodes.Element
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+private val LOGGER = Logging.getLogger()
 
-public class SeeAlso {
-	private static final Logger LOGGER = Logging.getLogger();
+class SeeAlso(type: DocSourceType, docDetail: DocDetail) {
+    class SeeAlsoReference(
+        val text: String,
+        val link: String,
+        val targetType: TargetType,
+        val fullSignature: String?
+    ) {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other == null || javaClass != other.javaClass) return false
+            val that = other as SeeAlsoReference
+            return if (targetType !== that.targetType) false else fullSignature == that.fullSignature
+        }
 
-	public static final class SeeAlsoReference {
-		private final String text;
-		private final String link;
-		private final TargetType targetType;
-		private final @Nullable String fullSignature;
+        override fun hashCode(): Int {
+            var result = targetType.hashCode()
+            result = 31 * result + (fullSignature?.hashCode() ?: 0)
+            return result
+        }
+    }
 
-		public SeeAlsoReference(String text, String link, TargetType targetType, @Nullable String fullSignature) {
-			this.text = text;
-			this.link = link;
-			this.targetType = targetType;
-			this.fullSignature = fullSignature;
-		}
+    private val references: MutableList<SeeAlsoReference> = ArrayList()
 
-		public String text() {return text;}
+    init {
+        for (seeAlsoClassElement in docDetail.htmlElements[0].targetElement.select("dd > ul > li > a")) {
+            try {
+                val href = type.toOnlineURL(seeAlsoClassElement.absUrl("href"))
+                val sourceType = DocSourceType.fromUrl(href)
+                if (sourceType == null) {
+                    tryAddReference(SeeAlsoReference(seeAlsoClassElement.text(), href, TargetType.UNKNOWN, null))
+                    continue
+                }
 
-		public String link() {return link;}
+                val classDocs = ClassDocs.getSource(sourceType)
+                //Class should be detectable as all URLs are pulled first
+                if (classDocs.isValidURL(href)) {
+                    //Class exists
+                    //Is it a class, method, or field
+                    val javadocUrl = JavadocUrl.fromURL(href)
+                    val className = javadocUrl.className
+                    val targetAsText = getTargetAsText(seeAlsoClassElement, javadocUrl.targetType)
 
-		public TargetType targetType() {return targetType;}
+                    val ref = when (javadocUrl.targetType) {
+                        TargetType.CLASS -> SeeAlsoReference(targetAsText, href, TargetType.CLASS, className)
+                        TargetType.METHOD -> SeeAlsoReference(
+                            targetAsText,
+                            href,
+                            TargetType.METHOD,
+                            className + "#" + DocUtils.getSimpleSignature(javadocUrl.fragment)
+                        )
+                        TargetType.FIELD -> SeeAlsoReference(
+                            targetAsText,
+                            href,
+                            TargetType.FIELD,
+                            className + "#" + javadocUrl.fragment
+                        )
+                        else -> throw IllegalStateException("Unexpected javadoc target type: " + javadocUrl.targetType)
+                    }
 
-		public @Nullable String fullSignature() {return fullSignature;}
+                    tryAddReference(ref)
+                } else {
+                    tryAddReference(SeeAlsoReference(seeAlsoClassElement.text(), href, TargetType.UNKNOWN, null))
+                }
+            } catch (e: Exception) {
+                LOGGER.error("An exception occurred while retrieving a 'See also' detail", e)
+            }
+        }
+    }
 
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
+    private fun tryAddReference(seeAlsoClassElement: SeeAlsoReference) {
+        if (!references.contains(seeAlsoClassElement)) {
+            references.add(seeAlsoClassElement)
+        }
+    }
 
-			SeeAlsoReference that = (SeeAlsoReference) o;
+    private fun getTargetAsText(seeAlsoClassElement: Element, targetType: TargetType): String {
+        val text = seeAlsoClassElement.text()
+        if (targetType !== TargetType.METHOD) return text
 
-			if (targetType != that.targetType) return false;
-			return Objects.equals(fullSignature, that.fullSignature);
-		}
+        val textBuilder = StringBuilder(text)
+        val parenthesisIndex = text.indexOf('(')
+        val index = text.lastIndexOf('.', if (parenthesisIndex == -1) 0 else parenthesisIndex)
+        if (index > -1) {
+            textBuilder.replace(index, index + 1, "#")
+        }
 
-		@Override
-		public int hashCode() {
-			int result = targetType.hashCode();
-			result = 31 * result + (fullSignature != null ? fullSignature.hashCode() : 0);
-			return result;
-		}
-	}
+        return textBuilder.toString()
+    }
 
-	private final List<SeeAlsoReference> references = new ArrayList<>();
-
-	public SeeAlso(DocSourceType type, @NotNull DocDetail docDetail) {
-		for (Element seeAlsoClassElement : docDetail.getHtmlElements().get(0).getTargetElement().select("dd > ul > li > a")) {
-			try {
-				final String href = type.toOnlineURL(seeAlsoClassElement.absUrl("href"));
-				final DocSourceType sourceType = DocSourceType.fromUrl(href);
-				if (sourceType == null) {
-					tryAddReference(new SeeAlsoReference(seeAlsoClassElement.text(), href, TargetType.UNKNOWN, null));
-
-					continue;
-				}
-
-				final ClassDocs classDocs = ClassDocs.getSource(sourceType);
-				//Class should be detectable as all URLs are pulled first
-				if (classDocs.isValidURL(href)) {
-					//Class exists
-
-					//Is it a class, method, or field
-
-					final JavadocUrl javadocUrl = JavadocUrl.fromURL(href);
-
-					final String className = javadocUrl.getClassName();
-
-					final String targetAsText = getTargetAsText(seeAlsoClassElement, javadocUrl.getTargetType());
-					final SeeAlsoReference ref = switch (javadocUrl.getTargetType()) {
-						case CLASS -> new SeeAlsoReference(targetAsText, href, TargetType.CLASS, className);
-						case METHOD -> new SeeAlsoReference(targetAsText, href, TargetType.METHOD, className + "#" + DocUtils.getSimpleSignature(javadocUrl.getFragment()));
-						case FIELD -> new SeeAlsoReference(targetAsText, href, TargetType.FIELD, className + "#" + javadocUrl.getFragment());
-						default -> throw new IllegalStateException("Unexpected javadoc target type: " + javadocUrl.getTargetType());
-					};
-
-					tryAddReference(ref);
-				} else {
-					tryAddReference(new SeeAlsoReference(seeAlsoClassElement.text(), href, TargetType.UNKNOWN, null));
-				}
-			} catch (Exception e) {
-				LOGGER.error("An exception occurred while retrieving a 'See also' detail", e);
-			}
-		}
-	}
-
-	private void tryAddReference(SeeAlsoReference seeAlsoClassElement) {
-		if (!references.contains(seeAlsoClassElement)) {
-			references.add(seeAlsoClassElement);
-		}
-	}
-
-	@NotNull
-	private String getTargetAsText(Element seeAlsoClassElement, TargetType targetType) {
-		final String text = seeAlsoClassElement.text();
-
-		if (targetType != TargetType.METHOD) return text;
-
-		final StringBuilder textBuilder = new StringBuilder(text);
-
-		final int parenthesisIndex = text.indexOf('(');
-		final int index = text.lastIndexOf('.', parenthesisIndex == -1
-				? 0
-				: parenthesisIndex);
-
-		if (index > -1) {
-			textBuilder.replace(index, index + 1, "#");
-		}
-
-		return textBuilder.toString();
-	}
-
-	public List<SeeAlsoReference> getReferences() {
-		return references;
-	}
+    fun getReferences(): List<SeeAlsoReference> {
+        return references
+    }
 }

@@ -228,13 +228,13 @@ class CommonDocsHandlers : ApplicationCommand() {
 
         private fun ReplyCallbackAction.addSeeAlso(cachedDoc: CachedDoc): ReplyCallbackAction {
             cachedDoc.seeAlsoReferences?.let { referenceList ->
-                if (referenceList.any { it.targetType() != TargetType.UNKNOWN }) {
+                if (referenceList.any { it.targetType != TargetType.UNKNOWN }) {
                     val selectionMenuBuilder = Components.selectionMenu(SEE_ALSO_SELECT_LISTENER_NAME)
                         .timeout(15, TimeUnit.MINUTES)
                         .setPlaceholder("See also")
                     for (reference in referenceList) {
-                        if (reference.targetType() != TargetType.UNKNOWN) {
-                            val optionValue = reference.targetType().name + ":" + reference.fullSignature()
+                        if (reference.targetType != TargetType.UNKNOWN) {
+                            val optionValue = reference.targetType.name + ":" + reference.fullSignature
                             if (optionValue.length > SelectMenu.ID_MAX_LENGTH) {
                                 LOGGER.warn(
                                     "Option value was too large ({}) for: '{}'",
@@ -246,7 +246,7 @@ class CommonDocsHandlers : ApplicationCommand() {
                             }
 
                             selectionMenuBuilder.addOption(
-                                reference.text(),
+                                reference.text,
                                 optionValue,
                                 EmojiUtils.resolveJDAEmoji("clipboard")
                             )

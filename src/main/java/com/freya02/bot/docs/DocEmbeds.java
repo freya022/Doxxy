@@ -197,11 +197,11 @@ public class DocEmbeds {
 			final String seeAlsoMd = seeAlso.getReferences()
 					.stream()
 					.map(ref -> {
-						if (HttpUtils.doesStartByLocalhost(ref.link())) {
-							return ref.text();
+						if (HttpUtils.doesStartByLocalhost(ref.getLink())) {
+							return ref.getText();
 						}
 
-						return "[" + ref.text() + "](" + ref.link() + ")";
+						return "[" + ref.getText() + "](" + ref.getLink() + ")";
 					})
 					.collect(Collectors.joining(", "));
 
