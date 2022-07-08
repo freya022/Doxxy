@@ -1,93 +1,89 @@
-package com.freya02.bot;
+package com.freya02.bot
 
-import com.freya02.bot.db.Database;
-import com.freya02.bot.docs.DocSourceTypeResolver;
-import com.freya02.bot.tag.TagCriteriaResolver;
-import com.freya02.bot.versioning.LibraryTypeResolver;
-import com.freya02.bot.versioning.Versions;
-import com.freya02.botcommands.api.CommandsBuilder;
-import com.freya02.botcommands.api.Logging;
-import com.freya02.botcommands.api.components.DefaultComponentManager;
-import com.freya02.docs.DocWebServer;
-import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.entities.Activity;
-import org.slf4j.Logger;
+import com.freya02.bot.db.Database
+import com.freya02.bot.docs.DocSourceTypeResolver
+import com.freya02.bot.tag.TagCriteriaResolver
+import com.freya02.bot.versioning.LibraryTypeResolver
+import com.freya02.bot.versioning.Versions
+import com.freya02.botcommands.api.CommandsBuilder
+import com.freya02.botcommands.api.Logging
+import com.freya02.botcommands.api.builder.ApplicationCommandsBuilder
+import com.freya02.botcommands.api.builder.ExtensionsBuilder
+import com.freya02.botcommands.api.builder.TextCommandsBuilder
+import com.freya02.botcommands.api.components.DefaultComponentManager
+import com.freya02.docs.DocWebServer
+import net.dv8tion.jda.api.JDABuilder
+import net.dv8tion.jda.api.entities.Activity
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.io.path.exists
+import kotlin.system.exitProcess
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+private val LOGGER = Logging.getLogger()
 
-public class Main {
-	public static final Path BOT_FOLDER = Path.of(System.getProperty("user.home"), "Downloads", "DocsBot");
-	public static final Path CACHE_PATH = BOT_FOLDER.resolve("docs_cache");
-	public static final Path JAVADOCS_PATH = BOT_FOLDER.resolve("javadocs");
-	public static final Path REPOS_PATH = BOT_FOLDER.resolve("repos");
-	public static final Path LAST_KNOWN_VERSIONS_FOLDER_PATH = BOT_FOLDER.resolve("last_versions");
-	public static final Path BRANCH_VERSIONS_FOLDER_PATH = LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("branch_versions");
+object Main {
+    @JvmField val BOT_FOLDER: Path = Path.of(System.getProperty("user.home"), "Downloads", "DocsBot")
+    @JvmField val CACHE_PATH: Path = BOT_FOLDER.resolve("docs_cache")
+    @JvmField val JAVADOCS_PATH: Path = BOT_FOLDER.resolve("javadocs")
+    @JvmField val REPOS_PATH: Path = BOT_FOLDER.resolve("repos")
+    @JvmField val LAST_KNOWN_VERSIONS_FOLDER_PATH: Path = BOT_FOLDER.resolve("last_versions")
+    @JvmField val BRANCH_VERSIONS_FOLDER_PATH: Path = LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("branch_versions")
 
-	private static final Logger LOGGER = Logging.getLogger();
+    init {
+        check(BOT_FOLDER.exists()) { "Bot folder at $BOT_FOLDER does not exist !" }
 
-	static {
-		try {
-			if (Files.notExists(BOT_FOLDER)) {
-				throw new IllegalStateException("Bot folder at " + BOT_FOLDER + " does not exist !");
-			}
+        Files.createDirectories(CACHE_PATH)
+        Files.createDirectories(REPOS_PATH)
+    }
 
-			Files.createDirectories(CACHE_PATH);
-			Files.createDirectories(REPOS_PATH);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
+    @JvmStatic
+    fun main(args: Array<String>) {
+        try {
+            val config = Config.getConfig()
+            val jda = JDABuilder.createLight(config.token)
+                .setActivity(Activity.watching("the docs"))
+                .build()
+                .awaitReady()
 
-	public static void main(String[] args) {
-		try {
-			final Config config = Config.getConfig();
+            LOGGER.info("Loaded JDA")
 
-			final JDA jda = JDABuilder.createLight(config.getToken())
-					.setActivity(Activity.watching("the docs"))
-					.build()
-					.awaitReady();
+            val database = Database(config)
 
-			LOGGER.info("Loaded JDA");
+            LOGGER.info("Starting docs web server")
+            DocWebServer.startDocWebServer()
+            LOGGER.info("Started docs web server")
 
-			final Database database = new Database(config);
+            val versions = Versions()
+            val commandsBuilder = CommandsBuilder.newBuilder(222046562543468545L)
 
-			LOGGER.info("Starting docs web server");
-			DocWebServer.startDocWebServer();
-			LOGGER.info("Started docs web server");
+            commandsBuilder
+                .extensionsBuilder { extensionsBuilder: ExtensionsBuilder ->
+                    extensionsBuilder
+                        .registerConstructorParameter(Config::class.java) { config }
+                        .registerConstructorParameter(Database::class.java) { database }
+                        .registerParameterResolver(TagCriteriaResolver())
+                        .registerParameterResolver(DocSourceTypeResolver())
+                        .registerConstructorParameter(Versions::class.java) { versions }
+                        .registerParameterResolver(LibraryTypeResolver())
+                }
+                .textCommandBuilder { textCommandsBuilder: TextCommandsBuilder ->
+                    textCommandsBuilder
+                        .addPrefix("!")
+                }
+                .applicationCommandBuilder { applicationCommandsBuilder: ApplicationCommandsBuilder ->
+                    applicationCommandsBuilder
+                        .addTestGuilds(722891685755093072L)
+                }
+                .setComponentManager(DefaultComponentManager { database.connection })
+                .setSettingsProvider(BotSettings())
+                .build(jda, "com.freya02.bot.commands")
 
-			final Versions versions = new Versions();
+            versions.initUpdateLoop(commandsBuilder.context)
 
-			final CommandsBuilder commandsBuilder = CommandsBuilder.newBuilder(222046562543468545L);
-
-			commandsBuilder
-					.extensionsBuilder(extensionsBuilder -> extensionsBuilder
-							.registerConstructorParameter(Config.class, commandType -> config)
-							.registerConstructorParameter(Database.class, commandType -> database)
-							.registerParameterResolver(new TagCriteriaResolver())
-							.registerParameterResolver(new DocSourceTypeResolver())
-							.registerConstructorParameter(Versions.class, commandType -> versions)
-							.registerParameterResolver(new LibraryTypeResolver())
-					)
-					.textCommandBuilder(textCommandsBuilder -> textCommandsBuilder
-							.addPrefix("!")
-					)
-					.applicationCommandBuilder(applicationCommandsBuilder -> applicationCommandsBuilder
-							.addTestGuilds(722891685755093072L)
-					)
-					.setComponentManager(new DefaultComponentManager(database::getConnection))
-					.setSettingsProvider(new BotSettings())
-					.build(jda, "com.freya02.bot.commands");
-
-			versions.initUpdateLoop(commandsBuilder.getContext());
-
-			LOGGER.info("Loaded commands");
-		} catch (Exception e) {
-			LOGGER.error("Unable to start the bot", e);
-
-			System.exit(-1);
-		}
-	}
+            LOGGER.info("Loaded commands")
+        } catch (e: Exception) {
+            LOGGER.error("Unable to start the bot", e)
+            exitProcess(-1)
+        }
+    }
 }
