@@ -63,7 +63,7 @@ class AnyFieldCommand : BaseDocCommand() {
             return
         }
 
-        val docIndex = docIndexMap[sourceType]
+        val docIndex = docIndexMap[sourceType]!!
         CommonDocsHandlers.handleFieldDocs(event, split[0], split[1], docIndex)
     }
 }

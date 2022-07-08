@@ -74,7 +74,7 @@ class MethodCommand : BaseDocCommand() {
         className: String,
         methodId: String
     ) {
-        val docIndex = docIndexMap[sourceType]
+        val docIndex = docIndexMap[sourceType]!!
         CommonDocsHandlers.handleMethodDocs(event, className, methodId, docIndex)
     }
 }

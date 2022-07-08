@@ -63,7 +63,7 @@ class AnyMethodCommand : BaseDocCommand() {
             return
         }
 
-        val docIndex = docIndexMap[sourceType]
+        val docIndex = docIndexMap[sourceType]!!
         CommonDocsHandlers.handleMethodDocs(event, split[0], split[1], docIndex)
     }
 }

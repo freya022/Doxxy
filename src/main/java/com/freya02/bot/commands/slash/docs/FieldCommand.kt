@@ -70,7 +70,7 @@ class FieldCommand : BaseDocCommand() {
         className: String,
         fieldName: String
     ) {
-        val docIndex = docIndexMap[sourceType]
+        val docIndex = docIndexMap[sourceType]!!
         CommonDocsHandlers.handleFieldDocs(event, className, fieldName, docIndex)
     }
 }

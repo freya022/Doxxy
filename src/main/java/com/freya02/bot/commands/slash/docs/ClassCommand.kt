@@ -49,7 +49,7 @@ class ClassCommand : BaseDocCommand() {
         sourceType: DocSourceType,
         className: String
     ) {
-        val docIndex = docIndexMap[sourceType]
+        val docIndex = docIndexMap[sourceType]!!
         CommonDocsHandlers.handleClass(event, className, docIndex)
     }
 }

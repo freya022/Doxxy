@@ -74,7 +74,7 @@ class DocsCommand : BaseDocCommand() {
         className: String,
         identifier: String?
     ) {
-        val docIndex = docIndexMap[sourceType]
+        val docIndex = docIndexMap[sourceType]!!
         if (identifier == null) {
             CommonDocsHandlers.handleClass(event, className, docIndex)
         } else if (identifier.contains("(")) { //prob a method
