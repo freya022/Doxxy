@@ -1,72 +1,52 @@
-package com.freya02.bot.commands.slash.versioning;
+package com.freya02.bot.commands.slash.versioning
 
-import com.freya02.bot.commands.slash.DeleteButtonListener;
-import com.freya02.bot.versioning.ArtifactInfo;
-import com.freya02.bot.versioning.LibraryType;
-import com.freya02.bot.versioning.Versions;
-import com.freya02.botcommands.api.annotations.Optional;
-import com.freya02.botcommands.api.application.ApplicationCommand;
-import com.freya02.botcommands.api.application.annotations.AppOption;
-import com.freya02.botcommands.api.application.slash.GuildSlashEvent;
-import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand;
-import net.dv8tion.jda.api.EmbedBuilder;
+import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.getDeleteButton
+import com.freya02.bot.versioning.LibraryType
+import com.freya02.bot.versioning.Versions
+import com.freya02.botcommands.api.annotations.CommandMarker
+import com.freya02.botcommands.api.application.ApplicationCommand
+import com.freya02.botcommands.api.application.annotations.AppOption
+import com.freya02.botcommands.api.application.slash.GuildSlashEvent
+import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand
+import net.dv8tion.jda.api.EmbedBuilder
 
-public class SlashLatest extends ApplicationCommand {
-	private final Versions versions;
+@CommandMarker
+class SlashLatest(private val versions: Versions) : ApplicationCommand() {
+    @JDASlashCommand(name = "latest", description = "Shows the latest version of the library")
+    fun onSlashLatest(
+        event: GuildSlashEvent,
+        @AppOption(description = "Type of library") libraryType: LibraryType?
+    ) {
+        val builder = EmbedBuilder().setTitle("Latest versions")
 
-	public SlashLatest(Versions versions) {
-		this.versions = versions;
-	}
+        when (libraryType) {
+            null -> {
+                builder.addBCVersion()
+                builder.addBlankField(true)
+                builder.addJDA5Version()
+                builder.addJDA4Version()
+                builder.addBlankField(true)
+            }
+            LibraryType.BOT_COMMANDS -> builder.addBCVersion()
+            LibraryType.JDA5 -> builder.addJDA5Version()
+            LibraryType.JDA4 -> builder.addJDA4Version()
+        }
 
-	@JDASlashCommand(
-			name = "latest",
-			description = "Shows the latest version of the library"
-	)
-	public void onSlashLatest(GuildSlashEvent event,
-	                          @Optional @AppOption(description = "Type of library") LibraryType libraryType) {
-		final EmbedBuilder builder = new EmbedBuilder();
+        event.replyEmbeds(builder.build())
+            .addActionRow(getDeleteButton(event.user))
+            .queue()
+    }
 
-		builder.setTitle("Latest versions");
-		if (libraryType == null) {
-			addBCVersion(builder);
+    private fun EmbedBuilder.addJDA4Version() {
+        addField("JDA 4", '`'.toString() + versions.latestJDA4Version.version() + '`', true)
+    }
 
-			builder.addBlankField(true);
+    private fun EmbedBuilder.addJDA5Version() {
+        addField("JDA 5", '`'.toString() + versions.latestJDA5Version.version() + '`', true)
+    }
 
-			addJDA5Version(builder);
-			addJDA4Version(builder);
-
-			builder.addBlankField(true);
-		} else if (libraryType == LibraryType.BOT_COMMANDS) {
-			addBCVersion(builder);
-		} else if (libraryType == LibraryType.JDA5) {
-			addJDA5Version(builder);
-		} else if (libraryType == LibraryType.JDA4) {
-			addJDA4Version(builder);
-		}
-
-		event.replyEmbeds(builder.build())
-//				.setEphemeral(true)
-				.addActionRow(DeleteButtonListener.getDeleteButton(event.getUser()))
-				.queue();
-	}
-
-	private void addJDA4Version(EmbedBuilder builder) {
-		final ArtifactInfo latestJDA4Version = versions.getLatestJDA4Version();
-
-		builder.addField("JDA 4", '`' + latestJDA4Version.version() + '`', true);
-	}
-
-	private void addJDA5Version(EmbedBuilder builder) {
-		final ArtifactInfo latestJDA5Version = versions.getLatestJDA5Version();
-
-		builder.addField("JDA 5", '`' + latestJDA5Version.version() + '`', true);
-	}
-
-	private void addBCVersion(EmbedBuilder builder) {
-		final ArtifactInfo latestBotCommands = versions.getLatestBotCommandsVersion();
-		final ArtifactInfo jdaVersionFromBotCommands = versions.getJdaVersionFromBotCommands();
-
-		builder.addField("BotCommands version", '`' + latestBotCommands.version() + '`', true);
-		builder.addField("JDA version for BC", '`' + jdaVersionFromBotCommands.version() + '`', true);
-	}
+    private fun EmbedBuilder.addBCVersion() {
+        addField("BotCommands version", '`'.toString() + versions.latestBotCommandsVersion.version() + '`', true)
+        addField("JDA version for BC", '`'.toString() + versions.jdaVersionFromBotCommands.version() + '`', true)
+    }
 }
