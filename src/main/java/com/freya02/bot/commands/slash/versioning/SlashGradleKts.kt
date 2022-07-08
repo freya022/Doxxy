@@ -1,52 +1,47 @@
-package com.freya02.bot.commands.slash.versioning;
+package com.freya02.bot.commands.slash.versioning
 
-import com.freya02.bot.commands.slash.DeleteButtonListener;
-import com.freya02.bot.utils.Utils;
-import com.freya02.bot.versioning.LibraryType;
-import com.freya02.bot.versioning.Versions;
-import com.freya02.bot.versioning.supplier.BuildToolType;
-import com.freya02.bot.versioning.supplier.DependencySupplier;
-import com.freya02.botcommands.api.annotations.Optional;
-import com.freya02.botcommands.api.application.ApplicationCommand;
-import com.freya02.botcommands.api.application.annotations.AppOption;
-import com.freya02.botcommands.api.application.slash.GuildSlashEvent;
-import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand;
-import net.dv8tion.jda.api.EmbedBuilder;
+import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.getDeleteButton
+import com.freya02.bot.utils.Utils
+import com.freya02.bot.versioning.LibraryType
+import com.freya02.bot.versioning.Versions
+import com.freya02.bot.versioning.supplier.BuildToolType
+import com.freya02.bot.versioning.supplier.DependencySupplier
+import com.freya02.botcommands.api.annotations.CommandMarker
+import com.freya02.botcommands.api.application.ApplicationCommand
+import com.freya02.botcommands.api.application.annotations.AppOption
+import com.freya02.botcommands.api.application.slash.GuildSlashEvent
+import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand
+import dev.minn.jda.ktx.messages.Embed
 
-public class SlashGradleKts extends ApplicationCommand {
-	private final Versions versions;
+@CommandMarker
+class SlashGradleKts(private val versions: Versions) : ApplicationCommand() {
+    @JDASlashCommand(name = "gradle_kts", description = "Shows the Kotlin Gradle dependencies for a library")
+    fun onSlashGradle(
+        event: GuildSlashEvent,
+        @AppOption(description = "Type of library") libraryType: LibraryType?
+    ) {
+        val libraryType = libraryType ?: run {
+            if (Utils.isBCGuild(event.guild)) LibraryType.BOT_COMMANDS else LibraryType.JDA5
+        }
 
-	public SlashGradleKts(Versions versions) {
-		this.versions = versions;
-	}
+        val script = when (libraryType) {
+            LibraryType.BOT_COMMANDS -> DependencySupplier.formatBC(
+                BuildToolType.GRADLE_KTS,
+                versions.jdaVersionFromBotCommands,
+                versions.latestBotCommandsVersion
+            )
+            LibraryType.JDA5 -> DependencySupplier.formatJDA5(BuildToolType.GRADLE_KTS, versions.latestJDA5Version)
+            LibraryType.JDA4 -> DependencySupplier.formatJDA4(BuildToolType.GRADLE_KTS, versions.latestJDA4Version)
+        }
 
-	@JDASlashCommand(
-			name = "gradle_kts",
-			description = "Shows the Kotlin Gradle dependencies for a library"
-	)
-	public void onSlashGradle(GuildSlashEvent event,
-	                         @Optional @AppOption(description = "Type of library") LibraryType libraryType) {
+        val embed = Embed {
+            title = "Kotlin Gradle dependencies for ${libraryType.displayString}"
 
-		if (libraryType == null) {
-			libraryType = Utils.isBCGuild(event.getGuild())
-					? LibraryType.BOT_COMMANDS
-					: LibraryType.JDA5;
-		}
+            description = "```gradle\n$script```"
+        }
 
-		final EmbedBuilder builder = new EmbedBuilder();
-
-		builder.setTitle("Kotlin Gradle dependencies for " + libraryType.getDisplayString());
-
-		final String script = switch (libraryType) {
-			case BOT_COMMANDS -> DependencySupplier.formatBC(BuildToolType.GRADLE_KTS, versions.getJdaVersionFromBotCommands(), versions.getLatestBotCommandsVersion());
-			case JDA5 -> DependencySupplier.formatJDA5(BuildToolType.GRADLE_KTS, versions.getLatestJDA5Version());
-			case JDA4 -> DependencySupplier.formatJDA4(BuildToolType.GRADLE_KTS, versions.getLatestJDA4Version());
-		};
-
-		builder.setDescription("```gradle\n" + script + "```");
-
-		event.replyEmbeds(builder.build())
-				.addActionRow(DeleteButtonListener.getDeleteButton(event.getUser()))
-				.queue();
-	}
+        event.replyEmbeds(embed)
+            .addActionRow(getDeleteButton(event.user))
+            .queue()
+    }
 }
