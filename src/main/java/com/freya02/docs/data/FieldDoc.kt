@@ -1,132 +1,62 @@
-package com.freya02.docs.data;
+package com.freya02.docs.data
 
-import com.freya02.docs.DocParseException;
-import com.freya02.docs.HTMLElement;
-import com.freya02.docs.HTMLElementList;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.jsoup.nodes.Element;
+import com.freya02.docs.DocParseException
+import com.freya02.docs.HTMLElement
+import com.freya02.docs.HTMLElementList
+import org.jsoup.nodes.Element
 
-public class FieldDoc extends BaseDoc {
-	@NotNull private final ClassDoc classDocs;
-	@NotNull private final ClassDetailType classDetailType;
+class FieldDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, element: Element) : BaseDoc() {
+    override val effectiveURL: String
+    val fieldName: String
+    val fieldType: String
+    override val descriptionElements: HTMLElementList
+    override val deprecationElement: HTMLElement?
 
-	@NotNull private final String effectiveURL;
-	@NotNull private final String fieldName;
-	@NotNull private final String fieldType;
-	@NotNull private final HTMLElementList descriptionElements;
+    val elementId: String
+    val modifiers: String
 
-	@NotNull private final String elementId;
-	@NotNull private final String modifiers;
+    override val detailToElementsMap: DetailToElementsMap
 
-	@NotNull private final DetailToElementsMap detailToElementsMap;
+    val seeAlso: SeeAlso?
 
-	@Nullable private final SeeAlso seeAlso;
-	@Nullable private final HTMLElement deprecationElement;
+    init {
+        elementId = element.id()
+        effectiveURL = classDocs.effectiveURL + "#" + elementId
 
-	public FieldDoc(@NotNull ClassDoc classDoc, @NotNull ClassDetailType classDetailType, @NotNull Element element) {
-		this.classDocs = classDoc;
-		this.classDetailType = classDetailType;
+        //Get field modifiers
+        val modifiersElement = element.selectFirst("div.member-signature > span.modifiers") ?: throw DocParseException()
+        modifiers = modifiersElement.text()
 
-		this.elementId = element.id();
-		this.effectiveURL = classDoc.getEffectiveURL() + "#" + elementId;
+        //Get field name
+        val fieldNameElement = element.selectFirst("h3") ?: throw DocParseException()
+        fieldName = fieldNameElement.text()
 
-		//Get field modifiers
-		final Element modifiersElement = element.selectFirst("div.member-signature > span.modifiers");
-		if (modifiersElement == null) throw new DocParseException();
-		this.modifiers = modifiersElement.text();
+        //Get field type
+        val fieldTypeElement =
+            element.selectFirst("div.member-signature > span.return-type") ?: throw DocParseException()
+        fieldType = fieldTypeElement.text()
 
-		//Get field name
-		final Element fieldNameElement = element.selectFirst("h3");
-		if (fieldNameElement == null) throw new DocParseException();
-		this.fieldName = fieldNameElement.text();
+        //Get field description
+        descriptionElements = HTMLElementList.fromElements(element.select("section.detail > div.block"))
 
-		//Get field type
-		final Element fieldTypeElement = element.selectFirst("div.member-signature > span.return-type");
-		if (fieldTypeElement == null) throw new DocParseException();
-		this.fieldType = fieldTypeElement.text();
+        //Get field possible's deprecation
+        deprecationElement = HTMLElement.tryWrap(element.selectFirst("section.detail > div.deprecation-block"))
 
-		//Get field description
-		this.descriptionElements = HTMLElementList.fromElements(element.select("section.detail > div.block"));
+        //Details
+        detailToElementsMap = DetailToElementsMap.parseDetails(element)
 
-		//Get field possible's deprecation
-		this.deprecationElement = HTMLElement.tryWrap(element.selectFirst("section.detail > div.deprecation-block"));
+        //See also
+        val seeAlsoDetail = detailToElementsMap.getDetail(DocDetailType.SEE_ALSO)
+        seeAlso = when {
+            seeAlsoDetail != null -> SeeAlso(classDocs.source, seeAlsoDetail)
+            else -> null
+        }
+    }
 
-		this.detailToElementsMap = DetailToElementsMap.parseDetails(element);
+    override fun toString(): String {
+        return "$fieldType $fieldName : $descriptionElements"
+    }
 
-		final DocDetail seeAlsoDetail = detailToElementsMap.getDetail(DocDetailType.SEE_ALSO);
-		if (seeAlsoDetail != null) {
-			this.seeAlso = new SeeAlso(classDoc.getSource(), seeAlsoDetail);
-		} else {
-			this.seeAlso = null;
-		}
-	}
-
-	@NotNull
-	public ClassDoc getClassDocs() {
-		return classDocs;
-	}
-
-	@NotNull
-	public ClassDetailType getClassDetailType() {
-		return classDetailType;
-	}
-
-	@NotNull
-	public String getElementId() {
-		return elementId;
-	}
-
-	@NotNull
-	public String getModifiers() {
-		return modifiers;
-	}
-
-	@NotNull
-	public String getFieldName() {
-		return fieldName;
-	}
-
-	@NotNull
-	public String getFieldType() {
-		return fieldType;
-	}
-
-	@Override
-	public String toString() {
-		return fieldType + " " + fieldName + " : " + descriptionElements;
-	}
-
-	public String getSimpleSignature() {
-		return fieldType + " " + fieldName;
-	}
-
-	@Override
-	@NotNull
-	public String getEffectiveURL() {
-		return effectiveURL;
-	}
-
-	@Override
-	@NotNull
-	public HTMLElementList getDescriptionElements() {
-		return descriptionElements;
-	}
-
-	@Override
-	@Nullable
-	public HTMLElement getDeprecationElement() {
-		return deprecationElement;
-	}
-
-	@Override
-	@NotNull
-	public DetailToElementsMap getDetailToElementsMap() {
-		return detailToElementsMap;
-	}
-
-	@Nullable
-	public SeeAlso getSeeAlso() {
-		return seeAlso;
-	}
+    val simpleSignature: String
+        get() = "$fieldType $fieldName"
 }
