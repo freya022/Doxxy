@@ -1,163 +1,78 @@
-package com.freya02.docs.data;
+package com.freya02.docs.data
 
-import com.freya02.docs.DocParseException;
-import com.freya02.docs.DocUtils;
-import com.freya02.docs.HTMLElement;
-import com.freya02.docs.HTMLElementList;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.jsoup.nodes.Element;
+import com.freya02.docs.DocParseException
+import com.freya02.docs.DocUtils
+import com.freya02.docs.HTMLElement
+import com.freya02.docs.HTMLElementList
+import com.freya02.docs.utils.requireDoc
+import org.jsoup.nodes.Element
 
-public class MethodDoc extends BaseDoc {
-	@NotNull private final ClassDoc classDocs;
-	@NotNull private final ClassDetailType classDetailType;
+class MethodDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, element: Element) : BaseDoc() {
+    val elementId: String
+    val methodAnnotations: String?
+    val methodName: String
+    val methodSignature: String
+    val methodParameters: String?
+    val methodReturnType: String
 
-	@NotNull private final String elementId;
+    override val descriptionElements: HTMLElementList
+    override val deprecationElement: HTMLElement?
 
-	@Nullable private final String methodAnnotations;
-	@NotNull private final String methodName;
-	@NotNull private final String methodSignature;
-	@Nullable private final String methodParameters;
-	@NotNull private final String methodReturnType;
-	@NotNull private final HTMLElementList descriptionElements;
-	@Nullable private final HTMLElement deprecationElement;
+    override val detailToElementsMap: DetailToElementsMap
 
-	@NotNull private final DetailToElementsMap detailToElementsMap;
+    val seeAlso: SeeAlso?
 
-	@Nullable private final SeeAlso seeAlso;
+    init {
+        elementId = element.id()
 
-	public MethodDoc(@NotNull ClassDoc classDoc, @NotNull ClassDetailType classDetailType, @NotNull Element element) {
-		this.classDocs = classDoc;
-		this.classDetailType = classDetailType;
+        //Get method name
+        val methodNameElement = element.selectFirst("h3") ?: throw DocParseException()
+        methodName = methodNameElement.text()
 
-		this.elementId = element.id();
+        //Get method signature
+        val methodSignatureElement = element.selectFirst("div.member-signature") ?: throw DocParseException()
+        methodSignature = methodSignatureElement.text()
 
-		//Get method name
-		final Element methodNameElement = element.selectFirst("h3");
-		if (methodNameElement == null) throw new DocParseException();
-		this.methodName = methodNameElement.text();
+        val methodAnnotationsElement = element.selectFirst("div.member-signature > span.annotations")
+        methodAnnotations = methodAnnotationsElement?.text()
 
-		//Get method signature
-		final Element methodSignatureElement = element.selectFirst("div.member-signature");
-		if (methodSignatureElement == null) throw new DocParseException();
+        val methodParametersElement = element.selectFirst("div.member-signature > span.parameters")
+        methodParameters = methodParametersElement?.text()
 
-		this.methodSignature = methodSignatureElement.text();
+        val methodReturnTypeElement = element.selectFirst("div.member-signature > span.return-type")
+        methodReturnType = when (methodReturnTypeElement) {
+            null -> requireDoc(classDetailType == ClassDetailType.CONSTRUCTOR).let { classDocs.className }
+            else -> methodReturnTypeElement.text()
+        }
 
-		final Element methodAnnotationsElement = element.selectFirst("div.member-signature > span.annotations");
-		this.methodAnnotations = methodAnnotationsElement == null ? null : methodAnnotationsElement.text();
+        //Get method description
+        descriptionElements = HTMLElementList.fromElements(element.select("section.detail > div.block"))
 
-		final Element methodParametersElement = element.selectFirst("div.member-signature > span.parameters");
-		this.methodParameters = methodParametersElement == null ? null : methodParametersElement.text();
+        //Get method possible's deprecation
+        deprecationElement = HTMLElement.tryWrap(element.selectFirst("section.detail > div.deprecation-block"))
 
-		final Element methodReturnTypeElement = element.selectFirst("div.member-signature > span.return-type");
-		if (methodReturnTypeElement == null) {
-			if (classDetailType == ClassDetailType.CONSTRUCTOR) {
-				this.methodReturnType = classDoc.getClassName();
-			} else {
-				throw new DocParseException();
-			}
-		} else {
-			this.methodReturnType = methodReturnTypeElement.text();
-		}
+        //Need to parse the children of the <dl> tag in order to make a map of dt[class] -> List<Element>
+        detailToElementsMap = DetailToElementsMap.parseDetails(element)
 
-		//Get method description
-		this.descriptionElements = HTMLElementList.fromElements(element.select("section.detail > div.block"));
+        //See also
+        val seeAlsoDetail = detailToElementsMap.getDetail(DocDetailType.SEE_ALSO)
+        seeAlso = when {
+            seeAlsoDetail != null -> SeeAlso(classDocs.source, seeAlsoDetail)
+            else -> null
+        }
+    }
 
-		//Get method possible's deprecation
-		this.deprecationElement = HTMLElement.tryWrap(element.selectFirst("section.detail > div.deprecation-block"));
+    val simpleSignature: String
+        get() = DocUtils.getSimpleSignature(elementId)
 
-		//Need to parse the children of the <dl> tag in order to make a map of dt[class] -> List<Element>
-		this.detailToElementsMap = DetailToElementsMap.parseDetails(element);
+    fun getSimpleAnnotatedSignature(targetClassdoc: ClassDoc): String {
+        return DocUtils.getSimpleAnnotatedSignature(targetClassdoc, this)
+    }
 
-		final DocDetail seeAlsoDetail = detailToElementsMap.getDetail(DocDetailType.SEE_ALSO);
-		if (seeAlsoDetail != null) {
-			this.seeAlso = new SeeAlso(classDoc.getSource(), seeAlsoDetail);
-		} else {
-			this.seeAlso = null;
-		}
-	}
+    override val effectiveURL: String
+        get() = classDocs.effectiveURL + '#' + elementId
 
-	@NotNull
-	public String getElementId() {
-		return elementId;
-	}
-
-	@NotNull
-	public ClassDoc getClassDocs() {
-		return classDocs;
-	}
-
-	@NotNull
-	public ClassDetailType getClassDetailType() {
-		return classDetailType;
-	}
-
-	@NotNull
-	public String getMethodName() {
-		return methodName;
-	}
-
-	@NotNull
-	public String getMethodSignature() {
-		return methodSignature;
-	}
-
-	@NotNull
-	public String getMethodReturnType() {
-		return methodReturnType;
-	}
-
-	@NotNull
-	public String getSimpleSignature() {
-		return DocUtils.getSimpleSignature(elementId);
-	}
-
-	@NotNull
-	public String getSimpleAnnotatedSignature(ClassDoc targetClassdoc) {
-		return DocUtils.getSimpleAnnotatedSignature(targetClassdoc, this);
-	}
-
-	@Override
-	@NotNull
-	public String getEffectiveURL() {
-		return classDocs.getEffectiveURL() + '#' + elementId;
-	}
-
-	@Override
-	@NotNull
-	public HTMLElementList getDescriptionElements() {
-		return descriptionElements;
-	}
-
-	@Override
-	@Nullable
-	public HTMLElement getDeprecationElement() {
-		return deprecationElement;
-	}
-
-	@Override
-	@NotNull
-	public DetailToElementsMap getDetailToElementsMap() {
-		return detailToElementsMap;
-	}
-
-	@Nullable
-	public SeeAlso getSeeAlso() {
-		return seeAlso;
-	}
-
-	@Override
-	public String toString() {
-		return methodSignature + " : " + descriptionElements;
-	}
-
-	@Nullable
-	public String getMethodParameters() {
-		return methodParameters;
-	}
-
-	@Nullable
-	public String getMethodAnnotations() {
-		return methodAnnotations;
-	}
+    override fun toString(): String {
+        return "$methodSignature : $descriptionElements"
+    }
 }
