@@ -1,40 +1,18 @@
-package com.freya02.docs.data;
+package com.freya02.docs.data
 
-import com.freya02.docs.HTMLElement;
-import com.freya02.docs.HTMLElementList;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import com.freya02.docs.HTMLElement
+import com.freya02.docs.HTMLElementList
+import java.util.*
 
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
+abstract class BaseDoc {
+    abstract val effectiveURL: String
+    abstract val descriptionElements: HTMLElementList
+    abstract val deprecationElement: HTMLElement?
 
-public abstract class BaseDoc {
-	@NotNull
-	public abstract String getEffectiveURL();
+    protected abstract val detailToElementsMap: DetailToElementsMap
 
-	@NotNull
-	public abstract HTMLElementList getDescriptionElements();
-
-	@Nullable
-	public abstract HTMLElement getDeprecationElement();
-
-	@NotNull
-	protected abstract DetailToElementsMap getDetailToElementsMap();
-
-	@NotNull
-	public List<DocDetail> getDetails(EnumSet<DocDetailType> includedTypes) {
-		final List<DocDetail> details = new ArrayList<>();
-
-		for (DocDetailType detailType : DocDetailType.values()) {
-			if (includedTypes.contains(detailType)) {
-				final DocDetail detail = getDetailToElementsMap().getDetail(detailType);
-				if (detail == null) continue;
-
-				details.add(detail);
-			}
-		}
-
-		return details;
-	}
+    fun getDetails(includedTypes: EnumSet<DocDetailType>): List<DocDetail> =
+        DocDetailType.values()
+            .filter { it in includedTypes }
+            .mapNotNull { detailType -> detailToElementsMap.getDetail(detailType) }
 }
