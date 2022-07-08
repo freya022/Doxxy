@@ -1,414 +1,423 @@
-package com.freya02.bot.commands.slash.versioning;
+package com.freya02.bot.commands.slash.versioning
 
-import com.freya02.bot.commands.slash.DeleteButtonListener;
-import com.freya02.bot.utils.CryptoUtils;
-import com.freya02.bot.versioning.ArtifactInfo;
-import com.freya02.bot.versioning.LibraryType;
-import com.freya02.bot.versioning.github.*;
-import com.freya02.bot.versioning.maven.MavenBranchProjectDependencyVersionChecker;
-import com.freya02.bot.versioning.supplier.BuildToolType;
-import com.freya02.bot.versioning.supplier.DependencySupplier;
-import com.freya02.botcommands.api.BContext;
-import com.freya02.botcommands.api.annotations.Optional;
-import com.freya02.botcommands.api.application.ApplicationCommand;
-import com.freya02.botcommands.api.application.CommandPath;
-import com.freya02.botcommands.api.application.annotations.AppOption;
-import com.freya02.botcommands.api.application.slash.DefaultValueSupplier;
-import com.freya02.botcommands.api.application.slash.GuildSlashEvent;
-import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand;
-import com.freya02.botcommands.api.application.slash.autocomplete.annotations.AutocompletionHandler;
-import com.freya02.botcommands.api.application.slash.autocomplete.annotations.CacheAutocompletion;
-import com.freya02.botcommands.api.application.slash.autocomplete.annotations.CompositeKey;
-import me.xdrop.fuzzywuzzy.FuzzySearch;
-import me.xdrop.fuzzywuzzy.ToStringFunction;
-import me.xdrop.fuzzywuzzy.model.BoundExtractedResult;
-import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
-import net.dv8tion.jda.api.interactions.AutoCompleteQuery;
-import net.dv8tion.jda.api.interactions.commands.Command;
-import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-
-import static com.freya02.bot.Main.BRANCH_VERSIONS_FOLDER_PATH;
-import static com.freya02.bot.utils.Utils.isBCGuild;
+import com.freya02.bot.Main.BRANCH_VERSIONS_FOLDER_PATH
+import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.getDeleteButton
+import com.freya02.bot.utils.CryptoUtils
+import com.freya02.bot.utils.Utils
+import com.freya02.bot.versioning.LibraryType
+import com.freya02.bot.versioning.github.*
+import com.freya02.bot.versioning.maven.MavenBranchProjectDependencyVersionChecker
+import com.freya02.bot.versioning.supplier.BuildToolType
+import com.freya02.bot.versioning.supplier.DependencySupplier
+import com.freya02.botcommands.api.BContext
+import com.freya02.botcommands.api.annotations.CommandMarker
+import com.freya02.botcommands.api.application.ApplicationCommand
+import com.freya02.botcommands.api.application.CommandPath
+import com.freya02.botcommands.api.application.annotations.AppOption
+import com.freya02.botcommands.api.application.slash.DefaultValueSupplier
+import com.freya02.botcommands.api.application.slash.GuildSlashEvent
+import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand
+import com.freya02.botcommands.api.application.slash.autocomplete.annotations.AutocompletionHandler
+import com.freya02.botcommands.api.application.slash.autocomplete.annotations.CacheAutocompletion
+import com.freya02.botcommands.api.application.slash.autocomplete.annotations.CompositeKey
+import dev.minn.jda.ktx.messages.Embed
+import me.xdrop.fuzzywuzzy.FuzzySearch
+import me.xdrop.fuzzywuzzy.ToStringFunction
+import me.xdrop.fuzzywuzzy.model.BoundExtractedResult
+import net.dv8tion.jda.api.entities.Guild
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
+import net.dv8tion.jda.api.interactions.commands.Command
+import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.*
+import java.util.concurrent.TimeUnit
 
 //TODO refactor
-public class SlashJitpack extends ApplicationCommand {
-	private static final String BRANCH_NUMBER_AUTOCOMPLETE_NAME = "SlashJitpack: branchNumber";
-	private static final String BRANCH_NAME_AUTOCOMPLETE_NAME = "SlashJitpack: branchName";
-
-	private final PullRequestCache bcPullRequestCache = new PullRequestCache("freya022", "BotCommands", null);
-	private final PullRequestCache jdaPullRequestCache = new PullRequestCache("DV8FromTheWorld", "JDA", "master");
-
-	private final Map<String, MavenBranchProjectDependencyVersionChecker> branchNameToJdaVersionChecker = Collections.synchronizedMap(new HashMap<>());
-	private final Map<String, UpdateCountdown> updateCountdownMap = new HashMap<>();
-
-	private final Map<LibraryType, UpdateCountdown> updateMap = new HashMap<>();
-	private final Map<LibraryType, GithubBranchMap> branchMap = new HashMap<>();
-
-	public SlashJitpack() throws IOException {
-		Files.createDirectories(BRANCH_VERSIONS_FOLDER_PATH);
-	}
-
-	private static List<BoundExtractedResult<PullRequest>> fuzzyMatching(Collection<PullRequest> items, ToStringFunction<PullRequest> toStringFunction, CommandAutoCompleteInteractionEvent event) {
-		final List<PullRequest> list = items
-				.stream()
-				.sorted(Comparator.comparingInt(PullRequest::number).reversed())
-				.toList();
-
-		final AutoCompleteQuery autoCompleteQuery = event.getFocusedOption();
-
-		if (autoCompleteQuery.getValue().isBlank()) {
-			final List<BoundExtractedResult<PullRequest>> l = new ArrayList<>();
-
-			for (int i = 0, listSize = list.size(); i < listSize; i++) {
-				PullRequest request = list.get(i);
-
-				l.add(new BoundExtractedResult<>(request, "", 100, i));
-			}
-
-			return l;
-		}
-
-		//First sort the results by similarities but by taking into account an incomplete input
-		final List<BoundExtractedResult<PullRequest>> bigLengthDiffResults = FuzzySearch.extractTop(autoCompleteQuery.getValue(),
-				list,
-				toStringFunction,
-				FuzzySearch::partialRatio,
-				OptionData.MAX_CHOICES);
-
-		//Then sort the results by similarities but don't take length into account
-		return FuzzySearch.extractTop(autoCompleteQuery.getValue(),
-				bigLengthDiffResults.stream().map(BoundExtractedResult::getReferent).toList(),
-				toStringFunction,
-				FuzzySearch::ratio,
-				OptionData.MAX_CHOICES);
-	}
-
-	@Override
-	@NotNull
-	public List<Command.Choice> getOptionChoices(@Nullable Guild guild, @NotNull CommandPath commandPath, int optionIndex) {
-		if (optionIndex == 0) {
-			if (isBCGuild(guild)) {
-				return List.of(
-						new Command.Choice("BotCommands", LibraryType.BOT_COMMANDS.name()),
-						new Command.Choice("JDA 5", LibraryType.JDA5.name())
-				);
-			}
-
-			return List.of(
-					new Command.Choice("JDA 5", LibraryType.JDA5.name())
-			);
-		}
-
-		return super.getOptionChoices(guild, commandPath, optionIndex);
-	}
-
-	@Override
-	@Nullable //Need to set JDA 5 as a default value if in a non-BC guild
-	public DefaultValueSupplier getDefaultValueSupplier(@NotNull BContext context, @NotNull Guild guild,
-	                                                    @Nullable String commandId, @NotNull CommandPath commandPath,
-	                                                    @NotNull String optionName, @NotNull Class<?> parameterType) {
-		if (optionName.equals("library_type")) {
-			if (!isBCGuild(guild)) {
-				return e -> LibraryType.JDA5;
-			}
-		}
-
-		return super.getDefaultValueSupplier(context, guild, commandId, commandPath, optionName, parameterType);
-	}
-
-	@JDASlashCommand(
-			name = "jitpack",
-			subcommand = "maven",
-			group = "pr",
-			description = "Shows you how to use Pull Requests for your bot"
-	)
-	public void onSlashJitpackPRMaven(GuildSlashEvent event,
-	                                  @NotNull @AppOption(description = "Type of library") LibraryType libraryType,
-	                                  @AppOption(description = "The number of the issue", autocomplete = BRANCH_NUMBER_AUTOCOMPLETE_NAME) int issueNumber) throws IOException {
-		onSlashJitpackPR(event, libraryType, BuildToolType.MAVEN, issueNumber);
-	}
-
-	@JDASlashCommand(
-			name = "jitpack",
-			group = "pr",
-			subcommand = "gradle",
-			description = "Shows you how to use Pull Requests for your bot"
-	)
-	public void onSlashJitpackPRGradle(GuildSlashEvent event,
-	                                   @NotNull @AppOption(description = "Type of library") LibraryType libraryType,
-	                                   @AppOption(description = "The number of the issue", autocomplete = BRANCH_NUMBER_AUTOCOMPLETE_NAME) int issueNumber) throws IOException {
-		onSlashJitpackPR(event, libraryType, BuildToolType.GRADLE, issueNumber);
-	}
-
-	@JDASlashCommand(
-			name = "jitpack",
-			group = "pr",
-			subcommand = "kotlin_gradle",
-			description = "Shows you how to use Pull Requests for your bot"
-	)
-	public void onSlashJitpackPRKT(GuildSlashEvent event,
-	                               @NotNull @AppOption(description = "Type of library") LibraryType libraryType,
-	                               @AppOption(description = "The number of the issue", autocomplete = BRANCH_NUMBER_AUTOCOMPLETE_NAME) int issueNumber) throws IOException {
-		onSlashJitpackPR(event, libraryType, BuildToolType.GRADLE_KTS, issueNumber);
-	}
-
-	private void onSlashJitpackPR(@NotNull GuildSlashEvent event,
-	                              @NotNull LibraryType libraryType,
-	                              @NotNull BuildToolType buildToolType,
-	                              int issueNumber) throws IOException {
-		final PullRequest pullRequest = switch (libraryType) {
-			case BOT_COMMANDS -> bcPullRequestCache.getPullRequests().get(issueNumber);
-			case JDA5 -> jdaPullRequestCache.getPullRequests().get(issueNumber);
-			default -> throw new IllegalArgumentException();
-		};
-
-		if (pullRequest == null) {
-			event.reply("Unknown Pull Request").setEphemeral(true).queue();
-
-			return;
-		}
-
-		final EmbedBuilder builder = new EmbedBuilder();
-
-		final String dependencyStr;
-		if (libraryType == LibraryType.BOT_COMMANDS) {
-			final GithubBranch branch = pullRequest.branch();
-
-			final MavenBranchProjectDependencyVersionChecker jdaVersionChecker = branchNameToJdaVersionChecker.computeIfAbsent(branch.branchName(), x -> {
-				try {
-					return new MavenBranchProjectDependencyVersionChecker(getBranchFileName(branch),
-							branch.ownerName(),
-							branch.repoName(),
-							"JDA",
-							branch.branchName());
-				} catch (IOException e) {
-					throw new RuntimeException("Unable to create branch specific JDA version checker", e);
-				}
-			});
-
-			checkGithubBranchUpdates(event, branch, jdaVersionChecker);
-
-			final ArtifactInfo latestBotCommands = pullRequest.toJitpackArtifact();
-			final ArtifactInfo jdaVersionFromBotCommands = jdaVersionChecker.getLatest();
-
-			dependencyStr = DependencySupplier.formatBC(buildToolType, jdaVersionFromBotCommands, latestBotCommands);
-		} else {
-			final ArtifactInfo latestJDAVersion = pullRequest.toJitpackArtifact();
-
-			dependencyStr = DependencySupplier.formatJDA5Jitpack(buildToolType, latestJDAVersion);
-		}
-
-		builder.setTitle(buildToolType.getHumanName() + " dependencies for " + libraryType.getDisplayString() + " @ PR #" + pullRequest.number(), pullRequest.pullUrl());
-		builder.addField("PR Link", pullRequest.pullUrl(), false);
-
-		switch (buildToolType) {
-			case MAVEN -> builder.setDescription("```xml\n" + dependencyStr + "```");
-			case GRADLE, GRADLE_KTS -> builder.setDescription("```gradle\n" + dependencyStr + "```");
-		}
-
-		event.replyEmbeds(builder.build())
-				.addActionRow(DeleteButtonListener.getDeleteButton(event.getUser()))
-				.queue();
-	}
-
-	@JDASlashCommand(
-			name = "jitpack",
-			subcommand = "maven",
-			group = "branch",
-			description = "Shows you how to use a branch for your bot"
-	)
-	public void onSlashJitpackBranchMaven(GuildSlashEvent event,
-	                                      @NotNull @AppOption(description = "Type of library") LibraryType libraryType,
-	                                      @Optional @AppOption(description = "The name of the branch", autocomplete = BRANCH_NAME_AUTOCOMPLETE_NAME) String branchName) throws IOException {
-		onSlashJitpackBranch(event, libraryType, BuildToolType.MAVEN, branchName);
-	}
-
-	@JDASlashCommand(
-			name = "jitpack",
-			group = "branch",
-			subcommand = "gradle",
-			description = "Shows you how to use a branch for your bot"
-	)
-	public void onSlashJitpackBranchGradle(GuildSlashEvent event,
-	                                       @NotNull @AppOption(description = "Type of library") LibraryType libraryType,
-	                                       @Optional @AppOption(description = "The name of the branch", autocomplete = BRANCH_NAME_AUTOCOMPLETE_NAME) String branchName) throws IOException {
-		onSlashJitpackBranch(event, libraryType, BuildToolType.GRADLE, branchName);
-	}
-
-	@JDASlashCommand(
-			name = "jitpack",
-			group = "branch",
-			subcommand = "kotlin_gradle",
-			description = "Shows you how to use a branch for your bot"
-	)
-	public void onSlashJitpackBranchKT(GuildSlashEvent event,
-	                                   @NotNull @AppOption(description = "Type of library") LibraryType libraryType,
-	                                   @Optional @AppOption(description = "The name of the branch", autocomplete = BRANCH_NAME_AUTOCOMPLETE_NAME) String branchName) throws IOException {
-		onSlashJitpackBranch(event, libraryType, BuildToolType.GRADLE_KTS, branchName);
-	}
-
-	private void onSlashJitpackBranch(@NotNull GuildSlashEvent event,
-	                                  @NotNull LibraryType libraryType,
-	                                  @NotNull BuildToolType buildToolType,
-	                                  @Nullable String branchName) throws IOException {
-
-		GithubBranchMap githubBranchMap = getBranchMap(libraryType);
-
-		final GithubBranch branch;
-		if (branchName == null) {
-			branch = githubBranchMap.defaultBranch();
-		} else {
-			branch = githubBranchMap.branches().get(branchName);
-		}
-
-		if (branch == null) {
-			event.reply("Unknown branch '" + branchName + "'").setEphemeral(true).queue();
-
-			return;
-		}
-
-		final EmbedBuilder builder = new EmbedBuilder();
-
-		final String dependencyStr = switch (libraryType) {
-			case JDA5 -> DependencySupplier.formatJDA5Jitpack(buildToolType, branch.toJitpackArtifact());
-			case BOT_COMMANDS -> {
-				final MavenBranchProjectDependencyVersionChecker jdaVersionChecker = branchNameToJdaVersionChecker.computeIfAbsent(branchName, x -> {
-					try {
-						return new MavenBranchProjectDependencyVersionChecker(getBranchFileName(branch),
-								branch.ownerName(),
-								branch.repoName(),
-								"JDA",
-								branch.branchName());
-					} catch (IOException e) {
-						throw new RuntimeException("Unable to create branch specific JDA version checker", e);
-					}
-				});
-
-				checkGithubBranchUpdates(event, branch, jdaVersionChecker);
-
-				yield DependencySupplier.formatBC(buildToolType,
-						jdaVersionChecker.getLatest(),
-						new ArtifactInfo("com.github." + branch.ownerName(),
-								branch.repoName(),
-								branch.latestCommitSha().asSha10())
-				);
-			}
-			default -> throw new IllegalArgumentException("Invalid lib type: " + libraryType);
-		};
-
-		builder.setTitle(buildToolType.getHumanName() + " dependencies for " + libraryType.getDisplayString() + " @ branch '" + branchName + "'", branch.toURL());
-		builder.addField("Branch Link", branch.toURL(), false);
-
-		switch (buildToolType) {
-			case MAVEN -> builder.setDescription("```xml\n" + dependencyStr + "```");
-			case GRADLE, GRADLE_KTS -> builder.setDescription("```gradle\n" + dependencyStr + "```");
-		}
-
-		event.replyEmbeds(builder.build())
-				.addActionRow(DeleteButtonListener.getDeleteButton(event.getUser()))
-				.queue();
-	}
-
-	private void checkGithubBranchUpdates(@NotNull GuildSlashEvent event, GithubBranch branch, MavenBranchProjectDependencyVersionChecker checker) throws IOException {
-		final UpdateCountdown updateCountdown = updateCountdownMap.computeIfAbsent(branch.branchName(), x -> new UpdateCountdown(5, TimeUnit.MINUTES));
-
-		if (updateCountdown.needsUpdate()) {
-			checker.checkVersion();
-
-			event.getContext().invalidateAutocompletionCache(BRANCH_NUMBER_AUTOCOMPLETE_NAME);
-
-			checker.saveVersion();
-		}
-	}
-
-	private GithubBranchMap getBranchMap(@NotNull LibraryType libraryType) throws IOException {
-		final UpdateCountdown updateCountdown = updateMap.computeIfAbsent(libraryType, x -> new UpdateCountdown(5, TimeUnit.MINUTES));
-
-		GithubBranchMap githubBranchMap;
-		synchronized (branchMap) {
-			githubBranchMap = branchMap.get(libraryType);
-
-			if (githubBranchMap == null || updateCountdown.needsUpdate()) {
-				githubBranchMap = retrieveBranchList(libraryType);
-
-				branchMap.put(libraryType, githubBranchMap);
-			}
-		}
-
-		return githubBranchMap;
-	}
-
-	private GithubBranchMap retrieveBranchList(LibraryType libraryType) throws IOException {
-		final String ownerName, repoName;
-
-		switch (libraryType) {
-			case JDA5 -> {
-				ownerName = "DV8FromTheWorld";
-				repoName = "JDA";
-			}
-			case BOT_COMMANDS -> {
-				ownerName = "freya022";
-				repoName = "BotCommands";
-			}
-			default -> throw new IllegalArgumentException("No branches for " + libraryType);
-		}
-
-		final Map<String, GithubBranch> map = new HashMap<>();
-
-		for (GithubBranch branch : GithubUtils.getBranches(ownerName, repoName)) {
-			map.put(branch.branchName(), branch);
-		}
-
-		final String defaultBranchName = GithubUtils.getDefaultBranchName(ownerName, repoName);
-		final GithubBranch defaultBranch = map.get(defaultBranchName);
-
-		return new GithubBranchMap(defaultBranch, map);
-	}
-
-	@NotNull
-	private Path getBranchFileName(GithubBranch branch) {
-		return BRANCH_VERSIONS_FOLDER_PATH.resolve("%s-%s-%s.txt".formatted(branch.ownerName(),
-				branch.repoName(),
-				CryptoUtils.hash(branch.branchName())));
-	}
-
-	@CacheAutocompletion
-	@AutocompletionHandler(name = BRANCH_NUMBER_AUTOCOMPLETE_NAME, showUserInput = false)
-	public Collection<Command.Choice> onBranchNumberAutocomplete(CommandAutoCompleteInteractionEvent event,
-	                                                             @CompositeKey @AppOption LibraryType libraryType) throws IOException {
-
-		final PullRequest[] pullRequests = switch (libraryType) {
-			case BOT_COMMANDS -> bcPullRequestCache.getPullRequests().values(new PullRequest[0]);
-			case JDA5 -> jdaPullRequestCache.getPullRequests().values(new PullRequest[0]);
-			default -> throw new IllegalArgumentException();
-		};
-
-		return fuzzyMatching(Arrays.asList(pullRequests), this::pullRequestToString, event)
-				.stream()
-				.map(r -> new Command.Choice(pullRequestToString(r.getReferent()), r.getReferent().number()))
-				.toList();
-	}
-
-	@CacheAutocompletion
-	@AutocompletionHandler(name = BRANCH_NAME_AUTOCOMPLETE_NAME)
-	public Collection<String> onBranchNameAutocomplete(CommandAutoCompleteInteractionEvent event,
-	                                                   @CompositeKey @AppOption LibraryType libraryType) throws IOException {
-		GithubBranchMap githubBranchMap = getBranchMap(libraryType);
-
-		return githubBranchMap.branches().keySet();
-	}
-
-	private String pullRequestToString(PullRequest referent) {
-		return "%d - %s (%s)".formatted(referent.number(), referent.title(), referent.branch().ownerName());
-	}
+@CommandMarker
+class SlashJitpack : ApplicationCommand() {
+    private val bcPullRequestCache = PullRequestCache("freya022", "BotCommands", null)
+    private val jdaPullRequestCache = PullRequestCache("DV8FromTheWorld", "JDA", "master")
+    private val branchNameToJdaVersionChecker: MutableMap<String, MavenBranchProjectDependencyVersionChecker> =
+        Collections.synchronizedMap(hashMapOf())
+    private val updateCountdownMap: MutableMap<String, UpdateCountdown> = HashMap()
+    private val updateMap: MutableMap<LibraryType, UpdateCountdown> = EnumMap(LibraryType::class.java)
+    private val branchMap: MutableMap<LibraryType, GithubBranchMap> = EnumMap(LibraryType::class.java)
+
+    init {
+        Files.createDirectories(BRANCH_VERSIONS_FOLDER_PATH)
+    }
+
+    override fun getOptionChoices(guild: Guild?, commandPath: CommandPath, optionIndex: Int): List<Command.Choice> {
+        if (optionIndex == 0) {
+            return when {
+                Utils.isBCGuild(guild) -> listOf(
+                    Command.Choice("BotCommands", LibraryType.BOT_COMMANDS.name),
+                    Command.Choice("JDA 5", LibraryType.JDA5.name)
+                )
+                else -> listOf(
+                    Command.Choice("JDA 5", LibraryType.JDA5.name)
+                )
+            }
+        }
+
+        return super.getOptionChoices(guild, commandPath, optionIndex)
+    }
+
+    //Need to set JDA 5 as a default value if in a non-BC guild
+    override fun getDefaultValueSupplier(
+        context: BContext, guild: Guild,
+        commandId: String?, commandPath: CommandPath,
+        optionName: String, parameterType: Class<*>
+    ): DefaultValueSupplier? {
+        if (optionName == "library_type") {
+            if (!Utils.isBCGuild(guild)) {
+                return DefaultValueSupplier { LibraryType.JDA5 }
+            }
+        }
+
+        return super.getDefaultValueSupplier(context, guild, commandId, commandPath, optionName, parameterType)
+    }
+
+    @JDASlashCommand(
+        name = "jitpack",
+        subcommand = "maven",
+        group = "pr",
+        description = "Shows you how to use Pull Requests for your bot"
+    )
+    fun onSlashJitpackPRMaven(
+        event: GuildSlashEvent,
+        @AppOption(description = "Type of library") libraryType: LibraryType,
+        @AppOption(
+            description = "The number of the issue",
+            autocomplete = BRANCH_NUMBER_AUTOCOMPLETE_NAME
+        ) issueNumber: Int
+    ) {
+        onSlashJitpackPR(event, libraryType, BuildToolType.MAVEN, issueNumber)
+    }
+
+    @JDASlashCommand(
+        name = "jitpack",
+        group = "pr",
+        subcommand = "gradle",
+        description = "Shows you how to use Pull Requests for your bot"
+    )
+    fun onSlashJitpackPRGradle(
+        event: GuildSlashEvent,
+        @AppOption(description = "Type of library") libraryType: LibraryType,
+        @AppOption(
+            description = "The number of the issue",
+            autocomplete = BRANCH_NUMBER_AUTOCOMPLETE_NAME
+        ) issueNumber: Int
+    ) {
+        onSlashJitpackPR(event, libraryType, BuildToolType.GRADLE, issueNumber)
+    }
+
+    @JDASlashCommand(
+        name = "jitpack",
+        group = "pr",
+        subcommand = "kotlin_gradle",
+        description = "Shows you how to use Pull Requests for your bot"
+    )
+    fun onSlashJitpackPRKT(
+        event: GuildSlashEvent,
+        @AppOption(description = "Type of library") libraryType: LibraryType,
+        @AppOption(
+            description = "The number of the issue",
+            autocomplete = BRANCH_NUMBER_AUTOCOMPLETE_NAME
+        ) issueNumber: Int
+    ) {
+        onSlashJitpackPR(event, libraryType, BuildToolType.GRADLE_KTS, issueNumber)
+    }
+
+    private fun onSlashJitpackPR(
+        event: GuildSlashEvent,
+        libraryType: LibraryType,
+        buildToolType: BuildToolType,
+        issueNumber: Int
+    ) {
+        val pullRequest = when (libraryType) {
+            LibraryType.BOT_COMMANDS -> bcPullRequestCache.pullRequests[issueNumber]
+            LibraryType.JDA5 -> jdaPullRequestCache.pullRequests[issueNumber]
+            else -> throw IllegalArgumentException()
+        } ?: run {
+            event.reply("Unknown Pull Request").setEphemeral(true).queue()
+            return
+        }
+
+        val dependencyStr: String = when (libraryType) {
+            LibraryType.BOT_COMMANDS -> {
+                val branch = pullRequest.branch()
+                val jdaVersionChecker = branchNameToJdaVersionChecker.getOrPut(branch.branchName()) {
+                    try {
+                        return@getOrPut MavenBranchProjectDependencyVersionChecker(
+                            getBranchFileName(branch),
+                            branch.ownerName(),
+                            branch.repoName(),
+                            "JDA",
+                            branch.branchName()
+                        )
+                    } catch (e: IOException) {
+                        throw RuntimeException("Unable to create branch specific JDA version checker", e)
+                    }
+                }
+                checkGithubBranchUpdates(event, branch, jdaVersionChecker)
+                val latestBotCommands = pullRequest.toJitpackArtifact()
+                val jdaVersionFromBotCommands = jdaVersionChecker.latest
+                DependencySupplier.formatBC(buildToolType, jdaVersionFromBotCommands, latestBotCommands)
+            }
+            else -> DependencySupplier.formatJDA5Jitpack(buildToolType, pullRequest.toJitpackArtifact())
+        }
+
+        val embed = Embed {
+            title =
+                "${buildToolType.humanName} dependencies for ${libraryType.displayString} @ PR #${pullRequest.number()}"
+            url = pullRequest.pullUrl()
+
+            field("PR Link", pullRequest.pullUrl(), false)
+
+            description = when (buildToolType) {
+                BuildToolType.MAVEN -> "```xml\n$dependencyStr```"
+                BuildToolType.GRADLE, BuildToolType.GRADLE_KTS -> "```gradle\n$dependencyStr```"
+            }
+        }
+
+        event.replyEmbeds(embed)
+            .addActionRow(getDeleteButton(event.user))
+            .queue()
+    }
+
+    @JDASlashCommand(
+        name = "jitpack",
+        subcommand = "maven",
+        group = "branch",
+        description = "Shows you how to use a branch for your bot"
+    )
+    fun onSlashJitpackBranchMaven(
+        event: GuildSlashEvent,
+        @AppOption(description = "Type of library") libraryType: LibraryType,
+        @AppOption(
+            description = "The name of the branch",
+            autocomplete = BRANCH_NAME_AUTOCOMPLETE_NAME
+        ) branchName: String?
+    ) {
+        onSlashJitpackBranch(event, libraryType, BuildToolType.MAVEN, branchName)
+    }
+
+    @JDASlashCommand(
+        name = "jitpack",
+        group = "branch",
+        subcommand = "gradle",
+        description = "Shows you how to use a branch for your bot"
+    )
+    fun onSlashJitpackBranchGradle(
+        event: GuildSlashEvent,
+        @AppOption(description = "Type of library") libraryType: LibraryType,
+        @AppOption(
+            description = "The name of the branch",
+            autocomplete = BRANCH_NAME_AUTOCOMPLETE_NAME
+        ) branchName: String?
+    ) {
+        onSlashJitpackBranch(event, libraryType, BuildToolType.GRADLE, branchName)
+    }
+
+    @JDASlashCommand(
+        name = "jitpack",
+        group = "branch",
+        subcommand = "kotlin_gradle",
+        description = "Shows you how to use a branch for your bot"
+    )
+    fun onSlashJitpackBranchKT(
+        event: GuildSlashEvent,
+        @AppOption(description = "Type of library") libraryType: LibraryType,
+        @AppOption(
+            description = "The name of the branch",
+            autocomplete = BRANCH_NAME_AUTOCOMPLETE_NAME
+        ) branchName: String?
+    ) {
+        onSlashJitpackBranch(event, libraryType, BuildToolType.GRADLE_KTS, branchName)
+    }
+
+    private fun onSlashJitpackBranch(
+        event: GuildSlashEvent,
+        libraryType: LibraryType,
+        buildToolType: BuildToolType,
+        branchName: String?
+    ) {
+        val githubBranchMap = getBranchMap(libraryType)
+        val branch = when (branchName) {
+            null -> githubBranchMap.defaultBranch()
+            else -> githubBranchMap.branches()[branchName] ?: run {
+                event.reply("Unknown branch '$branchName'").setEphemeral(true).queue()
+                return
+            }
+        }
+
+        val branchName = branch.branchName
+
+        val dependencyStr = when (libraryType) {
+            LibraryType.JDA5 -> DependencySupplier.formatJDA5Jitpack(buildToolType, branch.toJitpackArtifact())
+            LibraryType.BOT_COMMANDS -> {
+                val jdaVersionChecker = branchNameToJdaVersionChecker.getOrPut(branchName) {
+                    try {
+                        return@getOrPut MavenBranchProjectDependencyVersionChecker(
+                            getBranchFileName(branch),
+                            branch.ownerName(),
+                            branch.repoName(),
+                            "JDA",
+                            branch.branchName()
+                        )
+                    } catch (e: IOException) {
+                        throw RuntimeException("Unable to create branch specific JDA version checker", e)
+                    }
+                }
+                checkGithubBranchUpdates(event, branch, jdaVersionChecker)
+                DependencySupplier.formatBC(
+                    buildToolType,
+                    jdaVersionChecker.latest,
+                    branch.toJitpackArtifact()
+                )
+            }
+            else -> throw IllegalArgumentException("Invalid lib type: $libraryType")
+        }
+
+        val embed = Embed {
+            title =
+                buildToolType.humanName + " dependencies for " + libraryType.displayString + " @ branch '" + branchName + "'"
+            url = branch.toURL()
+
+            field("Branch Link", branch.toURL(), false)
+
+            description = when (buildToolType) {
+                BuildToolType.MAVEN -> "```xml\n$dependencyStr```"
+                BuildToolType.GRADLE, BuildToolType.GRADLE_KTS -> "```gradle\n$dependencyStr```"
+            }
+        }
+
+        event.replyEmbeds(embed)
+            .addActionRow(getDeleteButton(event.user))
+            .queue()
+    }
+
+    private fun checkGithubBranchUpdates(
+        event: GuildSlashEvent,
+        branch: GithubBranch,
+        checker: MavenBranchProjectDependencyVersionChecker
+    ) {
+        val updateCountdown = updateCountdownMap.getOrPut(branch.branchName()) { UpdateCountdown(5, TimeUnit.MINUTES) }
+        if (updateCountdown.needsUpdate()) {
+            checker.checkVersion()
+            event.context.invalidateAutocompletionCache(BRANCH_NUMBER_AUTOCOMPLETE_NAME)
+            checker.saveVersion()
+        }
+    }
+
+    private fun getBranchMap(libraryType: LibraryType): GithubBranchMap {
+        val updateCountdown =
+            updateMap.computeIfAbsent(libraryType) { UpdateCountdown(5, TimeUnit.MINUTES) }
+
+        synchronized(branchMap) {
+            branchMap[libraryType].let { githubBranchMap: GithubBranchMap? ->
+                if (githubBranchMap == null || updateCountdown.needsUpdate()) {
+                    return retrieveBranchList(libraryType)
+                        .also { updatedMap -> branchMap[libraryType] = updatedMap }
+                }
+
+                return githubBranchMap
+            }
+        }
+    }
+
+    private fun retrieveBranchList(libraryType: LibraryType): GithubBranchMap {
+        val (ownerName: String, repoName: String) = when (libraryType) {
+            LibraryType.JDA5 -> arrayOf("DV8FromTheWorld", "JDA")
+            LibraryType.BOT_COMMANDS -> arrayOf("freya022", "BotCommands")
+            else -> throw IllegalArgumentException("No branches for $libraryType")
+        }
+
+        val map: Map<String, GithubBranch> = GithubUtils.getBranches(ownerName, repoName).associateBy { it.branchName }
+        val defaultBranchName = GithubUtils.getDefaultBranchName(ownerName, repoName)
+        val defaultBranch = map[defaultBranchName]
+        return GithubBranchMap(defaultBranch, map)
+    }
+
+    private fun getBranchFileName(branch: GithubBranch): Path {
+        return BRANCH_VERSIONS_FOLDER_PATH.resolve(
+            "%s-%s-%s.txt".format(
+                branch.ownerName(),
+                branch.repoName(),
+                CryptoUtils.hash(branch.branchName())
+            )
+        )
+    }
+
+    @CacheAutocompletion
+    @AutocompletionHandler(name = BRANCH_NUMBER_AUTOCOMPLETE_NAME, showUserInput = false)
+    fun onBranchNumberAutocomplete(
+        event: CommandAutoCompleteInteractionEvent,
+        @CompositeKey @AppOption libraryType: LibraryType?
+    ): Collection<Command.Choice> {
+        val pullRequests = when (libraryType) {
+            LibraryType.BOT_COMMANDS -> bcPullRequestCache.pullRequests.values(arrayOfNulls(0))
+            LibraryType.JDA5 -> jdaPullRequestCache.pullRequests.values(arrayOfNulls(0))
+            else -> throw IllegalArgumentException()
+        }
+        return fuzzyMatching(
+            pullRequests.asList(),
+            { referent: PullRequest -> pullRequestToString(referent) },
+            event
+        ).map { r: BoundExtractedResult<PullRequest> ->
+            Command.Choice(
+                pullRequestToString(r.referent),
+                r.referent.number().toLong()
+            )
+        }
+    }
+
+    @CacheAutocompletion
+    @AutocompletionHandler(name = BRANCH_NAME_AUTOCOMPLETE_NAME)
+    fun onBranchNameAutocomplete(
+        event: CommandAutoCompleteInteractionEvent,
+        @CompositeKey @AppOption libraryType: LibraryType
+    ): Collection<String> {
+        return getBranchMap(libraryType).branches().keys
+    }
+
+    private fun pullRequestToString(referent: PullRequest): String {
+        return "%d - %s (%s)".format(referent.number(), referent.title(), referent.branch().ownerName())
+    }
+
+    companion object {
+        private const val BRANCH_NUMBER_AUTOCOMPLETE_NAME = "SlashJitpack: branchNumber"
+        private const val BRANCH_NAME_AUTOCOMPLETE_NAME = "SlashJitpack: branchName"
+
+        private fun fuzzyMatching(
+            items: Collection<PullRequest>,
+            toStringFunction: ToStringFunction<PullRequest>,
+            event: CommandAutoCompleteInteractionEvent
+        ): List<BoundExtractedResult<PullRequest>> {
+            val list = items.sortedWith(Comparator.comparingInt { obj: PullRequest -> obj.number() }.reversed())
+            val autoCompleteQuery = event.focusedOption
+            if (autoCompleteQuery.value.isBlank()) {
+                return list.mapIndexed { i, it -> BoundExtractedResult(it, "", 100, i) }
+            }
+
+            //First sort the results by similarities but by taking into account an incomplete input
+            val bigLengthDiffResults = FuzzySearch.extractTop(
+                autoCompleteQuery.value,
+                list,
+                toStringFunction, { s1: String, s2: String -> FuzzySearch.partialRatio(s1, s2) },
+                OptionData.MAX_CHOICES
+            )
+
+            //Then sort the results by similarities but don't take length into account
+            return FuzzySearch.extractTop(
+                autoCompleteQuery.value,
+                bigLengthDiffResults.stream().map { obj: BoundExtractedResult<PullRequest> -> obj.referent }.toList(),
+                toStringFunction, { s1: String, s2: String -> FuzzySearch.ratio(s1, s2) },
+                OptionData.MAX_CHOICES
+            )
+        }
+    }
 }
