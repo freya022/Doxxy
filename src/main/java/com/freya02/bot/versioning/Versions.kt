@@ -3,8 +3,8 @@ package com.freya02.bot.versioning
 import com.freya02.bot.Main
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers
 import com.freya02.bot.docs.DocIndexMap
-import com.freya02.bot.utils.ProcessUtils
-import com.freya02.bot.versioning.jitpack.JitpackUtils
+import com.freya02.bot.utils.Utils.withTemporaryFile
+import com.freya02.bot.versioning.VersionsUtils.downloadJitpackJavadoc
 import com.freya02.bot.versioning.jitpack.JitpackVersionChecker
 import com.freya02.bot.versioning.maven.MavenProjectDependencyVersionChecker
 import com.freya02.bot.versioning.maven.MavenUtils
@@ -16,18 +16,16 @@ import com.freya02.docs.DocSourceType
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.StandardCopyOption
-import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 private val LOGGER = Logging.getLogger()
-private val lastKnownBotCommandsPath = Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("BC.txt")
-private val lastKnownJDAFromBCPath = Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("JDA_from_BC.txt")
-private val lastKnownJDA4Path = Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("JDA4.txt")
-private val lastKnownJDA5Path = Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("JDA5.txt")
-private val JDA_DOCS_FOLDER = Main.JAVADOCS_PATH.resolve("JDA")
-private val BC_DOCS_FOLDER = Main.JAVADOCS_PATH.resolve("BotCommands")
+private val lastKnownBotCommandsPath: Path = Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("BC.txt")
+private val lastKnownJDAFromBCPath: Path = Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("JDA_from_BC.txt")
+private val lastKnownJDA4Path: Path = Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("JDA4.txt")
+private val lastKnownJDA5Path: Path = Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("JDA5.txt")
+private val JDA_DOCS_FOLDER: Path = Main.JAVADOCS_PATH.resolve("JDA")
+private val BC_DOCS_FOLDER: Path = Main.JAVADOCS_PATH.resolve("BotCommands")
 
 class Versions {
     private val bcChecker: JitpackVersionChecker
@@ -89,7 +87,7 @@ class Versions {
                 MavenUtils.downloadMavenDocs(jda5Checker.getLatest(), tempZip)
 
                 LOGGER.debug("Extracting JDA 5 javadocs")
-                VersionsUtils.extractZip(tempZip, JDA_DOCS_FOLDER)
+                VersionsUtils.replaceWithZipContent(tempZip, JDA_DOCS_FOLDER)
                 Files.deleteIfExists(tempZip)
 
                 LOGGER.debug("Invalidating JDA 5 index")
@@ -136,57 +134,15 @@ class Versions {
         }
     }
 
-    private fun checkLatestBCVersion(context: BContext?): Boolean {
+    fun checkLatestBCVersion(context: BContext?): Boolean {
         try {
             val changed = bcChecker.checkVersion()
 
             if (changed) {
                 LOGGER.info("BotCommands version changed")
 
-                val BCRepoPath = Main.REPOS_PATH.resolve("BotCommands")
-                val needClone = Files.notExists(BCRepoPath)
-                if (needClone) {
-                    LOGGER.debug("Cloning BC repo")
-                    ProcessUtils.runAndWait("git clone https://github.com/freya022/BotCommands.git", Main.REPOS_PATH)
-                } else {
-                    LOGGER.debug("Fetching BC repo")
-                    ProcessUtils.runAndWait("git fetch", BCRepoPath)
-                }
-
-                val latestBranch = bcChecker.latestBranch
-                LOGGER.debug("Switching to BC branch {}", latestBranch.branchName())
-
-                ProcessUtils.runAndWait("git checkout " + latestBranch.branchName(), BCRepoPath)
-                if (!needClone) {
-                    LOGGER.debug("Pulling changes from BC branch {}", latestBranch.branchName())
-                    ProcessUtils.runAndWait("git pull", BCRepoPath)
-                }
-
-                LOGGER.debug("Running mvn javadoc:javadoc")
-                if (System.getProperty("os.name").lowercase(Locale.getDefault()).contains("windows")) {
-                    ProcessUtils.runAndWait("mvn.cmd javadoc:javadoc", BCRepoPath)
-                } else {
-                    ProcessUtils.runAndWait("mvn javadoc:javadoc", BCRepoPath)
-                }
-
-                val targetDocsFolder = BC_DOCS_FOLDER
-                if (Files.exists(targetDocsFolder)) {
-                    LOGGER.debug("Removing old BC docs at {}", targetDocsFolder)
-                    for (path in Files.walk(targetDocsFolder).sorted(Comparator.reverseOrder()).toList()) {
-                        Files.deleteIfExists(path)
-                    }
-                }
-
-                val apiDocsPath = BCRepoPath.resolve("target").resolve("site").resolve("apidocs")
-                LOGGER.debug("Moving docs from {} to {}", apiDocsPath, targetDocsFolder)
-                for (sourcePath in Files.walk(apiDocsPath).use {
-                    it
-                        .filter { path: Path -> Files.isRegularFile(path) }
-                        .filter { p: Path -> p.fileName.toString().endsWith("html") }
-                }) {
-                    val targetPath = targetDocsFolder.resolve(apiDocsPath.relativize(sourcePath).toString())
-                    Files.createDirectories(targetPath.parent)
-                    Files.move(sourcePath, targetPath, StandardCopyOption.ATOMIC_MOVE)
+                bcChecker.latest.downloadJitpackJavadoc().withTemporaryFile { javadocPath ->
+                    VersionsUtils.replaceWithZipContent(javadocPath, BC_DOCS_FOLDER)
                 }
 
                 LOGGER.debug("Invalidating BotCommands index")
@@ -198,19 +154,15 @@ class Versions {
                 bcChecker.saveVersion()
 
                 LOGGER.info("BotCommands version updated to {}", bcChecker.getLatest().version())
-
-                JitpackUtils.triggerBuild(
-                    bcChecker.getLatest().groupId(),
-                    bcChecker.getLatest().artifactId(),
-                    bcChecker.getLatest().version()
-                )
             }
+
             return changed
         } catch (e: IOException) {
             LOGGER.error("An exception occurred while retrieving versions", e)
         } catch (e: InterruptedException) {
             LOGGER.error("An exception occurred while retrieving versions", e)
         }
+
         return false
     }
 

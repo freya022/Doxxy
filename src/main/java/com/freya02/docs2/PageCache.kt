@@ -2,17 +2,19 @@ package com.freya02.docs2
 
 import com.freya02.bot.Main
 import com.freya02.bot.utils.HttpUtils
+import com.freya02.bot.utils.Utils.deleteRecursively
 import com.freya02.docs.DocSourceType
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Request
 import org.jsoup.nodes.Document
-import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
-import kotlin.io.path.*
-import kotlin.streams.asSequence
+import kotlin.io.path.createDirectories
+import kotlin.io.path.exists
+import kotlin.io.path.readText
+import kotlin.io.path.writeText
 
 object PageCache {
     private val cachePath = Main.PAGE_CACHE_FOLDER_PATH
@@ -58,12 +60,7 @@ object PageCache {
 
     fun clearCache(type: DocSourceType) {
         globalLock.withLock {
-            Files.walk(getBaseFolder(type)).use { stream ->
-                stream
-                    .asSequence()
-                    .sortedDescending()
-                    .forEach { it.deleteIfExists() }
-            }
+            getBaseFolder(type).deleteRecursively()
         }
     }
 

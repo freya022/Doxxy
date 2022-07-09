@@ -1,29 +1,49 @@
-package com.freya02.bot.versioning;
+package com.freya02.bot.versioning
 
-import java.io.IOException;
-import java.nio.file.*;
-import java.util.Comparator;
+import com.freya02.bot.utils.HttpUtils
+import com.freya02.bot.utils.Utils.deleteRecursively
+import okhttp3.Request
+import java.io.IOException
+import java.nio.file.FileSystems
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardCopyOption
+import kotlin.io.path.createTempFile
+import kotlin.io.path.extension
+import kotlin.io.path.writeBytes
+import kotlin.streams.asSequence
 
-public class VersionsUtils {
-	public static void extractZip(Path tempZip, Path targetDocsFolder) throws IOException {
-		if (Files.exists(targetDocsFolder)) {
-			for (Path path : Files.walk(targetDocsFolder).sorted(Comparator.reverseOrder()).toList()) {
-				Files.deleteIfExists(path);
-			}
-		}
+object VersionsUtils {
+    @Throws(IOException::class)
+    fun replaceWithZipContent(tempZip: Path, targetDocsFolder: Path) {
+        if (Files.exists(targetDocsFolder)) {
+            targetDocsFolder.deleteRecursively()
+        }
 
-		try (FileSystem zfs = FileSystems.newFileSystem(tempZip)) {
-			final Path zfsRoot = zfs.getPath("/");
+        FileSystems.newFileSystem(tempZip).use { zfs ->
+            val zfsRoot = zfs.getPath("/")
 
-			for (Path sourcePath : Files.walk(zfsRoot)
-					.filter(Files::isRegularFile)
-					.filter(p -> p.getFileName().toString().endsWith("html"))
-					.toList()) {
-				final Path targetPath = targetDocsFolder.resolve(zfsRoot.relativize(sourcePath).toString());
+            Files.walk(zfsRoot)
+                .asSequence()
+                .filter { path: Path -> Files.isRegularFile(path) }
+                .filter { p: Path -> p.fileName.extension == "html" }
+                .forEach { sourcePath ->
+                    val targetPath = targetDocsFolder.resolve(zfsRoot.relativize(sourcePath).toString())
+                    Files.createDirectories(targetPath.parent)
+                    Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING)
+                }
+        }
+    }
 
-				Files.createDirectories(targetPath.getParent());
-				Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
-			}
-		}
-	}
+    fun ArtifactInfo.downloadJitpackJavadoc(): Path {
+        return createTempFile("${this.artifactId}-javadoc", ".zip")
+            .also { path ->
+                HttpUtils.CLIENT
+                    .newCall(Request.Builder().url(this.toJitpackUrl()).build())
+                    .execute()
+                    .use {
+                        path.writeBytes(it.body!!.bytes())
+                    }
+            }
+    }
 }

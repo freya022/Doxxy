@@ -26,6 +26,7 @@ public class HttpUtils {
 		final Cache cache = new Cache(Main.CACHE_PATH.toFile(), Long.MAX_VALUE);
 
 		CLIENT = new OkHttpClient.Builder()
+				.readTimeout(2, TimeUnit.MINUTES) //Jitpack builds have a blocking read
 				.cache(cache)
 				.addInterceptor(chain -> {
 					final Request request = chain.request();

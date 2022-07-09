@@ -3,6 +3,10 @@ package com.freya02.bot.utils
 import net.dv8tion.jda.api.entities.Guild
 import org.jetbrains.annotations.Contract
 import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.io.path.deleteIfExists
+import kotlin.streams.asSequence
 
 object Utils {
     @JvmStatic
@@ -34,6 +38,23 @@ object Utils {
         return when {
             this != null -> idLong == 848502702731165738L || idLong == 722891685755093072L
             else -> false
+        }
+    }
+
+    fun Path.deleteRecursively() {
+        Files.walk(this).use { stream ->
+            stream
+                .asSequence()
+                .sortedDescending()
+                .forEach { it.deleteIfExists() }
+        }
+    }
+
+    inline fun <R> Path.withTemporaryFile(block: (Path) -> R) {
+        try {
+            block(this)
+        } finally {
+            this.deleteIfExists()
         }
     }
 }
