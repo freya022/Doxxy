@@ -1,7 +1,7 @@
 package com.freya02.bot.commands.slash.versioning
 
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.getDeleteButton
-import com.freya02.bot.utils.Utils
+import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.bot.versioning.LibraryType
 import com.freya02.bot.versioning.Versions
 import com.freya02.bot.versioning.supplier.BuildToolType
@@ -21,7 +21,7 @@ class SlashGradleKts(private val versions: Versions) : ApplicationCommand() {
         @AppOption(description = "Type of library") libraryType: LibraryType?
     ) {
         val libraryType = libraryType ?: run {
-            if (Utils.isBCGuild(event.guild)) LibraryType.BOT_COMMANDS else LibraryType.JDA5
+            if (event.guild.isBCGuild()) LibraryType.BOT_COMMANDS else LibraryType.JDA5
         }
 
         val script = when (libraryType) {

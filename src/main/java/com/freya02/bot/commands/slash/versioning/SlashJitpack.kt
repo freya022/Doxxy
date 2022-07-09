@@ -3,7 +3,7 @@ package com.freya02.bot.commands.slash.versioning
 import com.freya02.bot.Main.BRANCH_VERSIONS_FOLDER_PATH
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.getDeleteButton
 import com.freya02.bot.utils.CryptoUtils
-import com.freya02.bot.utils.Utils
+import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.bot.versioning.LibraryType
 import com.freya02.bot.versioning.github.*
 import com.freya02.bot.versioning.maven.MavenBranchProjectDependencyVersionChecker
@@ -52,7 +52,7 @@ class SlashJitpack : ApplicationCommand() {
     override fun getOptionChoices(guild: Guild?, commandPath: CommandPath, optionIndex: Int): List<Command.Choice> {
         if (optionIndex == 0) {
             return when {
-                Utils.isBCGuild(guild) -> listOf(
+                guild.isBCGuild() -> listOf(
                     Command.Choice("BotCommands", LibraryType.BOT_COMMANDS.name),
                     Command.Choice("JDA 5", LibraryType.JDA5.name)
                 )
@@ -72,7 +72,7 @@ class SlashJitpack : ApplicationCommand() {
         optionName: String, parameterType: Class<*>
     ): DefaultValueSupplier? {
         if (optionName == "library_type") {
-            if (!Utils.isBCGuild(guild)) {
+            if (!guild.isBCGuild()) {
                 return DefaultValueSupplier { LibraryType.JDA5 }
             }
         }
