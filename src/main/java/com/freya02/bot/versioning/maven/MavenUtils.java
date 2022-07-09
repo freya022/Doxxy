@@ -37,11 +37,11 @@ public class MavenUtils {
 
 	public static void downloadMavenDocs(@NotNull ArtifactInfo artifactInfo, @NotNull Path targetPath) throws IOException {
 		try (Response response = HttpUtils.CLIENT.newCall(new Request.Builder()
-						.url(MAVEN_JAVADOC_FORMAT.formatted(artifactInfo.groupId().replace('.', '/'),
-								artifactInfo.artifactId(),
-								artifactInfo.version(),
-								artifactInfo.artifactId(),
-								artifactInfo.version()))
+						.url(MAVEN_JAVADOC_FORMAT.formatted(artifactInfo.getGroupId().replace('.', '/'),
+								artifactInfo.getArtifactId(),
+								artifactInfo.getVersion(),
+								artifactInfo.getArtifactId(),
+								artifactInfo.getVersion()))
 						.build())
 				.execute()) {
 			final ResponseBody body = response.body();

@@ -38,15 +38,15 @@ class SlashLatest(private val versions: Versions) : ApplicationCommand() {
     }
 
     private fun EmbedBuilder.addJDA4Version() {
-        addField("JDA 4", '`'.toString() + versions.latestJDA4Version.version() + '`', true)
+        addField("JDA 4", '`'.toString() + versions.latestJDA4Version.version + '`', true)
     }
 
     private fun EmbedBuilder.addJDA5Version() {
-        addField("JDA 5", '`'.toString() + versions.latestJDA5Version.version() + '`', true)
+        addField("JDA 5", '`'.toString() + versions.latestJDA5Version.version + '`', true)
     }
 
     private fun EmbedBuilder.addBCVersion() {
-        addField("BotCommands version", '`'.toString() + versions.latestBotCommandsVersion.version() + '`', true)
-        addField("JDA version for BC", '`'.toString() + versions.jdaVersionFromBotCommands.version() + '`', true)
+        addField("BotCommands version", '`'.toString() + versions.latestBotCommandsVersion.version + '`', true)
+        addField("JDA version for BC", '`'.toString() + versions.jdaVersionFromBotCommands.version + '`', true)
     }
 }

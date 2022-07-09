@@ -1,56 +1,56 @@
-package com.freya02.bot.versioning;
+package com.freya02.bot.versioning
 
-import org.jetbrains.annotations.NotNull;
+import java.io.IOException
+import java.nio.file.Path
+import kotlin.io.path.notExists
+import kotlin.io.path.readLines
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
+private const val MAVEN_JAVADOC_FORMAT = "https://repo1.maven.org/maven2/%s/%s/%s/%s-%s-javadoc.jar"
+private const val JITPACK_JAVADOC_FORMAT = "https://jitpack.io/%s/%s/%s/%s-%s-javadoc.jar"
 
-public record ArtifactInfo(String groupId, String artifactId, String version) {
-	public static final String MAVEN_JAVADOC_FORMAT = "https://repo1.maven.org/maven2/%s/%s/%s/%s-%s-javadoc.jar";
-	public static final String JITPACK_JAVADOC_FORMAT = "https://jitpack.io/%s/%s/%s/%s-%s-javadoc.jar";
+data class ArtifactInfo(val groupId: String, val artifactId: String, val version: String) {
+    fun toFileString(): String {
+        return arrayOf(groupId, artifactId, version).joinToString("\n")
+    }
 
-	public String toFileString() {
-		return String.join("\n", groupId, artifactId, version);
-	}
+    fun toMavenJavadocUrl(): String {
+        return MAVEN_JAVADOC_FORMAT.format(
+            groupId.replace('.', '/'),
+            artifactId,
+            artifactId,
+            version,
+            version
+        )
+    }
 
-	@NotNull
-	public String toMavenJavadocUrl() {
-		return MAVEN_JAVADOC_FORMAT.formatted(
-				groupId.replace('.', '/'),
-				artifactId,
-				artifactId,
-				version,
-				version
-		);
-	}
+    fun toJitpackJavadocUrl(): String {
+        return JITPACK_JAVADOC_FORMAT.format(
+            groupId.replace('.', '/'),
+            artifactId,
+            artifactId,
+            version,
+            version
+        )
+    }
 
-	@NotNull
-	public String toJitpackJavadocUrl() {
-		return JITPACK_JAVADOC_FORMAT.formatted(
-				groupId.replace('.', '/'),
-				artifactId,
-				artifactId,
-				version,
-				version
-		);
-	}
+    override fun toString(): String {
+        return "ArtifactInfo[" +
+                "groupId=" + groupId + ", " +
+                "artifactId=" + artifactId + ", " +
+                "version=" + version + ']'
+    }
 
-	public static ArtifactInfo fromFileString(Path path) throws IOException {
-		if (Files.notExists(path)) {
-			return new ArtifactInfo("invalid", "invalid", "invalid");
-		}
+    companion object {
+        @JvmStatic
+        @Throws(IOException::class)
+        fun fromFileString(path: Path): ArtifactInfo {
+            if (path.notExists()) return ArtifactInfo("invalid", "invalid", "invalid")
 
-		final List<String> lines = Files.readAllLines(path);
-		if (lines.size() != 3) {
-			return new ArtifactInfo("invalid", "invalid", "invalid");
-		}
-
-		return new ArtifactInfo(
-				lines.get(0),
-				lines.get(1),
-				lines.get(2)
-		);
-	}
+            val lines = path.readLines()
+            return when {
+                lines.size != 3 -> ArtifactInfo("invalid", "invalid", "invalid")
+                else -> ArtifactInfo(lines[0], lines[1], lines[2])
+            }
+        }
+    }
 }

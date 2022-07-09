@@ -14,25 +14,25 @@ public class DependencySupplier {
 	public static String formatBC(BuildToolType buildToolType, ArtifactInfo jdaVersionFromBotCommands, ArtifactInfo latestBotCommands) {
 		return dependenciesMap.get(buildToolType)
 				.getBCDependencyFormatString()
-				.formatted(jdaVersionFromBotCommands.groupId(), jdaVersionFromBotCommands.artifactId(), jdaVersionFromBotCommands.version(),
-				latestBotCommands.groupId(), latestBotCommands.artifactId(), latestBotCommands.version());
+				.formatted(jdaVersionFromBotCommands.getGroupId(), jdaVersionFromBotCommands.getArtifactId(), jdaVersionFromBotCommands.getVersion(),
+				latestBotCommands.getGroupId(), latestBotCommands.getArtifactId(), latestBotCommands.getVersion());
 	}
 
 	public static String formatJDA5(BuildToolType buildToolType, ArtifactInfo version) {
 		return dependenciesMap.get(buildToolType)
 				.getJDA5DependencyFormatString()
-				.formatted(version.groupId(), version.artifactId(), version.version());
+				.formatted(version.getGroupId(), version.getArtifactId(), version.getVersion());
 	}
 
 	public static String formatJDA5Jitpack(BuildToolType buildToolType, ArtifactInfo version) {
 		return dependenciesMap.get(buildToolType)
 				.getJDA5JitpackDependencyFormatString()
-				.formatted(version.groupId(), version.artifactId(), version.version());
+				.formatted(version.getGroupId(), version.getArtifactId(), version.getVersion());
 	}
 
 	public static String formatJDA4(BuildToolType buildToolType, ArtifactInfo version) {
 		return dependenciesMap.get(buildToolType)
 				.getJDA4DependencyFormatString()
-				.formatted(version.groupId(), version.artifactId(), version.version());
+				.formatted(version.getGroupId(), version.getArtifactId(), version.getVersion());
 	}
 }

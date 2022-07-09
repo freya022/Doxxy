@@ -96,7 +96,7 @@ class Versions {
 
                 jda5Checker.saveVersion()
 
-                LOGGER.info("JDA 5 version updated to {}", jda5Checker.getLatest().version())
+                LOGGER.info("JDA 5 version updated to {}", jda5Checker.getLatest().version)
             }
             return changed
         } catch (e: IOException) {
@@ -112,7 +112,7 @@ class Versions {
             if (changed) {
                 LOGGER.info("JDA 4 version changed")
                 jda4Checker.saveVersion()
-                LOGGER.info("JDA 4 version updated to {}", jda4Checker.getLatest().version())
+                LOGGER.info("JDA 4 version updated to {}", jda4Checker.getLatest().version)
             }
         } catch (e: IOException) {
             LOGGER.error("An exception occurred while retrieving versions", e)
@@ -125,7 +125,7 @@ class Versions {
             if (changed) {
                 LOGGER.info("BotCommands's JDA version changed")
                 jdaVersionFromBCChecker.saveVersion()
-                LOGGER.info("BotCommands's JDA version updated to {}", jdaVersionFromBCChecker.getLatest().version())
+                LOGGER.info("BotCommands's JDA version updated to {}", jdaVersionFromBCChecker.getLatest().version)
             }
         } catch (e: IOException) {
             LOGGER.error("An exception occurred while retrieving versions", e)
@@ -151,7 +151,7 @@ class Versions {
 
                 bcChecker.saveVersion()
 
-                LOGGER.info("BotCommands version updated to {}", bcChecker.getLatest().version())
+                LOGGER.info("BotCommands version updated to {}", bcChecker.getLatest().version)
             }
 
             return changed
