@@ -1,85 +1,76 @@
-package com.freya02.docs;
+package com.freya02.docs
 
-import com.freya02.bot.utils.DecomposedName;
-import com.freya02.bot.utils.HttpUtils;
-import com.freya02.botcommands.api.Logging;
-import com.freya02.docs2.PageCache;
-import org.jetbrains.annotations.NotNull;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.slf4j.Logger;
+import com.freya02.bot.utils.DecomposedName
+import com.freya02.bot.utils.HttpUtils
+import com.freya02.botcommands.api.Logging
+import com.freya02.docs2.PageCache.getPage
+import java.io.IOException
+import java.util.*
 
-import java.io.IOException;
-import java.util.*;
+private val LOGGER = Logging.getLogger()
 
-public class ClassDocs {
-	private static final Logger LOGGER = Logging.getLogger();
-	private static final Map<DocSourceType, ClassDocs> sourceMap = Collections.synchronizedMap(new EnumMap<>(DocSourceType.class));
+class ClassDocs private constructor(private val source: DocSourceType) {
+    private val simpleNameToUrlMap: MutableMap<String, String> = HashMap()
+    private val urlSet: MutableSet<String> = HashSet()
 
-	private final DocSourceType source;
+    fun getSimpleNameToUrlMap(): Map<String, String> {
+        return simpleNameToUrlMap
+    }
 
-	private final Map<String, String> simpleNameToUrlMap = new HashMap<>();
-	private final Set<String> urlSet = new HashSet<>();
+    fun isValidURL(url: String?): Boolean {
+        val cleanURL = HttpUtils.removeFragment(url!!)
+        return urlSet.contains(cleanURL)
+    }
 
-	//Use this map in case there are multiple classes with the same name, use a small package prefix to differentiate them
-//	private final Map<String, String> nameToUrlMap = new HashMap<>();
+    @Synchronized
+    @Throws(IOException::class)
+    private fun tryIndexAll() {
+        val indexURL = source.allClassesIndexURL
 
-	private ClassDocs(DocSourceType source) {
-		this.source = source;
-	}
+        LOGGER.info("Parsing ClassDocs URLs for: {}", source)
+        val document = getPage(indexURL)
 
-	@NotNull
-	public static synchronized ClassDocs getSource(DocSourceType source) {
-		return sourceMap.computeIfAbsent(source, ClassDocs::new);
-	}
+        simpleNameToUrlMap.clear()
+        urlSet.clear()
 
-	@NotNull
-	public static synchronized ClassDocs getUpdatedSource(DocSourceType source) throws IOException {
-		final ClassDocs classDocs = sourceMap.computeIfAbsent(source, ClassDocs::new);
+        //n = 1 needed as type parameters are links and external types
+        // For example in AbstractComponentBuilder<T extends AbstractComponentBuilder<T>>
+        // It could have selected 4 different URLs, except there is only 1 class we want here
+        // Since it's the left most, it's easy to pick the first one
+        for (element in document.select("#all-classes-table > div > div.summary-table.two-column-summary > div.col-first > a:nth-child(1)")) {
+            val classUrl = element.absUrl("href")
+            val decomposition = DecomposedName.getDecompositionFromUrl(source, classUrl)
 
-		classDocs.tryIndexAll();
+            if (!source.isValidPackage(decomposition.packageName())) continue
 
-		return classDocs;
-	}
+            val oldUrl = simpleNameToUrlMap.put(decomposition.className(), classUrl)
+            when {
+                oldUrl != null -> LOGGER.warn(
+                    "Detected a duplicate class name '{}' at '{}' and '{}'",
+                    decomposition.className(),
+                    classUrl,
+                    oldUrl
+                )
+                else -> urlSet.add(source.toOnlineURL(classUrl)) //For quick checks
+            }
+        }
+    }
 
-	public Map<String, String> getSimpleNameToUrlMap() {
-		return simpleNameToUrlMap;
-	}
+    companion object {
+        private val sourceMap: MutableMap<DocSourceType, ClassDocs> = EnumMap(DocSourceType::class.java)
 
-	public boolean isValidURL(String url) {
-		final String cleanURL = HttpUtils.removeFragment(url);
+        @Synchronized
+        fun getSource(source: DocSourceType): ClassDocs {
+            return sourceMap.computeIfAbsent(source) { ClassDocs(source) }
+        }
 
-		return urlSet.contains(cleanURL);
-	}
-
-	private synchronized void tryIndexAll() throws IOException {
-		final String indexURL = source.getAllClassesIndexURL();
-
-		LOGGER.info("Parsing ClassDocs URLs for: {}", source);
-
-		final Document document = PageCache.INSTANCE.getPage(indexURL);
-
-		simpleNameToUrlMap.clear();
-		urlSet.clear();
-
-		//n = 1 needed as type parameters are links and external types
-		// For example in AbstractComponentBuilder<T extends AbstractComponentBuilder<T>>
-		// It could have selected 4 different URLs, except there is only 1 class we want here
-		// Since it's the left most, it's easy to pick the first one
-		for (Element element : document.select("#all-classes-table > div > div.summary-table.two-column-summary > div.col-first > a:nth-child(1)")) {
-			final String classUrl = element.absUrl("href");
-
-			final DecomposedName decomposition = DecomposedName.getDecompositionFromUrl(source, classUrl);
-
-			if (!source.isValidPackage(decomposition.packageName()))
-				continue;
-
-			final String oldUrl = simpleNameToUrlMap.put(decomposition.className(), classUrl);
-			if (oldUrl != null) {
-				LOGGER.warn("Detected a duplicate class name '{}' at '{}' and '{}'", decomposition.className(), classUrl, oldUrl);
-			} else {
-				urlSet.add(source.toOnlineURL(classUrl)); //For quick checks
-			}
-		}
-	}
+        @JvmStatic
+        @Synchronized
+        @Throws(IOException::class)
+        fun getUpdatedSource(source: DocSourceType): ClassDocs {
+            return sourceMap
+                .computeIfAbsent(source) { ClassDocs(source) }
+                .also { it.tryIndexAll() }
+        }
+    }
 }
