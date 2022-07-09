@@ -3,6 +3,7 @@ package com.freya02.bot.versioning
 import com.freya02.bot.utils.HttpUtils
 import com.freya02.bot.utils.Utils.deleteRecursively
 import okhttp3.Request
+import okhttp3.ResponseBody
 import java.io.IOException
 import java.nio.file.FileSystems
 import java.nio.file.Files
@@ -35,14 +36,27 @@ object VersionsUtils {
         }
     }
 
+    fun ArtifactInfo.downloadMavenJavadoc(): Path {
+        return downloadJavadoc(this.toMavenJavadocUrl())
+    }
+
     fun ArtifactInfo.downloadJitpackJavadoc(): Path {
+        return downloadJavadoc(this.toJitpackJavadocUrl())
+    }
+
+    private fun ArtifactInfo.downloadJavadoc(url: String): Path {
         return createTempFile("${this.artifactId}-javadoc", ".zip")
             .also { path ->
                 HttpUtils.CLIENT
-                    .newCall(Request.Builder().url(this.toJitpackUrl()).build())
+                    .newCall(Request.Builder().url(url).build())
                     .execute()
-                    .use {
-                        path.writeBytes(it.body!!.bytes())
+                    .use { response ->
+                        val body: ResponseBody = response.body
+                            ?: throw IOException("Got no ResponseBody for ${response.request.url}")
+
+                        if (!response.isSuccessful) throw IOException("Got an unsuccessful response from ${response.request.url}, code: ${response.code}")
+
+                        path.writeBytes(body.bytes())
                     }
             }
     }

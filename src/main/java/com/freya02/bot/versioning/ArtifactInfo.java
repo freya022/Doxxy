@@ -1,18 +1,36 @@
 package com.freya02.bot.versioning;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
 public record ArtifactInfo(String groupId, String artifactId, String version) {
+	public static final String MAVEN_JAVADOC_FORMAT = "https://repo1.maven.org/maven2/%s/%s/%s/%s-%s-javadoc.jar";
+	public static final String JITPACK_JAVADOC_FORMAT = "https://jitpack.io/%s/%s/%s/%s-%s-javadoc.jar";
+
 	public String toFileString() {
 		return String.join("\n", groupId, artifactId, version);
 	}
 
-	public String toJitpackUrl() {
-		return "https://jitpack.io/%s/%s/%s/BotCommands-%s-javadoc.jar".formatted(
+	@NotNull
+	public String toMavenJavadocUrl() {
+		return MAVEN_JAVADOC_FORMAT.formatted(
 				groupId.replace('.', '/'),
+				artifactId,
+				artifactId,
+				version,
+				version
+		);
+	}
+
+	@NotNull
+	public String toJitpackJavadocUrl() {
+		return JITPACK_JAVADOC_FORMAT.formatted(
+				groupId.replace('.', '/'),
+				artifactId,
 				artifactId,
 				version,
 				version

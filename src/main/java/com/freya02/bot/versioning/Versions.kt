@@ -5,9 +5,9 @@ import com.freya02.bot.commands.slash.docs.CommonDocsHandlers
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.utils.Utils.withTemporaryFile
 import com.freya02.bot.versioning.VersionsUtils.downloadJitpackJavadoc
+import com.freya02.bot.versioning.VersionsUtils.downloadMavenJavadoc
 import com.freya02.bot.versioning.jitpack.JitpackVersionChecker
 import com.freya02.bot.versioning.maven.MavenProjectDependencyVersionChecker
-import com.freya02.bot.versioning.maven.MavenUtils
 import com.freya02.bot.versioning.maven.MavenVersionChecker
 import com.freya02.bot.versioning.maven.RepoType
 import com.freya02.botcommands.api.BContext
@@ -83,12 +83,10 @@ class Versions {
                 LOGGER.info("JDA 5 version changed")
 
                 LOGGER.debug("Downloading JDA 5 javadocs")
-                val tempZip = Files.createTempFile("JDA5Docs", ".zip")
-                MavenUtils.downloadMavenDocs(jda5Checker.getLatest(), tempZip)
-
-                LOGGER.debug("Extracting JDA 5 javadocs")
-                VersionsUtils.replaceWithZipContent(tempZip, JDA_DOCS_FOLDER)
-                Files.deleteIfExists(tempZip)
+                jda5Checker.latest.downloadMavenJavadoc().withTemporaryFile { tempZip ->
+                    LOGGER.debug("Extracting JDA 5 javadocs")
+                    VersionsUtils.replaceWithZipContent(tempZip, JDA_DOCS_FOLDER)
+                }
 
                 LOGGER.debug("Invalidating JDA 5 index")
                 DocIndexMap.refreshAndInvalidateIndex(DocSourceType.JDA)
