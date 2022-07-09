@@ -1,35 +1,29 @@
-package com.freya02.bot.versioning.maven;
+package com.freya02.bot.versioning.maven
 
-import com.freya02.bot.versioning.ArtifactInfo;
-import com.freya02.bot.versioning.VersionChecker;
+import com.freya02.bot.versioning.ArtifactInfo
+import com.freya02.bot.versioning.VersionChecker
+import java.io.IOException
+import java.nio.file.Path
 
-import java.io.IOException;
-import java.nio.file.Path;
+class MavenVersionChecker(
+    lastSavedPath: Path?,
+    private val repoType: RepoType,
+    private val groupId: String,
+    private val artifactId: String
+) : VersionChecker(
+    lastSavedPath!!
+) {
+    @Throws(IOException::class)
+    override fun checkVersion(): Boolean {
+        ArtifactInfo(
+            groupId,
+            artifactId,
+            MavenUtils.getLatestMavenVersion(repoType.urlFormat, groupId, artifactId)
+        ).let { latestVersion ->
+            val changed = latestVersion != diskLatest
+            latest = latestVersion
 
-public class MavenVersionChecker extends VersionChecker {
-	private final RepoType repoType;
-
-	private final String groupId;
-	private final String artifactId;
-
-	public MavenVersionChecker(Path lastSavedPath, RepoType repoType, String groupId, String artifactId) throws IOException {
-		super(lastSavedPath);
-
-		this.repoType = repoType;
-		this.groupId = groupId;
-		this.artifactId = artifactId;
-	}
-
-	@Override
-	public boolean checkVersion() throws IOException {
-		final ArtifactInfo latestVersion = new ArtifactInfo(groupId,
-				artifactId,
-				MavenUtils.getLatestMavenVersion(repoType.getUrlFormat(), groupId, artifactId));
-
-		final boolean changed = !latestVersion.equals(this.diskLatest);
-
-		this.latest = latestVersion;
-
-		return changed;
-	}
+            return changed
+        }
+    }
 }

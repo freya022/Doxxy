@@ -96,7 +96,7 @@ class Versions {
 
                 jda5Checker.saveVersion()
 
-                LOGGER.info("JDA 5 version updated to {}", jda5Checker.getLatest().version)
+                LOGGER.info("JDA 5 version updated to {}", jda5Checker.latest.version)
             }
             return changed
         } catch (e: IOException) {
@@ -112,7 +112,7 @@ class Versions {
             if (changed) {
                 LOGGER.info("JDA 4 version changed")
                 jda4Checker.saveVersion()
-                LOGGER.info("JDA 4 version updated to {}", jda4Checker.getLatest().version)
+                LOGGER.info("JDA 4 version updated to {}", jda4Checker.latest.version)
             }
         } catch (e: IOException) {
             LOGGER.error("An exception occurred while retrieving versions", e)
@@ -125,7 +125,7 @@ class Versions {
             if (changed) {
                 LOGGER.info("BotCommands's JDA version changed")
                 jdaVersionFromBCChecker.saveVersion()
-                LOGGER.info("BotCommands's JDA version updated to {}", jdaVersionFromBCChecker.getLatest().version)
+                LOGGER.info("BotCommands's JDA version updated to {}", jdaVersionFromBCChecker.latest.version)
             }
         } catch (e: IOException) {
             LOGGER.error("An exception occurred while retrieving versions", e)
@@ -151,7 +151,7 @@ class Versions {
 
                 bcChecker.saveVersion()
 
-                LOGGER.info("BotCommands version updated to {}", bcChecker.getLatest().version)
+                LOGGER.info("BotCommands version updated to {}", bcChecker.latest.version)
             }
 
             return changed
@@ -165,11 +165,11 @@ class Versions {
     }
 
     val latestBotCommandsVersion: ArtifactInfo
-        get() = bcChecker.getLatest()
+        get() = bcChecker.latest
     val jdaVersionFromBotCommands: ArtifactInfo
-        get() = jdaVersionFromBCChecker.getLatest()
+        get() = jdaVersionFromBCChecker.latest
     val latestJDA4Version: ArtifactInfo
-        get() = jda4Checker.getLatest()
+        get() = jda4Checker.latest
     val latestJDA5Version: ArtifactInfo
-        get() = jda5Checker.getLatest()
+        get() = jda5Checker.latest
 }

@@ -1,43 +1,31 @@
-package com.freya02.bot.versioning.maven;
+package com.freya02.bot.versioning.maven
 
-import com.freya02.bot.versioning.ArtifactInfo;
-import com.freya02.bot.versioning.VersionChecker;
-import com.freya02.bot.versioning.github.GithubUtils;
-import org.jetbrains.annotations.NotNull;
+import com.freya02.bot.versioning.VersionChecker
+import com.freya02.bot.versioning.github.GithubUtils
+import java.io.IOException
+import java.nio.file.Path
 
-import java.io.IOException;
-import java.nio.file.Path;
+open class MavenProjectDependencyVersionChecker(
+    lastSavedPath: Path,
+    private val ownerName: String,
+    private val artifactId: String,
+    private val targetArtifactId: String
+) : VersionChecker(
+    lastSavedPath
+) {
+    @Throws(IOException::class)
+    override fun checkVersion(): Boolean {
+        val targetBranchName = targetBranchName
+        val latestDependencyVersion =
+            MavenUtils.retrieveDependencyVersion(ownerName, artifactId, targetBranchName, targetArtifactId)
+        val changed = latestDependencyVersion != diskLatest
 
-public class MavenProjectDependencyVersionChecker extends VersionChecker {
-	private final String ownerName;
-	private final String artifactId;
+        latest = latestDependencyVersion
 
-	private final String targetArtifactId;
+        return changed
+    }
 
-	public MavenProjectDependencyVersionChecker(Path lastSavedPath, String ownerName, String artifactId, String targetArtifactId) throws IOException {
-		super(lastSavedPath);
-
-		this.ownerName = ownerName;
-		this.artifactId = artifactId;
-
-		this.targetArtifactId = targetArtifactId;
-	}
-
-	@Override
-	public boolean checkVersion() throws IOException {
-		final String targetBranchName = getTargetBranchName();
-
-		final ArtifactInfo latestDependencyVersion = MavenUtils.retrieveDependencyVersion(ownerName, artifactId, targetBranchName, targetArtifactId);
-
-		final boolean changed = !latestDependencyVersion.equals(this.diskLatest);
-
-		this.latest = latestDependencyVersion;
-
-		return changed;
-	}
-
-	@NotNull
-	protected String getTargetBranchName() throws IOException {
-		return GithubUtils.getLatestBranch(ownerName, artifactId).branchName();
-	}
+    @get:Throws(IOException::class)
+    protected open val targetBranchName: String
+        get() = GithubUtils.getLatestBranch(ownerName, artifactId).branchName()
 }
