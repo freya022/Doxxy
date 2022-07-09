@@ -8,6 +8,7 @@ import com.freya02.bot.utils.FileCache;
 import com.freya02.botcommands.api.Logging;
 import com.freya02.docs.ClassDocs;
 import com.freya02.docs.DocSourceType;
+import com.freya02.docs2.PageCache;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -57,6 +58,10 @@ public class DocIndex {
 	// Otherwise the index cache will be empty until the next update
 	public DocIndex reindex() throws IOException {
 		LOGGER.info("Re-indexing docs for {}", sourceType.name());
+
+		LOGGER.info("Clearing cache for {}", sourceType.name());
+		PageCache.INSTANCE.clearCache(sourceType);
+		LOGGER.info("Cleared cache of {}", sourceType.name());
 
 		this.indexCache = DocIndexCache.indexDocs(ClassDocs.getUpdatedSource(sourceType), this.sourceCacheFolder, indexPaths);
 

@@ -3,6 +3,7 @@ package com.freya02.docs;
 import com.freya02.bot.utils.DecomposedName;
 import com.freya02.bot.utils.HttpUtils;
 import com.freya02.botcommands.api.Logging;
+import com.freya02.docs2.PageCache;
 import org.jetbrains.annotations.NotNull;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -54,21 +55,9 @@ public class ClassDocs {
 	private synchronized void tryIndexAll() throws IOException {
 		final String indexURL = source.getAllClassesIndexURL();
 
-		final String body;
-		if (!simpleNameToUrlMap.isEmpty()) {
-			//We try to "abuse" the OkHttp caching in order to determine if the name-to-URL cache needs to be updated
-			// This allows SeeAlso to get updated sources of all DocSourceType(s) without spamming requests & parsing a lot
-
-			//Don't reindex if content hasn't changed
-			body = HttpUtils.downloadBodyIfNotCached(indexURL);
-			if (body == null) return;
-		} else {
-			body = HttpUtils.downloadBody(indexURL); //If this is the first run (map empty) then always download
-		}
-
 		LOGGER.info("Parsing ClassDocs URLs for: {}", source);
 
-		final Document document = HttpUtils.parseDocument(body, indexURL);
+		final Document document = PageCache.INSTANCE.getPage(indexURL);
 
 		simpleNameToUrlMap.clear();
 		urlSet.clear();
