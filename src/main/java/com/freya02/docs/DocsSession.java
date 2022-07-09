@@ -2,6 +2,7 @@ package com.freya02.docs;
 
 import com.freya02.bot.utils.HttpUtils;
 import com.freya02.docs.data.ClassDoc;
+import com.freya02.docs2.PageCache;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jsoup.nodes.Document;
@@ -37,7 +38,7 @@ public class DocsSession {
 				final DocSourceType urlSource = DocSourceType.fromUrl(classUrl);
 				if (urlSource == null) return null;
 
-				final Document document = HttpUtils.getDocument(classUrl);
+				final Document document = PageCache.INSTANCE.getPage(classUrl);
 				if (!DocUtils.isJavadocVersionCorrect(document)) return null;
 
 				final ClassDoc classDoc = new ClassDoc(this, HttpUtils.removeFragment(classUrl), document);
@@ -66,23 +67,25 @@ public class DocsSession {
 	 */
 	@Nullable
 	public ClassDoc retrieveDocIfNotCached(@NotNull String classUrl) throws IOException {
-		final DocSourceType urlSource = DocSourceType.fromUrl(classUrl);
-		if (urlSource == null) return null;
+//		final DocSourceType urlSource = DocSourceType.fromUrl(classUrl);
+//		if (urlSource == null) return null;
+//
+//		final String downloadedBody = HttpUtils.downloadBodyIfNotCached(classUrl);
+//
+//		if (downloadedBody == null) return null;
+//
+//		final Document document = HttpUtils.parseDocument(downloadedBody, classUrl);
+//
+//		if (!DocUtils.isJavadocVersionCorrect(document)) return null;
+//
+//		final ClassDoc newDoc = new ClassDoc(this, classUrl, document);
+//
+//		synchronized (docMap) {
+//			docMap.put(classUrl, newDoc);
+//		}
+//
+//		return newDoc;
 
-		final String downloadedBody = HttpUtils.downloadBodyIfNotCached(classUrl);
-
-		if (downloadedBody == null) return null;
-
-		final Document document = HttpUtils.parseDocument(downloadedBody, classUrl);
-
-		if (!DocUtils.isJavadocVersionCorrect(document)) return null;
-
-		final ClassDoc newDoc = new ClassDoc(this, classUrl, document);
-
-		synchronized (docMap) {
-			docMap.put(classUrl, newDoc);
-		}
-
-		return newDoc;
+		return retrieveDoc(classUrl);
 	}
 }

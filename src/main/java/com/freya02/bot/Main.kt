@@ -39,8 +39,8 @@ object Main {
     val REPOS_PATH: Path = BOT_FOLDER.resolve("repos")
     @JvmField
     val LAST_KNOWN_VERSIONS_FOLDER_PATH: Path = BOT_FOLDER.resolve("last_versions")
-    @JvmField
     val BRANCH_VERSIONS_FOLDER_PATH: Path = LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("branch_versions")
+    val PAGE_CACHE_FOLDER_PATH: Path = BOT_FOLDER.resolve("page_cache")
 
     init {
         check(BOT_FOLDER.exists()) { "Bot folder at $BOT_FOLDER does not exist !" }
