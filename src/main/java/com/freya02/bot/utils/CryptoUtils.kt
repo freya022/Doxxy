@@ -1,45 +1,31 @@
-package com.freya02.bot.utils;
+package com.freya02.bot.utils
 
-import org.jetbrains.annotations.NotNull;
+import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
+import java.util.*
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+object CryptoUtils {
+    private val SHA3_256: MessageDigest = MessageDigest.getInstance("SHA3-256")
 
-public class CryptoUtils {
-	private static final MessageDigest SHA3_256;
+    fun hash(content: ByteArray): String {
+        return toHexString(SHA3_256.digest(content))
+    }
 
-	static {
-		try {
-			SHA3_256 = MessageDigest.getInstance("SHA3-256");
-		} catch (NoSuchAlgorithmException e) {
-			throw new RuntimeException(e);
-		}
-	}
+    @JvmStatic
+    fun toHexString(bytes: ByteArray): String {
+        val builder = StringBuilder(bytes.size * 2)
+        for (b in bytes) {
+            val hex = 0xFF and b.toInt()
+            if (hex < 0x10) {
+                builder.append("0")
+            }
+            builder.append(Integer.toHexString(hex).uppercase(Locale.getDefault()))
+        }
 
-	@NotNull
-	public static String hash(byte[] content) {
-		return toHexString(SHA3_256.digest(content));
-	}
+        return builder.toString()
+    }
 
-	public static String toHexString(final byte[] bytes) {
-		final StringBuilder builder = new StringBuilder(bytes.length * 2);
-
-		for (final byte b : bytes) {
-			final int var = 0xFF & b;
-
-			if (var < 0x10) {
-				builder.append("0");
-			}
-
-			builder.append(Integer.toHexString(var).toUpperCase());
-		}
-
-		return builder.toString();
-	}
-
-	@NotNull
-	public static String hash(@NotNull String content) {
-		return hash(content.getBytes(StandardCharsets.UTF_8));
-	}
+    fun hash(content: String): String {
+        return hash(content.toByteArray(StandardCharsets.UTF_8))
+    }
 }

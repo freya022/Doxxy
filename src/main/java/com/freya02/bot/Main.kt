@@ -20,7 +20,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.events.ShutdownEvent
-import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.system.exitProcess
@@ -32,18 +31,13 @@ object Main {
     @JvmField
     val BOT_FOLDER: Path = Path.of(System.getProperty("user.home"), "Downloads", "DocsBot")
     @JvmField
-    val CACHE_PATH: Path = BOT_FOLDER.resolve("docs_cache")
-    @JvmField
     val JAVADOCS_PATH: Path = BOT_FOLDER.resolve("javadocs")
-    @JvmField
     val LAST_KNOWN_VERSIONS_FOLDER_PATH: Path = BOT_FOLDER.resolve("last_versions")
     val BRANCH_VERSIONS_FOLDER_PATH: Path = LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("branch_versions")
     val PAGE_CACHE_FOLDER_PATH: Path = BOT_FOLDER.resolve("page_cache")
 
     init {
         check(BOT_FOLDER.exists()) { "Bot folder at $BOT_FOLDER does not exist !" }
-
-        Files.createDirectories(CACHE_PATH)
     }
 
     @JvmStatic

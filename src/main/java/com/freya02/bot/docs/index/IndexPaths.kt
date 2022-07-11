@@ -1,39 +1,26 @@
-package com.freya02.bot.docs.index;
+package com.freya02.bot.docs.index
 
-import com.freya02.bot.utils.CryptoUtils;
-import org.jetbrains.annotations.NotNull;
+import com.freya02.bot.utils.CryptoUtils
+import java.nio.file.Path
 
-import java.nio.file.Path;
+class IndexPaths(private val sourceCacheFolder: Path) {
+    fun getClassEmbedPath(className: String): Path {
+        return sourceCacheFolder.resolve(className).resolve("ClassEmbed.json")
+    }
 
-public class IndexPaths {
-	private final Path sourceCacheFolder;
+    fun getMethodEmbedPath(className: String, methodId: String): Path {
+        return sourceCacheFolder.resolve(className).resolve(getMethodFileName(methodId))
+    }
 
-	public IndexPaths(Path sourceCacheFolder) {
-		this.sourceCacheFolder = sourceCacheFolder;
-	}
+    fun getFieldEmbedPath(className: String, fieldName: String): Path {
+        return sourceCacheFolder.resolve(className).resolve(getFieldFileName(fieldName))
+    }
 
-	@NotNull
-	public Path getClassEmbedPath(String className) {
-		return sourceCacheFolder.resolve(className).resolve("ClassEmbed.json");
-	}
+    fun getMethodFileName(signature: String): String {
+        return CryptoUtils.hash(signature) + ".json"
+    }
 
-	@NotNull
-	public Path getMethodEmbedPath(String className, String methodId) {
-		return sourceCacheFolder.resolve(className).resolve(getMethodFileName(methodId));
-	}
-
-	@NotNull
-	public Path getFieldEmbedPath(String className, String fieldName) {
-		return sourceCacheFolder.resolve(className).resolve(getFieldFileName(fieldName));
-	}
-
-	@NotNull
-	public String getMethodFileName(@NotNull String signature) {
-		return CryptoUtils.hash(signature) + ".json";
-	}
-
-	@NotNull
-	public String getFieldFileName(String fieldName) {
-		return CryptoUtils.hash(fieldName) + ".json";
-	}
+    fun getFieldFileName(fieldName: String): String {
+        return CryptoUtils.hash(fieldName) + ".json"
+    }
 }
