@@ -2,18 +2,13 @@ package com.freya02.bot.utils;
 
 import com.freya02.bot.Main;
 import com.freya02.botcommands.api.Logging;
-import com.freya02.docs.DocSourceType;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
@@ -66,75 +61,14 @@ public class HttpUtils {
 
 	@NotNull
 	public static String downloadBody(String url) throws IOException {
-		return retrieveFromCacheOrGet(url, () -> {
-			try (Response response = CLIENT.newCall(new Request.Builder()
-					.url(url)
-					.build()
-			).execute()) {
-				final ResponseBody body = response.body();
-				if (body == null) throw new IllegalArgumentException("Got no body from url: " + url);
+		try (Response response = CLIENT.newCall(new Request.Builder()
+				.url(url)
+				.build()
+		).execute()) {
+			final ResponseBody body = response.body();
+			if (body == null) throw new IllegalArgumentException("Got no body from url: " + url);
 
-				return body.string();
-			}
-		});
-	}
-
-	/**
-	 * Returns null if cache is still OK
-	 */
-	@Nullable
-	public static String downloadBodyIfNotCached(String url) throws IOException {
-		return retrieveFromCacheOrGetIfNotCached(url, () -> {
-			try (Response response = CLIENT.newCall(new Request.Builder()
-					.cacheControl(new CacheControl.Builder()
-							.maxAge(0, TimeUnit.SECONDS)
-							.build())
-					.url(url)
-					.build()
-			).execute()) {
-				if (response.cacheResponse() != null) return null;
-
-				final ResponseBody body = response.body();
-				if (body == null) throw new IllegalArgumentException("Got no body from url: " + url);
-
-				return body.string();
-			}
-		});
-	}
-
-	@NotNull
-	private static String retrieveFromCacheOrGet(String url, IOSupplier<String> contentSupplier) throws IOException {
-		return retrieveFromCacheOrGet(url, contentSupplier, Files::readString);
-	}
-
-	@Nullable
-	private static String retrieveFromCacheOrGetIfNotCached(String url, IOSupplier<String> contentSupplier) throws IOException {
-		return retrieveFromCacheOrGet(url, contentSupplier, p -> null);
-	}
-
-	private static String retrieveFromCacheOrGet(String url, IOSupplier<String> contentSupplier, IOFunction<Path, String> onCacheHitSupplier) throws IOException {
-		if (url.startsWith(DocSourceType.JAVA.getSourceUrl())) {
-			Path finalPath = Main.JAVADOCS_PATH.resolve("Java");
-
-			final String[] segments = url.substring(DocSourceType.JAVA.getSourceUrl().length())
-					.split("#")[0]
-					.split("/");
-			for (String segment : segments) {
-				finalPath = finalPath.resolve(segment);
-			}
-
-			if (Files.exists(finalPath)) {
-				return onCacheHitSupplier.get(finalPath);
-			} else {
-				final String content = contentSupplier.get();
-
-				Files.createDirectories(finalPath.getParent());
-				Files.writeString(finalPath, content, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-
-				return content;
-			}
-		} else {
-			return contentSupplier.get();
+			return body.string();
 		}
 	}
 

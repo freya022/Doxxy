@@ -6,6 +6,7 @@ import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.deleteIfExists
+import kotlin.io.path.notExists
 import kotlin.streams.asSequence
 
 object Utils {
@@ -42,6 +43,8 @@ object Utils {
     }
 
     fun Path.deleteRecursively() {
+        if (this.notExists()) return
+
         Files.walk(this).use { stream ->
             stream
                 .asSequence()

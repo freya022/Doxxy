@@ -62,25 +62,17 @@ public class DocIndexCache {
 				final Path classMetadataCacheFile = classCacheFolder.resolve("ClassMetadata.json");
 				final Path classEmbedCacheFile = indexPaths.getClassEmbedPath(className);
 
-				final boolean forceDownload = Files.notExists(classMetadataCacheFile) || Files.notExists(classEmbedCacheFile);
-				final ClassDoc doc = forceDownload
-						? docsSession.retrieveDoc(classUrl)
-						: docsSession.retrieveDocIfNotCached(classUrl);
+				final ClassDoc doc = docsSession.retrieveDoc(classUrl);
 
-				final CachedClassMetadata cachedClassMetadata;
-
-				if (doc == null && forceDownload) {
+				if (doc == null) {
 					LOGGER.warn("Unable to get docs of '{}' at '{}', javadoc version or source type may be incorrect", className, classUrl);
 
 					continue;
 				}
 
-				if (doc == null) {
-					//cached, read the files
+				final CachedClassMetadata cachedClassMetadata;
 
-					final String metadataJson = Files.readString(classMetadataCacheFile);
-					cachedClassMetadata = GSON.fromJson(metadataJson, CachedClassMetadata.class);
-				} else {
+				{
 					LOGGER.trace("Updated docs of '{}'", className);
 
 					cachedClassMetadata = new CachedClassMetadata();

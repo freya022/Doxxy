@@ -54,6 +54,7 @@ public class DocIndex {
 		this.indexCache = DocIndexCache.emptyIndex(indexPaths);
 	}
 
+	//TODO make so DocIndexCache reads local data on initial run and then reindex if version changed
 	//Must be called on startup
 	// Otherwise the index cache will be empty until the next update
 	public DocIndex reindex() throws IOException {
