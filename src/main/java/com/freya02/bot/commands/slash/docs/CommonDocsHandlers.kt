@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit
 private val LOGGER = Logging.getLogger()
 
 class CommonDocsHandlers : ApplicationCommand() {
-    private val docIndexMap: DocIndexMap = DocIndexMap.getInstance()
+    private val docIndexMap: DocIndexMap = DocIndexMap
 
     @JDASelectionMenuListener(name = SEE_ALSO_SELECT_LISTENER_NAME)
     fun onSeeAlsoSelect(event: SelectionEvent) {

@@ -53,12 +53,12 @@ class Versions {
         // This is why we index them here, if no update is required
         if (!checkLatestBCVersion(context)) {
             //Load docs normally, version hasn't changed
-            DocIndexMap.getInstance()[DocSourceType.BOT_COMMANDS]!!.reindex()
+            DocIndexMap[DocSourceType.BOT_COMMANDS]!!.reindex()
         }
 
         if (!checkLatestJDA5Version(context)) {
             //Load docs normally, version hasn't changed
-            DocIndexMap.getInstance()[DocSourceType.JDA]!!.reindex()
+            DocIndexMap[DocSourceType.JDA]!!.reindex()
         }
 
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestBCVersion(context) }, 30, 30, TimeUnit.MINUTES)
@@ -67,7 +67,7 @@ class Versions {
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDA5Version(context) }, 30, 30, TimeUnit.MINUTES)
 
         //First index for Java's docs, may take some time
-        DocIndexMap.getInstance()[DocSourceType.JAVA]!!.reindex()
+        DocIndexMap[DocSourceType.JAVA]!!.reindex()
 
         //Once we loaded everything, invalidate caches if the user had time to use the commands before docs were loaded
         for (autocompleteName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {

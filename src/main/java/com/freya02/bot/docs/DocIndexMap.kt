@@ -1,48 +1,34 @@
-package com.freya02.bot.docs;
+package com.freya02.bot.docs
 
-import com.freya02.bot.docs.index.DocIndex;
-import com.freya02.botcommands.api.Logging;
-import com.freya02.docs.DocSourceType;
-import org.slf4j.Logger;
+import com.freya02.bot.docs.index.DocIndex
+import com.freya02.botcommands.api.Logging
+import com.freya02.docs.DocSourceType
+import java.io.IOException
+import java.util.*
 
-import java.io.IOException;
-import java.util.EnumMap;
 
-public class DocIndexMap extends EnumMap<DocSourceType, DocIndex> {
-	private static final Logger LOGGER = Logging.getLogger();
-	private static DocIndexMap instance;
+object DocIndexMap : EnumMap<DocSourceType, DocIndex>(DocSourceType::class.java) {
+    private val LOGGER = Logging.getLogger()
 
-	private DocIndexMap() {
-		super(DocSourceType.class);
+    init {
+        Runtime.getRuntime().addShutdownHook(Thread {
+            try {
+                for (index in values) {
+                    index.close()
+                }
+            } catch (e: IOException) {
+                LOGGER.error("Unable to close cache", e)
+            }
+        })
 
-		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-			try {
-				for (DocIndex index : values()) {
-					index.close();
-				}
-			} catch (IOException e) {
-				LOGGER.error("Unable to close cache", e);
-			}
-		}));
-	}
+        this[DocSourceType.BOT_COMMANDS] = DocIndex(DocSourceType.BOT_COMMANDS)
+        this[DocSourceType.JDA] = DocIndex(DocSourceType.JDA)
+        this[DocSourceType.JAVA] = DocIndex(DocSourceType.JAVA)
+    }
 
-	public static synchronized DocIndexMap getInstance() throws IOException {
-		if (instance == null) {
-			instance = new DocIndexMap();
-
-			instance.put(DocSourceType.BOT_COMMANDS, new DocIndex(DocSourceType.BOT_COMMANDS));
-			instance.put(DocSourceType.JDA, new DocIndex(DocSourceType.JDA));
-			instance.put(DocSourceType.JAVA, new DocIndex(DocSourceType.JAVA));
-		}
-
-		return instance;
-	}
-
-	public static synchronized void refreshAndInvalidateIndex(DocSourceType sourceType) throws IOException {
-		final DocIndex index = instance.get(sourceType);
-
-		if (index != null) {
-			index.reindex();
-		}
-	}
+    @Synchronized
+    @Throws(IOException::class)
+    fun refreshAndInvalidateIndex(sourceType: DocSourceType) {
+        this[sourceType]?.reindex()
+    }
 }

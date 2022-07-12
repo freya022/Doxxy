@@ -9,7 +9,7 @@ import com.freya02.docs.DocSourceType
 import net.dv8tion.jda.api.entities.Guild
 
 abstract class BaseDocCommand : ApplicationCommand() {
-    protected val docIndexMap: DocIndexMap = DocIndexMap.getInstance()
+    protected val docIndexMap: DocIndexMap = DocIndexMap
 
     override fun getDefaultValueSupplier(
         context: BContext, guild: Guild,
