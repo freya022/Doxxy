@@ -1,37 +1,35 @@
-package com.freya02.bot.db;
+package com.freya02.bot.db
 
-import com.freya02.bot.Config;
-import com.zaxxer.hikari.HikariDataSource;
-import org.postgresql.ds.PGSimpleDataSource;
+import com.freya02.bot.Config
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
+import java.sql.Connection
+import java.sql.SQLException
 
-import java.sql.Connection;
-import java.sql.SQLException;
+class Database(config: Config) {
+    private val source: HikariDataSource
 
-public class Database {
-	private final HikariDataSource source;
+    init {
+        val dbConfig = config.dbConfig
 
-	public Database(Config config) throws SQLException {
-		final Config.DBConfig dbConfig = config.getDbConfig();
+        val hikariConfig = HikariConfig().apply {
+            jdbcUrl = dbConfig.dbURL
+            username = dbConfig.user
+            password = dbConfig.password
 
-		final PGSimpleDataSource pgSource = new PGSimpleDataSource();
-		pgSource.setServerNames(new String[]{dbConfig.getServerName()});
-		pgSource.setPortNumbers(new int[]{dbConfig.getPortNumber()});
-		pgSource.setUser(dbConfig.getUser());
-		pgSource.setPassword(dbConfig.getPassword());
-		pgSource.setDatabaseName(dbConfig.getDbName());
+            maximumPoolSize = 2
+            leakDetectionThreshold = 2500
+        }
 
-		source = new HikariDataSource();
-		source.setDataSource(pgSource);
-		source.setMaximumPoolSize(2); //haha postgres.exe go brr
+        source = HikariDataSource(hikariConfig)
 
-		source.getConnection().close();
-	}
+        source.connection.close() //Test connection
+    }
 
-	public Connection getConnection() {
-		try {
-			return source.getConnection();
-		} catch (SQLException e) {
-			throw new RuntimeException("Unable to get a SQL connection", e);
-		}
-	}
+    val connection: Connection
+        get() = try {
+            source.connection
+        } catch (e: SQLException) {
+            throw RuntimeException("Unable to get a SQL connection", e)
+        }
 }

@@ -1,68 +1,32 @@
-package com.freya02.bot;
+package com.freya02.bot
 
-import com.google.gson.Gson;
+import com.google.gson.Gson
+import java.nio.file.Path
+import kotlin.io.path.isDirectory
+import kotlin.io.path.readText
 
-import java.nio.file.Files;
-import java.nio.file.Path;
+data class DBConfig(val serverName: String, val portNumber: Int, val user: String, val password: String, val dbName: String) {
+    val dbURL: String
+        get() = "jdbc:postgresql://localhost:$portNumber/$dbName"
+}
 
-@SuppressWarnings("unused")
-public class Config {
-	private static Config instance;
+data class Config(val token: String, val dbConfig: DBConfig) {
+    companion object {
+        private var config_: Config? = null
 
-	private String token;
-	private DBConfig dbConfig;
+        @Synchronized
+        fun getConfig(): Config {
+            if (config_ == null) {
+                val classPath = Path.of(Main::class.java.protectionDomain.codeSource.location.toURI())
+                val configPath = when {
+                    classPath.isDirectory() -> Path.of("Test_Config.json") //Target folder prob IJ
+                    else -> Path.of("Config.json")
+                }
 
-	private Config() {}
+                config_ = Gson().fromJson(configPath.readText(), Config::class.java)
+            }
 
-	public static Config getConfig() {
-		if (instance == null) {
-			try {
-				final Path classPath = Path.of(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-
-				if (Files.isDirectory(classPath)) { //Target folder prob IJ
-					instance = new Gson().fromJson(Files.readString(Path.of("Test_Config.json")), Config.class);
-				} else {
-					instance = new Gson().fromJson(Files.readString(Path.of("Config.json")), Config.class);
-				}
-			} catch (Exception e) {
-				throw new RuntimeException("Unable to load configs", e);
-			}
-		}
-
-		return instance;
-	}
-
-	public String getToken() {
-		return token;
-	}
-
-	public DBConfig getDbConfig() {
-		return dbConfig;
-	}
-
-	public static class DBConfig {
-		private String serverName;
-		private int portNumber;
-		private String user, password, dbName;
-
-		public String getServerName() {
-			return serverName;
-		}
-
-		public int getPortNumber() {
-			return portNumber;
-		}
-
-		public String getUser() {
-			return user;
-		}
-
-		public String getPassword() {
-			return password;
-		}
-
-		public String getDbName() {
-			return dbName;
-		}
-	}
+            return config_!!
+        }
+    }
 }
