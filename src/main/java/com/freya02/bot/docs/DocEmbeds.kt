@@ -1,216 +1,208 @@
-package com.freya02.bot.docs;
+package com.freya02.bot.docs
 
-import com.freya02.bot.utils.HttpUtils;
-import com.freya02.docs.HTMLElement;
-import com.freya02.docs.HTMLElementList;
-import com.freya02.docs.data.*;
-import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import com.freya02.bot.utils.HttpUtils.doesStartByLocalhost
+import com.freya02.docs.data.*
+import com.freya02.docs.data.SeeAlso.SeeAlsoReference
+import dev.minn.jda.ktx.messages.EmbedBuilder
+import net.dv8tion.jda.api.EmbedBuilder
+import net.dv8tion.jda.api.entities.MessageEmbed
+import java.util.*
 
-import java.util.EnumSet;
-import java.util.List;
-import java.util.StringJoiner;
-import java.util.stream.Collectors;
+object DocEmbeds {
+    private const val DESCRIPTION_MAX_LENGTH = 2048 //Description max length / 2 basically, otherwise embeds are HUGE
 
-public class DocEmbeds {
-	private static final int DESCRIPTION_MAX_LENGTH = 2048; //Description max length / 2 basically, otherwise embeds are HUGE
+    //SEE_ALSO not needed, already added manually
+    private val includedTypes: EnumSet<DocDetailType> = EnumSet.of( //SEE_ALSO not needed, already added manually
+        DocDetailType.PARAMETERS,
+        DocDetailType.TYPE_PARAMETERS,
+        DocDetailType.RETURNS,
+        DocDetailType.SPECIFIED_BY,
+        DocDetailType.OVERRIDES,
+        DocDetailType.INCUBATING,
+        DocDetailType.DEFAULT,
+        DocDetailType.THROWS
+    )
 
-	@NotNull
-	private static EnumSet<DocDetailType> getIncludedTypes() {
-		return EnumSet.of( //SEE_ALSO not needed, already added manually
-				DocDetailType.PARAMETERS,
-				DocDetailType.TYPE_PARAMETERS,
-				DocDetailType.RETURNS,
-				DocDetailType.SPECIFIED_BY,
-				DocDetailType.OVERRIDES,
-				DocDetailType.INCUBATING,
-				DocDetailType.DEFAULT,
-				DocDetailType.THROWS
-		);
-	}
+    @JvmStatic
+    fun toEmbed(doc: ClassDoc): EmbedBuilder {
+        return EmbedBuilder {
+            title = doc.docTitleElement.targetElement.text()
+            url = getDocURL(doc)
 
-	public static EmbedBuilder toEmbed(ClassDoc doc) {
-		final EmbedBuilder builder = new EmbedBuilder();
+            builder.addDocDescription(doc)
+            builder.addDocDeprecation(doc)
 
-		builder.setTitle(doc.getDocTitleElement().getTargetElement().text(), getDocURL(doc));
+            val enumConstants = doc.enumConstants
+            if (enumConstants.isNotEmpty()) {
+                val valuesStr = enumConstants
+                    .take(10)
+                    .joinToString("`\n`", "`", "`") { it.fieldName }
 
-		fillDescription(doc, builder);
+                builder.addDocField(
+                    "Enum values:",
+                    valuesStr + if (enumConstants.size > 10) "\n... and more ..." else "",
+                    false,
+                    getDocURL(doc)
+                )
+            }
 
-		fillDeprecation(doc, builder);
+            val annotationElements = doc.annotationElements
+            if (annotationElements.isNotEmpty()) {
+                val fieldsStr = annotationElements
+                    .take(10)
+                    .joinToString("`\n`", "`", "`") { "#" + it.methodName + "()" }
 
-		final List<FieldDoc> enumConstants = doc.getEnumConstants();
-		if (!enumConstants.isEmpty()) {
-			final StringJoiner valuesBuilder = new StringJoiner("`\n`", "`", "`");
+                builder.addDocField(
+                    "Annotation fields:",
+                    fieldsStr + if (annotationElements.size > 10) "\n... and more ..." else "",
+                    false,
+                    getDocURL(doc)
+                )
+            }
 
-			for (int i = 0, enumConstantsSize = enumConstants.size(); i < Math.min(10, enumConstantsSize); i++) { //Limit to 10
-				FieldDoc enumConstant = enumConstants.get(i);
+            builder.addDocDetails(doc, includedTypes)
 
-				valuesBuilder.add(enumConstant.getFieldName());
-			}
+            builder.addSeeAlso(doc.seeAlso, getDocURL(doc))
+        }.builder
+    }
 
-			addField(builder, "Enum values:", valuesBuilder + (enumConstants.size() > 10 ? "\n... and more ..."  : ""), false, getDocURL(doc));
-		}
+    @JvmStatic
+    fun toEmbed(classDoc: ClassDoc, methodDoc: MethodDoc): EmbedBuilder {
+        return EmbedBuilder {
+            var title = methodDoc.getSimpleAnnotatedSignature(classDoc)
+            if (title.length > MessageEmbed.TITLE_MAX_LENGTH) {
+                title = "%s#%s : %s - [full signature on online docs]".format(
+                    methodDoc.classDocs.className,
+                    methodDoc.methodName,
+                    methodDoc.methodReturnType
+                )
+            }
 
-		final List<MethodDoc> annotationElements = doc.getAnnotationElements();
-		if (!annotationElements.isEmpty()) {
-			final StringJoiner fieldsBuilder = new StringJoiner("`\n`", "`", "`");
+            builder.setTitle(title, getDocURL(methodDoc))
 
-			for (int i = 0, annotationElementsSize = annotationElements.size(); i < Math.min(10, annotationElementsSize); i++) { //Limit to 10
-				MethodDoc annotationElement = annotationElements.get(i);
+            //Should use that but JB annotations are duplicated, bruh momentum
+//		    builder.setTitle(methodDoc.getMethodSignature(), methodDoc.getURL());
+            if (classDoc != methodDoc.classDocs) {
+                builder.setDescription("**Inherited from ${methodDoc.classDocs.className}**\n\n")
+            }
 
-				fieldsBuilder.add("#" + annotationElement.getMethodName() + "()");
-			}
+            builder.addDocDescription(methodDoc)
+            builder.addDocDeprecation(methodDoc)
+            builder.addDocDetails(methodDoc, includedTypes)
+            builder.addSeeAlso(methodDoc.seeAlso, getDocURL(methodDoc))
+        }.builder
+    }
 
-			addField(builder, "Annotation fields:", fieldsBuilder + (annotationElements.size() > 10 ? "\n... and more ..."  : ""), false, getDocURL(doc));
-		}
+    @JvmStatic
+    fun toEmbed(classDoc: ClassDoc, fieldDoc: FieldDoc): EmbedBuilder {
+        return EmbedBuilder {
+            title = classDoc.className + " : " + fieldDoc.simpleSignature
+            url = getDocURL(fieldDoc)
 
-		fillDetails(builder, doc, getIncludedTypes());
+            if (classDoc != fieldDoc.classDocs) {
+                description = "**Inherited from ${fieldDoc.classDocs.className}**\n\n"
+            }
 
-		addSeeAlso(builder, doc.getSeeAlso(), getDocURL(doc));
+            builder.addDocDescription(fieldDoc)
+            builder.addDocDeprecation(fieldDoc)
+            builder.addDocDetails(fieldDoc, includedTypes)
+            builder.addSeeAlso(fieldDoc.seeAlso, getDocURL(fieldDoc))
+        }.builder
+    }
 
-		return builder;
-	}
+    private fun getDocURL(doc: BaseDoc): String? {
+        return if (doesStartByLocalhost(doc.effectiveURL)) null else doc.effectiveURL
+    }
 
-	@Nullable
-	private static String getDocURL(BaseDoc doc) {
-		return HttpUtils.doesStartByLocalhost(doc.getEffectiveURL())
-				? null
-				: doc.getEffectiveURL();
-	}
+    private fun EmbedBuilder.addDocDescription(doc: BaseDoc) {
+        val descriptionElement = doc.descriptionElements
+        if (descriptionElement.isNotEmpty()) {
+            appendDescription(
+                getDescriptionValue(
+                    descriptionBuilder.length,
+                    descriptionElement.toMarkdown("\n\n"), //Description blocks are separated like paragraphs, unlike details such as "Specified by"
+                    getDocURL(doc)
+                )
+            )
+        } else {
+            appendDescription("No description")
+        }
+    }
 
-	public static EmbedBuilder toEmbed(ClassDoc classDoc, MethodDoc methodDoc) {
-		final EmbedBuilder builder = new EmbedBuilder();
+    private fun EmbedBuilder.addDocDeprecation(doc: BaseDoc) {
+        val deprecationElement = doc.deprecationElement
+        if (deprecationElement != null) {
+            this.addDocField(
+                "Deprecated",
+                deprecationElement.markdown,
+                false,
+                getDocURL(doc)
+            )
+        }
+    }
 
-		String title = methodDoc.getSimpleAnnotatedSignature(classDoc);
-		if (title.length() > MessageEmbed.TITLE_MAX_LENGTH) {
-			title = "%s#%s : %s - [full signature on online docs]".formatted(methodDoc.getClassDocs().getClassName(), methodDoc.getMethodName(), methodDoc.getMethodReturnType());
-		}
+    private fun EmbedBuilder.addDocDetails(doc: BaseDoc, excludedTypes: EnumSet<DocDetailType>) {
+        val details = doc.getDetails(excludedTypes)
+        for (detail in details) {
+            addDocField(
+                detail.detailString,
+                detail.toMarkdown("\n"),
+                false,
+                getDocURL(doc)
+            )
+        }
+    }
 
-		builder.setTitle(title, getDocURL(methodDoc));
+    private fun getDescriptionValue(currentLength: Int, descriptionValue: String, onlineTarget: String?): String =
+        when {
+            descriptionValue.length + currentLength > DESCRIPTION_MAX_LENGTH -> {
+                when (onlineTarget) {
+                    null -> "Description is too long. Please look at the docs in your IDE"
+                    else -> "Description is too long. Please look at [the online docs]($onlineTarget)"
+                }
+            }
+            else -> descriptionValue
+        }
 
-		//Should use that but JB annotations are duplicated, bruh momentum
-//		builder.setTitle(methodDoc.getMethodSignature(), methodDoc.getURL());
+    private fun EmbedBuilder.addDocField(
+        fieldName: String,
+        fieldValue: String,
+        inline: Boolean,
+        onlineDocs: String?
+    ) {
+        when {
+            fieldValue.length > MessageEmbed.VALUE_MAX_LENGTH -> {
+                when (onlineDocs) {
+                    null -> addField(
+                        fieldName,
+                        "This section is too long" + ". Please look at the docs in your IDE",
+                        inline
+                    )
+                    else -> addField(
+                        fieldName,
+                        "This section is too long. Please look at [the online docs]($onlineDocs)",
+                        inline
+                    )
+                }
+            }
+            else -> addField(fieldName, fieldValue, inline)
+        }
+    }
 
-		if (classDoc != methodDoc.getClassDocs()) {
-			builder.setDescription("**Inherited from " + methodDoc.getClassDocs().getClassName() + "**\n\n");
-		}
+    private fun EmbedBuilder.addSeeAlso(seeAlso: SeeAlso?, onlineDocs: String?) {
+        if (seeAlso == null) return
 
-		fillDescription(methodDoc, builder);
-
-		fillDeprecation(methodDoc, builder);
-
-		fillDetails(builder, methodDoc, getIncludedTypes());
-
-		addSeeAlso(builder, methodDoc.getSeeAlso(), getDocURL(methodDoc));
-
-		return builder;
-	}
-
-	public static EmbedBuilder toEmbed(ClassDoc classDoc, FieldDoc fieldDoc) {
-		final EmbedBuilder builder = new EmbedBuilder();
-
-		builder.setTitle(classDoc.getClassName() + " : " + fieldDoc.getSimpleSignature(), getDocURL(fieldDoc));
-
-		if (classDoc != fieldDoc.getClassDocs()) {
-			builder.setDescription("**Inherited from " + fieldDoc.getClassDocs().getClassName() + "**\n\n");
-		}
-
-		fillDescription(fieldDoc, builder);
-
-		fillDeprecation(fieldDoc, builder);
-
-		fillDetails(builder, fieldDoc, getIncludedTypes());
-
-		addSeeAlso(builder, fieldDoc.getSeeAlso(), getDocURL(fieldDoc));
-
-		return builder;
-	}
-
-	private static void fillDescription(BaseDoc doc, EmbedBuilder builder) {
-		final HTMLElementList descriptionElement = doc.getDescriptionElements();
-
-		if (!descriptionElement.isEmpty()) {
-			final String description = descriptionElement.toMarkdown("\n\n"); //Description blocks are separated like paragraphs, unlike details such as "Specified by"
-
-			builder.appendDescription(
-					getDescriptionValue(builder.getDescriptionBuilder().length(),
-							description,
-							getDocURL(doc))
-			);
-		} else {
-			builder.appendDescription("No description");
-		}
-	}
-
-	private static void fillDeprecation(BaseDoc doc, EmbedBuilder builder) {
-		final HTMLElement deprecationElement = doc.getDeprecationElement();
-
-		if (deprecationElement != null) {
-			addField(builder,
-					"Deprecated",
-					deprecationElement.getMarkdown(),
-					false,
-					getDocURL(doc));
-		}
-	}
-
-	private static void fillDetails(EmbedBuilder builder, BaseDoc doc, EnumSet<DocDetailType> excludedTypes) {
-		final List<DocDetail> details = doc.getDetails(excludedTypes);
-
-		for (DocDetail detail : details) {
-			addField(builder,
-					detail.getDetailString(),
-					detail.toMarkdown("\n"),
-					false,
-					getDocURL(doc));
-		}
-	}
-
-	private static String getDescriptionValue(int currentLength, @NotNull String descriptionValue, @Nullable String onlineTarget) {
-		if (descriptionValue.length() + currentLength > DESCRIPTION_MAX_LENGTH) {
-			if (onlineTarget == null) {
-				return "Description is too long. Please look at the docs in your IDE";
-			} else {
-				return "Description is too long. Please look at [the online docs](" + onlineTarget + ")";
-			}
-		} else {
-			return descriptionValue;
-		}
-	}
-
-	private static void addField(EmbedBuilder builder, String fieldName, @NotNull String fieldValue, boolean inline, @Nullable String onlineDocs) {
-		if (fieldValue.length() > MessageEmbed.VALUE_MAX_LENGTH) {
-			if (onlineDocs == null) {
-				builder.addField(fieldName, "This section is too long" + ". Please look at the docs in your IDE", inline);
-			} else {
-				builder.addField(fieldName, "This section is too long" + ". Please look at [the online docs](" + onlineDocs + ")", inline);
-			}
-		} else {
-			builder.addField(fieldName, fieldValue, inline);
-		}
-	}
-
-	private static void addSeeAlso(EmbedBuilder builder, SeeAlso seeAlso, String onlineDocs) {
-		if (seeAlso != null) {
-			final String seeAlsoMd = seeAlso.getReferences()
-					.stream()
-					.map(ref -> {
-						if (HttpUtils.doesStartByLocalhost(ref.getLink())) {
-							return ref.getText();
-						}
-
-						return "[" + ref.getText() + "](" + ref.getLink() + ")";
-					})
-					.collect(Collectors.joining(", "));
-
-			addField(builder,
-					"See Also",
-					seeAlsoMd,
-					false,
-					onlineDocs);
-		}
-	}
-
+        val seeAlsoMd = seeAlso.getReferences().joinToString(", ") { ref: SeeAlsoReference ->
+            return@joinToString when {
+                doesStartByLocalhost(ref.link) -> ref.text
+                else -> "[" + ref.text + "](" + ref.link + ")"
+            }
+        }
+        addDocField(
+            "See Also",
+            seeAlsoMd,
+            false,
+            onlineDocs
+        )
+    }
 }
