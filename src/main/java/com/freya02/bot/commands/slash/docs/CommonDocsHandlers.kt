@@ -6,7 +6,7 @@ import com.freya02.bot.docs.cached.CachedClass
 import com.freya02.bot.docs.cached.CachedDoc
 import com.freya02.bot.docs.cached.CachedField
 import com.freya02.bot.docs.cached.CachedMethod
-import com.freya02.bot.docs.index.DocIndex
+import com.freya02.bot.docs.index.DocIndexKt
 import com.freya02.botcommands.api.Logging
 import com.freya02.botcommands.api.application.ApplicationCommand
 import com.freya02.botcommands.api.application.annotations.AppOption
@@ -30,9 +30,7 @@ import java.util.concurrent.TimeUnit
 
 private val LOGGER = Logging.getLogger()
 
-class CommonDocsHandlers : ApplicationCommand() {
-    private val docIndexMap: DocIndexMap = DocIndexMap
-
+class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationCommand() {
     @JDASelectionMenuListener(name = SEE_ALSO_SELECT_LISTENER_NAME)
     fun onSeeAlsoSelect(event: SelectionEvent) {
         val option = event.selectedOptions[0] //Forced to use 1
@@ -61,36 +59,36 @@ class CommonDocsHandlers : ApplicationCommand() {
     @CacheAutocompletion
     @AutocompletionHandler(name = CLASS_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onClassNameAutocomplete(
-        event: CommandAutoCompleteInteractionEvent?,
+        event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
     ): Collection<String> {
-        return docIndexMap[sourceType]?.simpleNameList ?: return listOf()
+        return docIndexMap[sourceType]?.getSimpleNameList() ?: return listOf()
     }
 
     @CacheAutocompletion
     @AutocompletionHandler(name = CLASS_NAME_WITH_METHODS_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onClassNameWithMethodsAutocomplete(
-        event: CommandAutoCompleteInteractionEvent?,
+        event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
     ): Collection<String> {
-        return docIndexMap[sourceType]?.classesWithMethods ?: return listOf()
+        return docIndexMap[sourceType]?.getClassesWithMethods() ?: return listOf()
     }
 
     @CacheAutocompletion
     @AutocompletionHandler(name = CLASS_NAME_WITH_FIELDS_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onClassNameWithFieldsAutocomplete(
-        event: CommandAutoCompleteInteractionEvent?,
+        event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
     ): Collection<String> {
-        return docIndexMap[sourceType]?.classesWithFields ?: return listOf()
+        return docIndexMap[sourceType]?.getClassesWithFields() ?: return listOf()
     }
 
     @CacheAutocompletion
     @AutocompletionHandler(name = METHOD_NAME_BY_CLASS_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onMethodNameByClassAutocomplete(
-        event: CommandAutoCompleteInteractionEvent?,
+        event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType,
-        @CompositeKey @AppOption className: String?
+        @CompositeKey @AppOption className: String
     ): Collection<String> {
         return docIndexMap[sourceType]?.getMethodDocSuggestions(className) ?: return listOf()
     }
@@ -98,10 +96,10 @@ class CommonDocsHandlers : ApplicationCommand() {
     @CacheAutocompletion
     @AutocompletionHandler(name = ANY_METHOD_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onAnyMethodNameAutocomplete(
-        event: CommandAutoCompleteInteractionEvent?,
+        event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
     ): Collection<String> {
-        val set = docIndexMap[sourceType]?.methodDocSuggestions ?: return listOf()
+        val set = docIndexMap[sourceType]?.getMethodDocSuggestions() ?: return listOf()
 
         //TODO real fix hopefully
         return set.filter { s: String -> s.length <= OptionData.MAX_CHOICE_VALUE_LENGTH }
@@ -110,9 +108,9 @@ class CommonDocsHandlers : ApplicationCommand() {
     @CacheAutocompletion
     @AutocompletionHandler(name = FIELD_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onFieldNameAutocomplete(
-        event: CommandAutoCompleteInteractionEvent?,
+        event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType,
-        @CompositeKey @AppOption className: String?
+        @CompositeKey @AppOption className: String
     ): Collection<String> {
         return docIndexMap[sourceType]?.getFieldDocSuggestions(className) ?: return listOf()
     }
@@ -120,18 +118,18 @@ class CommonDocsHandlers : ApplicationCommand() {
     @CacheAutocompletion
     @AutocompletionHandler(name = ANY_FIELD_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onAnyFieldNameAutocomplete(
-        event: CommandAutoCompleteInteractionEvent?,
+        event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
     ): Collection<String> {
-        return docIndexMap[sourceType]?.fieldDocSuggestions ?: return listOf()
+        return docIndexMap[sourceType]?.getFieldDocSuggestions() ?: return listOf()
     }
 
     @CacheAutocompletion
     @AutocompletionHandler(name = METHOD_NAME_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onMethodNameOrFieldByClassAutocomplete(
-        event: CommandAutoCompleteInteractionEvent?,
+        event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType,
-        @CompositeKey @AppOption className: String?
+        @CompositeKey @AppOption className: String
     ): Collection<String> {
         return docIndexMap[sourceType]?.getMethodAndFieldDocSuggestions(className) ?: return listOf()
     }
@@ -189,7 +187,7 @@ class CommonDocsHandlers : ApplicationCommand() {
                 .queue()
         }
 
-        fun handleClass(event: GuildSlashEvent, className: String, docIndex: DocIndex) {
+        fun handleClass(event: GuildSlashEvent, className: String, docIndex: DocIndexKt) {
             val cachedClass = docIndex.getClassDoc(className) ?: run {
                 event.reply("Class '$className' does not exist").setEphemeral(true).queue()
                 return
@@ -198,8 +196,8 @@ class CommonDocsHandlers : ApplicationCommand() {
             sendClass(event, false, cachedClass)
         }
 
-        fun handleMethodDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex) {
-            if (!docIndex.classesWithMethods.contains(className)) {
+        fun handleMethodDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndexKt) {
+            if (!docIndex.getClassesWithMethods().contains(className)) {
                 event.reply_("'$className' does not contain methods", ephemeral = true).queue()
                 return
             }
@@ -212,8 +210,8 @@ class CommonDocsHandlers : ApplicationCommand() {
             sendMethod(event, false, cachedMethod)
         }
 
-        fun handleFieldDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex) {
-            if (!docIndex.classesWithFields.contains(className)) {
+        fun handleFieldDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndexKt) {
+            if (!docIndex.getClassesWithFields().contains(className)) {
                 event.reply_("'$className' does not contain fields", ephemeral = true).queue()
                 return
             }

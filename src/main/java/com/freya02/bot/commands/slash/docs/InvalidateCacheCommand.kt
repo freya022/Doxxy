@@ -9,14 +9,14 @@ import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand
 import com.freya02.docs.DocSourceType
 
 @CommandMarker
-class InvalidateCacheCommand : ApplicationCommand() {
+class InvalidateCacheCommand(private val docIndexMap: DocIndexMap) : ApplicationCommand() {
     @Test
     @JDASlashCommand(name = "invalidate")
     fun onSlashInvalidate(event: GuildSlashEvent) {
         event.deferReply(true).queue()
-        DocIndexMap.refreshAndInvalidateIndex(DocSourceType.BOT_COMMANDS)
-        DocIndexMap.refreshAndInvalidateIndex(DocSourceType.JDA)
-        //		DocIndexMap.refreshAndInvalidateIndex(DocSourceType.JAVA); Java's docs dont get updated lol
+        docIndexMap.refreshAndInvalidateIndex(DocSourceType.BOT_COMMANDS)
+        docIndexMap.refreshAndInvalidateIndex(DocSourceType.JDA)
+        //		docIndexMap.refreshAndInvalidateIndex(DocSourceType.JAVA); Java's docs dont get updated lol
 
         for (autocompleteName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
             event.context.invalidateAutocompletionCache(autocompleteName)

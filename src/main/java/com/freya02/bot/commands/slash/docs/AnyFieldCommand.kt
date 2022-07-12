@@ -1,5 +1,6 @@
 package com.freya02.bot.commands.slash.docs
 
+import com.freya02.bot.docs.DocIndexMap
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.application.annotations.AppOption
 import com.freya02.botcommands.api.application.slash.GuildSlashEvent
@@ -8,7 +9,7 @@ import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.messages.reply_
 
 @CommandMarker
-class AnyFieldCommand : BaseDocCommand() {
+class AnyFieldCommand(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
     @JDASlashCommand(
         name = "anyfield",
         subcommand = "botcommands",

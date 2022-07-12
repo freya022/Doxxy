@@ -1,6 +1,7 @@
 package com.freya02.bot
 
 import com.freya02.bot.db.Database
+import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.DocSourceTypeResolver
 import com.freya02.bot.tag.TagCriteriaResolver
 import com.freya02.bot.versioning.LibraryTypeResolver
@@ -64,7 +65,9 @@ object Main {
             DocWebServer.startDocWebServer()
             LOGGER.info("Started docs web server")
 
-            val versions = Versions()
+            val docIndexMap = DocIndexMap(database)
+
+            val versions = Versions(docIndexMap)
             val commandsBuilder = CommandsBuilder.newBuilder(222046562543468545L)
 
             commandsBuilder
@@ -75,6 +78,7 @@ object Main {
                         .registerParameterResolver(TagCriteriaResolver())
                         .registerParameterResolver(DocSourceTypeResolver())
                         .registerConstructorParameter(Versions::class.java) { versions }
+                        .registerConstructorParameter(DocIndexMap::class.java) { docIndexMap }
                         .registerParameterResolver(LibraryTypeResolver())
                         .setMethodRunnerFactory(KotlinMethodRunnerFactory(Dispatchers.IO, scope))
                 }

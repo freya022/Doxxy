@@ -27,7 +27,7 @@ private val lastKnownJDA5Path: Path = Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resol
 private val JDA_DOCS_FOLDER: Path = Main.JAVADOCS_PATH.resolve("JDA")
 private val BC_DOCS_FOLDER: Path = Main.JAVADOCS_PATH.resolve("BotCommands")
 
-class Versions {
+class Versions(private val docIndexMap: DocIndexMap) {
     private val bcChecker: JitpackVersionChecker
     private val jdaVersionFromBCChecker: MavenProjectDependencyVersionChecker
     private val jda4Checker: MavenVersionChecker
@@ -53,12 +53,12 @@ class Versions {
         // This is why we index them here, if no update is required
         if (!checkLatestBCVersion(context)) {
             //Load docs normally, version hasn't changed
-            DocIndexMap[DocSourceType.BOT_COMMANDS]!!.reindex()
+            docIndexMap[DocSourceType.BOT_COMMANDS]!!.reindex()
         }
 
         if (!checkLatestJDA5Version(context)) {
             //Load docs normally, version hasn't changed
-            DocIndexMap[DocSourceType.JDA]!!.reindex()
+            docIndexMap[DocSourceType.JDA]!!.reindex()
         }
 
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestBCVersion(context) }, 30, 30, TimeUnit.MINUTES)
@@ -67,7 +67,7 @@ class Versions {
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDA5Version(context) }, 30, 30, TimeUnit.MINUTES)
 
         //First index for Java's docs, may take some time
-        DocIndexMap[DocSourceType.JAVA]!!.reindex()
+        docIndexMap[DocSourceType.JAVA]!!.reindex()
 
         //Once we loaded everything, invalidate caches if the user had time to use the commands before docs were loaded
         for (autocompleteName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
@@ -89,7 +89,7 @@ class Versions {
                 }
 
                 LOGGER.debug("Invalidating JDA 5 index")
-                DocIndexMap.refreshAndInvalidateIndex(DocSourceType.JDA)
+                docIndexMap.refreshAndInvalidateIndex(DocSourceType.JDA)
                 for (handlerName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
                     context?.invalidateAutocompletionCache(handlerName)
                 }
@@ -144,7 +144,7 @@ class Versions {
                 }
 
                 LOGGER.debug("Invalidating BotCommands index")
-                DocIndexMap.refreshAndInvalidateIndex(DocSourceType.BOT_COMMANDS)
+                docIndexMap.refreshAndInvalidateIndex(DocSourceType.BOT_COMMANDS)
                 for (handlerName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
                     context?.invalidateAutocompletionCache(handlerName)
                 }

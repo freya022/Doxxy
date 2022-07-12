@@ -1,5 +1,6 @@
 package com.freya02.bot.commands.slash.docs
 
+import com.freya02.bot.docs.DocIndexMap
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.application.annotations.AppOption
 import com.freya02.botcommands.api.application.slash.GuildSlashEvent
@@ -7,7 +8,7 @@ import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand
 import com.freya02.docs.DocSourceType
 
 @CommandMarker
-class ClassCommand : BaseDocCommand() {
+class ClassCommand(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
     @JDASlashCommand(name = "class", subcommand = "botcommands", description = "Shows the documentation for a class")
     fun onSlashClassBC(
         event: GuildSlashEvent,
