@@ -1,25 +1,37 @@
-package com.freya02.bot.tag;
+package com.freya02.bot.tag
 
-import java.lang.reflect.RecordComponent;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.time.Instant;
-import java.util.Arrays;
+import java.lang.reflect.RecordComponent
+import java.sql.ResultSet
+import java.sql.SQLException
+import java.time.Instant
 
-public record Tag(long guildId, long ownerId, Instant createdAt, String name, String description, String content, int uses) {
-	public static final String[] COLUMN_NAMES = Arrays.stream(Tag.class.getRecordComponents())
-			.map(RecordComponent::getName)
-			.toArray(String[]::new);
+@JvmRecord
+data class Tag(
+    val guildId: Long,
+    val ownerId: Long,
+    val createdAt: Instant,
+    val name: String,
+    val description: String,
+    val content: String,
+    val uses: Int
+) {
+    companion object {
+        val COLUMN_NAMES =
+            Tag::class.java.recordComponents
+            .map { obj: RecordComponent -> obj.name }
+            .toTypedArray()
 
-	public static Tag fromResult(ResultSet set) throws SQLException {
-		return new Tag(
-				set.getLong("guildId"),
-				set.getLong("ownerId"),
-				set.getTimestamp("createdAt").toInstant(),
-				set.getString("name"),
-				set.getString("description"),
-				set.getString("content"),
-				set.getInt("uses")
-		);
-	}
+        @Throws(SQLException::class)
+        fun fromResult(set: ResultSet): Tag {
+            return Tag(
+                set.getLong("guildId"),
+                set.getLong("ownerId"),
+                set.getTimestamp("createdAt").toInstant(),
+                set.getString("name"),
+                set.getString("description"),
+                set.getString("content"),
+                set.getInt("uses")
+            )
+        }
+    }
 }

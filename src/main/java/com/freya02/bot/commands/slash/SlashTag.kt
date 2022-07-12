@@ -63,7 +63,7 @@ class SlashTag(database: Database) : ApplicationCommand() {
             return
         }
 
-        if (tag.ownerId() != event.user.idLong) {
+        if (tag.ownerId != event.user.idLong) {
             if (!member.hasPermission(event.guildChannel, MANAGE_SERVER, MANAGE_ROLES)) {
                 event.reply("You do not own this tag").setEphemeral(true).queue()
                 return
@@ -88,8 +88,8 @@ class SlashTag(database: Database) : ApplicationCommand() {
         @AppOption(description = "Name of the tag", autocomplete = GUILD_TAGS_AUTOCOMPLETE) name: String
     ) {
         withTag(event, name) { tag: Tag ->
-            tagDB.incrementTag(event.guild.idLong, tag.name())
-            event.reply(tag.content()).queue()
+            tagDB.incrementTag(event.guild.idLong, tag.name)
+            event.reply(tag.content).queue()
         }
     }
 
@@ -102,7 +102,7 @@ class SlashTag(database: Database) : ApplicationCommand() {
         event: GuildSlashEvent,
         @AppOption(description = "Name of the tag", autocomplete = GUILD_TAGS_AUTOCOMPLETE) name: String
     ) {
-        withTag(event, name) { tag: Tag -> event.reply(MarkdownSanitizer.escape(tag.content())).queue() }
+        withTag(event, name) { tag: Tag -> event.reply(MarkdownSanitizer.escape(tag.content)).queue() }
     }
 
     @JDASlashCommand(name = "tags", subcommand = "create", description = "Creates a tag in this guild")
@@ -147,17 +147,17 @@ class SlashTag(database: Database) : ApplicationCommand() {
                 .setTitle("Edit a tag")
                 .addActionRow(
                     Modals.createTextInput("tagName", "Tag name", TextInputStyle.SHORT)
-                        .setValue(tag.name())
+                        .setValue(tag.name)
                         .build()
                 )
                 .addActionRow(
                     Modals.createTextInput("tagDescription", "Tag description", TextInputStyle.SHORT)
-                        .setValue(tag.description())
+                        .setValue(tag.description)
                         .build()
                 )
                 .addActionRow(
                     Modals.createTextInput("tagContent", "Tag content", TextInputStyle.PARAGRAPH)
-                        .setValue(tag.content())
+                        .setValue(tag.content)
                         .build()
                 )
                 .build()
@@ -218,7 +218,7 @@ class SlashTag(database: Database) : ApplicationCommand() {
         @AppOption(description = "Name of the tag", autocomplete = USER_TAGS_AUTOCOMPLETE) name: String
     ) {
         withOwnedTag(event, name) { tag: Tag ->
-            event.reply("Are you sure you want to delete the tag '${tag.name()}' ?")
+            event.reply("Are you sure you want to delete the tag '${tag.name}' ?")
                 .addActionRow(
                     *Components.group(
                         Components.dangerButton { btnEvt: ButtonEvent -> doDeleteTag(event, name, btnEvt) }
@@ -261,7 +261,7 @@ class SlashTag(database: Database) : ApplicationCommand() {
 
                         description = when {
                             tagRange.isEmpty() -> "No tags for this guild"
-                            else -> tagRange.joinToString("\n") { t: Tag -> "${t.name()} : ${t.description()} : <@${t.ownerId()}> (${t.uses()} uses)" }
+                            else -> tagRange.joinToString("\n") { t: Tag -> "${t.name} : ${t.description} : <@${t.ownerId}> (${t.uses} uses)" }
                         }
                     }
 
@@ -289,14 +289,14 @@ class SlashTag(database: Database) : ApplicationCommand() {
             event.deferReply(true).queue() //Retrieve might take some time, ig
 
             val embed = Embed {
-                val ownerMember = event.guild.retrieveMemberById(tag.ownerId()).await()
+                val ownerMember = event.guild.retrieveMemberById(tag.ownerId).await()
                 if (ownerMember != null) {
                     author {
                         name = ownerMember.user.asTag
                         iconUrl = ownerMember.effectiveAvatarUrl
                     }
                 } else {
-                    val owner = event.jda.retrieveUserById(tag.ownerId()).await()
+                    val owner = event.jda.retrieveUserById(tag.ownerId).await()
 
                     author {
                         name = owner.asTag
@@ -304,11 +304,11 @@ class SlashTag(database: Database) : ApplicationCommand() {
                     }
                 }
 
-                title = "Tag '${tag.name()}'"
+                title = "Tag '${tag.name}'"
 
-                field("Description", tag.description(), false)
-                field("Owner", "<@" + tag.ownerId() + ">", true)
-                field("Uses", tag.uses().toString(), true)
+                field("Description", tag.description, false)
+                field("Owner", "<@" + tag.ownerId + ">", true)
+                field("Uses", tag.uses.toString(), true)
                 field("Rank", tagDB.getRank(event.guild.idLong, tagName).toString(), true)
 
                 footer {
@@ -326,7 +326,7 @@ class SlashTag(database: Database) : ApplicationCommand() {
         val guild = checkGuild(event.guild)
         return AutocompleteAlgorithms
             .fuzzyMatching(
-                tagDB.getShortTagsSorted(guild.idLong, TagCriteria.USES), { obj: ShortTag -> obj.name() },
+                tagDB.getShortTagsSorted(guild.idLong, TagCriteria.USES), { obj: ShortTag -> obj.name },
                 event
             )
             .map { r: BoundExtractedResult<ShortTag> -> Command.Choice(r.referent.asChoiceName(), r.string) }
@@ -338,16 +338,16 @@ class SlashTag(database: Database) : ApplicationCommand() {
         return AutocompleteAlgorithms
             .fuzzyMatching(
                 tagDB.getShortTagsSorted(guild.idLong, event.user.idLong, TagCriteria.NAME),
-                { obj: ShortTag -> obj.name() },
+                { obj: ShortTag -> obj.name },
                 event
             )
             .map { r: BoundExtractedResult<ShortTag> -> Command.Choice(r.referent.asChoiceName(), r.string) }
     }
 
     private fun ShortTag.asChoiceName(): String {
-        val choiceName = name() + " - " + description()
+        val choiceName = "$name - $description"
         return when {
-            choiceName.length > OptionData.MAX_CHOICE_NAME_LENGTH -> name()
+            choiceName.length > OptionData.MAX_CHOICE_NAME_LENGTH -> name
             //TODO maybe improve
             else -> choiceName
         }

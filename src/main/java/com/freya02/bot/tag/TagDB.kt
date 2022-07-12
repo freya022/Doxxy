@@ -65,33 +65,33 @@ class TagDB(private val database: Database) {
         newName: String?,
         newDescription: String?,
         newContent: String?
-    ) {
+    ) { //TODO make it edit on tag IDs to have cleaner code by avoiding mixing names
         newName?.let { checkName(it) }
         newDescription?.let { checkDescription(it) }
         newContent?.let { checkContent(it) }
 
-        var name = name
+        var currentName = name
         if (newName != null) {
             DBAction.of(
                 database,
                 "update Tag set name = ? where guildid = ? and ownerid = ? and name = ?"
-            ).use { action -> action.executeUpdate(newName, guildId, ownerId, name) }
+            ).use { action -> action.executeUpdate(newName, guildId, ownerId, currentName) }
 
-            name = newName
+            currentName = newName
         }
 
         if (newDescription != null) {
             DBAction.of(
                 database,
                 "update Tag set description = ? where guildid = ? and ownerid = ? and name = ?"
-            ).use { action -> action.executeUpdate(newDescription, guildId, ownerId, name) }
+            ).use { action -> action.executeUpdate(newDescription, guildId, ownerId, currentName) }
         }
 
         if (newContent != null) {
             DBAction.of(
                 database,
                 "update Tag set content = ? where guildid = ? and ownerid = ? and name = ?"
-            ).use { action -> action.executeUpdate(newContent, guildId, ownerId, name) }
+            ).use { action -> action.executeUpdate(newContent, guildId, ownerId, currentName) }
         }
     }
 
@@ -119,7 +119,7 @@ class TagDB(private val database: Database) {
             *Tag.COLUMN_NAMES
         ).use { action ->
             val result = action.executeQuery(guildId, name)
-            return result.readOnce { set: ResultSet? -> Tag.fromResult(set) }
+            return result.readOnce { set: ResultSet -> Tag.fromResult(set) }
         }
     }
 
@@ -152,7 +152,7 @@ class TagDB(private val database: Database) {
             *Tag.COLUMN_NAMES
         ).use { action ->
             val result = action.executeQuery(guildId, offset, amount)
-            return result.transformEach { set: ResultSet? -> Tag.fromResult(set) }
+            return result.transformEach { set: ResultSet -> Tag.fromResult(set) }
         }
     }
 
@@ -164,7 +164,7 @@ class TagDB(private val database: Database) {
             *ShortTag.COLUMN_NAMES
         ).use { action ->
             val result = action.executeQuery(guildId)
-            return result.transformEach { set: ResultSet? -> ShortTag.fromResult(set) }
+            return result.transformEach { set: ResultSet -> ShortTag.fromResult(set) }
         }
     }
 
@@ -176,7 +176,7 @@ class TagDB(private val database: Database) {
             *ShortTag.COLUMN_NAMES
         ).use { action ->
             val result = action.executeQuery(guildId, ownerId)
-            return result.transformEach { set: ResultSet? -> ShortTag.fromResult(set) }
+            return result.transformEach { set: ResultSet -> ShortTag.fromResult(set) }
         }
     }
 

@@ -1,19 +1,22 @@
-package com.freya02.bot.tag;
+package com.freya02.bot.tag
 
-import java.lang.reflect.RecordComponent;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Arrays;
+import java.lang.reflect.RecordComponent
+import java.sql.ResultSet
+import java.sql.SQLException
 
-public record ShortTag(String name, String description) {
-	public static final String[] COLUMN_NAMES = Arrays.stream(ShortTag.class.getRecordComponents())
-			.map(RecordComponent::getName)
-			.toArray(String[]::new);
+@JvmRecord
+data class ShortTag(val name: String, val description: String) {
+    companion object {
+        val COLUMN_NAMES = ShortTag::class.java.recordComponents
+            .map { obj: RecordComponent -> obj.name }
+            .toTypedArray()
 
-	public static ShortTag fromResult(ResultSet set) throws SQLException {
-		return new ShortTag(
-				set.getString("name"),
-				set.getString("description")
-		);
-	}
+        @Throws(SQLException::class)
+        fun fromResult(set: ResultSet): ShortTag {
+            return ShortTag(
+                set.getString("name"),
+                set.getString("description")
+            )
+        }
+    }
 }
