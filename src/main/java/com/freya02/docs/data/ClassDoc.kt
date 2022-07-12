@@ -31,7 +31,7 @@ class ClassDoc @JvmOverloads constructor(
     private val methodDocs: MutableMap<String, MethodDoc> = hashMapOf()
 
     init {
-        document.checkJavadocVersion(sourceURL)
+        document.checkJavadocVersion()
 
         //Get javadoc title
         docTitleElement = HTMLElement.wrap(document.selectFirst("body > div.flex-box > div > main > div > h1"))
