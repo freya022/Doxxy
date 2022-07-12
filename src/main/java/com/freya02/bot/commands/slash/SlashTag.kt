@@ -48,7 +48,7 @@ private const val TAGS_CREATE_MODAL_HANDLER = "SlashTag: tagsCreate"
 private const val TAGS_EDIT_MODAL_HANDLER = "SlashTag: tagsEdit"
 
 @CommandMarker
-class SlashTag(database: Database?) : ApplicationCommand() {
+class SlashTag(database: Database) : ApplicationCommand() {
     private val tagDB: TagDB = TagDB(database)
 
     @Contract(value = "null -> fail", pure = true)
@@ -119,9 +119,9 @@ class SlashTag(database: Database?) : ApplicationCommand() {
     @ModalHandler(name = TAGS_CREATE_MODAL_HANDLER)
     fun createTag(
         event: ModalInteractionEvent,
-        @ModalInput(name = "tagName") name: String?,
-        @ModalInput(name = "tagDescription") description: String?,
-        @ModalInput(name = "tagContent") content: String?
+        @ModalInput(name = "tagName") name: String,
+        @ModalInput(name = "tagDescription") description: String,
+        @ModalInput(name = "tagContent") content: String
     ) {
         try {
             tagDB.create(checkGuild(event.guild).idLong, event.user.idLong, name, description, content)
