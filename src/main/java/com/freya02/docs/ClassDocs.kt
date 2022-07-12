@@ -41,13 +41,13 @@ class ClassDocs private constructor(private val source: DocSourceType) {
             val classUrl = element.absUrl("href")
             val decomposition = DecomposedName.getDecompositionFromUrl(source, classUrl)
 
-            if (!source.isValidPackage(decomposition.packageName())) continue
+            if (!source.isValidPackage(decomposition.packageName)) continue
 
-            val oldUrl = simpleNameToUrlMap.put(decomposition.className(), classUrl)
+            val oldUrl = simpleNameToUrlMap.put(decomposition.className, classUrl)
             when {
                 oldUrl != null -> LOGGER.warn(
                     "Detected a duplicate class name '{}' at '{}' and '{}'",
-                    decomposition.className(),
+                    decomposition.className,
                     classUrl,
                     oldUrl
                 )

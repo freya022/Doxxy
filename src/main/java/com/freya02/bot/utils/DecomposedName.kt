@@ -1,70 +1,63 @@
-package com.freya02.bot.utils;
+package com.freya02.bot.utils
 
-import com.freya02.docs.DocSourceType;
-import okhttp3.HttpUrl;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import com.freya02.docs.DocSourceType
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import org.jetbrains.annotations.Contract
 
-import java.util.ArrayList;
-import java.util.List;
+@JvmRecord
+data class DecomposedName(val packageName: String?, val className: String) {
+    companion object {
+        fun getSimpleClassName(fullName: String): String {
+            for (i in 0 until fullName.length - 1) {
+                if (fullName[i] == '.' && Character.isUpperCase(fullName[i + 1])) {
+                    return fullName.substring(i + 1)
+                }
+            }
 
-public record DecomposedName(@Nullable String packageName, @NotNull String className) {
-	@NotNull
-	public static String getSimpleClassName(@NotNull String fullName) {
-		for (int i = 0; i < fullName.length() - 1; i++) {
-			if (fullName.charAt(i) == '.' && Character.isUpperCase(fullName.charAt(i + 1))) {
-				return fullName.substring(i + 1);
-			}
-		}
+            //No name if naming conventions aren't respected
+            return fullName
+        }
 
-		//No package if naming conventions are respected
-		return fullName;
-	}
+        fun getPackageName(fullName: String): String? {
+            for (i in 0 until fullName.length - 1) {
+                if (fullName[i] == '.' && Character.isUpperCase(fullName[i + 1])) {
+                    return fullName.substring(0, i)
+                }
+            }
 
-	public static @Nullable String getPackageName(@NotNull String fullName) {
-		for (int i = 0; i < fullName.length() - 1; i++) {
-			if (fullName.charAt(i) == '.' && Character.isUpperCase(fullName.charAt(i + 1))) {
-				return fullName.substring(0, i);
-			}
-		}
+            //No package if naming conventions aren't respected
+            return null
+        }
 
-		//No package if naming conventions are respected
-		return null;
-	}
+        @Contract("_ -> new")
+        fun getDecomposition(fullName: String): DecomposedName {
+            for (i in 0 until fullName.length - 1) {
+                if (fullName[i] == '.' && Character.isUpperCase(fullName[i + 1])) {
+                    return DecomposedName(fullName.substring(0, i), fullName.substring(i + 1))
+                }
+            }
 
-	@Contract("_ -> new")
-	@NotNull
-	public static DecomposedName getDecomposition(@NotNull String fullName) {
-		for (int i = 0; i < fullName.length() - 1; i++) {
-			if (fullName.charAt(i) == '.' && Character.isUpperCase(fullName.charAt(i + 1))) {
-				return new DecomposedName(fullName.substring(0, i), fullName.substring(i + 1));
-			}
-		}
+            //No package if naming conventions aren't respected
+            return DecomposedName(null, fullName)
+        }
 
-		//No package if naming conventions are respected
-		return new DecomposedName(null, fullName);
-	}
+        @Contract("_, _ -> new")
+        fun getDecompositionFromUrl(sourceType: DocSourceType, target: String): DecomposedName {
+            val sourceUrl = sourceType.sourceUrl.toHttpUrl()
+            val targetUrl = target.toHttpUrl()
+            val rightSegments: MutableList<String> =
+                ArrayList(targetUrl.pathSegments.subList(sourceUrl.pathSize, targetUrl.pathSize))
 
-	@Contract("_, _ -> new")
-	@NotNull
-	public static DecomposedName getDecompositionFromUrl(@NotNull DocSourceType sourceType, @NotNull String target) {
-		final HttpUrl sourceUrl = HttpUrl.get(sourceType.getSourceUrl());
-		final HttpUrl targetUrl = HttpUrl.get(target);
+            //Remove java 9 modules from segments
+            if (rightSegments[0].startsWith("java.")) rightSegments.removeAt(0)
 
-		final List<String> rightSegments = new ArrayList<>(targetUrl.pathSegments().subList(sourceUrl.pathSize(), targetUrl.pathSize()));
+            //All segments except last
+            val packageSegments = rightSegments.subList(0, rightSegments.size - 1)
+            val lastSegment = rightSegments.last()
 
-		//Remove java 9 modules from segments
-		if (rightSegments.get(0).startsWith("java.")) rightSegments.remove(0);
-
-		//All segments except last
-		final List<String> packageSegments = rightSegments.subList(0, rightSegments.size() - 1);
-
-		final String lastSegment = rightSegments.get(rightSegments.size() - 1);
-
-		//Remove .html extension
-		final String className = lastSegment.substring(0, lastSegment.lastIndexOf('.'));
-
-		return new DecomposedName(String.join(".", packageSegments), className);
-	}
+            //Remove .html extension
+            val className = lastSegment.substringBeforeLast('.')
+            return DecomposedName(packageSegments.joinToString("."), className)
+        }
+    }
 }
