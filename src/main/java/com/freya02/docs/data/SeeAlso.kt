@@ -57,13 +57,13 @@ class SeeAlso(type: DocSourceType, docDetail: DocDetail) {
                             targetAsText,
                             href,
                             TargetType.METHOD,
-                            className + "#" + DocUtils.getSimpleSignature(javadocUrl.fragment)
+                            className + "#" + DocUtils.getSimpleSignature(javadocUrl.fragment!!)
                         )
                         TargetType.FIELD -> SeeAlsoReference(
                             targetAsText,
                             href,
                             TargetType.FIELD,
-                            className + "#" + javadocUrl.fragment
+                            className + "#" + javadocUrl.fragment!!
                         )
                         else -> throw IllegalStateException("Unexpected javadoc target type: " + javadocUrl.targetType)
                     }

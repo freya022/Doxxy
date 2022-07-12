@@ -51,41 +51,4 @@ public class DocsSession {
 			return doc;
 		}
 	}
-
-	/**
-	 * Retrieves the ClassDoc for this URL
-	 *
-	 * @param classUrl URL of the class
-	 * @return <code>null</code> if:
-	 * <ul>
-	 *     <li>The URL's DocSourceType is not known</li>
-	 *     <li>The javadoc version is incorrect</li>
-	 *     <li>The doc was already cached</li>
-	 * </ul>
-	 * <p>
-	 * Always returns a ClassDoc otherwise
-	 */
-	@Nullable
-	public ClassDoc retrieveDocIfNotCached(@NotNull String classUrl) throws IOException {
-//		final DocSourceType urlSource = DocSourceType.fromUrl(classUrl);
-//		if (urlSource == null) return null;
-//
-//		final String downloadedBody = HttpUtils.downloadBodyIfNotCached(classUrl);
-//
-//		if (downloadedBody == null) return null;
-//
-//		final Document document = HttpUtils.parseDocument(downloadedBody, classUrl);
-//
-//		if (!DocUtils.isJavadocVersionCorrect(document)) return null;
-//
-//		final ClassDoc newDoc = new ClassDoc(this, classUrl, document);
-//
-//		synchronized (docMap) {
-//			docMap.put(classUrl, newDoc);
-//		}
-//
-//		return newDoc;
-
-		return retrieveDoc(classUrl);
-	}
 }

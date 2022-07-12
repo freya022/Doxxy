@@ -1,48 +1,28 @@
-package com.freya02.docs;
+package com.freya02.docs
 
-import org.jetbrains.annotations.NotNull;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
+import org.jsoup.select.Elements
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
+open class HTMLElementList protected constructor(elements: List<HTMLElement> = emptyList()) : ArrayList<HTMLElement>() {
+    constructor(elements: Elements) : this() {
+        for (element in elements) {
+            this.add(HTMLElement.wrap(element))
+        }
+    }
 
-public class HTMLElementList extends ArrayList<HTMLElement> {
-	public HTMLElementList(@NotNull Collection<? extends HTMLElement> c) {
-		super(c);
-	}
+    init {
+        this.addAll(elements)
+    }
 
-	public HTMLElementList(@NotNull Elements elements) {
-		super(elements.size());
+    val htmlElements: List<HTMLElement>
+        get() = this
 
-		for (Element element : elements) {
-			add(HTMLElement.wrap(element));
-		}
-	}
+    fun toMarkdown(delimiter: String): String = this.joinToString(delimiter) { obj: HTMLElement -> obj.markdown }
 
-	@NotNull
-	public static HTMLElementList fromElements(@NotNull Elements elements) {
-		return new HTMLElementList(elements);
-	}
+    fun toText(): String = this.joinToString("") { e: HTMLElement -> e.targetElement.text() }
 
-	@NotNull
-	public List<HTMLElement> getHtmlElements() {
-		return this;
-	}
-
-	@NotNull
-	public String toMarkdown(String delimiter) {
-		return this.stream()
-				.map(HTMLElement::getMarkdown)
-				.collect(Collectors.joining(delimiter));
-	}
-
-	@NotNull
-	public String toText() {
-		return this.stream()
-				.map(e -> e.getTargetElement().text())
-				.collect(Collectors.joining());
-	}
+    companion object {
+        fun fromElements(elements: Elements): HTMLElementList {
+            return HTMLElementList(elements)
+        }
+    }
 }
