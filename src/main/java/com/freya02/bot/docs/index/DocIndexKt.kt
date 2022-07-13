@@ -42,15 +42,13 @@ class DocIndexKt(private val sourceType: DocSourceType, private val database: Da
 
     override fun getAllMethodSignatures(): Collection<String> = getAllSignatures(DocType.METHOD)
 
-    override fun findMethodSignatures(className: String): Collection<String> = findSignatures(DocType.METHOD, className)
+    override fun findMethodSignatures(className: String): Collection<String> = findSignatures(className, DocType.METHOD)
 
     override fun getAllFieldSignatures(): Collection<String> = getAllSignatures(DocType.FIELD)
 
-    override fun findFieldSignatures(className: String): Collection<String> = findSignatures(DocType.FIELD, className)
+    override fun findFieldSignatures(className: String): Collection<String> = findSignatures(className, DocType.FIELD)
 
-    override fun getMethodAndFieldSignatures(className: String): Collection<String> {
-        TODO("Not yet implemented")
-    }
+    override fun findMethodAndFieldSignatures(className: String): Collection<String> = findSignatures(className, DocType.METHOD, DocType.FIELD)
 
     override fun getSimpleNameList(): Collection<String> {
         TODO("Not yet implemented")
@@ -118,12 +116,15 @@ class DocIndexKt(private val sourceType: DocSourceType, private val database: Da
             action.executeQuery(docType.id).transformEach { it.getString("name") }
         }
 
-    private fun findSignatures(docType: DocType, className: String): List<String> =
-        DBAction.of(
+    private fun findSignatures(className: String, vararg docTypes: DocType): List<String> {
+        val typeCheck = docTypes.joinToString(" or ") { "doc.type = ${it.id}" }
+
+        return DBAction.of(
             database,
-            "select doc.name from doc join doc parentDoc on doc.parent_id = parentDoc.id where doc.type = ? and parentDoc.name = ?",
+            "select doc.name from doc join doc parentDoc on doc.parent_id = parentDoc.id where ($typeCheck) and parentDoc.name = ?",
             "name"
         ).use { action ->
-            action.executeQuery(docType.id, className).transformEach { it.getString("name") }
+            action.executeQuery(className).transformEach { it.getString("name") }
         }
+    }
 }

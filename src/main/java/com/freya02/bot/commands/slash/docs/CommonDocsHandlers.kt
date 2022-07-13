@@ -131,7 +131,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
     ): Collection<String> {
-        return docIndexMap[sourceType]?.getMethodAndFieldSignatures(className) ?: return listOf()
+        return docIndexMap[sourceType]?.findMethodAndFieldSignatures(className) ?: return listOf()
     }
 
     companion object {

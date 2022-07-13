@@ -36,7 +36,7 @@ interface IDocIndexKt {
 
     fun findFieldSignatures(className: String): Collection<String>
 
-    fun getMethodAndFieldSignatures(className: String): Collection<String>
+    fun findMethodAndFieldSignatures(className: String): Collection<String>
 
     fun getSimpleNameList(): Collection<String>
 

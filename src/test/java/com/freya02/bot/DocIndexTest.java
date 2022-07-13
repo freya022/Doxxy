@@ -34,6 +34,9 @@ public class DocIndexTest {
 		final CachedField cachedField = docIndexKt.getFieldDoc("AppendMode#SET");
 		final Collection<String> methodSignatures = docIndexKt.findMethodSignatures("AppOption");
 		final Collection<String> allMethodSignatures = docIndexKt.getAllMethodSignatures();
+		final Collection<String> fieldSignatures = docIndexKt.findFieldSignatures("AppendMode");
+		final Collection<String> allFieldSignatures = docIndexKt.getAllFieldSignatures();
+		final Collection<String> methodAndFieldSignatures = docIndexKt.findMethodAndFieldSignatures("ApplicationCommandInfoMapView");
 
 		System.out.println();
 
