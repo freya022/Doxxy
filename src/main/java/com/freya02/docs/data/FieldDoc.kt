@@ -17,7 +17,7 @@ class FieldDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, el
 
     override val detailToElementsMap: DetailToElementsMap
 
-    val seeAlso: SeeAlso?
+    override val seeAlso: SeeAlso?
 
     init {
         elementId = element.id()
@@ -59,4 +59,7 @@ class FieldDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, el
 
     val simpleSignature: String
         get() = "$fieldType $fieldName"
+
+    override val asDBName: String
+        get() = simpleSignature
 }

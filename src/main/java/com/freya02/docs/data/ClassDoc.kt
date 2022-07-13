@@ -25,7 +25,7 @@ class ClassDoc @JvmOverloads constructor(
 
     override val detailToElementsMap: DetailToElementsMap
 
-    val seeAlso: SeeAlso?
+    override val seeAlso: SeeAlso?
 
     private val fieldDocs: MutableMap<String, FieldDoc> = hashMapOf()
     private val methodDocs: MutableMap<String, MethodDoc> = hashMapOf()
@@ -165,6 +165,9 @@ class ClassDoc @JvmOverloads constructor(
 
     override val effectiveURL: String
         get() = source.toOnlineURL(sourceURL)
+
+    override val asDBName: String
+        get() = className
 
     val enumConstants: List<FieldDoc>
         get() = getFieldDocs()

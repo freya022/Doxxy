@@ -22,7 +22,7 @@ public class DocIndexTest {
 		final Config config = Config.Companion.getConfig();
 		final Database database = new Database(config);
 
-		final DocIndexKt docIndexKt = new DocIndexKt(DocSourceType.BOT_COMMANDS, database);
+		final DocIndexKt docIndexKt = new DocIndexKt(DocSourceType.BOT_COMMANDS, database).reindex();
 
 		System.out.println();
 	}

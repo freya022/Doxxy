@@ -20,7 +20,7 @@ class MethodDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, e
 
     override val detailToElementsMap: DetailToElementsMap
 
-    val seeAlso: SeeAlso?
+    override val seeAlso: SeeAlso?
 
     init {
         elementId = element.id()
@@ -64,6 +64,9 @@ class MethodDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, e
 
     val simpleSignature: String
         get() = DocUtils.getSimpleSignature(elementId)
+
+    override val asDBName: String
+        get() = simpleSignature
 
     fun getSimpleAnnotatedSignature(targetClassdoc: ClassDoc): String {
         return DocUtils.getSimpleAnnotatedSignature(targetClassdoc, this)

@@ -1,21 +1,25 @@
 package com.freya02.docs
 
 enum class DocSourceType(
+    val id: Int,
     val sourceUrl: String,
     private val onlineURL: String?,
     vararg validPackagePatterns: String
 ) {
     JDA(
+        1,
         "http://localhost:25566/JDA",
         "https://ci.dv8tion.net/job/JDA5/javadoc",
         "net\\.dv8tion\\.jda.*"
     ),
     BOT_COMMANDS(
+        2,
         "http://localhost:25566/BotCommands",
         null,
         "com\\.freya02\\.botcommands\\.api.*"
     ),
     JAVA(
+        3,
         "https://docs.oracle.com/en/java/javase/17/docs/api",
         "https://docs.oracle.com/en/java/javase/17/docs/api",
         "java\\.io.*",

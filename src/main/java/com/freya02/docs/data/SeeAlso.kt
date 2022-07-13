@@ -44,7 +44,7 @@ class SeeAlso(type: DocSourceType, docDetail: DocDetail) {
 
                 val classDocs = ClassDocs.getSource(sourceType)
                 //Class should be detectable as all URLs are pulled first
-                if (classDocs.isValidURL(href)) {
+                if (classDocs.isValidURL(href)) { //TODO check if URLs are checked correctly
                     //Class exists
                     //Is it a class, method, or field
                     val javadocUrl = JavadocUrl.fromURL(href)

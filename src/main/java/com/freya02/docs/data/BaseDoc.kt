@@ -8,6 +8,9 @@ abstract class BaseDoc {
     abstract val effectiveURL: String
     abstract val descriptionElements: HTMLElementList
     abstract val deprecationElement: HTMLElement?
+    abstract val seeAlso: SeeAlso?
+
+    abstract val asDBName: String
 
     protected abstract val detailToElementsMap: DetailToElementsMap
 
