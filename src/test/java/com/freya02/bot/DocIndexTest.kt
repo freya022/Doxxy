@@ -1,48 +1,48 @@
-package com.freya02.bot;
+package com.freya02.bot
 
-import com.freya02.bot.db.Database;
-import com.freya02.bot.docs.cached.CachedClass;
-import com.freya02.bot.docs.cached.CachedField;
-import com.freya02.bot.docs.cached.CachedMethod;
-import com.freya02.bot.docs.index.DocIndexKt;
-import com.freya02.docs.DocSourceType;
-import com.freya02.docs.DocWebServer;
+import com.freya02.bot.Config.Companion.getConfig
+import com.freya02.bot.db.Database
+import com.freya02.bot.docs.index.DocIndexKt
+import com.freya02.docs.DocSourceType
+import com.freya02.docs.DocWebServer.startDocWebServer
+import kotlin.system.exitProcess
 
-import java.util.Collection;
+object DocIndexTest {
+    @JvmStatic
+    fun main(args: Array<String>) {
+        startDocWebServer()
 
-public class DocIndexTest {
-	public static void main(String[] args) throws Exception {
-		DocWebServer.startDocWebServer();
-
-//		final DocIndex bcIndex = new DocIndex(DocSourceType.BOT_COMMANDS).reindex();
-//		final DocIndex jdaIndex = new DocIndex(DocSourceType.JDA).reindex();
-//		final DocIndex javaIndex = new DocIndex(DocSourceType.JAVA).reindex();
+//        val bcIndex = DocIndex(DocSourceType.BOT_COMMANDS).reindex()
+//        val jdaIndex = DocIndex(DocSourceType.JDA).reindex()
+//        val javaIndex = DocIndex(DocSourceType.JAVA).reindex()
 //
-//		System.out.println();
+//        println()
 //
-//		bcIndex.close();
-//		jdaIndex.close();
-//		javaIndex.close();
+//        bcIndex.close()
+//        jdaIndex.close()
+//        javaIndex.close()
 
-		final Config config = Config.Companion.getConfig();
-		final Database database = new Database(config);
+        val config = getConfig()
+        val database = Database(config)
 
-		final DocIndexKt docIndexKt = new DocIndexKt(DocSourceType.BOT_COMMANDS, database);
-//		docIndexKt.reindex();
-		final CachedClass cachedClass = docIndexKt.getClassDoc("AppOption");
-		final CachedMethod cachedMethod = docIndexKt.getMethodDoc("AppOption#autocomplete()");
-		final CachedField cachedField = docIndexKt.getFieldDoc("AppendMode#SET");
-		final Collection<String> methodSignatures = docIndexKt.findMethodSignatures("AppOption");
-		final Collection<String> allMethodSignatures = docIndexKt.getAllMethodSignatures();
-		final Collection<String> fieldSignatures = docIndexKt.findFieldSignatures("AppendMode");
-		final Collection<String> allFieldSignatures = docIndexKt.getAllFieldSignatures();
-		final Collection<String> methodAndFieldSignatures = docIndexKt.findMethodAndFieldSignatures("ApplicationCommandInfoMapView");
-		final Collection<String> simpleNameList = docIndexKt.getClasses();
-		final Collection<String> classesWithMethods = docIndexKt.getClassesWithMethods();
-		final Collection<String> classesWithFields = docIndexKt.getClassesWithFields();
+        val docIndexKt = DocIndexKt(DocSourceType.BOT_COMMANDS, database)
 
-		System.out.println();
+//        docIndexKt.reindex()
 
-		System.exit(0);
-	}
+        val cachedClass = docIndexKt.getClassDoc("AppOption")
+        val cachedMethod = docIndexKt.getMethodDoc("AppOption#autocomplete()")
+        val cachedField = docIndexKt.getFieldDoc("AppendMode#SET")
+        val methodSignatures = docIndexKt.findMethodSignatures("AppOption")
+        val allMethodSignatures = docIndexKt.getAllMethodSignatures()
+        val fieldSignatures = docIndexKt.findFieldSignatures("AppendMode")
+        val allFieldSignatures = docIndexKt.getAllFieldSignatures()
+        val methodAndFieldSignatures = docIndexKt.findMethodAndFieldSignatures("ApplicationCommandInfoMapView")
+        val simpleNameList = docIndexKt.getClasses()
+        val classesWithMethods = docIndexKt.getClassesWithMethods()
+        val classesWithFields = docIndexKt.getClassesWithFields()
+
+        println()
+
+        exitProcess(0)
+    }
 }
