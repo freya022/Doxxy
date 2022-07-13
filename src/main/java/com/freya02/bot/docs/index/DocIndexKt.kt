@@ -41,22 +41,10 @@ class DocIndexKt(private val sourceType: DocSourceType, private val database: Da
     }
 
     override fun getAllMethodSignatures(): Collection<String> =
-        DBAction.of(
-            database,
-            "select doc.name from doc where type = ?",
-            "name"
-        ).use { action ->
-            action.executeQuery(DocType.METHOD.id).transformEach { it.getString("name") }
-        }
+        getAllSignatures(DocType.METHOD)
 
     override fun getMethodSignatures(className: String): Collection<String> =
-        DBAction.of(
-            database,
-            "select doc.name from doc join doc parentDoc on doc.parent_id = parentDoc.id where doc.type = ? and parentDoc.name = ?",
-            "name"
-        ).use { action ->
-            action.executeQuery(DocType.METHOD.id, className).transformEach { it.getString("name") }
-        }
+        findSignatures(DocType.METHOD, className)
 
     override fun getAllFieldSignatures(): Collection<String> {
         TODO("Not yet implemented")
@@ -126,4 +114,22 @@ class DocIndexKt(private val sourceType: DocSourceType, private val database: Da
             MessageEmbed::class.java
         )
     }
+
+    private fun getAllSignatures(docType: DocType): List<String> =
+        DBAction.of(
+            database,
+            "select doc.name from doc where type = ?",
+            "name"
+        ).use { action ->
+            action.executeQuery(docType.id).transformEach { it.getString("name") }
+        }
+
+    private fun findSignatures(docType: DocType, className: String): List<String> =
+        DBAction.of(
+            database,
+            "select doc.name from doc join doc parentDoc on doc.parent_id = parentDoc.id where doc.type = ? and parentDoc.name = ?",
+            "name"
+        ).use { action ->
+            action.executeQuery(docType.id, className).transformEach { it.getString("name") }
+        }
 }
