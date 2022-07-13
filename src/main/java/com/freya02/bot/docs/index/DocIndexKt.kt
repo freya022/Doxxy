@@ -40,13 +40,23 @@ class DocIndexKt(private val sourceType: DocSourceType, private val database: Da
         return CachedField(embed, seeAlsoReferences)
     }
 
-    override fun getMethodDocSuggestions(className: String): Collection<String> {
-        TODO("Not yet implemented")
-    }
+    override fun getMethodDocSuggestions(className: String): Collection<String> =
+        DBAction.of(
+            database,
+            "select doc.name from doc join doc parentDoc on doc.parent_id = parentDoc.id where parentDoc.name = ?",
+            "name"
+        ).use { action ->
+            action.executeQuery(className).transformEach { it.getString("name") }
+        }
 
-    override fun getMethodDocSuggestions(): Collection<String> {
-        TODO("Not yet implemented")
-    }
+    override fun getMethodDocSuggestions(): Collection<String> =
+        DBAction.of(
+            database,
+            "select doc.name from doc where type = ?",
+            "name"
+        ).use { action ->
+            action.executeQuery(DocType.METHOD.id).transformEach { it.getString("name") }
+        }
 
     override fun getFieldDocSuggestions(className: String): Collection<String> {
         TODO("Not yet implemented")

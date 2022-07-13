@@ -8,6 +8,8 @@ import com.freya02.bot.docs.index.DocIndexKt;
 import com.freya02.docs.DocSourceType;
 import com.freya02.docs.DocWebServer;
 
+import java.util.Collection;
+
 public class DocIndexTest {
 	public static void main(String[] args) throws Exception {
 		DocWebServer.startDocWebServer();
@@ -30,6 +32,8 @@ public class DocIndexTest {
 		final CachedClass cachedClass = docIndexKt.getClassDoc("AppOption");
 		final CachedMethod cachedMethod = docIndexKt.getMethodDoc("AppOption#autocomplete()");
 		final CachedField cachedField = docIndexKt.getFieldDoc("AppendMode#SET");
+		final Collection<String> methodDocSuggestions = docIndexKt.getMethodDocSuggestions("AppOption");
+		final Collection<String> allMethodDocSuggestions = docIndexKt.getMethodDocSuggestions();
 
 		System.out.println();
 
