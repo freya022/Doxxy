@@ -15,6 +15,7 @@ create table Doc
 (
     id        serial primary key,
     source_id int  not null,
+    type      int  not null,
     parent_id int,
     name      text not null,
     embed     text not null

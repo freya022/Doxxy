@@ -34,7 +34,7 @@ internal class DocIndexWriter(private val database: Database, private val docsSe
                 val classEmbed = toEmbed(classDoc).build()
                 val classEmbedJson = GSON.toJson(classEmbed)
 
-                val classDocId = insertDoc(null, classDoc, classEmbedJson)
+                val classDocId = insertDoc(null, DocType.CLASS, classDoc, classEmbedJson)
                 insertSeeAlso(classDoc, classDocId)
 
                 insertMethodDocs(classDoc, classDocId)
@@ -51,7 +51,7 @@ internal class DocIndexWriter(private val database: Database, private val docsSe
                 val methodEmbed = toEmbed(classDoc, methodDoc).build()
                 val methodEmbedJson = GSON.toJson(methodEmbed)
 
-                val methodDocId = insertDoc(classDocId, methodDoc, methodEmbedJson)
+                val methodDocId = insertDoc(classDocId, DocType.METHOD, methodDoc, methodEmbedJson)
                 insertSeeAlso(methodDoc, methodDocId)
             } catch (e: Exception) {
                 throw RuntimeException(
@@ -68,7 +68,7 @@ internal class DocIndexWriter(private val database: Database, private val docsSe
                 val fieldEmbed = toEmbed(classDoc, fieldDoc).build()
                 val fieldEmbedJson = GSON.toJson(fieldEmbed)
 
-                val fieldDocId = insertDoc(classDocId, fieldDoc, fieldEmbedJson)
+                val fieldDocId = insertDoc(classDocId, DocType.FIELD, fieldDoc, fieldEmbedJson)
                 insertSeeAlso(fieldDoc, fieldDocId)
             } catch (e: Exception) {
                 throw RuntimeException(
@@ -81,14 +81,15 @@ internal class DocIndexWriter(private val database: Database, private val docsSe
 
     private fun insertDoc(
         classDocId: Int? = null,
+        docType: DocType,
         baseDoc: BaseDoc,
         embedJson: String?
     ): Int = DBAction.of(
         database,
-        "insert into doc (source_id, parent_id, name, embed) VALUES (?, ?, ?, ?) returning id",
+        "insert into doc (source_id, type, parent_id, name, embed) VALUES (?, ?, ?, ?, ?) returning id",
         "id"
     ).use { action ->
-        action.executeUpdate(sourceType.id, classDocId, baseDoc.asDBName, embedJson)
+        action.executeUpdate(sourceType.id, docType.id, classDocId, baseDoc.asDBName, embedJson)
         return@use action.nextGeneratedRow().getInt("id")
     }
 
