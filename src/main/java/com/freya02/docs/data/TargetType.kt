@@ -15,5 +15,9 @@ enum class TargetType(val id: Int) {
                 else -> FIELD
             }
         }
+
+        fun fromId(type: Int): TargetType {
+            return values().find { it.id == type } ?: throw IllegalArgumentException("Unknown type: $type")
+        }
     }
 }

@@ -14,9 +14,6 @@ import net.dv8tion.jda.api.entities.MessageEmbed
 import java.sql.ResultSet
 
 private val LOGGER = Logging.getLogger()
-private val GSON = GsonBuilder()
-    .registerTypeAdapter(MessageEmbed::class.java, MessageEmbedAdapter())
-    .create()
 
 internal class DocIndexWriter(private val database: Database, private val docsSession: DocsSession, private val sourceType: DocSourceType) {
     fun doReindex() {
@@ -118,5 +115,11 @@ internal class DocIndexWriter(private val database: Database, private val docsSe
         }
 
         return preparedStatement.generatedKeys
+    }
+
+    companion object {
+        internal val GSON = GsonBuilder()
+            .registerTypeAdapter(MessageEmbed::class.java, MessageEmbedAdapter())
+            .create()
     }
 }

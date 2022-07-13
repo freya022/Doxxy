@@ -1,6 +1,7 @@
 package com.freya02.bot;
 
 import com.freya02.bot.db.Database;
+import com.freya02.bot.docs.cached.CachedClass;
 import com.freya02.bot.docs.index.DocIndexKt;
 import com.freya02.docs.DocSourceType;
 import com.freya02.docs.DocWebServer;
@@ -23,6 +24,7 @@ public class DocIndexTest {
 		final Database database = new Database(config);
 
 		final DocIndexKt docIndexKt = new DocIndexKt(DocSourceType.BOT_COMMANDS, database).reindex();
+		final CachedClass cachedClass = docIndexKt.getClassDoc("AppOption");
 
 		System.out.println();
 	}
