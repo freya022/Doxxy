@@ -2,10 +2,8 @@ package com.freya02.bot.tag
 
 import com.freya02.bot.db.DBAction
 import com.freya02.bot.db.Database
-import com.freya02.bot.utils.Utils.readResource
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-import org.intellij.lang.annotations.Language
 import java.sql.ResultSet
 import java.sql.SQLException
 
@@ -14,21 +12,6 @@ private const val DESCRIPTION_MAX_LENGTH = 512
 private const val NAME_MAX_LENGTH = OptionData.MAX_CHOICE_NAME_LENGTH
 
 class TagDB(private val database: Database) {
-    init {
-        val setupSql = readResource("TagDB.sql")
-        DBAction.of(database, setupSql).use { createTableAction -> createTableAction.executeUpdate() }
-
-        //Setting column restrictions to JDA constants
-        //Looks like the driver doesn't understand when we do these 3 alterations in 1 statement
-        applyConstraint("alter table Tag add constraint name check(length(name) <= $NAME_MAX_LENGTH)")
-        applyConstraint("alter table Tag add constraint description check(length(description) <= $DESCRIPTION_MAX_LENGTH)")
-        applyConstraint("alter table Tag add constraint content check(length(content) <= $CONTENT_MAX_LENGTH)")
-    }
-
-    private fun applyConstraint(@Language("PostgreSQL") query: String) {
-        DBAction.of(database, query).use { constraintAction -> constraintAction.executeUpdate() }
-    }
-
     private fun checkName(name: String) {
         if (name.length > NAME_MAX_LENGTH)
             throw TagException("Tag name is too long, it should be under $NAME_MAX_LENGTH characters")
