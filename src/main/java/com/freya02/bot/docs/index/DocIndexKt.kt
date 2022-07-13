@@ -40,19 +40,13 @@ class DocIndexKt(private val sourceType: DocSourceType, private val database: Da
         return CachedField(embed, seeAlsoReferences)
     }
 
-    override fun getAllMethodSignatures(): Collection<String> =
-        getAllSignatures(DocType.METHOD)
+    override fun getAllMethodSignatures(): Collection<String> = getAllSignatures(DocType.METHOD)
 
-    override fun findMethodSignatures(className: String): Collection<String> =
-        findSignatures(DocType.METHOD, className)
+    override fun findMethodSignatures(className: String): Collection<String> = findSignatures(DocType.METHOD, className)
 
-    override fun getAllFieldSignatures(): Collection<String> {
-        TODO("Not yet implemented")
-    }
+    override fun getAllFieldSignatures(): Collection<String> = getAllSignatures(DocType.FIELD)
 
-    override fun findFieldSignatures(className: String): Collection<String> {
-        TODO("Not yet implemented")
-    }
+    override fun findFieldSignatures(className: String): Collection<String> = findSignatures(DocType.FIELD, className)
 
     override fun getMethodAndFieldSignatures(className: String): Collection<String> {
         TODO("Not yet implemented")
