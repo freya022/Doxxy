@@ -8,9 +8,9 @@ import com.freya02.bot.docs.cached.CachedMethod
 import com.freya02.botcommands.api.Logging
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.DocsSession
+import com.freya02.docs.PageCache
 import com.freya02.docs.data.SeeAlso.SeeAlsoReference
 import com.freya02.docs.data.TargetType
-import com.freya02.docs2.PageCache
 import net.dv8tion.jda.api.entities.MessageEmbed
 import org.slf4j.Logger
 

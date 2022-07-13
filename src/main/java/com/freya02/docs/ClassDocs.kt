@@ -3,8 +3,8 @@ package com.freya02.docs
 import com.freya02.bot.utils.DecomposedName
 import com.freya02.bot.utils.HttpUtils
 import com.freya02.botcommands.api.Logging
+import com.freya02.docs.PageCache.getPage
 import com.freya02.docs.utils.DocsURL
-import com.freya02.docs2.PageCache.getPage
 import java.io.IOException
 import java.util.*
 

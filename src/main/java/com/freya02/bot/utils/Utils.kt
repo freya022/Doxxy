@@ -24,16 +24,6 @@ object Utils {
         }
     }
 
-    fun getClassName(fullName: String): String {
-        for ((index, c) in fullName.withIndex()) {
-            if (c.isUpperCase()) {
-                return fullName.substring(index)
-            }
-        }
-
-        throw IllegalArgumentException("Could not get glass name from '$fullName'")
-    }
-
     @Contract("null -> false")
     fun Guild?.isBCGuild(): Boolean {
         return when {

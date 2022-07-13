@@ -3,9 +3,9 @@ package com.freya02.docs
 import com.freya02.bot.utils.HttpUtils.removeFragment
 import com.freya02.docs.DocSourceType.Companion.fromUrl
 import com.freya02.docs.DocUtils.isJavadocVersionCorrect
+import com.freya02.docs.PageCache.getPage
 import com.freya02.docs.data.ClassDoc
 import com.freya02.docs.utils.DocsURL
-import com.freya02.docs2.PageCache.getPage
 import java.io.IOException
 
 class DocsSession {

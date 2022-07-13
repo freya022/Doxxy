@@ -1,9 +1,8 @@
-package com.freya02.docs2
+package com.freya02.docs
 
 import com.freya02.bot.Main
 import com.freya02.bot.utils.HttpUtils
 import com.freya02.bot.utils.Utils.deleteRecursively
-import com.freya02.docs.DocSourceType
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Request
 import org.jsoup.nodes.Document
