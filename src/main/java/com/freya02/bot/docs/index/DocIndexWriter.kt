@@ -22,6 +22,8 @@ internal class DocIndexWriter(private val database: Database, private val docsSe
     fun doReindex() {
         val updatedSource = ClassDocs.getUpdatedSource(sourceType)
 
+        DBAction.of(database, "delete from doc where source_id = ?").use { it.executeUpdate(sourceType.id) }
+
         for ((className, classUrl) in updatedSource.getSimpleNameToUrlMap()) {
             try {
                 val classDoc = docsSession.retrieveDoc(classUrl)
@@ -93,14 +95,14 @@ internal class DocIndexWriter(private val database: Database, private val docsSe
         return@use action.nextGeneratedRow().getInt("id")
     }
 
-    private fun insertSeeAlso(methodDoc: BaseDoc, methodDocId: Int) {
-        methodDoc.seeAlso?.getReferences()?.forEach { seeAlsoReference ->
+    private fun insertSeeAlso(baseDoc: BaseDoc, docId: Int) {
+        baseDoc.seeAlso?.getReferences()?.forEach { seeAlsoReference ->
             DBAction.of(
                 database,
                 "insert into docseealsoreference (doc_id, text, link, target_type, full_signature) VALUES (?, ?, ?, ?, ?)"
             ).use { action ->
                 action.executeUpdate(
-                    methodDocId,
+                    docId,
                     seeAlsoReference.text,
                     seeAlsoReference.link,
                     seeAlsoReference.targetType.id,
