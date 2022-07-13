@@ -20,34 +20,37 @@ private val LOGGER: Logger = Logging.getLogger()
 // Further updates must be invoked by external methods such as version checkers
 class DocIndexKt(private val sourceType: DocSourceType, private val database: Database) : IDocIndexKt {
     fun getClassDoc(className: String): CachedClass? {
-        val (docId, embed) = DBAction.of(
-            database,
-            "select id, embed from doc where type = ? and name = ? limit 1",
-            "id", "embed"
-        ).use {
-            val result = it.executeQuery(DocType.CLASS.id, className).readOnce() ?: return null
-            return@use result.getInt("id") to DocIndexWriter.GSON.fromJson(
-                result.getString("embed"),
-                MessageEmbed::class.java
-            )
-        }
-
-        val seeAlsoReferences: List<SeeAlsoReference> = DBAction.of(
-            database,
-            "select text, link, target_type, full_signature from docseealsoreference where doc_id = ?",
-            "text", "link", "target_type", "full_signature"
-        ).use { action ->
-            action.executeQuery(docId).transformEach {
-                SeeAlsoReference(
-                    it.getString("text"),
-                    it.getString("link"),
-                    TargetType.fromId(it.getInt("target_type")),
-                    it.getString("full_signature")
-                )
-            }
-        }
+        val (docId, embed) = findDoc(className) ?: return null
+        val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
 
         return CachedClass(embed, seeAlsoReferences)
+    }
+
+    private fun findSeeAlsoReferences(docId: Int): List<SeeAlsoReference> = DBAction.of(
+        database,
+        "select text, link, target_type, full_signature from docseealsoreference where doc_id = ?",
+        "text", "link", "target_type", "full_signature"
+    ).use { action ->
+        action.executeQuery(docId).transformEach {
+            SeeAlsoReference(
+                it.getString("text"),
+                it.getString("link"),
+                TargetType.fromId(it.getInt("target_type")),
+                it.getString("full_signature")
+            )
+        }
+    }
+
+    private fun findDoc(className: String): Pair<Int, MessageEmbed>? = DBAction.of(
+        database,
+        "select id, embed from doc where type = ? and name = ? limit 1",
+        "id", "embed"
+    ).use {
+        val result = it.executeQuery(DocType.CLASS.id, className).readOnce() ?: return null
+        return@use result.getInt("id") to DocIndexWriter.GSON.fromJson(
+            result.getString("embed"),
+            MessageEmbed::class.java
+        )
     }
 
     override fun getMethodDoc(className: String, methodId: String): CachedMethod? {
