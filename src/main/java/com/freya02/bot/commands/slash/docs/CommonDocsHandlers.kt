@@ -6,7 +6,7 @@ import com.freya02.bot.docs.cached.CachedClass
 import com.freya02.bot.docs.cached.CachedDoc
 import com.freya02.bot.docs.cached.CachedField
 import com.freya02.bot.docs.cached.CachedMethod
-import com.freya02.bot.docs.index.DocIndexKt
+import com.freya02.bot.docs.index.DocIndex
 import com.freya02.botcommands.api.Logging
 import com.freya02.botcommands.api.application.ApplicationCommand
 import com.freya02.botcommands.api.application.annotations.AppOption
@@ -187,7 +187,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
                 .queue()
         }
 
-        fun handleClass(event: GuildSlashEvent, className: String, docIndex: DocIndexKt) {
+        fun handleClass(event: GuildSlashEvent, className: String, docIndex: DocIndex) {
             val cachedClass = docIndex.getClassDoc(className) ?: run {
                 event.reply("Class '$className' does not exist").setEphemeral(true).queue()
                 return
@@ -196,7 +196,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
             sendClass(event, false, cachedClass)
         }
 
-        fun handleMethodDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndexKt) {
+        fun handleMethodDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex) {
             if (!docIndex.getClassesWithMethods().contains(className)) {
                 event.reply_("'$className' does not contain methods", ephemeral = true).queue()
                 return
@@ -210,7 +210,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
             sendMethod(event, false, cachedMethod)
         }
 
-        fun handleFieldDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndexKt) {
+        fun handleFieldDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex) {
             if (!docIndex.getClassesWithFields().contains(className)) {
                 event.reply_("'$className' does not contain fields", ephemeral = true).queue()
                 return

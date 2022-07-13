@@ -2,7 +2,7 @@ package com.freya02.bot
 
 import com.freya02.bot.Config.Companion.getConfig
 import com.freya02.bot.db.Database
-import com.freya02.bot.docs.index.DocIndexKt
+import com.freya02.bot.docs.index.DocIndex
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.DocWebServer.startDocWebServer
 import kotlin.system.exitProcess
@@ -25,9 +25,9 @@ object DocIndexTest {
         val config = getConfig()
         val database = Database(config)
 
-        val bcIndex = DocIndexKt(DocSourceType.BOT_COMMANDS, database)
-        val jdaIndex = DocIndexKt(DocSourceType.JDA, database)
-        val javaIndex = DocIndexKt(DocSourceType.JAVA, database)
+        val bcIndex = DocIndex(DocSourceType.BOT_COMMANDS, database)
+        val jdaIndex = DocIndex(DocSourceType.JDA, database)
+        val javaIndex = DocIndex(DocSourceType.JAVA, database)
 
 //        bcIndex.reindex()
 //        jdaIndex.reindex()

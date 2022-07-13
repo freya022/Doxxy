@@ -18,7 +18,7 @@ private val LOGGER: Logger = Logging.getLogger()
 
 //Initial construct just allows database access
 // Further updates must be invoked by external methods such as version checkers
-class DocIndexKt(private val sourceType: DocSourceType, private val database: Database) : IDocIndexKt {
+class DocIndex(private val sourceType: DocSourceType, private val database: Database) : IDocIndexKt {
     fun getClassDoc(className: String): CachedClass? {
         val (docId, embed) = findDoc(DocType.CLASS, className) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
@@ -67,7 +67,7 @@ class DocIndexKt(private val sourceType: DocSourceType, private val database: Da
 
     override fun getClassesWithFields(): Collection<String> = getClassNamesWithChildren(DocType.FIELD)
 
-    fun reindex(): DocIndexKt {
+    fun reindex(): DocIndex {
         LOGGER.info("Re-indexing docs for {}", sourceType.name)
 
         LOGGER.info("Clearing cache for {}", sourceType.name)
