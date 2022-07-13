@@ -48,11 +48,15 @@ class DocIndexKt(private val sourceType: DocSourceType, private val database: Da
 
     override fun findFieldSignatures(className: String): Collection<String> = findSignatures(className, DocType.FIELD)
 
-    override fun findMethodAndFieldSignatures(className: String): Collection<String> = findSignatures(className, DocType.METHOD, DocType.FIELD)
+    override fun findMethodAndFieldSignatures(className: String): Collection<String> =
+        findSignatures(className, DocType.METHOD, DocType.FIELD)
 
     override fun getClasses(): Collection<String> = DBAction.of(
         database,
-        "select name from doc where type = ?",
+        """
+            select name
+            from doc
+            where type = ?""".trimIndent(),
         "name"
     ).use { action ->
         action.executeQuery(DocType.CLASS.id).transformEach { it.getString("name") }
@@ -82,7 +86,10 @@ class DocIndexKt(private val sourceType: DocSourceType, private val database: Da
 
     private fun findSeeAlsoReferences(docId: Int): List<SeeAlsoReference> = DBAction.of(
         database,
-        "select text, link, target_type, full_signature from docseealsoreference where doc_id = ?",
+        """
+            select text, link, target_type, full_signature
+            from docseealsoreference
+            where doc_id = ?""".trimIndent(),
         "text", "link", "target_type", "full_signature"
     ).use { action ->
         action.executeQuery(docId).transformEach {
@@ -97,7 +104,12 @@ class DocIndexKt(private val sourceType: DocSourceType, private val database: Da
 
     private fun findDoc(docType: DocType, className: String): Pair<Int, MessageEmbed>? = DBAction.of(
         database,
-        "select id, embed from doc where type = ? and name = ? limit 1",
+        """
+            select id, embed
+            from doc
+            where type = ?
+              and name = ?
+            limit 1""".trimIndent(),
         "id", "embed"
     ).use {
         val result = it.executeQuery(docType.id, className).readOnce() ?: return null
@@ -110,7 +122,10 @@ class DocIndexKt(private val sourceType: DocSourceType, private val database: Da
     private fun getAllSignatures(docType: DocType): List<String> =
         DBAction.of(
             database,
-            "select doc.name from doc where type = ?",
+            """
+                select doc.name
+                from doc
+                where type = ?""".trimIndent(),
             "name"
         ).use { action ->
             action.executeQuery(docType.id).transformEach { it.getString("name") }
@@ -121,7 +136,12 @@ class DocIndexKt(private val sourceType: DocSourceType, private val database: Da
 
         return DBAction.of(
             database,
-            "select doc.name from doc join doc parentDoc on doc.parent_id = parentDoc.id where ($typeCheck) and parentDoc.name = ?",
+            """
+                select doc.name
+                from doc
+                         join doc parentDoc on doc.parent_id = parentDoc.id
+                where ($typeCheck)
+                  and parentDoc.name = ?""".trimIndent(),
             "name"
         ).use { action ->
             action.executeQuery(className).transformEach { it.getString("name") }
@@ -130,7 +150,12 @@ class DocIndexKt(private val sourceType: DocSourceType, private val database: Da
 
     private fun getClassNamesWithChildren(docType: DocType) = DBAction.of(
         database,
-        "select doc.name from doc join doc childDoc on childDoc.parent_id = doc.id where childDoc.type = ? group by doc.name",
+        """
+            select doc.name
+            from doc
+                     join doc childDoc on childDoc.parent_id = doc.id
+            where childDoc.type = ?
+            group by doc.name""".trimIndent(),
         "name"
     ).use { action ->
         action.executeQuery(docType.id).transformEach { it.getString("name") }
