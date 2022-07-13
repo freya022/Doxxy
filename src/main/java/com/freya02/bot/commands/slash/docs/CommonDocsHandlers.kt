@@ -90,7 +90,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
     ): Collection<String> {
-        return docIndexMap[sourceType]?.getMethodDocSuggestions(className) ?: return listOf()
+        return docIndexMap[sourceType]?.getMethodSignatures(className) ?: return listOf()
     }
 
     @CacheAutocompletion
@@ -99,7 +99,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
     ): Collection<String> {
-        val set = docIndexMap[sourceType]?.getMethodDocSuggestions() ?: return listOf()
+        val set = docIndexMap[sourceType]?.getAllMethodSignatures() ?: return listOf()
 
         //TODO real fix hopefully
         return set.filter { s: String -> s.length <= OptionData.MAX_CHOICE_VALUE_LENGTH }
@@ -112,7 +112,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
     ): Collection<String> {
-        return docIndexMap[sourceType]?.getFieldDocSuggestions(className) ?: return listOf()
+        return docIndexMap[sourceType]?.getFieldSignatures(className) ?: return listOf()
     }
 
     @CacheAutocompletion
@@ -121,7 +121,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
     ): Collection<String> {
-        return docIndexMap[sourceType]?.getFieldDocSuggestions() ?: return listOf()
+        return docIndexMap[sourceType]?.getAllFieldSignatures() ?: return listOf()
     }
 
     @CacheAutocompletion
@@ -131,7 +131,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
     ): Collection<String> {
-        return docIndexMap[sourceType]?.getMethodAndFieldDocSuggestions(className) ?: return listOf()
+        return docIndexMap[sourceType]?.getMethodAndFieldSignatures(className) ?: return listOf()
     }
 
     companion object {

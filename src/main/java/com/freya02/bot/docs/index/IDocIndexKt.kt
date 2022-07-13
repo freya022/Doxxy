@@ -28,15 +28,15 @@ interface IDocIndexKt {
         }
     }
 
-    fun getMethodDocSuggestions(className: String): Collection<String>
+    fun getAllMethodSignatures(): Collection<String>
 
-    fun getMethodDocSuggestions(): Collection<String>
+    fun getMethodSignatures(className: String): Collection<String>
 
-    fun getFieldDocSuggestions(className: String): Collection<String>
+    fun getAllFieldSignatures(): Collection<String>
 
-    fun getMethodAndFieldDocSuggestions(className: String): Collection<String>
+    fun getFieldSignatures(className: String): Collection<String>
 
-    fun getFieldDocSuggestions(): Collection<String>
+    fun getMethodAndFieldSignatures(className: String): Collection<String>
 
     fun getSimpleNameList(): Collection<String>
 
