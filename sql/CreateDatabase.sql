@@ -30,3 +30,5 @@ create table DocSeeAlsoReference
     target_type    int  not null,
     full_signature text
 );
+
+create index see_also_doc_id_index on docseealsoreference (doc_id);
