@@ -56,10 +56,11 @@ class DocIndexKt(private val sourceType: DocSourceType, private val database: Da
         """
             select name
             from doc
-            where type = ?""".trimIndent(),
+            where source_id = ?
+              and type = ?""".trimIndent(),
         "name"
     ).use { action ->
-        action.executeQuery(DocType.CLASS.id).transformEach { it.getString("name") }
+        action.executeQuery(sourceType.id, DocType.CLASS.id).transformEach { it.getString("name") }
     }
 
     override fun getClassesWithMethods(): Collection<String> = getClassNamesWithChildren(DocType.METHOD)
@@ -84,6 +85,24 @@ class DocIndexKt(private val sourceType: DocSourceType, private val database: Da
         return this
     }
 
+    private fun findDoc(docType: DocType, className: String): Pair<Int, MessageEmbed>? = DBAction.of(
+        database,
+        """
+            select id, embed
+            from doc
+            where source_id = ?
+              and type = ?
+              and name = ?
+            limit 1""".trimIndent(),
+        "id", "embed"
+    ).use {
+        val result = it.executeQuery(sourceType.id, docType.id, className).readOnce() ?: return null
+        return@use result.getInt("id") to DocIndexWriter.GSON.fromJson(
+            result.getString("embed"),
+            MessageEmbed::class.java
+        )
+    }
+
     private fun findSeeAlsoReferences(docId: Int): List<SeeAlsoReference> = DBAction.of(
         database,
         """
@@ -102,33 +121,17 @@ class DocIndexKt(private val sourceType: DocSourceType, private val database: Da
         }
     }
 
-    private fun findDoc(docType: DocType, className: String): Pair<Int, MessageEmbed>? = DBAction.of(
-        database,
-        """
-            select id, embed
-            from doc
-            where type = ?
-              and name = ?
-            limit 1""".trimIndent(),
-        "id", "embed"
-    ).use {
-        val result = it.executeQuery(docType.id, className).readOnce() ?: return null
-        return@use result.getInt("id") to DocIndexWriter.GSON.fromJson(
-            result.getString("embed"),
-            MessageEmbed::class.java
-        )
-    }
-
     private fun getAllSignatures(docType: DocType): List<String> =
         DBAction.of(
             database,
             """
                 select doc.name
                 from doc
-                where type = ?""".trimIndent(),
+                where source_id = ?
+                  and type = ?""".trimIndent(),
             "name"
         ).use { action ->
-            action.executeQuery(docType.id).transformEach { it.getString("name") }
+            action.executeQuery(sourceType.id, docType.id).transformEach { it.getString("name") }
         }
 
     private fun findSignatures(className: String, vararg docTypes: DocType): List<String> {
@@ -140,11 +143,12 @@ class DocIndexKt(private val sourceType: DocSourceType, private val database: Da
                 select doc.name
                 from doc
                          join doc parentDoc on doc.parent_id = parentDoc.id
-                where ($typeCheck)
+                where doc.source_id = ?
+                  and ($typeCheck)
                   and parentDoc.name = ?""".trimIndent(),
             "name"
         ).use { action ->
-            action.executeQuery(className).transformEach { it.getString("name") }
+            action.executeQuery(sourceType.id, className).transformEach { it.getString("name") }
         }
     }
 
@@ -154,10 +158,11 @@ class DocIndexKt(private val sourceType: DocSourceType, private val database: Da
             select doc.name
             from doc
                      join doc childDoc on childDoc.parent_id = doc.id
-            where childDoc.type = ?
+            where doc.source_id = ?
+              and childDoc.type = ?
             group by doc.name""".trimIndent(),
         "name"
     ).use { action ->
-        action.executeQuery(docType.id).transformEach { it.getString("name") }
+        action.executeQuery(sourceType.id, docType.id).transformEach { it.getString("name") }
     }
 }
