@@ -50,17 +50,17 @@ class DocIndexKt(private val sourceType: DocSourceType, private val database: Da
 
     override fun findMethodAndFieldSignatures(className: String): Collection<String> = findSignatures(className, DocType.METHOD, DocType.FIELD)
 
-    override fun getSimpleNameList(): Collection<String> {
-        TODO("Not yet implemented")
+    override fun getClasses(): Collection<String> = DBAction.of(
+        database,
+        "select name from doc where type = ?",
+        "name"
+    ).use { action ->
+        action.executeQuery(DocType.CLASS.id).transformEach { it.getString("name") }
     }
 
-    override fun getClassesWithMethods(): Collection<String> {
-        TODO("Not yet implemented")
-    }
+    override fun getClassesWithMethods(): Collection<String> = getClassNamesWithChildren(DocType.METHOD)
 
-    override fun getClassesWithFields(): Collection<String> {
-        TODO("Not yet implemented")
-    }
+    override fun getClassesWithFields(): Collection<String> = getClassNamesWithChildren(DocType.FIELD)
 
     fun reindex(): DocIndexKt {
         LOGGER.info("Re-indexing docs for {}", sourceType.name)
@@ -126,5 +126,13 @@ class DocIndexKt(private val sourceType: DocSourceType, private val database: Da
         ).use { action ->
             action.executeQuery(className).transformEach { it.getString("name") }
         }
+    }
+
+    private fun getClassNamesWithChildren(docType: DocType) = DBAction.of(
+        database,
+        "select doc.name from doc join doc childDoc on childDoc.parent_id = doc.id where childDoc.type = ? group by doc.name",
+        "name"
+    ).use { action ->
+        action.executeQuery(docType.id).transformEach { it.getString("name") }
     }
 }

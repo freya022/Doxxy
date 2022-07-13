@@ -37,6 +37,9 @@ public class DocIndexTest {
 		final Collection<String> fieldSignatures = docIndexKt.findFieldSignatures("AppendMode");
 		final Collection<String> allFieldSignatures = docIndexKt.getAllFieldSignatures();
 		final Collection<String> methodAndFieldSignatures = docIndexKt.findMethodAndFieldSignatures("ApplicationCommandInfoMapView");
+		final Collection<String> simpleNameList = docIndexKt.getClasses();
+		final Collection<String> classesWithMethods = docIndexKt.getClassesWithMethods();
+		final Collection<String> classesWithFields = docIndexKt.getClassesWithFields();
 
 		System.out.println();
 

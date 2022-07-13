@@ -62,7 +62,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
     ): Collection<String> {
-        return docIndexMap[sourceType]?.getSimpleNameList() ?: return listOf()
+        return docIndexMap[sourceType]?.getClasses() ?: return listOf()
     }
 
     @CacheAutocompletion
