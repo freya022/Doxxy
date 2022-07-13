@@ -67,7 +67,9 @@ class Versions(private val docIndexMap: DocIndexMap) {
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDA5Version(context) }, 30, 30, TimeUnit.MINUTES)
 
         //First index for Java's docs, may take some time
-        docIndexMap[DocSourceType.JAVA]!!.reindex()
+        if (docIndexMap[DocSourceType.JAVA]!!.getClassDoc("Object") == null) {
+            docIndexMap[DocSourceType.JAVA]!!.reindex()
+        }
 
         //Once we loaded everything, invalidate caches if the user had time to use the commands before docs were loaded
         for (autocompleteName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
