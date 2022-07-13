@@ -6,7 +6,7 @@ import java.io.IOException
 
 interface IDocIndexKt {
     @Throws(IOException::class)
-    fun getMethodDoc(className: String, methodId: String): CachedMethod?
+    fun getMethodDoc(className: String, identifier: String): CachedMethod?
 
     @Throws(IOException::class)
     fun getMethodDoc(fullSignature: String): CachedMethod? {

@@ -20,45 +20,24 @@ private val LOGGER: Logger = Logging.getLogger()
 // Further updates must be invoked by external methods such as version checkers
 class DocIndexKt(private val sourceType: DocSourceType, private val database: Database) : IDocIndexKt {
     fun getClassDoc(className: String): CachedClass? {
-        val (docId, embed) = findDoc(className) ?: return null
+        val (docId, embed) = findDoc(DocType.CLASS, className) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
 
         return CachedClass(embed, seeAlsoReferences)
     }
 
-    private fun findSeeAlsoReferences(docId: Int): List<SeeAlsoReference> = DBAction.of(
-        database,
-        "select text, link, target_type, full_signature from docseealsoreference where doc_id = ?",
-        "text", "link", "target_type", "full_signature"
-    ).use { action ->
-        action.executeQuery(docId).transformEach {
-            SeeAlsoReference(
-                it.getString("text"),
-                it.getString("link"),
-                TargetType.fromId(it.getInt("target_type")),
-                it.getString("full_signature")
-            )
-        }
-    }
+    override fun getMethodDoc(className: String, identifier: String): CachedMethod? {
+        val (docId, embed) = findDoc(DocType.METHOD, "$className#$identifier") ?: return null
+        val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
 
-    private fun findDoc(className: String): Pair<Int, MessageEmbed>? = DBAction.of(
-        database,
-        "select id, embed from doc where type = ? and name = ? limit 1",
-        "id", "embed"
-    ).use {
-        val result = it.executeQuery(DocType.CLASS.id, className).readOnce() ?: return null
-        return@use result.getInt("id") to DocIndexWriter.GSON.fromJson(
-            result.getString("embed"),
-            MessageEmbed::class.java
-        )
-    }
-
-    override fun getMethodDoc(className: String, methodId: String): CachedMethod? {
-        TODO("Not yet implemented")
+        return CachedMethod(embed, seeAlsoReferences)
     }
 
     override fun getFieldDoc(className: String, fieldName: String): CachedField? {
-        TODO("Not yet implemented")
+        val (docId, embed) = findDoc(DocType.FIELD, "$className#$fieldName") ?: return null
+        val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
+
+        return CachedField(embed, seeAlsoReferences)
     }
 
     override fun getMethodDocSuggestions(className: String): Collection<String> {
@@ -109,5 +88,32 @@ class DocIndexKt(private val sourceType: DocSourceType, private val database: Da
         System.gc() //Very effective
 
         return this
+    }
+
+    private fun findSeeAlsoReferences(docId: Int): List<SeeAlsoReference> = DBAction.of(
+        database,
+        "select text, link, target_type, full_signature from docseealsoreference where doc_id = ?",
+        "text", "link", "target_type", "full_signature"
+    ).use { action ->
+        action.executeQuery(docId).transformEach {
+            SeeAlsoReference(
+                it.getString("text"),
+                it.getString("link"),
+                TargetType.fromId(it.getInt("target_type")),
+                it.getString("full_signature")
+            )
+        }
+    }
+
+    private fun findDoc(docType: DocType, className: String): Pair<Int, MessageEmbed>? = DBAction.of(
+        database,
+        "select id, embed from doc where type = ? and name = ? limit 1",
+        "id", "embed"
+    ).use {
+        val result = it.executeQuery(docType.id, className).readOnce() ?: return null
+        return@use result.getInt("id") to DocIndexWriter.GSON.fromJson(
+            result.getString("embed"),
+            MessageEmbed::class.java
+        )
     }
 }
