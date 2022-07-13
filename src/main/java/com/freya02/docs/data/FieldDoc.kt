@@ -58,8 +58,8 @@ class FieldDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, el
     }
 
     val simpleSignature: String
-        get() = "$fieldType $fieldName"
+        get() = fieldName
 
     override val asDBName: String
-        get() = simpleSignature
+        get() = "${classDocs.className}#$simpleSignature"
 }
