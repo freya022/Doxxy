@@ -17,8 +17,8 @@ data class ArtifactInfo(val groupId: String, val artifactId: String, val version
         return MAVEN_JAVADOC_FORMAT.format(
             groupId.replace('.', '/'),
             artifactId,
-            artifactId,
             version,
+            artifactId,
             version
         )
     }
@@ -27,8 +27,8 @@ data class ArtifactInfo(val groupId: String, val artifactId: String, val version
         return JITPACK_JAVADOC_FORMAT.format(
             groupId.replace('.', '/'),
             artifactId,
-            artifactId,
             version,
+            artifactId,
             version
         )
     }
