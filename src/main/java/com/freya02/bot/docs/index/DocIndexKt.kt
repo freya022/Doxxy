@@ -52,10 +52,10 @@ class DocIndexKt(private val sourceType: DocSourceType, private val database: Da
     override fun getMethodSignatures(className: String): Collection<String> =
         DBAction.of(
             database,
-            "select doc.name from doc join doc parentDoc on doc.parent_id = parentDoc.id where parentDoc.name = ?",
+            "select doc.name from doc join doc parentDoc on doc.parent_id = parentDoc.id where doc.type = ? and parentDoc.name = ?",
             "name"
         ).use { action ->
-            action.executeQuery(className).transformEach { it.getString("name") }
+            action.executeQuery(DocType.METHOD.id, className).transformEach { it.getString("name") }
         }
 
     override fun getAllFieldSignatures(): Collection<String> {
