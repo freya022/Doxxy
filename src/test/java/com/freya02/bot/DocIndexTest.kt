@@ -25,23 +25,29 @@ object DocIndexTest {
         val config = getConfig()
         val database = Database(config)
 
-        val docIndexKt = DocIndexKt(DocSourceType.BOT_COMMANDS, database)
+        val bcIndex = DocIndexKt(DocSourceType.BOT_COMMANDS, database)
+        val jdaIndex = DocIndexKt(DocSourceType.JDA, database)
+        val javaIndex = DocIndexKt(DocSourceType.JAVA, database)
 
-//        docIndexKt.reindex()
+//        bcIndex.reindex()
+//        jdaIndex.reindex()
+//        javaIndex.reindex()
 
-        val cachedClass = docIndexKt.getClassDoc("AppOption")
-        val cachedMethod = docIndexKt.getMethodDoc("AppOption#autocomplete()")
-        val cachedField = docIndexKt.getFieldDoc("AppendMode#SET")
-        val methodSignatures = docIndexKt.findMethodSignatures("AppOption")
-        val allMethodSignatures = docIndexKt.getAllMethodSignatures()
-        val fieldSignatures = docIndexKt.findFieldSignatures("AppendMode")
-        val allFieldSignatures = docIndexKt.getAllFieldSignatures()
-        val methodAndFieldSignatures = docIndexKt.findMethodAndFieldSignatures("ApplicationCommandInfoMapView")
-        val simpleNameList = docIndexKt.getClasses()
-        val classesWithMethods = docIndexKt.getClassesWithMethods()
-        val classesWithFields = docIndexKt.getClassesWithFields()
+        for (index in listOf(bcIndex, jdaIndex, javaIndex)) {
+            val cachedClass = index.getClassDoc("AppOption")
+            val cachedMethod = index.getMethodDoc("AppOption#autocomplete()")
+            val cachedField = index.getFieldDoc("AppendMode#SET")
+            val methodSignatures = index.findMethodSignatures("AppOption")
+            val allMethodSignatures = index.getAllMethodSignatures()
+            val fieldSignatures = index.findFieldSignatures("AppendMode")
+            val allFieldSignatures = index.getAllFieldSignatures()
+            val methodAndFieldSignatures = index.findMethodAndFieldSignatures("ApplicationCommandInfoMapView")
+            val simpleNameList = index.getClasses()
+            val classesWithMethods = index.getClassesWithMethods()
+            val classesWithFields = index.getClassesWithFields()
 
-        println()
+            println()
+        }
 
         exitProcess(0)
     }
