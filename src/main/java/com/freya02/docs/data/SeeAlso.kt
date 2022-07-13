@@ -1,5 +1,6 @@
 package com.freya02.docs.data
 
+import com.freya02.bot.utils.HttpUtils
 import com.freya02.botcommands.api.Logging
 import com.freya02.docs.ClassDocs
 import com.freya02.docs.DocSourceType
@@ -20,7 +21,11 @@ class SeeAlso(type: DocSourceType, docDetail: DocDetail) {
             if (this === other) return true
             if (other == null || javaClass != other.javaClass) return false
             val that = other as SeeAlsoReference
-            return if (targetType !== that.targetType) false else fullSignature == that.fullSignature
+            return if (targetType !== that.targetType) false else {
+                if (fullSignature == that.fullSignature && fullSignature == null) {
+                    HttpUtils.removeFragment(link) == HttpUtils.removeFragment(that.link)
+                } else fullSignature == that.fullSignature
+            }
         }
 
         override fun hashCode(): Int {
