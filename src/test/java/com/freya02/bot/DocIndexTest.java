@@ -32,7 +32,7 @@ public class DocIndexTest {
 		final CachedClass cachedClass = docIndexKt.getClassDoc("AppOption");
 		final CachedMethod cachedMethod = docIndexKt.getMethodDoc("AppOption#autocomplete()");
 		final CachedField cachedField = docIndexKt.getFieldDoc("AppendMode#SET");
-		final Collection<String> methodSignatures = docIndexKt.getMethodSignatures("AppOption");
+		final Collection<String> methodSignatures = docIndexKt.findMethodSignatures("AppOption");
 		final Collection<String> allMethodSignatures = docIndexKt.getAllMethodSignatures();
 
 		System.out.println();

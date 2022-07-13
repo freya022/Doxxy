@@ -30,11 +30,11 @@ interface IDocIndexKt {
 
     fun getAllMethodSignatures(): Collection<String>
 
-    fun getMethodSignatures(className: String): Collection<String>
+    fun findMethodSignatures(className: String): Collection<String>
 
     fun getAllFieldSignatures(): Collection<String>
 
-    fun getFieldSignatures(className: String): Collection<String>
+    fun findFieldSignatures(className: String): Collection<String>
 
     fun getMethodAndFieldSignatures(className: String): Collection<String>
 

@@ -90,7 +90,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
     ): Collection<String> {
-        return docIndexMap[sourceType]?.getMethodSignatures(className) ?: return listOf()
+        return docIndexMap[sourceType]?.findMethodSignatures(className) ?: return listOf()
     }
 
     @CacheAutocompletion
@@ -112,7 +112,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
     ): Collection<String> {
-        return docIndexMap[sourceType]?.getFieldSignatures(className) ?: return listOf()
+        return docIndexMap[sourceType]?.findFieldSignatures(className) ?: return listOf()
     }
 
     @CacheAutocompletion

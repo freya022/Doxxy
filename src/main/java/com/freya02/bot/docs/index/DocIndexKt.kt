@@ -43,14 +43,14 @@ class DocIndexKt(private val sourceType: DocSourceType, private val database: Da
     override fun getAllMethodSignatures(): Collection<String> =
         getAllSignatures(DocType.METHOD)
 
-    override fun getMethodSignatures(className: String): Collection<String> =
+    override fun findMethodSignatures(className: String): Collection<String> =
         findSignatures(DocType.METHOD, className)
 
     override fun getAllFieldSignatures(): Collection<String> {
         TODO("Not yet implemented")
     }
 
-    override fun getFieldSignatures(className: String): Collection<String> {
+    override fun findFieldSignatures(className: String): Collection<String> {
         TODO("Not yet implemented")
     }
 
