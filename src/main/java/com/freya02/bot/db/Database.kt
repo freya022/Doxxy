@@ -26,10 +26,9 @@ class Database(config: Config) {
         source.connection.close() //Test connection
     }
 
-    val connection: Connection
-        get() = try {
-            source.connection
-        } catch (e: SQLException) {
-            throw RuntimeException("Unable to get a SQL connection", e)
-        }
+    fun fetchConnection(): Connection = try {
+        source.connection
+    } catch (e: SQLException) {
+        throw RuntimeException("Unable to get a SQL connection", e)
+    }
 }

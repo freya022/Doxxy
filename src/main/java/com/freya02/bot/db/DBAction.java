@@ -23,19 +23,19 @@ public class DBAction implements AutoCloseable {
 	}
 
 	public static DBAction of(Database database, @Language("PostgreSQL") String statement) throws SQLException {
-		final Connection connection = database.getConnection();
+		final Connection connection = database.fetchConnection();
 
 		return new DBAction(connection, connection.prepareStatement(statement), false);
 	}
 
 	public static DBAction of(Database database, @Language("PostgreSQL") String statement, int... returnedColumnIndexes) throws SQLException {
-		final Connection connection = database.getConnection();
+		final Connection connection = database.fetchConnection();
 
 		return new DBAction(connection, connection.prepareStatement(statement, returnedColumnIndexes), true);
 	}
 
 	public static DBAction of(Database database, @Language("PostgreSQL") String statement, String... returnedColumnNames) throws SQLException {
-		final Connection connection = database.getConnection();
+		final Connection connection = database.fetchConnection();
 
 		return new DBAction(connection, connection.prepareStatement(statement, returnedColumnNames), true);
 	}

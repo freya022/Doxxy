@@ -90,7 +90,7 @@ object Main {
                     applicationCommandsBuilder
                         .addTestGuilds(722891685755093072L)
                 }
-                .setComponentManager(DefaultComponentManager { database.connection })
+                .setComponentManager(DefaultComponentManager { database.fetchConnection() })
                 .setSettingsProvider(BotSettings())
                 .build(jda, "com.freya02.bot.commands")
 
