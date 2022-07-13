@@ -12,11 +12,10 @@ import com.freya02.docs.DocSourceType
 class InvalidateCacheCommand(private val docIndexMap: DocIndexMap) : ApplicationCommand() {
     @Test
     @JDASlashCommand(name = "invalidate")
-    fun onSlashInvalidate(event: GuildSlashEvent) {
+    suspend fun onSlashInvalidate(event: GuildSlashEvent) {
         event.deferReply(true).queue()
         docIndexMap.refreshAndInvalidateIndex(DocSourceType.BOT_COMMANDS)
         docIndexMap.refreshAndInvalidateIndex(DocSourceType.JDA)
-        //		docIndexMap.refreshAndInvalidateIndex(DocSourceType.JAVA); Java's docs dont get updated lol
 
         for (autocompleteName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
             event.context.invalidateAutocompletionCache(autocompleteName)

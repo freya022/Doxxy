@@ -1,7 +1,7 @@
 package com.freya02.bot.commands.slash
 
 import com.freya02.bot.db.Database
-import com.freya02.bot.db.SQLCodes
+import com.freya02.bot.db.isUniqueViolation
 import com.freya02.bot.tag.*
 import com.freya02.botcommands.api.Logging
 import com.freya02.botcommands.api.annotations.CommandMarker
@@ -127,7 +127,7 @@ class SlashTag(database: Database) : ApplicationCommand() {
             tagDB.create(checkGuild(event.guild).idLong, event.user.idLong, name, description, content)
             event.replyFormat("Tag '%s' created successfully", name).setEphemeral(true).queue()
         } catch (e: SQLException) {
-            if (SQLCodes.isUniqueViolation(e)) {
+            if (e.isUniqueViolation()) {
                 event.replyFormat("Tag '%s' already exists", name).setEphemeral(true).queue()
             } else {
                 throw e

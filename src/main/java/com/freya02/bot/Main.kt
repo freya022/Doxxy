@@ -19,6 +19,7 @@ import dev.minn.jda.ktx.events.getDefaultScope
 import dev.minn.jda.ktx.jdabuilder.light
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.events.ShutdownEvent
 import java.nio.file.Path
@@ -94,7 +95,9 @@ object Main {
                 .setSettingsProvider(BotSettings())
                 .build(jda, "com.freya02.bot.commands")
 
-            versions.initUpdateLoop(commandsBuilder.context)
+            runBlocking {
+                versions.initUpdateLoop(commandsBuilder.context)
+            }
 
             LOGGER.info("Loaded commands")
         } catch (e: Exception) {

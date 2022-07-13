@@ -13,9 +13,8 @@ class DocIndexMap(database: Database) : EnumMap<DocSourceType, DocIndex>(DocSour
         this[DocSourceType.JAVA] = DocIndex(DocSourceType.JAVA, database)
     }
 
-    @Synchronized
     @Throws(IOException::class)
-    fun refreshAndInvalidateIndex(sourceType: DocSourceType) {
+    suspend fun refreshAndInvalidateIndex(sourceType: DocSourceType) {
         this[sourceType]?.reindex()
     }
 }

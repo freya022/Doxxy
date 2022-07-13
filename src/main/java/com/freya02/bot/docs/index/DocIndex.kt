@@ -11,6 +11,9 @@ import com.freya02.docs.DocsSession
 import com.freya02.docs.PageCache
 import com.freya02.docs.data.SeeAlso.SeeAlsoReference
 import com.freya02.docs.data.TargetType
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import net.dv8tion.jda.api.entities.MessageEmbed
 import org.slf4j.Logger
 
@@ -19,6 +22,8 @@ private val LOGGER: Logger = Logging.getLogger()
 //Initial construct just allows database access
 // Further updates must be invoked by external methods such as version checkers
 class DocIndex(private val sourceType: DocSourceType, private val database: Database) : IDocIndexKt {
+    private val mutex = Mutex()
+
     fun getClassDoc(className: String): CachedClass? {
         val (docId, embed) = findDoc(DocType.CLASS, className) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
@@ -51,34 +56,36 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
     override fun findMethodAndFieldSignatures(className: String): Collection<String> =
         findSignatures(className, DocType.METHOD, DocType.FIELD)
 
-    override fun getClasses(): Collection<String> = DBAction.of(
-        database,
-        """
+    override fun getClasses(): Collection<String> = runBlocking {
+        database.preparedStatement(
+            """
             select name
             from doc
             where source_id = ?
-              and type = ?""".trimIndent(),
-        "name"
-    ).use { action ->
-        action.executeQuery(sourceType.id, DocType.CLASS.id).transformEach { it.getString("name") }
+              and type = ?""".trimIndent()
+        ) {
+            executeQuery(sourceType.id, DocType.CLASS.id).transformEach { it.getString("name") }
+        }
     }
 
     override fun getClassesWithMethods(): Collection<String> = getClassNamesWithChildren(DocType.METHOD)
 
     override fun getClassesWithFields(): Collection<String> = getClassNamesWithChildren(DocType.FIELD)
 
-    fun reindex(): DocIndex {
-        LOGGER.info("Re-indexing docs for {}", sourceType.name)
+    suspend fun reindex(): DocIndex {
+        mutex.withLock {
+            LOGGER.info("Re-indexing docs for {}", sourceType.name)
 
-        LOGGER.info("Clearing cache for {}", sourceType.name)
-        PageCache.clearCache(sourceType)
-        LOGGER.info("Cleared cache of {}", sourceType.name)
+            LOGGER.info("Clearing cache for {}", sourceType.name)
+            PageCache.clearCache(sourceType)
+            LOGGER.info("Cleared cache of {}", sourceType.name)
 
-        val docsSession = DocsSession()
+            val docsSession = DocsSession()
 
-        DocIndexWriter(database, docsSession, sourceType).doReindex()
+            DocIndexWriter(database, docsSession, sourceType).doReindex()
 
-        LOGGER.info("Re-indexed docs for {}", sourceType.name)
+            LOGGER.info("Re-indexed docs for {}", sourceType.name)
+        }
 
         System.gc() //Very effective
 

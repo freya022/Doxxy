@@ -13,6 +13,7 @@ import com.freya02.bot.versioning.maven.RepoType
 import com.freya02.botcommands.api.BContext
 import com.freya02.botcommands.api.Logging
 import com.freya02.docs.DocSourceType
+import kotlinx.coroutines.runBlocking
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
@@ -44,7 +45,7 @@ class Versions(private val docIndexMap: DocIndexMap) {
     }
 
     @Throws(IOException::class)
-    fun initUpdateLoop(context: BContext?) {
+    suspend fun initUpdateLoop(context: BContext?) {
         val scheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 
         //We need to check if the version has **not** changed between runs
@@ -91,7 +92,7 @@ class Versions(private val docIndexMap: DocIndexMap) {
                 }
 
                 LOGGER.debug("Invalidating JDA 5 index")
-                docIndexMap.refreshAndInvalidateIndex(DocSourceType.JDA)
+                runBlocking { docIndexMap.refreshAndInvalidateIndex(DocSourceType.JDA) }
                 for (handlerName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
                     context?.invalidateAutocompletionCache(handlerName)
                 }
@@ -146,7 +147,7 @@ class Versions(private val docIndexMap: DocIndexMap) {
                 }
 
                 LOGGER.debug("Invalidating BotCommands index")
-                docIndexMap.refreshAndInvalidateIndex(DocSourceType.BOT_COMMANDS)
+                runBlocking { docIndexMap.refreshAndInvalidateIndex(DocSourceType.BOT_COMMANDS) }
                 for (handlerName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
                     context?.invalidateAutocompletionCache(handlerName)
                 }
