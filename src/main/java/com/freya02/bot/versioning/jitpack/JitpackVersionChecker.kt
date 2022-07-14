@@ -2,7 +2,6 @@ package com.freya02.bot.versioning.jitpack
 
 import com.freya02.bot.versioning.ArtifactInfo
 import com.freya02.bot.versioning.VersionChecker
-import com.freya02.bot.versioning.github.GithubBranch
 import com.freya02.bot.versioning.github.GithubUtils
 import java.io.IOException
 import java.nio.file.Path
@@ -15,16 +14,13 @@ class JitpackVersionChecker(
 ) : VersionChecker(
     lastSavedPath
 ) {
-    var latestBranch: GithubBranch? = null
-        private set
-
     @Throws(IOException::class)
     override fun checkVersion(): Boolean {
-        latestBranch = GithubUtils.getLatestBranch(ownerName, artifactId)
+        val latestBranch = GithubUtils.getLatestBranch(ownerName, artifactId)
         val latestVersion = ArtifactInfo(
             groupId,
             artifactId,
-            latestBranch!!.latestCommitSha().asSha10()
+            latestBranch.latestCommitSha().asSha10()
         )
 
         val changed = latestVersion != diskLatest
