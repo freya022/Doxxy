@@ -143,8 +143,7 @@ class SlashTag(database: Database) : ApplicationCommand() {
         @AppOption(description = "Name of the tag", autocomplete = USER_TAGS_AUTOCOMPLETE) name: String
     ) {
         withOwnedTag(event, name) { tag: Tag ->
-            val modal = Modals.create(TAGS_EDIT_MODAL_HANDLER, name)
-                .setTitle("Edit a tag")
+            val modal = Modals.create("Edit a tag", TAGS_EDIT_MODAL_HANDLER, name)
                 .addActionRow(
                     Modals.createTextInput("tagName", "Tag name", TextInputStyle.SHORT)
                         .setValue(tag.name)
