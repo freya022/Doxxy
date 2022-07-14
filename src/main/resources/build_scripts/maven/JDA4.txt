@@ -1,0 +1,13 @@
+<repository>
+    <id>dv8tion</id>
+    <name>m2-dv8tion</name>
+    <url>https://m2.dv8tion.net/releases</url>
+</repository>
+
+<dependencies>
+    <dependency>
+        <groupId>%s</groupId>
+        <artifactId>%s</artifactId>
+        <version>%s</version>
+    </dependency>
+</dependencies>
