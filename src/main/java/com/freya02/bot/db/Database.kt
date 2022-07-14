@@ -6,6 +6,7 @@ import com.zaxxer.hikari.HikariDataSource
 import org.intellij.lang.annotations.Language
 import java.sql.Connection
 import java.sql.SQLException
+import kotlin.time.Duration.Companion.seconds
 
 class Database(config: Config) {
     private val source: HikariDataSource
@@ -19,7 +20,7 @@ class Database(config: Config) {
             password = dbConfig.password
 
             maximumPoolSize = 2
-            leakDetectionThreshold = 2500
+            leakDetectionThreshold = 10.seconds.inWholeMilliseconds
         }
 
         source = HikariDataSource(hikariConfig)
