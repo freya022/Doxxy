@@ -18,13 +18,7 @@ class KPreparedStatement(preparedStatement: PreparedStatement): PreparedStatemen
         }
     }
 
-    suspend fun executeReturningInsert(vararg params: Any?): DBResult {
-        return withContext(Dispatchers.IO) {
-            setParameters(*params)
-            executeQuery()
-            DBResult(generatedKeys)
-        }
-    }
+    suspend inline fun executeReturningInsert(vararg params: Any?): DBResult = executeQuery(*params)
 
     suspend fun executeQuery(vararg params: Any?): DBResult {
         return withContext(Dispatchers.IO) {

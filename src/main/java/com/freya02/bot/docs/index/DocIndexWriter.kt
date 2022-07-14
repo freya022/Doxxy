@@ -19,7 +19,7 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
         val updatedSource = ClassDocs.getUpdatedSource(sourceType)
 
         preparedStatement("delete from doc where source_id = ?") {
-            executeUpdate()
+            executeUpdate(sourceType.id)
         }
 
         for ((className, classUrl) in updatedSource.getSimpleNameToUrlMap()) {
@@ -89,7 +89,7 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
         embedJson: String?
     ): Int {
         return preparedStatement("insert into doc (source_id, type, parent_id, name, embed) VALUES (?, ?, ?, ?, ?) returning id") {
-            executeReturningInsert(sourceType.id, docType.id, classDocId, baseDoc.asDBName, embedJson)["id"]
+            executeReturningInsert(sourceType.id, docType.id, classDocId, baseDoc.asDBName, embedJson).readOnce()!!["id"]
         }
     }
 
