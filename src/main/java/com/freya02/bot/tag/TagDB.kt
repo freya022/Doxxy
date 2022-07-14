@@ -46,35 +46,26 @@ class TagDB(private val database: Database) {
         guildId: Long,
         ownerId: Long,
         name: String,
-        newName: String?,
-        newDescription: String?,
-        newContent: String?
+        newName: String,
+        newDescription: String,
+        newContent: String
     ) = runBlocking {
-        newName?.let { checkName(it) }
-        newDescription?.let { checkDescription(it) }
-        newContent?.let { checkContent(it) }
-
-        var currentName = name
+        checkName(newName)
+        checkDescription(newDescription)
+        checkContent(newContent)
 
         database.transactional {
-            if (newName != null) {
-                preparedStatement("update Tag set name = ? where guildid = ? and ownerid = ? and name = ?") {
-                    executeUpdate(newName, guildId, ownerId, currentName)
-
-                    currentName = newName
-                }
-            }
-
-            if (newDescription != null) {
-                preparedStatement("update Tag set description = ? where guildid = ? and ownerid = ? and name = ?") {
-                    executeUpdate(newDescription, guildId, ownerId, currentName)
-                }
-            }
-
-            if (newContent != null) {
-                preparedStatement("update Tag set content = ? where guildid = ? and ownerid = ? and name = ?") {
-                    executeUpdate(newContent, guildId, ownerId, currentName)
-                }
+            preparedStatement(
+                """
+                    update Tag
+                    set name        = coalesce(?, name),
+                        description = coalesce(?, description),
+                        content     = coalesce(?, content)
+                    where guildid = ?
+                      and ownerid = ?
+                      and name = ?""".trimIndent()
+            ) {
+                executeUpdate(newName, newDescription, newContent, guildId, ownerId, name)
             }
         }
     }

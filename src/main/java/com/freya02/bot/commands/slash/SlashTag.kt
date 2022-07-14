@@ -170,9 +170,9 @@ class SlashTag(database: Database) : ApplicationCommand() {
     suspend fun editTag(
         event: ModalInteractionEvent,
         @ModalData name: String,
-        @ModalInput(name = "tagName") newName: String?,
-        @ModalInput(name = "tagDescription") newDescription: String?,
-        @ModalInput(name = "tagContent") newContent: String?
+        @ModalInput(name = "tagName") newName: String,
+        @ModalInput(name = "tagDescription") newDescription: String,
+        @ModalInput(name = "tagContent") newContent: String
     ) {
         withOwnedTag(event, name) {
             try {
