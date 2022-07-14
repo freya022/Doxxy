@@ -16,14 +16,8 @@ import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
 object PageCache {
-    private val cachePath = Main.PAGE_CACHE_FOLDER_PATH
-
     private val globalLock = ReentrantLock()
     private val pathMutexMap: MutableMap<Path, ReentrantLock> = ConcurrentHashMap()
-
-    init {
-        cachePath.createDirectories()
-    }
 
     fun getPage(url: String): Document {
         val type = DocSourceType.fromUrl(url) ?: throw IllegalArgumentException("Unknown doc type for url '$url'")
@@ -64,6 +58,6 @@ object PageCache {
     }
 
     private fun getBaseFolder(type: DocSourceType): Path {
-        return cachePath.resolve(type.name)
+        return Main.PAGE_CACHE_FOLDER_PATH.resolve(type.name)
     }
 }

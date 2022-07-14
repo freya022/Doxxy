@@ -29,7 +29,6 @@ import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInterac
 import net.dv8tion.jda.api.interactions.commands.Command
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import java.io.IOException
-import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -44,10 +43,6 @@ class SlashJitpack : ApplicationCommand() {
     private val updateCountdownMap: MutableMap<String, UpdateCountdown> = HashMap()
     private val updateMap: MutableMap<LibraryType, UpdateCountdown> = EnumMap(LibraryType::class.java)
     private val branchMap: MutableMap<LibraryType, GithubBranchMap> = EnumMap(LibraryType::class.java)
-
-    init {
-        Files.createDirectories(BRANCH_VERSIONS_FOLDER_PATH)
-    }
 
     override fun getOptionChoices(guild: Guild?, commandPath: CommandPath, optionIndex: Int): List<Command.Choice> {
         if (optionIndex == 0) {

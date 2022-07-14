@@ -15,7 +15,6 @@ import com.freya02.botcommands.api.Logging
 import com.freya02.docs.DocSourceType
 import kotlinx.coroutines.runBlocking
 import java.io.IOException
-import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -29,20 +28,14 @@ private val JDA_DOCS_FOLDER: Path = Main.JAVADOCS_PATH.resolve("JDA")
 private val BC_DOCS_FOLDER: Path = Main.JAVADOCS_PATH.resolve("BotCommands")
 
 class Versions(private val docIndexMap: DocIndexMap) {
-    private val bcChecker: JitpackVersionChecker
-    private val jdaVersionFromBCChecker: MavenProjectDependencyVersionChecker
-    private val jda4Checker: MavenVersionChecker
-    private val jda5Checker: MavenVersionChecker
-
-    init {
-        Files.createDirectories(Main.LAST_KNOWN_VERSIONS_FOLDER_PATH)
-
-        bcChecker = JitpackVersionChecker(lastKnownBotCommandsPath, "freya022", "com.github.freya022", "BotCommands")
-        jdaVersionFromBCChecker =
-            MavenProjectDependencyVersionChecker(lastKnownJDAFromBCPath, "freya022", "BotCommands", "JDA")
-        jda4Checker = MavenVersionChecker(lastKnownJDA4Path, RepoType.M2, "net.dv8tion", "JDA")
-        jda5Checker = MavenVersionChecker(lastKnownJDA5Path, RepoType.MAVEN, "net.dv8tion", "JDA")
-    }
+    private val bcChecker =
+        JitpackVersionChecker(lastKnownBotCommandsPath, "freya022", "com.github.freya022", "BotCommands")
+    private val jdaVersionFromBCChecker: MavenProjectDependencyVersionChecker =
+        MavenProjectDependencyVersionChecker(lastKnownJDAFromBCPath, "freya022", "BotCommands", "JDA")
+    private val jda4Checker: MavenVersionChecker =
+        MavenVersionChecker(lastKnownJDA4Path, RepoType.M2, "net.dv8tion", "JDA")
+    private val jda5Checker: MavenVersionChecker =
+        MavenVersionChecker(lastKnownJDA5Path, RepoType.MAVEN, "net.dv8tion", "JDA")
 
     @Throws(IOException::class)
     suspend fun initUpdateLoop(context: BContext?) {

@@ -23,6 +23,7 @@ import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.events.ShutdownEvent
 import java.nio.file.Path
+import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
 import kotlin.system.exitProcess
 import kotlin.time.Duration.Companion.minutes
@@ -40,6 +41,10 @@ object Main {
 
     init {
         check(BOT_FOLDER.exists()) { "Bot folder at $BOT_FOLDER does not exist !" }
+
+        LAST_KNOWN_VERSIONS_FOLDER_PATH.createDirectories()
+        BRANCH_VERSIONS_FOLDER_PATH.createDirectories()
+        PAGE_CACHE_FOLDER_PATH.createDirectories()
     }
 
     @JvmStatic
