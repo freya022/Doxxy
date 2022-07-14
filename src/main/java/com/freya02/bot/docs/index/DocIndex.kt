@@ -76,9 +76,11 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         mutex.withLock {
             LOGGER.info("Re-indexing docs for {}", sourceType.name)
 
-            LOGGER.info("Clearing cache for {}", sourceType.name)
-            PageCache.clearCache(sourceType)
-            LOGGER.info("Cleared cache of {}", sourceType.name)
+            if (sourceType != DocSourceType.JAVA) {
+                LOGGER.info("Clearing cache for {}", sourceType.name)
+                PageCache.clearCache(sourceType)
+                LOGGER.info("Cleared cache of {}", sourceType.name)
+            }
 
             val docsSession = DocsSession()
 
