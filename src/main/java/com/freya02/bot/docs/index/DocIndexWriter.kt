@@ -34,7 +34,7 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
                 val classEmbed = toEmbed(classDoc).build()
                 val classEmbedJson = GSON.toJson(classEmbed)
 
-                val classDocId = insertDoc(null, DocType.CLASS, classDoc, classEmbedJson)
+                val classDocId = insertDoc(null, DocType.CLASS, classDoc.className, classDoc, classEmbedJson)
                 insertSeeAlso(classDoc, classDocId)
 
                 insertMethodDocs(classDoc, classDocId)
@@ -52,7 +52,7 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
                 val methodEmbed = toEmbed(classDoc, methodDoc).build()
                 val methodEmbedJson = GSON.toJson(methodEmbed)
 
-                val methodDocId = insertDoc(classDocId, DocType.METHOD, methodDoc, methodEmbedJson)
+                val methodDocId = insertDoc(classDocId, DocType.METHOD, classDoc.className, methodDoc, methodEmbedJson)
                 insertSeeAlso(methodDoc, methodDocId)
             } catch (e: Exception) {
                 throw RuntimeException(
@@ -70,7 +70,7 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
                 val fieldEmbed = toEmbed(classDoc, fieldDoc).build()
                 val fieldEmbedJson = GSON.toJson(fieldEmbed)
 
-                val fieldDocId = insertDoc(classDocId, DocType.FIELD, fieldDoc, fieldEmbedJson)
+                val fieldDocId = insertDoc(classDocId, DocType.FIELD, classDoc.className, fieldDoc, fieldEmbedJson)
                 insertSeeAlso(fieldDoc, fieldDocId)
             } catch (e: Exception) {
                 throw RuntimeException(
@@ -85,11 +85,12 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
     private suspend fun insertDoc(
         classDocId: Int? = null,
         docType: DocType,
+        className: String,
         baseDoc: BaseDoc,
-        embedJson: String?
+        embedJson: String
     ): Int {
-        return preparedStatement("insert into doc (source_id, type, parent_id, name, embed) VALUES (?, ?, ?, ?, ?) returning id") {
-            executeReturningInsert(sourceType.id, docType.id, classDocId, baseDoc.asDBName, embedJson).readOnce()!!["id"]
+        return preparedStatement("insert into doc (source_id, type, parent_id, classname, identifier, embed) VALUES (?, ?, ?, ?, ?, ?) returning id") {
+            executeReturningInsert(sourceType.id, docType.id, classDocId, className, baseDoc.identifier, embedJson).readOnce()!!["id"]
         }
     }
 

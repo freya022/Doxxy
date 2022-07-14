@@ -19,7 +19,7 @@ class ClassDoc @JvmOverloads constructor(
     val source: DocSourceType = DocSourceType.fromUrl(sourceURL) ?: throw DocParseException()
 
     val docTitleElement: HTMLElement
-    val className: String
+    override val className: String
     override val descriptionElements: HTMLElementList
     override val deprecationElement: HTMLElement?
 
@@ -156,7 +156,7 @@ class ClassDoc @JvmOverloads constructor(
 
     override fun toString(): String {
         return "%s : %d fields, %d methods%s".format(
-            className,
+            this.className,
             fieldDocs.size,
             methodDocs.size,
             if (descriptionElements.isEmpty()) "" else " : " + descriptionElements.toText()
@@ -166,8 +166,7 @@ class ClassDoc @JvmOverloads constructor(
     override val effectiveURL: String
         get() = source.toOnlineURL(sourceURL)
 
-    override val asDBName: String
-        get() = className
+    override val identifier: String? = null
 
     val enumConstants: List<FieldDoc>
         get() = getFieldDocs()

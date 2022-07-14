@@ -32,14 +32,14 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
     }
 
     override fun getMethodDoc(className: String, identifier: String): CachedMethod? {
-        val (docId, embed) = findDoc(DocType.METHOD, "$className#$identifier") ?: return null
+        val (docId, embed) = findDoc(DocType.METHOD, className, identifier) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
 
         return CachedMethod(embed, seeAlsoReferences)
     }
 
     override fun getFieldDoc(className: String, fieldName: String): CachedField? {
-        val (docId, embed) = findDoc(DocType.FIELD, "$className#$fieldName") ?: return null
+        val (docId, embed) = findDoc(DocType.FIELD, className, fieldName) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
 
         return CachedField(embed, seeAlsoReferences)
@@ -59,12 +59,12 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
     override fun getClasses(): Collection<String> = runBlocking {
         database.preparedStatement(
             """
-            select name
+            select classname
             from doc
             where source_id = ?
               and type = ?""".trimIndent()
         ) {
-            executeQuery(sourceType.id, DocType.CLASS.id).transformEach { it.getString("name") }
+            executeQuery(sourceType.id, DocType.CLASS.id).transformEach { it.getString("classname") }
         }
     }
 
@@ -94,18 +94,19 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         return this
     }
 
-    private fun findDoc(docType: DocType, className: String): Pair<Int, MessageEmbed>? = DBAction.of(
+    private fun findDoc(docType: DocType, className: String, identifier: String? = null): Pair<Int, MessageEmbed>? = DBAction.of(
         database,
         """
             select id, embed
             from doc
             where source_id = ?
               and type = ?
-              and name = ?
+              and classname = ?
+              and quote_nullable(identifier) = quote_nullable(?)
             limit 1""".trimIndent(),
         "id", "embed"
     ).use {
-        val result = it.executeQuery(sourceType.id, docType.id, className).readOnce() ?: return null
+        val result = it.executeQuery(sourceType.id, docType.id, className, identifier).readOnce() ?: return null
         return@use result.getInt("id") to DocIndexWriter.GSON.fromJson(
             result.getString("embed"),
             MessageEmbed::class.java
@@ -134,13 +135,16 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         DBAction.of(
             database,
             """
-                select doc.name
+                select classname, identifier
                 from doc
                 where source_id = ?
-                  and type = ?""".trimIndent(),
-            "name"
+                  and type = ?
+                group by classname, identifier
+                order by classname, identifier
+                  """.trimIndent(),
+            "classname"
         ).use { action ->
-            action.executeQuery(sourceType.id, docType.id).transformEach { it.getString("name") }
+            action.executeQuery(sourceType.id, docType.id).transformEach { "${it.get<String>("classname")}#${it.get<String>("identifier")}" }
         }
 
     private fun findSignatures(className: String, vararg docTypes: DocType): List<String> {
@@ -149,29 +153,28 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         return DBAction.of(
             database,
             """
-                select doc.name
+                select identifier
                 from doc
-                         join doc parentDoc on doc.parent_id = parentDoc.id
-                where doc.source_id = ?
+                where source_id = ?
                   and ($typeCheck)
-                  and parentDoc.name = ?""".trimIndent(),
-            "name"
+                  and classname = ?""".trimIndent(),
+            "identifier"
         ).use { action ->
-            action.executeQuery(sourceType.id, className).transformEach { it.getString("name") }
+            action.executeQuery(sourceType.id, className).transformEach { it.getString("identifier") }
         }
     }
 
     private fun getClassNamesWithChildren(docType: DocType) = DBAction.of(
         database,
         """
-            select doc.name
+            select classname
             from doc
-                     join doc childDoc on childDoc.parent_id = doc.id
-            where doc.source_id = ?
-              and childDoc.type = ?
-            group by doc.name""".trimIndent(),
-        "name"
+            where source_id = ?
+              and type = ? --Take docs of DocType and keep the class names
+            group by classname
+            order by classname""".trimIndent(),
+        "classname"
     ).use { action ->
-        action.executeQuery(sourceType.id, docType.id).transformEach { it.getString("name") }
+        action.executeQuery(sourceType.id, docType.id).transformEach { it.getString("classname") }
     }
 }

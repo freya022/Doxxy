@@ -10,7 +10,8 @@ abstract class BaseDoc {
     abstract val deprecationElement: HTMLElement?
     abstract val seeAlso: SeeAlso?
 
-    abstract val asDBName: String
+    abstract val className: String
+    abstract val identifier: String?
 
     protected abstract val detailToElementsMap: DetailToElementsMap
 

@@ -65,7 +65,10 @@ class MethodDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, e
     val simpleSignature: String
         get() = DocUtils.getSimpleSignature(elementId)
 
-    override val asDBName: String
+    override val className: String
+        get() = classDocs.className
+
+    override val identifier: String
         get() = simpleSignature
 
     fun getSimpleAnnotatedSignature(targetClassdoc: ClassDoc): String {

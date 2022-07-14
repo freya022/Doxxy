@@ -13,12 +13,15 @@ create table Tag
 
 create table Doc
 (
-    id        serial primary key,
-    source_id int  not null,
-    type      int  not null,
-    parent_id int,
-    name      text not null,
-    embed     text not null
+    id         serial primary key,
+    source_id  int  not null,
+    type       int  not null,
+    parent_id  int,
+    className  text not null,
+    identifier text,
+    embed      text not null,
+
+    unique (source_id, className, identifier)
 );
 
 create table DocSeeAlsoReference
