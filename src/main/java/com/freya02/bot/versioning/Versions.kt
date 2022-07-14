@@ -48,33 +48,19 @@ class Versions(private val docIndexMap: DocIndexMap) {
     suspend fun initUpdateLoop(context: BContext?) {
         val scheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 
-        //We need to check if the version has **not** changed between runs
-        // If the version changed then it would have updated in the scheduled executor
-        // But if the version didn't change then the docs wouldn't have been indexed
-        // This is why we index them here, if no update is required
-        if (!checkLatestBCVersion(context)) {
-            //Load docs normally, version hasn't changed
-            docIndexMap[DocSourceType.BOT_COMMANDS]!!.reindex()
-        }
-
-        if (!checkLatestJDA5Version(context)) {
-            //Load docs normally, version hasn't changed
-            docIndexMap[DocSourceType.JDA]!!.reindex()
-        }
-
-        scheduledExecutorService.scheduleWithFixedDelay({ checkLatestBCVersion(context) }, 30, 30, TimeUnit.MINUTES)
+        scheduledExecutorService.scheduleWithFixedDelay({ checkLatestBCVersion(context) }, 0, 30, TimeUnit.MINUTES)
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDAVersionFromBC() }, 0, 30, TimeUnit.MINUTES)
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDA4Version() }, 0, 30, TimeUnit.MINUTES)
-        scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDA5Version(context) }, 30, 30, TimeUnit.MINUTES)
+        scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDA5Version(context) }, 0, 30, TimeUnit.MINUTES)
 
         //First index for Java's docs, may take some time
         if (docIndexMap[DocSourceType.JAVA]!!.getClassDoc("Object") == null) {
             docIndexMap[DocSourceType.JAVA]!!.reindex()
-        }
 
-        //Once we loaded everything, invalidate caches if the user had time to use the commands before docs were loaded
-        for (autocompleteName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
-            context?.invalidateAutocompletionCache(autocompleteName)
+            //Once java's docs are indexed, invalidate caches if the user had time to use the commands before docs were loaded
+            for (autocompleteName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
+                context?.invalidateAutocompletionCache(autocompleteName)
+            }
         }
     }
 
