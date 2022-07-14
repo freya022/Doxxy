@@ -44,7 +44,7 @@ object DocUtils {
         }.toString() + " : " + fixedReturnType
     }
 
-    fun Document.isJavadocVersionCorrect(): Boolean { //TODO use existing KT code but without the throw
+    fun Document.isJavadocVersionCorrect(): Boolean {
         val head: Element = selectFirst("head") ?: throw DocParseException("Javadoc at '${baseUri()}' is not javadoc 17")
         val nodes = head.childNodes()
         if (nodes.size < 2) return false

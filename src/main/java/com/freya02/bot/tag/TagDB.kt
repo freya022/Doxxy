@@ -2,6 +2,7 @@ package com.freya02.bot.tag
 
 import com.freya02.bot.db.DBAction
 import com.freya02.bot.db.Database
+import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import java.sql.ResultSet
@@ -48,33 +49,33 @@ class TagDB(private val database: Database) {
         newName: String?,
         newDescription: String?,
         newContent: String?
-    ) { //TODO make it edit on tag IDs to have cleaner code by avoiding mixing names
+    ) = runBlocking {
         newName?.let { checkName(it) }
         newDescription?.let { checkDescription(it) }
         newContent?.let { checkContent(it) }
 
         var currentName = name
-        if (newName != null) {
-            DBAction.of(
-                database,
-                "update Tag set name = ? where guildid = ? and ownerid = ? and name = ?"
-            ).use { action -> action.executeUpdate(newName, guildId, ownerId, currentName) }
 
-            currentName = newName
-        }
+        database.transactional {
+            if (newName != null) {
+                preparedStatement("update Tag set name = ? where guildid = ? and ownerid = ? and name = ?") {
+                    executeUpdate(newName, guildId, ownerId, currentName)
 
-        if (newDescription != null) {
-            DBAction.of(
-                database,
-                "update Tag set description = ? where guildid = ? and ownerid = ? and name = ?"
-            ).use { action -> action.executeUpdate(newDescription, guildId, ownerId, currentName) }
-        }
+                    currentName = newName
+                }
+            }
 
-        if (newContent != null) {
-            DBAction.of(
-                database,
-                "update Tag set content = ? where guildid = ? and ownerid = ? and name = ?"
-            ).use { action -> action.executeUpdate(newContent, guildId, ownerId, currentName) }
+            if (newDescription != null) {
+                preparedStatement("update Tag set description = ? where guildid = ? and ownerid = ? and name = ?") {
+                    executeUpdate(newDescription, guildId, ownerId, currentName)
+                }
+            }
+
+            if (newContent != null) {
+                preparedStatement("update Tag set content = ? where guildid = ? and ownerid = ? and name = ?") {
+                    executeUpdate(newContent, guildId, ownerId, currentName)
+                }
+            }
         }
     }
 
