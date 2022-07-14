@@ -8,12 +8,12 @@ import java.io.IOException
 import java.nio.file.Path
 
 class JitpackVersionChecker(
-    lastSavedPath: Path?,
+    lastSavedPath: Path,
     private val ownerName: String,
     private val groupId: String,
     private val artifactId: String
 ) : VersionChecker(
-    lastSavedPath!!
+    lastSavedPath
 ) {
     var latestBranch: GithubBranch? = null
         private set
