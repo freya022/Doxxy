@@ -1,5 +1,6 @@
 package com.freya02.bot.db
 
+import com.freya02.bot.utils.Utils.logQuery
 import com.freya02.botcommands.api.Logging
 import com.freya02.botcommands.internal.utils.ReflectionUtils
 import org.intellij.lang.annotations.Language
@@ -24,6 +25,7 @@ class DBAction private constructor(
                 ReflectionUtils.formatCallerMethod()
             )
         }
+        preparedStatement.logQuery()
 
         return DBResult(preparedStatement.executeQuery())
     }
@@ -36,6 +38,7 @@ class DBAction private constructor(
         for ((i, parameter) in parameters.withIndex()) {
             preparedStatement.setObject(i + 1, parameter)
         }
+        preparedStatement.logQuery()
 
         return preparedStatement.executeUpdate()
     }
