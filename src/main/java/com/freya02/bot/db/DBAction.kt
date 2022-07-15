@@ -1,78 +1,77 @@
-package com.freya02.bot.db;
+package com.freya02.bot.db
 
-import com.freya02.botcommands.api.Logging;
-import com.freya02.botcommands.internal.utils.ReflectionUtils;
-import org.intellij.lang.annotations.Language;
-import org.slf4j.Logger;
+import com.freya02.botcommands.api.Logging
+import com.freya02.botcommands.internal.utils.ReflectionUtils
+import org.intellij.lang.annotations.Language
+import java.sql.Connection
+import java.sql.PreparedStatement
+import java.sql.SQLException
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+class DBAction private constructor(
+    val connection: Connection,
+    val preparedStatement: PreparedStatement,
+    private val shouldReturnData: Boolean
+) : AutoCloseable {
+    @Throws(SQLException::class)
+    fun executeQuery(vararg parameters: Any?): DBResult {
+        for ((i, parameter) in parameters.withIndex()) {
+            preparedStatement.setObject(i + 1, parameter)
+        }
 
-public class DBAction implements AutoCloseable {
-	private static final Logger LOGGER = Logging.getLogger();
+        if (!shouldReturnData) {
+            LOGGER.warn(
+                "Call at {} asks for data to be queried but no column names as been specified, this is just a performance issue",
+                ReflectionUtils.formatCallerMethod()
+            )
+        }
 
-	private final Connection connection;
-	private final PreparedStatement preparedStatement;
-	private final boolean shouldReturnData;
+        return DBResult(preparedStatement.executeQuery())
+    }
 
-	private DBAction(Connection connection, PreparedStatement preparedStatement, boolean shouldReturnData) {
-		this.connection = connection;
-		this.preparedStatement = preparedStatement;
-		this.shouldReturnData = shouldReturnData;
-	}
+    /**
+     * @see PreparedStatement.executeUpdate
+     */
+    @Throws(SQLException::class)
+    fun executeUpdate(vararg parameters: Any?): Int {
+        for ((i, parameter) in parameters.withIndex()) {
+            preparedStatement.setObject(i + 1, parameter)
+        }
 
-	public static DBAction of(Database database, @Language("PostgreSQL") String statement) throws SQLException {
-		final Connection connection = database.fetchConnection();
+        return preparedStatement.executeUpdate()
+    }
 
-		return new DBAction(connection, connection.prepareStatement(statement), false);
-	}
+    @Throws(SQLException::class)
+    override fun close() {
+        connection.close()
+    }
 
-	public static DBAction of(Database database, @Language("PostgreSQL") String statement, int... returnedColumnIndexes) throws SQLException {
-		final Connection connection = database.fetchConnection();
+    companion object {
+        private val LOGGER = Logging.getLogger()
 
-		return new DBAction(connection, connection.prepareStatement(statement, returnedColumnIndexes), true);
-	}
+        @Throws(SQLException::class)
+        fun of(database: Database, @Language("PostgreSQL") statement: String): DBAction {
+            val connection = database.fetchConnection()
+            return DBAction(connection, connection.prepareStatement(statement), false)
+        }
 
-	public static DBAction of(Database database, @Language("PostgreSQL") String statement, String... returnedColumnNames) throws SQLException {
-		final Connection connection = database.fetchConnection();
+        @Throws(SQLException::class)
+        fun of(
+            database: Database,
+            @Language("PostgreSQL") statement: String,
+            vararg returnedColumnIndexes: Int
+        ): DBAction {
+            val connection = database.fetchConnection()
+            return DBAction(connection, connection.prepareStatement(statement, returnedColumnIndexes), true)
+        }
 
-		return new DBAction(connection, connection.prepareStatement(statement, returnedColumnNames), true);
-	}
-
-	public DBResult executeQuery(Object... parameters) throws SQLException {
-		for (int i = 0; i < parameters.length; i++) {
-			preparedStatement.setObject(i + 1, parameters[i]);
-		}
-
-		if (!shouldReturnData) {
-			LOGGER.warn("Call at {} asks for data to be queried but no column names as been specified, this is just a performance issue", ReflectionUtils.formatCallerMethod());
-		}
-
-		return new DBResult(preparedStatement.executeQuery());
-	}
-
-	/**
-	 * @see PreparedStatement#executeUpdate()
-	 */
-	public int executeUpdate(Object... parameters) throws SQLException {
-		for (int i = 0; i < parameters.length; i++) {
-			preparedStatement.setObject(i + 1, parameters[i]);
-		}
-
-		return preparedStatement.executeUpdate();
-	}
-
-	public Connection getConnection() {
-		return connection;
-	}
-
-	public PreparedStatement getPreparedStatement() {
-		return preparedStatement;
-	}
-
-	@Override
-	public void close() throws SQLException {
-		connection.close();
-	}
+        @Throws(SQLException::class)
+        fun of(
+            database: Database,
+            @Language("PostgreSQL") statement: String,
+            vararg returnedColumnNames: String
+        ): DBAction {
+            val connection = database.fetchConnection()
+            return DBAction(connection, connection.prepareStatement(statement, returnedColumnNames), true)
+        }
+    }
 }

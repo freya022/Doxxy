@@ -20,7 +20,7 @@ class JitpackVersionChecker(
         val latestVersion = ArtifactInfo(
             groupId,
             artifactId,
-            latestBranch.latestCommitSha().asSha10()
+            latestBranch.latestCommitSha.asSha10()
         )
 
         val changed = latestVersion != diskLatest

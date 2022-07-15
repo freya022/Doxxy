@@ -1,23 +1,30 @@
-package com.freya02.bot.versioning.github;
+package com.freya02.bot.versioning.github
 
-import java.util.concurrent.TimeUnit;
+import kotlin.properties.ReadOnlyProperty
+import kotlin.reflect.KProperty
+import kotlin.time.Duration
 
-public class UpdateCountdown {
-	private final long interval;
+open class UpdateCountdown(duration: Duration) {
+    private val interval: Long = duration.inWholeMilliseconds
+    private var nextUpdate: Long = 0
 
-	private long lastUpdate = 0;
+    fun needsUpdate(): Boolean = when {
+        System.currentTimeMillis() > nextUpdate -> {
+            nextUpdate = System.currentTimeMillis() + interval
+            true
+        }
+        else -> false
+    }
+}
 
-	public UpdateCountdown(long time, TimeUnit unit) {
-		this.interval = unit.toMillis(time);
-	}
+class UpdateCountdownDelegate<T>(duration: Duration, private val updater: () -> T): UpdateCountdown(duration), ReadOnlyProperty<Any, T> {
+    private var value: T? = null
 
-	public boolean needsUpdate() {
-		if ((System.currentTimeMillis() - lastUpdate) > interval) {
-			lastUpdate = System.currentTimeMillis();
+    override fun getValue(thisRef: Any, property: KProperty<*>): T {
+        if (needsUpdate()) {
+            value = updater()
+        }
 
-			return true;
-		} else {
-			return false;
-		}
-	}
+        return value!!
+    }
 }

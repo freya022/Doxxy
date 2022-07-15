@@ -31,7 +31,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import java.io.IOException
 import java.nio.file.Path
 import java.util.*
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.minutes
 
 //TODO refactor
 @CommandMarker
@@ -143,15 +143,15 @@ class SlashJitpack : ApplicationCommand() {
 
         val dependencyStr: String = when (libraryType) {
             LibraryType.BOT_COMMANDS -> {
-                val branch = pullRequest.branch()
-                val jdaVersionChecker = branchNameToJdaVersionChecker.getOrPut(branch.branchName()) {
+                val branch = pullRequest.branch
+                val jdaVersionChecker = branchNameToJdaVersionChecker.getOrPut(branch.branchName) {
                     try {
                         return@getOrPut MavenBranchProjectDependencyVersionChecker(
                             getBranchFileName(branch),
-                            branch.ownerName(),
-                            branch.repoName(),
+                            branch.ownerName,
+                            branch.repoName,
                             "JDA",
-                            branch.branchName()
+                            branch.branchName
                         )
                     } catch (e: IOException) {
                         throw RuntimeException("Unable to create branch specific JDA version checker", e)
@@ -167,10 +167,10 @@ class SlashJitpack : ApplicationCommand() {
 
         val embed = Embed {
             title =
-                "${buildToolType.humanName} dependencies for ${libraryType.displayString} @ PR #${pullRequest.number()}"
-            url = pullRequest.pullUrl()
+                "${buildToolType.humanName} dependencies for ${libraryType.displayString} @ PR #${pullRequest.number}"
+            url = pullRequest.pullUrl
 
-            field("PR Link", pullRequest.pullUrl(), false)
+            field("PR Link", pullRequest.pullUrl, false)
 
             description = when (buildToolType) {
                 BuildToolType.MAVEN -> "```xml\n$dependencyStr```"
@@ -247,12 +247,12 @@ class SlashJitpack : ApplicationCommand() {
         }
         return fuzzyMatching(
             pullRequests.asList(),
-            { referent: PullRequest -> referent.pullRequestToString() },
+            { referent: PullRequest -> referent.asHumanDescription },
             event
         ).map { r: BoundExtractedResult<PullRequest> ->
             Command.Choice(
-                r.referent.pullRequestToString(),
-                r.referent.number().toLong()
+                r.referent.asHumanDescription,
+                r.referent.number.toLong()
             )
         }
     }
@@ -263,7 +263,7 @@ class SlashJitpack : ApplicationCommand() {
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption libraryType: LibraryType
     ): Collection<String> {
-        return getBranchMap(libraryType).branches().keys
+        return getBranchMap(libraryType).branches.keys
     }
 
     private fun onSlashJitpackBranch(
@@ -274,8 +274,8 @@ class SlashJitpack : ApplicationCommand() {
     ) {
         val githubBranchMap = getBranchMap(libraryType)
         val branch = when (branchName) {
-            null -> githubBranchMap.defaultBranch()
-            else -> githubBranchMap.branches()[branchName] ?: run {
+            null -> githubBranchMap.defaultBranch
+            else -> githubBranchMap.branches[branchName] ?: run {
                 event.reply("Unknown branch '$branchName'").setEphemeral(true).queue()
                 return
             }
@@ -284,16 +284,16 @@ class SlashJitpack : ApplicationCommand() {
         val branchName = branch.branchName
 
         val dependencyStr = when (libraryType) {
-            LibraryType.JDA5 -> DependencySupplier.formatJDA5Jitpack(buildToolType, branch.toJitpackArtifact())
+            LibraryType.JDA5 -> DependencySupplier.formatJDA5Jitpack(buildToolType, branch.asJitpackArtifact)
             LibraryType.BOT_COMMANDS -> {
                 val jdaVersionChecker = branchNameToJdaVersionChecker.getOrPut(branchName) {
                     try {
                         return@getOrPut MavenBranchProjectDependencyVersionChecker(
                             getBranchFileName(branch),
-                            branch.ownerName(),
-                            branch.repoName(),
+                            branch.ownerName,
+                            branch.repoName,
                             "JDA",
-                            branch.branchName()
+                            branch.branchName
                         )
                     } catch (e: IOException) {
                         throw RuntimeException("Unable to create branch specific JDA version checker", e)
@@ -303,7 +303,7 @@ class SlashJitpack : ApplicationCommand() {
                 DependencySupplier.formatBC(
                     buildToolType,
                     jdaVersionChecker.latest,
-                    branch.toJitpackArtifact()
+                    branch.asJitpackArtifact
                 )
             }
             else -> throw IllegalArgumentException("Invalid lib type: $libraryType")
@@ -312,9 +312,9 @@ class SlashJitpack : ApplicationCommand() {
         val embed = Embed {
             title =
                 buildToolType.humanName + " dependencies for " + libraryType.displayString + " @ branch '" + branchName + "'"
-            url = branch.toURL()
+            url = branch.asURL
 
-            field("Branch Link", branch.toURL(), false)
+            field("Branch Link", branch.asURL, false)
 
             description = when (buildToolType) {
                 BuildToolType.MAVEN -> "```xml\n$dependencyStr```"
@@ -332,7 +332,7 @@ class SlashJitpack : ApplicationCommand() {
         branch: GithubBranch,
         checker: MavenBranchProjectDependencyVersionChecker
     ) {
-        val updateCountdown = updateCountdownMap.getOrPut(branch.branchName()) { UpdateCountdown(5, TimeUnit.MINUTES) }
+        val updateCountdown = updateCountdownMap.getOrPut(branch.branchName) { UpdateCountdown(5.minutes) }
         if (updateCountdown.needsUpdate()) {
             checker.checkVersion()
             event.context.invalidateAutocompletionCache(BRANCH_NUMBER_AUTOCOMPLETE_NAME)
@@ -342,7 +342,7 @@ class SlashJitpack : ApplicationCommand() {
 
     private fun getBranchMap(libraryType: LibraryType): GithubBranchMap {
         val updateCountdown =
-            updateMap.computeIfAbsent(libraryType) { UpdateCountdown(5, TimeUnit.MINUTES) }
+            updateMap.computeIfAbsent(libraryType) { UpdateCountdown(5.minutes) }
 
         synchronized(branchMap) {
             branchMap[libraryType].let { githubBranchMap: GithubBranchMap? ->
@@ -365,22 +365,18 @@ class SlashJitpack : ApplicationCommand() {
 
         val map: Map<String, GithubBranch> = GithubUtils.getBranches(ownerName, repoName).associateBy { it.branchName }
         val defaultBranchName = GithubUtils.getDefaultBranchName(ownerName, repoName)
-        val defaultBranch = map[defaultBranchName]
+        val defaultBranch = map[defaultBranchName]!!
         return GithubBranchMap(defaultBranch, map)
     }
 
     private fun getBranchFileName(branch: GithubBranch): Path {
         return BRANCH_VERSIONS_FOLDER_PATH.resolve(
             "%s-%s-%s.txt".format(
-                branch.ownerName(),
-                branch.repoName(),
-                CryptoUtils.hash(branch.branchName())
+                branch.ownerName,
+                branch.repoName,
+                CryptoUtils.hash(branch.branchName)
             )
         )
-    }
-
-    private fun PullRequest.pullRequestToString(): String {
-        return "%d - %s (%s)".format(number(), title(), branch().ownerName())
     }
 
     companion object {
@@ -392,7 +388,7 @@ class SlashJitpack : ApplicationCommand() {
             toStringFunction: ToStringFunction<PullRequest>,
             event: CommandAutoCompleteInteractionEvent
         ): List<BoundExtractedResult<PullRequest>> {
-            val list = items.sortedWith(Comparator.comparingInt { obj: PullRequest -> obj.number() }.reversed())
+            val list = items.sortedWith(Comparator.comparingInt { obj: PullRequest -> obj.number }.reversed())
             val autoCompleteQuery = event.focusedOption
             if (autoCompleteQuery.value.isBlank()) {
                 return list.mapIndexed { i, it -> BoundExtractedResult(it, "", 100, i) }

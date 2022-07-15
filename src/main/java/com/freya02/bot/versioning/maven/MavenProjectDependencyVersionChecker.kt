@@ -27,5 +27,5 @@ open class MavenProjectDependencyVersionChecker(
 
     @get:Throws(IOException::class)
     protected open val targetBranchName: String
-        get() = GithubUtils.getLatestBranch(ownerName, artifactId).branchName()
+        get() = GithubUtils.getLatestBranch(ownerName, artifactId).branchName
 }

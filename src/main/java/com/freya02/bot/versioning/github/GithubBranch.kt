@@ -1,15 +1,21 @@
-package com.freya02.bot.versioning.github;
+package com.freya02.bot.versioning.github
 
-import com.freya02.bot.versioning.ArtifactInfo;
+import com.freya02.bot.versioning.ArtifactInfo
 
-public record GithubBranch(String ownerName, String repoName, String branchName, CommitHash latestCommitSha) {
-	public ArtifactInfo toJitpackArtifact() {
-		return new ArtifactInfo("com.github." + ownerName,
-				repoName,
-				latestCommitSha.asSha10());
-	}
+@JvmRecord
+data class GithubBranch(
+    val ownerName: String,
+    val repoName: String,
+    val branchName: String,
+    val latestCommitSha: CommitHash
+) {
+    val asJitpackArtifact: ArtifactInfo
+        get() = ArtifactInfo(
+            "com.github.$ownerName",
+            repoName,
+            latestCommitSha.asSha10()
+        )
 
-	public String toURL() {
-		return "https://github.com/%s/%s/tree/%s".formatted(ownerName, repoName, branchName);
-	}
+    val asURL: String
+        get() = "https://github.com/$ownerName/$repoName/tree/$branchName"
 }
