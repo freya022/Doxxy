@@ -158,7 +158,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         )
 
         fun sendClass(event: IReplyCallback, ephemeral: Boolean, cachedClass: CachedClass) {
-            event.replyEmbeds(cachedClass.classEmbed)
+            event.replyEmbeds(cachedClass.embed)
                 .addSeeAlso(cachedClass)
                 .also {
                     if (!ephemeral) it.addActionRow(DeleteButtonListener.getDeleteButton(event.user))
@@ -168,7 +168,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         }
 
         fun sendMethod(event: IReplyCallback, ephemeral: Boolean, cachedMethod: CachedMethod) {
-            event.replyEmbeds(cachedMethod.methodEmbed)
+            event.replyEmbeds(cachedMethod.embed)
                 .addSeeAlso(cachedMethod)
                 .also {
                     if (!ephemeral) it.addActionRow(DeleteButtonListener.getDeleteButton(event.user))
@@ -178,7 +178,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         }
 
         fun sendField(event: IReplyCallback, ephemeral: Boolean, cachedField: CachedField) {
-            event.replyEmbeds(cachedField.fieldEmbed)
+            event.replyEmbeds(cachedField.embed)
                 .addSeeAlso(cachedField)
                 .also {
                     if (!ephemeral) it.addActionRow(DeleteButtonListener.getDeleteButton(event.user))

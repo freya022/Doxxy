@@ -1,26 +1,9 @@
-package com.freya02.bot.docs.cached;
+package com.freya02.bot.docs.cached
 
-import com.freya02.docs.data.SeeAlso;
-import net.dv8tion.jda.api.entities.MessageEmbed;
+import com.freya02.docs.data.SeeAlso.SeeAlsoReference
+import net.dv8tion.jda.api.entities.MessageEmbed
 
-import java.util.List;
-
-public final class CachedClass implements CachedDoc {
-	private final MessageEmbed classEmbed;
-	private final List<SeeAlso.SeeAlsoReference> seeAlsoReferences;
-
-	public CachedClass(MessageEmbed classEmbed,
-	                   List<SeeAlso.SeeAlsoReference> seeAlsoReferences) {
-		this.classEmbed = classEmbed;
-		this.seeAlsoReferences = seeAlsoReferences;
-	}
-
-	public MessageEmbed getClassEmbed() {
-		return classEmbed;
-	}
-
-	@Override
-	public List<SeeAlso.SeeAlsoReference> getSeeAlsoReferences() {
-		return seeAlsoReferences;
-	}
-}
+class CachedClass(
+    override val embed: MessageEmbed,
+    override val seeAlsoReferences: List<SeeAlsoReference>
+) : CachedDoc
