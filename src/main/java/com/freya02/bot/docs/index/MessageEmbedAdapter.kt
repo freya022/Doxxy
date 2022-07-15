@@ -1,32 +1,23 @@
-package com.freya02.bot.docs.index;
+package com.freya02.bot.docs.index
 
-import com.google.gson.*;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.utils.data.DataObject;
-import net.dv8tion.jda.internal.entities.EntityBuilder;
+import com.google.gson.*
+import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.utils.data.DataObject
+import net.dv8tion.jda.internal.entities.EntityBuilder
+import java.lang.reflect.Type
 
-import java.lang.reflect.Type;
+object MessageEmbedAdapter : JsonSerializer<MessageEmbed>, JsonDeserializer<MessageEmbed> {
+    private val entityBuilder = EntityBuilder(null)
+    private val GSON = Gson()
 
-public class MessageEmbedAdapter implements JsonSerializer<MessageEmbed>, JsonDeserializer<MessageEmbed> {
-	private static final Gson GSON = new GsonBuilder().create();
+    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): MessageEmbed {
+        val content = DataObject.fromJson(json.toString()).put("type", "rich")
+        return entityBuilder.createMessageEmbed(content)
+    }
 
-	private final EntityBuilder entityBuilder = new EntityBuilder(null);
-
-	@Override
-	public MessageEmbed deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-		final DataObject content = DataObject.fromJson(json.toString());
-		content.put("type", "rich");
-
-		return entityBuilder.createMessageEmbed(content);
-	}
-
-	@Override
-	public JsonElement serialize(MessageEmbed src, Type typeOfSrc, JsonSerializationContext context) {
-		//We need to serialize only the properties which JDA actually serializes for Discord
-		final String discordData = src.toData().toString();
-
-		final Object dataTree = GSON.fromJson(discordData, Object.class);
-
-		return GSON.toJsonTree(dataTree);
-	}
+    override fun serialize(src: MessageEmbed, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
+        //We need to serialize only the properties which JDA actually serializes for Discord
+        val discordData = src.toData().toString()
+        return GSON.fromJson(discordData, JsonElement::class.java)
+    }
 }

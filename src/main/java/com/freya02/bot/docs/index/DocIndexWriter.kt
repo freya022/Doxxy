@@ -111,7 +111,7 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
 
     companion object {
         internal val GSON = GsonBuilder()
-            .registerTypeAdapter(MessageEmbed::class.java, MessageEmbedAdapter())
+            .registerTypeAdapter(MessageEmbed::class.java, MessageEmbedAdapter)
             .create()
     }
 }
