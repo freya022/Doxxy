@@ -134,7 +134,7 @@ object DocEmbeds {
         if (deprecationElement != null) {
             this.addDocField(
                 "Deprecated",
-                deprecationElement.markdown,
+                deprecationElement.asMarkdown,
                 false,
                 getDocURL(doc)
             )

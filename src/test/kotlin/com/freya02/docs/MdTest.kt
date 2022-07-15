@@ -23,6 +23,6 @@ object MdTest {
 
     private fun testHtml(html: String) {
         val element = HTMLElement.wrap(Jsoup.parseBodyFragment(html, "https://myurl.com").selectFirst("body"))
-        println(element.markdown)
+        println(element.asMarkdown)
     }
 }

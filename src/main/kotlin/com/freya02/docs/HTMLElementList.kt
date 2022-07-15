@@ -16,7 +16,7 @@ open class HTMLElementList protected constructor(elements: List<HTMLElement> = e
     val htmlElements: List<HTMLElement>
         get() = this
 
-    fun toMarkdown(delimiter: String): String = this.joinToString(delimiter) { obj: HTMLElement -> obj.markdown }
+    fun toMarkdown(delimiter: String): String = this.joinToString(delimiter) { obj: HTMLElement -> obj.asMarkdown }
 
     fun toText(): String = this.joinToString("") { e: HTMLElement -> e.targetElement.text() }
 
