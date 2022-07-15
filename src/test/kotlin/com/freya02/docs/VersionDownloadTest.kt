@@ -1,4 +1,4 @@
-package com.freya02.docs2
+package com.freya02.docs
 
 import com.freya02.bot.Config.Companion.getConfig
 import com.freya02.bot.db.Database

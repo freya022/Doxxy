@@ -1,9 +1,8 @@
-package com.freya02.bot
+package com.freya02.docs
 
 import com.freya02.bot.Config.Companion.getConfig
 import com.freya02.bot.db.Database
 import com.freya02.bot.docs.index.DocIndex
-import com.freya02.docs.DocSourceType
 import com.freya02.docs.DocWebServer.startDocWebServer
 import kotlin.system.exitProcess
 
