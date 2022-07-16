@@ -4,6 +4,7 @@ import com.freya02.botcommands.api.BContext;
 import com.freya02.botcommands.api.parameters.ParameterResolver;
 import com.freya02.botcommands.api.parameters.SlashParameterResolver;
 import com.freya02.botcommands.internal.application.slash.SlashCommandInfo;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.CommandInteractionPayload;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -32,7 +33,8 @@ public class TagCriteriaResolver extends ParameterResolver implements SlashParam
 	}
 
 	@Override
-	public Collection<Command.Choice> getPredefinedChoices() {
+	@NotNull
+	public Collection<Command.Choice> getPredefinedChoices(@Nullable Guild guild) {
 		return List.of(
 				new Command.Choice("Name", TagCriteria.NAME.name()),
 				new Command.Choice("Uses", TagCriteria.USES.name())

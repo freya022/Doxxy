@@ -1,9 +1,8 @@
-package com.freya02.bot.commands.slash.versioning;
+package com.freya02.bot.versioning.supplier;
 
-import com.freya02.bot.versioning.ArtifactInfo;
 import org.intellij.lang.annotations.Language;
 
-public class VersioningCommons {
+public class MavenDependencies implements BuildToolDependencies {
 	@Language(value = "xml", prefix = "<project>", suffix = "</project>")
 	private static final String BC_XML = """
 			<repositories>
@@ -34,7 +33,7 @@ public class VersioningCommons {
 			    <name>m2-dv8tion</name>
 			    <url>https://m2.dv8tion.net/releases</url>
 			</repository>
-            
+			
 			<dependencies>
 				<dependency>
 					<groupId>%s</groupId>
@@ -73,20 +72,23 @@ public class VersioningCommons {
 			</dependencies>
 			""";
 
-	public static String formatBC(ArtifactInfo jdaVersionFromBotCommands, ArtifactInfo latestBotCommands) {
-		return BC_XML.formatted(jdaVersionFromBotCommands.groupId(), jdaVersionFromBotCommands.artifactId(), jdaVersionFromBotCommands.version(),
-				latestBotCommands.groupId(), latestBotCommands.artifactId(), latestBotCommands.version());
+	@Override
+	public String getBCDependencyFormatString() {
+		return BC_XML;
 	}
 
-	public static String formatJDA5(ArtifactInfo version) {
-		return JDA5_XML.formatted(version.groupId(), version.artifactId(), version.version());
+	@Override
+	public String getJDA4DependencyFormatString() {
+		return JDA4_XML;
 	}
 
-	public static String formatJDA5Jitpack(ArtifactInfo version) {
-		return JDA5_JITPACK_XML.formatted(version.groupId(), version.artifactId(), version.version());
+	@Override
+	public String getJDA5DependencyFormatString() {
+		return JDA5_XML;
 	}
 
-	public static String formatJDA4(ArtifactInfo version) {
-		return JDA4_XML.formatted(version.groupId(), version.artifactId(), version.version());
+	@Override
+	public String getJDA5JitpackDependencyFormatString() {
+		return JDA5_JITPACK_XML;
 	}
 }

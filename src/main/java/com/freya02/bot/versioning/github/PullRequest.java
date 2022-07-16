@@ -3,7 +3,7 @@ package com.freya02.bot.versioning.github;
 import com.freya02.bot.versioning.ArtifactInfo;
 import net.dv8tion.jda.api.utils.data.DataObject;
 
-public record PullRequest(int number, String title, boolean draft, String headOwnerName, String headRepoName, String headBranchName, CommitHash latestHash, String pullUrl) {
+public record PullRequest(int number, String title, boolean draft, GithubBranch branch, String pullUrl) {
 	public static PullRequest fromData(DataObject data) {
 		final DataObject head = data.getObject("head");
 
@@ -22,10 +22,10 @@ public record PullRequest(int number, String title, boolean draft, String headOw
 		final String latestHash = head.getString("sha");
 		final String pullUrl = data.getString("html_url");
 
-		return new PullRequest(number, title, draft, headRepoOwnerName, headRepoName, headBranchName, new CommitHash(latestHash), pullUrl);
+		return new PullRequest(number, title, draft, new GithubBranch(headRepoOwnerName, headRepoName, headBranchName, new CommitHash(latestHash)), pullUrl);
 	}
 
 	public ArtifactInfo toJitpackArtifact() {
-		return new ArtifactInfo("com.github." + headOwnerName, headRepoName, latestHash.asSha10());
+		return branch.toJitpackArtifact();
 	}
 }

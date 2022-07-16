@@ -5,6 +5,7 @@ import com.freya02.botcommands.api.parameters.ParameterResolver;
 import com.freya02.botcommands.api.parameters.SlashParameterResolver;
 import com.freya02.botcommands.internal.application.slash.SlashCommandInfo;
 import com.freya02.docs.DocSourceType;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.CommandInteractionPayload;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -14,6 +15,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.List;
+
+import static com.freya02.bot.utils.Utils.isBCGuild;
 
 public class DocSourceTypeResolver extends ParameterResolver implements SlashParameterResolver {
 	public DocSourceTypeResolver() {
@@ -33,9 +36,17 @@ public class DocSourceTypeResolver extends ParameterResolver implements SlashPar
 	}
 
 	@Override
-	public Collection<Command.Choice> getPredefinedChoices() {
+	@NotNull
+	public Collection<Command.Choice> getPredefinedChoices(@Nullable Guild guild) {
+		if (isBCGuild(guild)) {
+			return List.of(
+					new Command.Choice("BotCommands", DocSourceType.BOT_COMMANDS.name()),
+					new Command.Choice("JDA", DocSourceType.JDA.name()),
+					new Command.Choice("Java", DocSourceType.JAVA.name())
+			);
+		}
+
 		return List.of(
-				new Command.Choice("BotCommands", DocSourceType.BOT_COMMANDS.name()),
 				new Command.Choice("JDA", DocSourceType.JDA.name()),
 				new Command.Choice("Java", DocSourceType.JAVA.name())
 		);

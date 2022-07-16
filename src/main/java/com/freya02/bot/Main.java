@@ -24,6 +24,7 @@ public class Main {
 	public static final Path JAVADOCS_PATH = BOT_FOLDER.resolve("javadocs");
 	public static final Path REPOS_PATH = BOT_FOLDER.resolve("repos");
 	public static final Path LAST_KNOWN_VERSIONS_FOLDER_PATH = BOT_FOLDER.resolve("last_versions");
+	public static final Path BRANCH_VERSIONS_FOLDER_PATH = LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("branch_versions");
 
 	private static final Logger LOGGER = Logging.getLogger();
 
@@ -77,6 +78,7 @@ public class Main {
 							.addTestGuilds(722891685755093072L)
 					)
 					.setComponentManager(new DefaultComponentManager(database::getConnection))
+					.setSettingsProvider(new BotSettings())
 					.build(jda, "com.freya02.bot.commands");
 
 			versions.initUpdateLoop(commandsBuilder.getContext());
