@@ -33,12 +33,18 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
 
                 val classEmbed = toEmbed(classDoc).build()
                 val classEmbedJson = GSON.toJson(classEmbed)
+                val sourceLink = run {
+                    when (sourceType.githubSourceURL) {
+                        null -> null
+                        else -> sourceType.githubSourceURL + classDoc.packageName.replace('.', '/') + "/${classDoc.className}.java"
+                    }
+                }
 
-                val classDocId = insertDoc(null, DocType.CLASS, classDoc.className, classDoc, classEmbedJson)
+                val classDocId = insertDoc(DocType.CLASS, classDoc.className, classDoc, classEmbedJson, sourceLink)
                 insertSeeAlso(classDoc, classDocId)
 
-                insertMethodDocs(classDoc, classDocId)
-                insertFieldDocs(classDoc, classDocId)
+                insertMethodDocs(classDoc)
+                insertFieldDocs(classDoc)
             } catch (e: Exception) {
                 throw RuntimeException("An exception occurred while reading the docs of '$className' at '$classUrl'", e)
             }
@@ -46,13 +52,13 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
     }
 
     context(Transaction)
-    private suspend fun insertMethodDocs(classDoc: ClassDoc, classDocId: Int) {
+    private suspend fun insertMethodDocs(classDoc: ClassDoc) {
         for (methodDoc in classDoc.getMethodDocs().values) {
             try {
                 val methodEmbed = toEmbed(classDoc, methodDoc).build()
                 val methodEmbedJson = GSON.toJson(methodEmbed)
 
-                val methodDocId = insertDoc(classDocId, DocType.METHOD, classDoc.className, methodDoc, methodEmbedJson)
+                val methodDocId = insertDoc(DocType.METHOD, classDoc.className, methodDoc, methodEmbedJson, null)
                 insertSeeAlso(methodDoc, methodDocId)
             } catch (e: Exception) {
                 throw RuntimeException(
@@ -64,13 +70,13 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
     }
 
     context(Transaction)
-    private suspend fun insertFieldDocs(classDoc: ClassDoc, classDocId: Int) {
+    private suspend fun insertFieldDocs(classDoc: ClassDoc) {
         for (fieldDoc in classDoc.getFieldDocs().values) {
             try {
                 val fieldEmbed = toEmbed(classDoc, fieldDoc).build()
                 val fieldEmbedJson = GSON.toJson(fieldEmbed)
 
-                val fieldDocId = insertDoc(classDocId, DocType.FIELD, classDoc.className, fieldDoc, fieldEmbedJson)
+                val fieldDocId = insertDoc(DocType.FIELD, classDoc.className, fieldDoc, fieldEmbedJson, null)
                 insertSeeAlso(fieldDoc, fieldDocId)
             } catch (e: Exception) {
                 throw RuntimeException(
@@ -83,14 +89,14 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
 
     context(Transaction)
     private suspend fun insertDoc(
-        classDocId: Int? = null,
         docType: DocType,
         className: String,
         baseDoc: BaseDoc,
-        embedJson: String
+        embedJson: String,
+        sourceLink: String?
     ): Int {
-        return preparedStatement("insert into doc (source_id, type, parent_id, classname, identifier, embed) VALUES (?, ?, ?, ?, ?, ?) returning id") {
-            executeReturningInsert(sourceType.id, docType.id, classDocId, className, baseDoc.identifier, embedJson).readOnce()!!["id"]
+        return preparedStatement("insert into doc (source_id, type, classname, identifier, embed, source_link) VALUES (?, ?, ?, ?, ?, ?) returning id") {
+            executeReturningInsert(sourceType.id, docType.id, className, baseDoc.identifier, embedJson, sourceLink).readOnce()!!["id"]
         }
     }
 

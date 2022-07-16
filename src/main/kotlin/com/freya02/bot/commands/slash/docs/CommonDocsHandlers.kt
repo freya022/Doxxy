@@ -25,6 +25,9 @@ import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInterac
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.interactions.components.ActionRow
+import net.dv8tion.jda.api.interactions.components.ItemComponent
+import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction
 import java.util.concurrent.TimeUnit
@@ -168,7 +171,11 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
             event.replyEmbeds(cachedClass.embed)
                 .addSeeAlso(cachedClass)
                 .also {
-                    if (!ephemeral) it.addActionRow(DeleteButtonListener.getDeleteButton(event.user))
+                    val row: MutableList<ItemComponent> = arrayListOf()
+                    if (!ephemeral) row.add(DeleteButtonListener.getDeleteButton(event.user))
+                    if (cachedClass.link != null) row.add(Button.link(cachedClass.link, "Source"))
+
+                    it.addActionRows(ActionRow.of(row))
                 }
                 .setEphemeral(ephemeral)
                 .queue()
@@ -178,7 +185,11 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
             event.replyEmbeds(cachedMethod.embed)
                 .addSeeAlso(cachedMethod)
                 .also {
-                    if (!ephemeral) it.addActionRow(DeleteButtonListener.getDeleteButton(event.user))
+                    val row: MutableList<ItemComponent> = arrayListOf()
+                    if (!ephemeral) row.add(DeleteButtonListener.getDeleteButton(event.user))
+                    if (cachedMethod.link != null) row.add(Button.link(cachedMethod.link, "Source"))
+
+                    it.addActionRows(ActionRow.of(row))
                 }
                 .setEphemeral(ephemeral)
                 .queue()
@@ -188,7 +199,11 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
             event.replyEmbeds(cachedField.embed)
                 .addSeeAlso(cachedField)
                 .also {
-                    if (!ephemeral) it.addActionRow(DeleteButtonListener.getDeleteButton(event.user))
+                    val row: MutableList<ItemComponent> = arrayListOf()
+                    if (!ephemeral) row.add(DeleteButtonListener.getDeleteButton(event.user))
+                    if (cachedField.link != null) row.add(Button.link(cachedField.link, "Source"))
+
+                    it.addActionRows(ActionRow.of(row))
                 }
                 .setEphemeral(ephemeral)
                 .queue()

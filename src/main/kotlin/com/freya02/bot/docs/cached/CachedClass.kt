@@ -5,5 +5,6 @@ import net.dv8tion.jda.api.entities.MessageEmbed
 
 class CachedClass(
     override val embed: MessageEmbed,
-    override val seeAlsoReferences: List<SeeAlsoReference>
+    override val seeAlsoReferences: List<SeeAlsoReference>,
+    override val link: String?
 ) : CachedDoc
