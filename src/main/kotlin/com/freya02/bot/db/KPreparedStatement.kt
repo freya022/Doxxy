@@ -6,7 +6,7 @@ import kotlinx.coroutines.withContext
 import net.dv8tion.jda.internal.utils.JDALogger
 import java.sql.PreparedStatement
 
-class KPreparedStatement(preparedStatement: PreparedStatement): PreparedStatement by preparedStatement {
+class KPreparedStatement(val preparedStatement: PreparedStatement): PreparedStatement by preparedStatement {
     private fun setParameters(vararg params: Any?) {
         for ((i, param) in params.withIndex()) {
             setObject(i + 1, param)
@@ -31,6 +31,10 @@ class KPreparedStatement(preparedStatement: PreparedStatement): PreparedStatemen
         setParameters(*params)
         logQuery()
         DBResult(executeQuery())
+    }
+
+    override fun toString(): String {
+        return preparedStatement.toString()
     }
 
     companion object {
