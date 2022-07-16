@@ -96,7 +96,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
 
             if (sourceType != DocSourceType.JAVA) {
                 LOGGER.info("Clearing cache for {}", sourceType.name)
-                PageCache.clearCache(sourceType)
+                PageCache[sourceType].clearCache()
                 LOGGER.info("Cleared cache of {}", sourceType.name)
             }
 
