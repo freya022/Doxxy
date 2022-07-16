@@ -57,15 +57,28 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
     override fun findMethodAndFieldSignatures(className: String, query: String?): Collection<String> =
         findSignatures(className, query, DocType.METHOD, DocType.FIELD)
 
-    override fun getClasses(): Collection<String> = runBlocking {
+    override fun getClasses(query: String?): Collection<String> = runBlocking {
+        @Language("PostgreSQL", prefix = "select * from doc ")
+        val limitingSort = when (query) {
+            null -> ""
+            else -> "order by similarity(classname, ?) desc limit 25"
+        }
+
+        val sortArgs = when (query) {
+            null -> arrayOf()
+            else -> arrayOf(query)
+        }
+
         database.preparedStatement(
             """
             select classname
             from doc
             where source_id = ?
-              and type = ?""".trimIndent()
+              and type = ?
+            $limitingSort
+            """.trimIndent()
         ) {
-            executeQuery(sourceType.id, DocType.CLASS.id).transformEach { it.getString("classname") }
+            executeQuery(sourceType.id, DocType.CLASS.id, *sortArgs).transformEach { it.getString("classname") }
         }
     }
 
