@@ -74,7 +74,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
     ): Collection<Choice> {
-        val classes = docIndexMap[sourceType]?.getClassesWithMethods() ?: return listOf()
+        val classes = docIndexMap[sourceType]?.getClassesWithMethods(event.focusedOption.value) ?: return listOf()
 
         return classes.toChoices()
     }
@@ -85,7 +85,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
     ): Collection<Choice> {
-        val classes = docIndexMap[sourceType]?.getClassesWithFields() ?: return listOf()
+        val classes = docIndexMap[sourceType]?.getClassesWithFields(event.focusedOption.value) ?: return listOf()
 
         return classes.toChoices()
     }
@@ -219,7 +219,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         }
 
         fun handleMethodDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex) {
-            if (!docIndex.getClassesWithMethods().contains(className)) {
+            if (!docIndex.getClassesWithMethods().contains(className)) { //TODO to be removed ? potentially slow
                 event.reply_("'$className' does not contain methods", ephemeral = true).queue()
                 return
             }
@@ -233,7 +233,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         }
 
         fun handleFieldDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex) {
-            if (!docIndex.getClassesWithFields().contains(className)) {
+            if (!docIndex.getClassesWithFields().contains(className)) { //TODO to be removed ? potentially slow
                 event.reply_("'$className' does not contain fields", ephemeral = true).queue()
                 return
             }

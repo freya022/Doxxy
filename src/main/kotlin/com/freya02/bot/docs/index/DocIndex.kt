@@ -82,9 +82,9 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         }
     }
 
-    override fun getClassesWithMethods(): Collection<String> = getClassNamesWithChildren(DocType.METHOD)
+    override fun getClassesWithMethods(query: String?): Collection<String> = getClassNamesWithChildren(DocType.METHOD, query)
 
-    override fun getClassesWithFields(): Collection<String> = getClassNamesWithChildren(DocType.FIELD)
+    override fun getClassesWithFields(query: String?): Collection<String> = getClassNamesWithChildren(DocType.FIELD, query)
 
     suspend fun reindex(): DocIndex {
         mutex.withLock {
@@ -206,17 +206,31 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         }
     }
 
-    private fun getClassNamesWithChildren(docType: DocType) = DBAction.of(
-        database,
-        """
-            select classname
-            from doc
-            where source_id = ?
-              and type = ?
-            group by classname
-            order by classname""".trimIndent(),
-        "classname"
-    ).use { action ->
-        action.executeQuery(sourceType.id, docType.id).transformEach { it.getString("classname") }
+    private fun getClassNamesWithChildren(docType: DocType, query: String?): List<String> {
+        @Language("PostgreSQL", prefix = "select * from doc ")
+        val limitingSort = when (query) {
+            null -> "order by classname"
+            else -> "order by similarity(classname, ?) desc limit 25"
+        }
+
+        val sortArgs = when (query) {
+            null -> arrayOf()
+            else -> arrayOf(query)
+        }
+
+        return DBAction.of(
+            database,
+            """
+                select classname
+                from doc
+                where source_id = ?
+                  and type = ?
+                group by classname
+                $limitingSort
+                """.trimIndent(),
+            "classname"
+        ).use { action ->
+            action.executeQuery(sourceType.id, docType.id, *sortArgs).transformEach { it.getString("classname") }
+        }
     }
 }

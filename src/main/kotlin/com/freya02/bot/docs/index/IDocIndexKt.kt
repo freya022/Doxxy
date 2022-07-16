@@ -40,7 +40,7 @@ interface IDocIndexKt {
 
     fun getClasses(query: String? = null): Collection<String>
 
-    fun getClassesWithMethods(): Collection<String>
+    fun getClassesWithMethods(query: String? = null): Collection<String>
 
-    fun getClassesWithFields(): Collection<String>
+    fun getClassesWithFields(query: String? = null): Collection<String>
 }
