@@ -13,13 +13,12 @@ import java.util.function.Consumer
 
 class ClassDoc @JvmOverloads constructor(
     docsSession: DocsSession,
-    val sourceURL: String,
+    private val sourceURL: String,
     document: Document = HttpUtils.getDocument(sourceURL)
 ) : BaseDoc() {
     val source: DocSourceType = DocSourceType.fromUrl(sourceURL) ?: throw DocParseException()
 
     val docTitleElement: HTMLElement
-    val classNameFqcn: String by lazy { "$packageName.$className" }
     val packageName: String
     override val className: String
     override val descriptionElements: HTMLElementList
@@ -172,9 +171,6 @@ class ClassDoc @JvmOverloads constructor(
         get() = source.toOnlineURL(sourceURL)
 
     override val identifier: String? = null
-    override val identifierNoArgs: String? = null
-    override val humanIdentifier: String? = null
-    override fun toHumanClassIdentifier(className: String): String? = null
 
     val enumConstants: List<FieldDoc>
         get() = getFieldDocs()

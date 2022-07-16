@@ -22,10 +22,10 @@ private val LOGGER: Logger = Logging.getLogger()
 
 //Initial construct just allows database access
 // Further updates must be invoked by external methods such as version checkers
-class DocIndex(private val sourceType: DocSourceType, private val database: Database) : IDocIndex {
+class DocIndex(private val sourceType: DocSourceType, private val database: Database) : IDocIndexKt {
     private val mutex = Mutex()
 
-    override fun getClassDoc(className: String): CachedClass? {
+    fun getClassDoc(className: String): CachedClass? {
         val (docId, embed, sourceLink) = findDoc(DocType.CLASS, className) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
 
@@ -46,55 +46,28 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         return CachedField(embed, seeAlsoReferences, sourceLink)
     }
 
-    override fun findAnySignatures(docType: DocType, query: String?): List<DocSearchResult> = getAllSignatures(docType, query)
+    override fun findAnyMethodSignatures(query: String?): Collection<String> = getAllSignatures(DocType.METHOD, query)
 
-    override fun findSignaturesIn(className: String, query: String?, vararg docTypes: DocType): List<DocSearchResult> {
-        val typeCheck = docTypes.joinToString(" or ") { "doc.type = ${it.id}" }
+    override fun findMethodSignatures(className: String, query: String?): Collection<String> =
+        findSignatures(className, query, DocType.METHOD)
 
+    override fun findAnyFieldSignatures(query: String?): Collection<String> = getAllSignatures(DocType.FIELD, query)
+
+    override fun findFieldSignatures(className: String, query: String?): Collection<String> =
+        findSignatures(className, query, DocType.FIELD)
+
+    override fun findMethodAndFieldSignatures(className: String, query: String?): Collection<String> =
+        findSignatures(className, query, DocType.METHOD, DocType.FIELD)
+
+    override fun getClasses(query: String?): Collection<String> = runBlocking {
         @Language("PostgreSQL", prefix = "select * from doc ")
-        val sort = when {
-            query.isNullOrEmpty() -> "order by identifier"
-            else -> "order by similarity(identifier_no_args, ?) desc"
-        }
-
-        val sortArgs = when {
-            query.isNullOrEmpty() -> arrayOf()
-            else -> arrayOf(query)
-        }
-
-        return DBAction.of(
-            database,
-            """
-                select identifier, human_identifier, human_class_identifier
-                from doc
-                where source_id = ?
-                  and ($typeCheck)
-                  and classname = ?
-                $sort
-                limit 25
-                """.trimIndent(),
-            "identifier"
-        ).use { action ->
-            action.executeQuery(sourceType.id, className, *sortArgs)
-                .transformEach {
-                    DocSearchResult(
-                        it["identifier"],
-                        it["human_identifier"],
-                        it["human_class_identifier"],
-                    )
-                }
-        }
-    }
-
-    override fun getClasses(query: String?): List<String> = runBlocking {
-        @Language("PostgreSQL", prefix = "select * from doc ")
-        val limitingSort = when {
-            query.isNullOrEmpty() -> "order by classname limit 25"
+        val limitingSort = when (query) {
+            null -> ""
             else -> "order by similarity(classname, ?) desc limit 25"
         }
 
-        val sortArgs = when {
-            query.isNullOrEmpty() -> arrayOf()
+        val sortArgs = when (query) {
+            null -> arrayOf()
             else -> arrayOf(query)
         }
 
@@ -107,29 +80,29 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
             $limitingSort
             """.trimIndent()
         ) {
-            executeQuery(sourceType.id, DocType.CLASS.id, *sortArgs).transformEach { it["classname"] }
+            executeQuery(sourceType.id, DocType.CLASS.id, *sortArgs).transformEach { it.getString("classname") }
         }
     }
 
-    override fun getClassesWithMethods(query: String?): List<String> =
+    override fun getClassesWithMethods(query: String?): Collection<String> =
         getClassNamesWithChildren(DocType.METHOD, query)
 
-    override fun getClassesWithFields(query: String?): List<String> =
+    override fun getClassesWithFields(query: String?): Collection<String> =
         getClassNamesWithChildren(DocType.FIELD, query)
 
-    suspend fun reindex(reindexData: ReindexData): DocIndex {
+    suspend fun reindex(): DocIndex {
         mutex.withLock {
             LOGGER.info("Re-indexing docs for {}", sourceType.name)
 
             if (sourceType != DocSourceType.JAVA) {
                 LOGGER.info("Clearing cache for {}", sourceType.name)
-                PageCache[sourceType].clearCache()
+                PageCache.clearCache(sourceType)
                 LOGGER.info("Cleared cache of {}", sourceType.name)
             }
 
             val docsSession = DocsSession()
 
-            DocIndexWriter(database, docsSession, sourceType, reindexData).doReindex()
+            DocIndexWriter(database, docsSession, sourceType).doReindex()
 
             LOGGER.info("Re-indexed docs for {}", sourceType.name)
         }
@@ -181,16 +154,16 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         }
     }
 
-    private fun getAllSignatures(docType: DocType, query: String?): List<DocSearchResult> {
+    private fun getAllSignatures(docType: DocType, query: String?): List<String> {
         @Language("PostgreSQL", prefix = "select * from doc ")
         val sort = when {
-            query.isNullOrEmpty() -> "order by classname, identifier"
-            '#' in query -> "order by similarity(classname, ?) * similarity(identifier_no_args, ?) desc"
-            else -> "order by similarity(concat(classname, '#', identifier_no_args), ?) desc"
+            query == null || query.isEmpty() -> "order by classname, identifier"
+            '#' in query -> "order by similarity(classname, ?) * similarity(left(identifier, strpos(identifier, '(')), ?) desc"
+            else -> "order by similarity(concat(classname, '#', left(identifier, strpos(identifier, '('))), ?) desc"
         }
 
         val sortArgs = when {
-            query.isNullOrEmpty() -> arrayOf()
+            query == null || query.isEmpty() -> arrayOf()
             '#' in query -> arrayOf(query.substringBefore('#'), query.substringAfter('#'))
             else -> arrayOf(query)
         }
@@ -198,7 +171,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         return DBAction.of(
             database,
             """
-                select concat(classname, '#', identifier) as full_identifier, human_identifier, human_class_identifier
+                select classname, identifier
                 from doc
                 where source_id = ?
                   and type = ?
@@ -208,25 +181,51 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
             "classname"
         ).use { action ->
             action.executeQuery(sourceType.id, docType.id, *sortArgs)
-                .transformEach {
-                    DocSearchResult(
-                        it["full_identifier"],
-                        it["human_identifier"],
-                        it["human_class_identifier"]
-                    )
-                }
+                .transformEach { "${it.get<String>("classname")}#${it.get<String>("identifier")}" }
+        }
+    }
+
+    private fun findSignatures(className: String, query: String?, vararg docTypes: DocType): List<String> {
+        val typeCheck = docTypes.joinToString(" or ") { "doc.type = ${it.id}" }
+
+        @Language("PostgreSQL", prefix = "select * from doc ")
+        val sort = when {
+            query == null || query.isEmpty() -> "order by identifier"
+            else -> "order by similarity(left(identifier, strpos(identifier, '(')), ?) desc"
+        }
+
+        val sortArgs = when {
+            query == null || query.isEmpty() -> arrayOf()
+            else -> arrayOf(query)
+        }
+
+        return DBAction.of(
+            database,
+            """
+                select identifier
+                from doc
+                where source_id = ?
+                  and ($typeCheck)
+                  and classname = ?
+                $sort
+                limit 25
+                """.trimIndent(),
+            "identifier"
+        ).use { action ->
+            action.executeQuery(sourceType.id, className, *sortArgs)
+                .transformEach { it.getString("identifier") }
         }
     }
 
     private fun getClassNamesWithChildren(docType: DocType, query: String?): List<String> {
         @Language("PostgreSQL", prefix = "select * from doc ")
         val sort = when {
-            query.isNullOrEmpty() -> "order by classname"
+            query == null || query.isEmpty() -> "order by classname"
             else -> "order by similarity(classname, ?) desc"
         }
 
         val sortArgs = when {
-            query.isNullOrEmpty() -> arrayOf()
+            query == null || query.isEmpty() -> arrayOf()
             else -> arrayOf(query)
         }
 
