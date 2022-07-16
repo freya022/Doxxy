@@ -90,8 +90,10 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
-    ): Collection<String> {
-        return docIndexMap[sourceType]?.findMethodSignatures(className) ?: return listOf()
+    ): Collection<Choice> {
+        val signatures = docIndexMap[sourceType]?.findMethodSignatures(className, event.focusedOption.value) ?: return listOf()
+
+        return signatures.map { Choice(it, it) }
     }
 
     @CacheAutocompletion
@@ -109,13 +111,15 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
     }
 
     @CacheAutocompletion
-    @AutocompletionHandler(name = FIELD_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
-    fun onFieldNameAutocomplete(
+    @AutocompletionHandler(name = FIELD_NAME_BY_CLASS_AUTOCOMPLETE_NAME, showUserInput = false)
+    fun onFieldNameByClassAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
-    ): Collection<String> {
-        return docIndexMap[sourceType]?.findFieldSignatures(className) ?: return listOf()
+    ): Collection<Choice> {
+        val signatures = docIndexMap[sourceType]?.findFieldSignatures(className, event.focusedOption.value) ?: return listOf()
+
+        return signatures.map { Choice(it, it) }
     }
 
     @CacheAutocompletion
@@ -130,13 +134,13 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
     }
 
     @CacheAutocompletion
-    @AutocompletionHandler(name = METHOD_NAME_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME, showUserInput = false)
-    fun onMethodNameOrFieldByClassAutocomplete(
+    @AutocompletionHandler(name = METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME, showUserInput = false)
+    fun onMethodOrFieldByClassAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
     ): Collection<String> {
-        return docIndexMap[sourceType]?.findMethodAndFieldSignatures(className) ?: return listOf()
+        return docIndexMap[sourceType]?.findMethodAndFieldSignatures(className, event.focusedOption.value) ?: return listOf()
     }
 
     companion object {
@@ -145,9 +149,9 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         const val CLASS_NAME_WITH_FIELDS_AUTOCOMPLETE_NAME = "CommonDocsHandlers: classNameWithFields"
         const val METHOD_NAME_BY_CLASS_AUTOCOMPLETE_NAME = "CommonDocsHandlers: methodNameByClass"
         const val ANY_METHOD_NAME_AUTOCOMPLETE_NAME = "CommonDocsHandlers: anyMethodName"
-        const val FIELD_NAME_AUTOCOMPLETE_NAME = "FieldCommand: fieldName"
+        const val FIELD_NAME_BY_CLASS_AUTOCOMPLETE_NAME = "FieldCommand: fieldNameByClass"
         const val ANY_FIELD_NAME_AUTOCOMPLETE_NAME = "CommonDocsHandlers: anyFieldName"
-        const val METHOD_NAME_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME = "CommonDocsHandlers: methodNameOrFieldByClass"
+        const val METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME = "CommonDocsHandlers: methodNameOrFieldByClass"
         const val SEE_ALSO_SELECT_LISTENER_NAME = "CommonDocsHandlers: seeAlso"
 
         @JvmField
@@ -157,9 +161,9 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
             CLASS_NAME_WITH_FIELDS_AUTOCOMPLETE_NAME,
             METHOD_NAME_BY_CLASS_AUTOCOMPLETE_NAME,
             ANY_METHOD_NAME_AUTOCOMPLETE_NAME,
-            FIELD_NAME_AUTOCOMPLETE_NAME,
+            FIELD_NAME_BY_CLASS_AUTOCOMPLETE_NAME,
             ANY_FIELD_NAME_AUTOCOMPLETE_NAME,
-            METHOD_NAME_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME
+            METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME
         )
 
         fun sendClass(event: IReplyCallback, ephemeral: Boolean, cachedClass: CachedClass) {
@@ -230,7 +234,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         }
 
         private fun ReplyCallbackAction.addSeeAlso(cachedDoc: CachedDoc): ReplyCallbackAction {
-            cachedDoc.seeAlsoReferences?.let { referenceList ->
+            cachedDoc.seeAlsoReferences.let { referenceList ->
                 if (referenceList.any { it.targetType != TargetType.UNKNOWN }) {
                     val selectionMenuBuilder = Components.selectionMenu(SEE_ALSO_SELECT_LISTENER_NAME)
                         .timeout(15, TimeUnit.MINUTES)

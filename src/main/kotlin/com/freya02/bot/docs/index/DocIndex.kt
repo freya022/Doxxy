@@ -48,14 +48,14 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
 
     override fun findAnyMethodSignatures(query: String?): Collection<String> = getAllSignatures(DocType.METHOD, query)
 
-    override fun findMethodSignatures(className: String): Collection<String> = findSignatures(className, DocType.METHOD)
+    override fun findMethodSignatures(className: String, query: String?): Collection<String> = findSignatures(className, query, DocType.METHOD)
 
     override fun findAnyFieldSignatures(query: String?): Collection<String> = getAllSignatures(DocType.FIELD, query)
 
-    override fun findFieldSignatures(className: String): Collection<String> = findSignatures(className, DocType.FIELD)
+    override fun findFieldSignatures(className: String, query: String?): Collection<String> = findSignatures(className, query, DocType.FIELD)
 
-    override fun findMethodAndFieldSignatures(className: String): Collection<String> =
-        findSignatures(className, DocType.METHOD, DocType.FIELD)
+    override fun findMethodAndFieldSignatures(className: String, query: String?): Collection<String> =
+        findSignatures(className, query, DocType.METHOD, DocType.FIELD)
 
     override fun getClasses(): Collection<String> = runBlocking {
         database.preparedStatement(
@@ -162,8 +162,19 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         }
     }
 
-    private fun findSignatures(className: String, vararg docTypes: DocType): List<String> {
+    private fun findSignatures(className: String, query: String?, vararg docTypes: DocType): List<String> {
         val typeCheck = docTypes.joinToString(" or ") { "doc.type = ${it.id}" }
+
+        @Language("PostgreSQL", prefix = "select * from doc ")
+        val limitingSort = when (query) {
+            null -> ""
+            else -> "order by similarity(left(identifier, strpos(identifier, '(')), ?) desc limit 25"
+        }
+
+        val sortArgs = when (query) {
+            null -> arrayOf()
+            else -> arrayOf(query)
+        }
 
         return DBAction.of(
             database,
@@ -172,10 +183,13 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
                 from doc
                 where source_id = ?
                   and ($typeCheck)
-                  and classname = ?""".trimIndent(),
+                  and classname = ?
+                $limitingSort
+                """.trimIndent(),
             "identifier"
         ).use { action ->
-            action.executeQuery(sourceType.id, className).transformEach { it.getString("identifier") }
+            action.executeQuery(sourceType.id, className, *sortArgs)
+                .transformEach { it.getString("identifier") }
         }
     }
 
@@ -185,7 +199,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
             select classname
             from doc
             where source_id = ?
-              and type = ? --Take docs of DocType and keep the class names
+              and type = ?
             group by classname
             order by classname""".trimIndent(),
         "classname"
