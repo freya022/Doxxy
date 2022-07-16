@@ -23,7 +23,6 @@ object DocEmbeds {
         DocDetailType.THROWS
     )
 
-    @JvmStatic
     fun toEmbed(doc: ClassDoc): EmbedBuilder {
         return EmbedBuilder {
             title = doc.docTitleElement.targetElement.text()
@@ -66,7 +65,6 @@ object DocEmbeds {
         }.builder
     }
 
-    @JvmStatic
     fun toEmbed(classDoc: ClassDoc, methodDoc: MethodDoc): EmbedBuilder {
         return EmbedBuilder {
             var title = methodDoc.getSimpleAnnotatedSignature(classDoc)
@@ -93,7 +91,6 @@ object DocEmbeds {
         }.builder
     }
 
-    @JvmStatic
     fun toEmbed(classDoc: ClassDoc, fieldDoc: FieldDoc): EmbedBuilder {
         return EmbedBuilder {
             title = classDoc.className + " : " + fieldDoc.simpleSignature

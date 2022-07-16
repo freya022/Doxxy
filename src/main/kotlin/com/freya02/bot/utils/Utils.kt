@@ -13,9 +13,8 @@ import kotlin.io.path.notExists
 import kotlin.streams.asSequence
 
 object Utils {
-    val walker = StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
+    val walker: StackWalker = StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
 
-    @JvmStatic
     fun readResource(url: String): String {
         val callerClass = StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE).callerClass
         try {

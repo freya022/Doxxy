@@ -153,7 +153,6 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         const val METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME = "CommonDocsHandlers: methodNameOrFieldByClass"
         const val SEE_ALSO_SELECT_LISTENER_NAME = "CommonDocsHandlers: seeAlso"
 
-        @JvmField
         val AUTOCOMPLETE_NAMES = arrayOf(
             CLASS_NAME_AUTOCOMPLETE_NAME,
             CLASS_NAME_WITH_METHODS_AUTOCOMPLETE_NAME,
