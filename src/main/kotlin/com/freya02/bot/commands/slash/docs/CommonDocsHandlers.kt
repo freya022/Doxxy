@@ -62,10 +62,8 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
     fun onClassNameAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
-    ): Collection<Choice> {
-        val classes = docIndexMap[sourceType]?.getClasses(event.focusedOption.value) ?: return listOf()
-
-        return classes.toChoices()
+    ): Collection<Choice> = withDocIndex(sourceType) {
+        getClasses(event.focusedOption.value).toChoices()
     }
 
     @CacheAutocompletion
@@ -73,10 +71,8 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
     fun onClassNameWithMethodsAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
-    ): Collection<Choice> {
-        val classes = docIndexMap[sourceType]?.getClassesWithMethods(event.focusedOption.value) ?: return listOf()
-
-        return classes.toChoices()
+    ): Collection<Choice> = withDocIndex(sourceType) {
+        getClassesWithMethods(event.focusedOption.value).toChoices()
     }
 
     @CacheAutocompletion
@@ -84,10 +80,8 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
     fun onClassNameWithFieldsAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
-    ): Collection<Choice> {
-        val classes = docIndexMap[sourceType]?.getClassesWithFields(event.focusedOption.value) ?: return listOf()
-
-        return classes.toChoices()
+    ): Collection<Choice> = withDocIndex(sourceType) {
+        getClassesWithFields(event.focusedOption.value).toChoices()
     }
 
     @CacheAutocompletion
@@ -96,11 +90,8 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
-    ): Collection<Choice> {
-        val signatures =
-            docIndexMap[sourceType]?.findMethodSignatures(className, event.focusedOption.value) ?: return listOf()
-
-        return signatures.toChoices()
+    ): Collection<Choice> = withDocIndex(sourceType) {
+        findMethodSignatures(className, event.focusedOption.value).toChoices()
     }
 
     @CacheAutocompletion
@@ -108,11 +99,9 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
     fun onAnyMethodNameAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
-    ): Collection<Choice> {
-        val signatures = docIndexMap[sourceType]?.findAnyMethodSignatures(event.focusedOption.value) ?: return listOf()
-
+    ): Collection<Choice> = withDocIndex(sourceType) {
         //TODO real fix hopefully
-        return signatures
+        findAnyMethodSignatures(event.focusedOption.value)
             .filter { s: String -> s.length <= OptionData.MAX_CHOICE_VALUE_LENGTH }
             .toChoices()
     }
@@ -123,11 +112,8 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
-    ): Collection<Choice> {
-        val signatures =
-            docIndexMap[sourceType]?.findFieldSignatures(className, event.focusedOption.value) ?: return listOf()
-
-        return signatures.toChoices()
+    ): Collection<Choice> = withDocIndex(sourceType) {
+        findFieldSignatures(className, event.focusedOption.value).toChoices()
     }
 
     @CacheAutocompletion
@@ -135,10 +121,8 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
     fun onAnyFieldNameAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
-    ): Collection<Choice> {
-        val signatures = docIndexMap[sourceType]?.findAnyFieldSignatures(event.focusedOption.value) ?: return listOf()
-
-        return signatures.toChoices()
+    ): Collection<Choice> = withDocIndex(sourceType) {
+        findAnyFieldSignatures(event.focusedOption.value).toChoices()
     }
 
     @CacheAutocompletion
@@ -147,11 +131,13 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
-    ): Collection<Choice> {
-        val signatures = docIndexMap[sourceType]?.findMethodAndFieldSignatures(className, event.focusedOption.value)
-            ?: return listOf()
+    ): Collection<Choice> = withDocIndex(sourceType) {
+        findMethodAndFieldSignatures(className, event.focusedOption.value).toChoices()
+    }
 
-        return signatures.toChoices()
+    private fun withDocIndex(sourceType: DocSourceType, block: DocIndex.() -> List<Choice>): List<Choice> {
+        val map = docIndexMap[sourceType] ?: return emptyList()
+        return block(map)
     }
 
     private fun Iterable<String>.toChoices() = this.map { Choice(it, it) }
