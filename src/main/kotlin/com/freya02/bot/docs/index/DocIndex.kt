@@ -137,7 +137,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         val limitingSort = when {
             query == null -> ""
             '#' in query -> "order by similarity(classname, ?) * similarity(left(identifier, strpos(identifier, '(')), ?) desc limit 25"
-            else -> "order by similarity(concat(classname, '#', identifier), ?) desc limit 25"
+            else -> "order by similarity(concat(classname, '#', left(identifier, strpos(identifier, '('))), ?) desc limit 25"
         }
 
         val sortArgs = when {
@@ -154,7 +154,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
                 where source_id = ?
                   and type = ?
                 $limitingSort
-                  """.trimIndent(),
+                """.trimIndent(),
             "classname"
         ).use { action ->
             action.executeQuery(sourceType.id, docType.id, *sortArgs)
