@@ -7,6 +7,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Request
 import org.jsoup.nodes.Document
 import java.nio.file.Path
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -15,15 +16,16 @@ import kotlin.io.path.exists
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
-object PageCache {
+class PageCache(val type: DocSourceType) {
     private val globalLock = ReentrantLock()
     private val pathMutexMap: MutableMap<Path, ReentrantLock> = ConcurrentHashMap()
 
-    fun getPage(url: String): Document {
-        val type = DocSourceType.fromUrl(url) ?: throw IllegalArgumentException("Unknown doc type for url '$url'")
-        val baseFolder = getBaseFolder(type)
+    private val baseFolder: Path = Main.PAGE_CACHE_FOLDER_PATH.resolve(type.name)
 
-        val cachedFilePath = url.toHttpUrl().pathSegments.fold(baseFolder) { path, segment -> path.resolve(segment) }
+    fun getPage(url: String): Document {
+        val cachedFilePath = url.toHttpUrl().let { httpUrl ->
+            httpUrl.pathSegments.fold(baseFolder.resolve(httpUrl.host)) { path, segment -> path.resolve(segment) }
+        }
 
         globalLock.lock() //Wait for clearing to stop
         globalLock.unlock()
@@ -51,13 +53,17 @@ object PageCache {
             }
     }
 
-    fun clearCache(type: DocSourceType) {
+    fun clearCache() {
         globalLock.withLock {
-            getBaseFolder(type).deleteRecursively()
+            baseFolder.deleteRecursively()
         }
     }
 
-    private fun getBaseFolder(type: DocSourceType): Path {
-        return Main.PAGE_CACHE_FOLDER_PATH.resolve(type.name)
+    companion object {
+        private val map: MutableMap<DocSourceType, PageCache> = EnumMap(DocSourceType::class.java)
+
+        operator fun get(type: DocSourceType): PageCache {
+            return map.getOrPut(type) { PageCache(type) }
+        }
     }
 }
