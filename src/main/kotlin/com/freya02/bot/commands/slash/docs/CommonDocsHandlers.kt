@@ -219,11 +219,6 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         }
 
         fun handleMethodDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex) {
-            if (!docIndex.getClassesWithMethods().contains(className)) { //TODO to be removed ? potentially slow
-                event.reply_("'$className' does not contain methods", ephemeral = true).queue()
-                return
-            }
-
             val cachedMethod = docIndex.getMethodDoc(className, identifier) ?: run {
                 event.reply_("'$className' does not contain a '$identifier' method", ephemeral = true).queue()
                 return
@@ -233,11 +228,6 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         }
 
         fun handleFieldDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex) {
-            if (!docIndex.getClassesWithFields().contains(className)) { //TODO to be removed ? potentially slow
-                event.reply_("'$className' does not contain fields", ephemeral = true).queue()
-                return
-            }
-
             val cachedField = docIndex.getFieldDoc(className, identifier) ?: run {
                 event.reply_("'$className' does not contain a '$identifier' field", ephemeral = true).queue()
                 return

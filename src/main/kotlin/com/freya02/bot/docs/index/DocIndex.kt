@@ -147,14 +147,14 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
 
     private fun getAllSignatures(docType: DocType, query: String?): List<String> {
         @Language("PostgreSQL", prefix = "select * from doc ")
-        val limitingSort = when {
-            query == null -> ""
-            '#' in query -> "order by similarity(classname, ?) * similarity(left(identifier, strpos(identifier, '(')), ?) desc limit 25"
-            else -> "order by similarity(concat(classname, '#', left(identifier, strpos(identifier, '('))), ?) desc limit 25"
+        val sort = when {
+            query == null || query.isEmpty() -> "order by classname, identifier"
+            '#' in query -> "order by similarity(classname, ?) * similarity(left(identifier, strpos(identifier, '(')), ?) desc"
+            else -> "order by similarity(concat(classname, '#', left(identifier, strpos(identifier, '('))), ?) desc"
         }
 
         val sortArgs = when {
-            query == null -> arrayOf()
+            query == null || query.isEmpty()  -> arrayOf()
             '#' in query -> arrayOf(query.substringBefore('#'), query.substringAfter('#'))
             else -> arrayOf(query)
         }
@@ -166,7 +166,8 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
                 from doc
                 where source_id = ?
                   and type = ?
-                $limitingSort
+                $sort
+                limit 25
                 """.trimIndent(),
             "classname"
         ).use { action ->
@@ -179,13 +180,13 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         val typeCheck = docTypes.joinToString(" or ") { "doc.type = ${it.id}" }
 
         @Language("PostgreSQL", prefix = "select * from doc ")
-        val limitingSort = when (query) {
-            null -> ""
-            else -> "order by similarity(left(identifier, strpos(identifier, '(')), ?) desc limit 25"
+        val sort = when {
+            query == null || query.isEmpty() -> "order by identifier"
+            else -> "order by similarity(left(identifier, strpos(identifier, '(')), ?) desc"
         }
 
-        val sortArgs = when (query) {
-            null -> arrayOf()
+        val sortArgs = when {
+            query == null || query.isEmpty()  -> arrayOf()
             else -> arrayOf(query)
         }
 
@@ -197,7 +198,8 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
                 where source_id = ?
                   and ($typeCheck)
                   and classname = ?
-                $limitingSort
+                $sort
+                limit 25
                 """.trimIndent(),
             "identifier"
         ).use { action ->
@@ -208,13 +210,13 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
 
     private fun getClassNamesWithChildren(docType: DocType, query: String?): List<String> {
         @Language("PostgreSQL", prefix = "select * from doc ")
-        val limitingSort = when (query) {
-            null -> "order by classname"
-            else -> "order by similarity(classname, ?) desc limit 25"
+        val sort = when {
+            query == null || query.isEmpty() -> "order by classname"
+            else -> "order by similarity(classname, ?) desc"
         }
 
-        val sortArgs = when (query) {
-            null -> arrayOf()
+        val sortArgs = when {
+            query == null || query.isEmpty() -> arrayOf()
             else -> arrayOf(query)
         }
 
@@ -226,7 +228,8 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
                 where source_id = ?
                   and type = ?
                 group by classname
-                $limitingSort
+                $sort
+                limit 25
                 """.trimIndent(),
             "classname"
         ).use { action ->

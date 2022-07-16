@@ -1,5 +1,6 @@
 package com.freya02.bot.utils
 
+import com.freya02.botcommands.api.Logging
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.internal.utils.JDALogger
 import org.jetbrains.annotations.Contract
@@ -64,5 +65,16 @@ object Utils {
 
     fun Statement.logQuery(callerClass: Class<*>) {
         JDALogger.getLog(callerClass).debug("Running query '${this.toSQLString()}'")
+    }
+
+    inline fun <R> measureTime(desc: String, block: () -> R): R {
+        val start = System.nanoTime()
+        val r = block()
+        val diff = System.nanoTime() - start
+
+        //Abusing the fact that this method call with expose the real caller class
+        Logging.getLogger().debug("$desc took ${diff / 1000000.0} ms")
+
+        return r
     }
 }
