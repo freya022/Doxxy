@@ -28,11 +28,11 @@ interface IDocIndexKt {
         }
     }
 
-    fun getAllMethodSignatures(): Collection<String>
+    fun findAnyMethodSignatures(query: String? = null): Collection<String>
 
     fun findMethodSignatures(className: String): Collection<String>
 
-    fun getAllFieldSignatures(): Collection<String>
+    fun findAnyFieldSignatures(query: String? = null): Collection<String>
 
     fun findFieldSignatures(className: String): Collection<String>
 

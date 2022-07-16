@@ -23,6 +23,7 @@ import com.freya02.docs.data.TargetType
 import dev.minn.jda.ktx.messages.reply_
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
+import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction
@@ -98,11 +99,13 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
     fun onAnyMethodNameAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
-    ): Collection<String> {
-        val set = docIndexMap[sourceType]?.getAllMethodSignatures() ?: return listOf()
+    ): Collection<Choice> {
+        val signatures = docIndexMap[sourceType]?.findAnyMethodSignatures(event.focusedOption.value) ?: return listOf()
 
         //TODO real fix hopefully
-        return set.filter { s: String -> s.length <= OptionData.MAX_CHOICE_VALUE_LENGTH }
+        return signatures
+            .filter { s: String -> s.length <= OptionData.MAX_CHOICE_VALUE_LENGTH }
+            .map { Choice(it, it) }
     }
 
     @CacheAutocompletion
@@ -120,8 +123,10 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
     fun onAnyFieldNameAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
-    ): Collection<String> {
-        return docIndexMap[sourceType]?.getAllFieldSignatures() ?: return listOf()
+    ): Collection<Choice> {
+        val signatures = docIndexMap[sourceType]?.findAnyFieldSignatures(event.focusedOption.value) ?: return listOf()
+
+        return signatures.map { Choice(it, it) }
     }
 
     @CacheAutocompletion

@@ -15,6 +15,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import net.dv8tion.jda.api.entities.MessageEmbed
+import org.intellij.lang.annotations.Language
 import org.slf4j.Logger
 
 private val LOGGER: Logger = Logging.getLogger()
@@ -45,11 +46,11 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         return CachedField(embed, seeAlsoReferences)
     }
 
-    override fun getAllMethodSignatures(): Collection<String> = getAllSignatures(DocType.METHOD)
+    override fun findAnyMethodSignatures(query: String?): Collection<String> = getAllSignatures(DocType.METHOD, query)
 
     override fun findMethodSignatures(className: String): Collection<String> = findSignatures(className, DocType.METHOD)
 
-    override fun getAllFieldSignatures(): Collection<String> = getAllSignatures(DocType.FIELD)
+    override fun findAnyFieldSignatures(query: String?): Collection<String> = getAllSignatures(DocType.FIELD, query)
 
     override fun findFieldSignatures(className: String): Collection<String> = findSignatures(className, DocType.FIELD)
 
@@ -131,21 +132,35 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         }
     }
 
-    private fun getAllSignatures(docType: DocType): List<String> =
-        DBAction.of(
+    private fun getAllSignatures(docType: DocType, query: String?): List<String> {
+        @Language("PostgreSQL", prefix = "select * from doc ")
+        val limitingSort = when {
+            query == null -> ""
+            '#' in query -> "order by similarity(classname, ?) * similarity(left(identifier, strpos(identifier, '(')), ?) desc limit 25"
+            else -> "order by similarity(concat(classname, '#', identifier), ?) desc limit 25"
+        }
+
+        val sortArgs = when {
+            query == null -> arrayOf()
+            '#' in query -> arrayOf(query.substringBefore('#'), query.substringAfter('#'))
+            else -> arrayOf(query)
+        }
+
+        return DBAction.of(
             database,
             """
                 select classname, identifier
                 from doc
                 where source_id = ?
                   and type = ?
-                group by classname, identifier
-                order by classname, identifier
+                $limitingSort
                   """.trimIndent(),
             "classname"
         ).use { action ->
-            action.executeQuery(sourceType.id, docType.id).transformEach { "${it.get<String>("classname")}#${it.get<String>("identifier")}" }
+            action.executeQuery(sourceType.id, docType.id, *sortArgs)
+                .transformEach { "${it.get<String>("classname")}#${it.get<String>("identifier")}" }
         }
+    }
 
     private fun findSignatures(className: String, vararg docTypes: DocType): List<String> {
         val typeCheck = docTypes.joinToString(" or ") { "doc.type = ${it.id}" }
