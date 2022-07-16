@@ -41,7 +41,6 @@ data class ArtifactInfo(val groupId: String, val artifactId: String, val version
     }
 
     companion object {
-        @JvmStatic
         @Throws(IOException::class)
         fun fromFileString(path: Path): ArtifactInfo {
             if (path.notExists()) return ArtifactInfo("invalid", "invalid", "invalid")

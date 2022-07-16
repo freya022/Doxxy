@@ -23,7 +23,7 @@ class DocsCommand(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
         ) className: String,
         @AppOption(
             description = "Signature of the method / field name",
-            autocomplete = CommonDocsHandlers.METHOD_NAME_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME
+            autocomplete = CommonDocsHandlers.METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME
         ) identifier: String?
     ) {
         onSlashDocs(event, sourceType, className, identifier)
@@ -43,7 +43,7 @@ class DocsCommand(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
         ) className: String,
         @AppOption(
             description = "Signature of the method / field name",
-            autocomplete = CommonDocsHandlers.METHOD_NAME_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME
+            autocomplete = CommonDocsHandlers.METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME
         ) identifier: String?
     ) {
         onSlashDocs(event, sourceType, className, identifier)
@@ -63,7 +63,7 @@ class DocsCommand(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
         ) className: String,
         @AppOption(
             description = "Signature of the method / field name",
-            autocomplete = CommonDocsHandlers.METHOD_NAME_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME
+            autocomplete = CommonDocsHandlers.METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME
         ) identifier: String?
     ) {
         onSlashDocs(event, sourceType, className, identifier)

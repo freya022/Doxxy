@@ -23,7 +23,7 @@ class FieldCommand(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
         ) className: String,
         @AppOption(
             description = "Name of the field",
-            autocomplete = CommonDocsHandlers.FIELD_NAME_AUTOCOMPLETE_NAME
+            autocomplete = CommonDocsHandlers.FIELD_NAME_BY_CLASS_AUTOCOMPLETE_NAME
         ) fieldName: String
     ) {
         onSlashField(event, sourceType, className, fieldName)
@@ -39,7 +39,7 @@ class FieldCommand(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
         ) className: String,
         @AppOption(
             description = "Name of the field",
-            autocomplete = CommonDocsHandlers.FIELD_NAME_AUTOCOMPLETE_NAME
+            autocomplete = CommonDocsHandlers.FIELD_NAME_BY_CLASS_AUTOCOMPLETE_NAME
         ) fieldName: String
     ) {
         onSlashField(event, sourceType, className, fieldName)
@@ -59,7 +59,7 @@ class FieldCommand(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
         ) className: String,
         @AppOption(
             description = "Name of the field",
-            autocomplete = CommonDocsHandlers.FIELD_NAME_AUTOCOMPLETE_NAME
+            autocomplete = CommonDocsHandlers.FIELD_NAME_BY_CLASS_AUTOCOMPLETE_NAME
         ) fieldName: String
     ) {
         onSlashField(event, sourceType, className, fieldName)

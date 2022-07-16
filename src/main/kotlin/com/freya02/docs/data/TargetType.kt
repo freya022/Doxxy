@@ -7,7 +7,6 @@ enum class TargetType(val id: Int) {
     UNKNOWN(-1);
 
     companion object {
-        @JvmStatic
         fun fromFragment(fragment: String?): TargetType {
             return when {
                 fragment == null -> CLASS

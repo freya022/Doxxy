@@ -28,19 +28,19 @@ interface IDocIndexKt {
         }
     }
 
-    fun getAllMethodSignatures(): Collection<String>
+    fun findAnyMethodSignatures(query: String? = null): Collection<String>
 
-    fun findMethodSignatures(className: String): Collection<String>
+    fun findMethodSignatures(className: String, query: String? = null): Collection<String>
 
-    fun getAllFieldSignatures(): Collection<String>
+    fun findAnyFieldSignatures(query: String? = null): Collection<String>
 
-    fun findFieldSignatures(className: String): Collection<String>
+    fun findFieldSignatures(className: String, query: String? = null): Collection<String>
 
-    fun findMethodAndFieldSignatures(className: String): Collection<String>
+    fun findMethodAndFieldSignatures(className: String, query: String? = null): Collection<String>
 
-    fun getClasses(): Collection<String>
+    fun getClasses(query: String? = null): Collection<String>
 
-    fun getClassesWithMethods(): Collection<String>
+    fun getClassesWithMethods(query: String? = null): Collection<String>
 
-    fun getClassesWithFields(): Collection<String>
+    fun getClassesWithFields(query: String? = null): Collection<String>
 }

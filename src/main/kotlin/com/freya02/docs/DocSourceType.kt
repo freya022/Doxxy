@@ -62,7 +62,6 @@ enum class DocSourceType(
     }
 
     companion object {
-        @JvmStatic
         fun fromUrl(url: String): DocSourceType? {
             return values().find { source -> url.startsWith(source.sourceUrl) || source.onlineURL != null && url.startsWith(source.onlineURL) }
         }

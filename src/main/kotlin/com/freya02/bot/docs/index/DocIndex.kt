@@ -15,6 +15,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import net.dv8tion.jda.api.entities.MessageEmbed
+import org.intellij.lang.annotations.Language
 import org.slf4j.Logger
 
 private val LOGGER: Logger = Logging.getLogger()
@@ -45,32 +46,45 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         return CachedField(embed, seeAlsoReferences)
     }
 
-    override fun getAllMethodSignatures(): Collection<String> = getAllSignatures(DocType.METHOD)
+    override fun findAnyMethodSignatures(query: String?): Collection<String> = getAllSignatures(DocType.METHOD, query)
 
-    override fun findMethodSignatures(className: String): Collection<String> = findSignatures(className, DocType.METHOD)
+    override fun findMethodSignatures(className: String, query: String?): Collection<String> = findSignatures(className, query, DocType.METHOD)
 
-    override fun getAllFieldSignatures(): Collection<String> = getAllSignatures(DocType.FIELD)
+    override fun findAnyFieldSignatures(query: String?): Collection<String> = getAllSignatures(DocType.FIELD, query)
 
-    override fun findFieldSignatures(className: String): Collection<String> = findSignatures(className, DocType.FIELD)
+    override fun findFieldSignatures(className: String, query: String?): Collection<String> = findSignatures(className, query, DocType.FIELD)
 
-    override fun findMethodAndFieldSignatures(className: String): Collection<String> =
-        findSignatures(className, DocType.METHOD, DocType.FIELD)
+    override fun findMethodAndFieldSignatures(className: String, query: String?): Collection<String> =
+        findSignatures(className, query, DocType.METHOD, DocType.FIELD)
 
-    override fun getClasses(): Collection<String> = runBlocking {
+    override fun getClasses(query: String?): Collection<String> = runBlocking {
+        @Language("PostgreSQL", prefix = "select * from doc ")
+        val limitingSort = when (query) {
+            null -> ""
+            else -> "order by similarity(classname, ?) desc limit 25"
+        }
+
+        val sortArgs = when (query) {
+            null -> arrayOf()
+            else -> arrayOf(query)
+        }
+
         database.preparedStatement(
             """
             select classname
             from doc
             where source_id = ?
-              and type = ?""".trimIndent()
+              and type = ?
+            $limitingSort
+            """.trimIndent()
         ) {
-            executeQuery(sourceType.id, DocType.CLASS.id).transformEach { it.getString("classname") }
+            executeQuery(sourceType.id, DocType.CLASS.id, *sortArgs).transformEach { it.getString("classname") }
         }
     }
 
-    override fun getClassesWithMethods(): Collection<String> = getClassNamesWithChildren(DocType.METHOD)
+    override fun getClassesWithMethods(query: String?): Collection<String> = getClassNamesWithChildren(DocType.METHOD, query)
 
-    override fun getClassesWithFields(): Collection<String> = getClassNamesWithChildren(DocType.FIELD)
+    override fun getClassesWithFields(query: String?): Collection<String> = getClassNamesWithChildren(DocType.FIELD, query)
 
     suspend fun reindex(): DocIndex {
         mutex.withLock {
@@ -131,24 +145,50 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         }
     }
 
-    private fun getAllSignatures(docType: DocType): List<String> =
-        DBAction.of(
+    private fun getAllSignatures(docType: DocType, query: String?): List<String> {
+        @Language("PostgreSQL", prefix = "select * from doc ")
+        val sort = when {
+            query == null || query.isEmpty() -> "order by classname, identifier"
+            '#' in query -> "order by similarity(classname, ?) * similarity(left(identifier, strpos(identifier, '(')), ?) desc"
+            else -> "order by similarity(concat(classname, '#', left(identifier, strpos(identifier, '('))), ?) desc"
+        }
+
+        val sortArgs = when {
+            query == null || query.isEmpty()  -> arrayOf()
+            '#' in query -> arrayOf(query.substringBefore('#'), query.substringAfter('#'))
+            else -> arrayOf(query)
+        }
+
+        return DBAction.of(
             database,
             """
                 select classname, identifier
                 from doc
                 where source_id = ?
                   and type = ?
-                group by classname, identifier
-                order by classname, identifier
-                  """.trimIndent(),
+                $sort
+                limit 25
+                """.trimIndent(),
             "classname"
         ).use { action ->
-            action.executeQuery(sourceType.id, docType.id).transformEach { "${it.get<String>("classname")}#${it.get<String>("identifier")}" }
+            action.executeQuery(sourceType.id, docType.id, *sortArgs)
+                .transformEach { "${it.get<String>("classname")}#${it.get<String>("identifier")}" }
+        }
+    }
+
+    private fun findSignatures(className: String, query: String?, vararg docTypes: DocType): List<String> {
+        val typeCheck = docTypes.joinToString(" or ") { "doc.type = ${it.id}" }
+
+        @Language("PostgreSQL", prefix = "select * from doc ")
+        val sort = when {
+            query == null || query.isEmpty() -> "order by identifier"
+            else -> "order by similarity(left(identifier, strpos(identifier, '(')), ?) desc"
         }
 
-    private fun findSignatures(className: String, vararg docTypes: DocType): List<String> {
-        val typeCheck = docTypes.joinToString(" or ") { "doc.type = ${it.id}" }
+        val sortArgs = when {
+            query == null || query.isEmpty()  -> arrayOf()
+            else -> arrayOf(query)
+        }
 
         return DBAction.of(
             database,
@@ -157,24 +197,43 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
                 from doc
                 where source_id = ?
                   and ($typeCheck)
-                  and classname = ?""".trimIndent(),
+                  and classname = ?
+                $sort
+                limit 25
+                """.trimIndent(),
             "identifier"
         ).use { action ->
-            action.executeQuery(sourceType.id, className).transformEach { it.getString("identifier") }
+            action.executeQuery(sourceType.id, className, *sortArgs)
+                .transformEach { it.getString("identifier") }
         }
     }
 
-    private fun getClassNamesWithChildren(docType: DocType) = DBAction.of(
-        database,
-        """
-            select classname
-            from doc
-            where source_id = ?
-              and type = ? --Take docs of DocType and keep the class names
-            group by classname
-            order by classname""".trimIndent(),
-        "classname"
-    ).use { action ->
-        action.executeQuery(sourceType.id, docType.id).transformEach { it.getString("classname") }
+    private fun getClassNamesWithChildren(docType: DocType, query: String?): List<String> {
+        @Language("PostgreSQL", prefix = "select * from doc ")
+        val sort = when {
+            query == null || query.isEmpty() -> "order by classname"
+            else -> "order by similarity(classname, ?) desc"
+        }
+
+        val sortArgs = when {
+            query == null || query.isEmpty() -> arrayOf()
+            else -> arrayOf(query)
+        }
+
+        return DBAction.of(
+            database,
+            """
+                select classname
+                from doc
+                where source_id = ?
+                  and type = ?
+                group by classname
+                $sort
+                limit 25
+                """.trimIndent(),
+            "classname"
+        ).use { action ->
+            action.executeQuery(sourceType.id, docType.id, *sortArgs).transformEach { it.getString("classname") }
+        }
     }
 }

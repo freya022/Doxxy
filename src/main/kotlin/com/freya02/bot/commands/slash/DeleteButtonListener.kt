@@ -20,7 +20,6 @@ class DeleteButtonListener {
         private const val DELETE_MESSAGE_BUTTON_LISTENER_NAME = "DeleteButtonListener: deleteMessage"
         private val WASTEBASKET = EmojiUtils.resolveJDAEmoji("wastebasket")
 
-        @JvmStatic
         fun getDeleteButton(allowedUser: User): Button {
             return Components.dangerButton(DELETE_MESSAGE_BUTTON_LISTENER_NAME)
                 .setConstraints(InteractionConstraints.ofUsers(allowedUser).addPermissions(Permission.MESSAGE_MANAGE))

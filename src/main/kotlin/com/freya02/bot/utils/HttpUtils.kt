@@ -37,11 +37,9 @@ object HttpUtils {
         }
     }
 
-    @JvmStatic
     fun doesStartByLocalhost(link: String): Boolean {
         return link.startsWith("http://localhost")
     }
 
-    @JvmStatic
     fun removeFragment(url: String): String = url.substringBefore('#')
 }
