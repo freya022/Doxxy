@@ -1,0 +1,8 @@
+repositories {
+    mavenCentral()
+    maven("https://jitpack.io")
+}
+
+dependencies {
+    implementation("%s:%s:%s")
+}

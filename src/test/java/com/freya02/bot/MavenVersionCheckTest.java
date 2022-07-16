@@ -4,8 +4,6 @@ import com.freya02.bot.utils.HttpUtils;
 import com.freya02.bot.versioning.ArtifactInfo;
 import com.freya02.bot.versioning.github.PullRequest;
 import com.freya02.bot.versioning.github.PullRequestCache;
-import com.freya02.bot.versioning.jitpack.BuildStatus;
-import com.google.gson.Gson;
 import gnu.trove.map.TIntObjectMap;
 import net.dv8tion.jda.api.exceptions.ParsingException;
 import net.dv8tion.jda.api.utils.data.DataArray;
@@ -17,7 +15,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import java.io.IOException;
-import java.util.Map;
 
 public class MavenVersionCheckTest {
 	public static void main(String[] args) throws Exception {
@@ -26,18 +23,11 @@ public class MavenVersionCheckTest {
 //		final String latestCommitHash = getLatestCommitHash("com.github.freya022", "BotCommands", "2.3.0");
 //		System.out.println("getLatestCommitHash(\"com.github.freya022\", \"BotCommands\", \"2.3.0\") = " + latestCommitHash);
 //
-//		triggerBuild(latestCommitHash);
-//
 //		System.out.println("getJDAVersion(\"2.3.0\") = " + getJDAVersion("2.3.0"));
 
 //		final String hash = getLatestHash("freya022", "BotCommands", "2.3.0");
 //
 //		System.out.println("hash = " + hash);
-//
-//		BuildStatus buildStatus;
-//		while ((buildStatus = triggerBuild(hash)) == BuildStatus.IN_PROGRESS) {
-//			Thread.sleep(500);
-//		}
 //
 //		System.out.println("buildStatus = " + buildStatus);
 
@@ -127,28 +117,6 @@ public class MavenVersionCheckTest {
 		if (jdaVersionElement == null) throw new ParsingException("Unable to get JDA version element");
 
 		return jdaVersionElement.text();
-	}
-
-	@SuppressWarnings("unchecked")
-	private static BuildStatus triggerBuild(String latestCommitHash) throws IOException {
-		try (Response response = HttpUtils.CLIENT.newCall(new Request.Builder()
-						.url("https://jitpack.io/api/builds/com.github.freya022/BotCommands/%s".formatted(latestCommitHash))
-						.build())
-				.execute()) {
-			final Map<String, ?> map = new Gson().fromJson(response.body().string(), Map.class);
-
-			final String status = (String) map.get("status");
-
-			if (response.code() == 200 && status.equalsIgnoreCase("ok")) {
-				return BuildStatus.OK;
-			} else if (response.code() == 404 && status.equalsIgnoreCase("ok")) {
-				return BuildStatus.IN_PROGRESS;
-			} else if (response.code() == 404 && status.equalsIgnoreCase("error")) {
-				return BuildStatus.ERROR;
-			} else {
-				throw new IllegalStateException("Unable to check build status: code = " + response.code() + ", status = '" + status + "'");
-			}
-		}
 	}
 
 	private static String getLatestMavenVersion(String groupId, String artifactId) throws IOException {
