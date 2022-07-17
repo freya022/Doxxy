@@ -45,12 +45,12 @@ object VersionsUtils {
         return downloadJavadoc(this.toJitpackUrl(FileType.JAVADOC))
     }
 
-    fun ArtifactInfo.downloadMavenSources(): Path {
-        return downloadJavadoc(this.toMavenUrl(FileType.SOURCES))
+    fun ArtifactInfo.downloadMavenClasses(): Path {
+        return downloadJavadoc(this.toMavenUrl(FileType.CLASSES))
     }
 
-    fun ArtifactInfo.downloadJitpackSources(): Path {
-        return downloadJavadoc(this.toJitpackUrl(FileType.SOURCES))
+    fun ArtifactInfo.downloadJitpackClasses(): Path {
+        return downloadJavadoc(this.toJitpackUrl(FileType.CLASSES))
     }
 
     private fun ArtifactInfo.downloadJavadoc(url: String): Path {
