@@ -29,21 +29,19 @@ object HttpUtils {
         return parseDocument(downloadBody(url), url)
     }
 
-    fun <R> doRequest(request: Request, handleNonSuccess: Boolean = true, block: (Response, ResponseBody) -> R): R {
-        CLIENT.newCall(request).execute().use { response ->
-            if (handleNonSuccess) {
-                if (!response.isSuccessful) throw IOException("Got an unsuccessful response from ${response.request.url}, code: ${response.code}")
-            }
+    fun <R> doRequest(url: String, block: (Response, ResponseBody) -> R): R {
+        CLIENT.newCall(
+            Request.Builder()
+                .url(url)
+                .build()
+        ).execute().use { response ->
+            if (!response.isSuccessful) throw IOException("Got an unsuccessful response from ${response.request.url}, code: ${response.code}")
 
             val body: ResponseBody = response.body
                 ?: throw IOException("Got no ResponseBody for ${response.request.url}")
 
             return block(response, body)
         }
-    }
-
-    fun <R> doRequest(url: String, handleNonSuccess: Boolean = true, block: (Response, ResponseBody) -> R): R {
-        return doRequest(Request.Builder().url(url).build(), handleNonSuccess, block)
     }
 
     @Throws(IOException::class)
