@@ -11,10 +11,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
-import kotlin.io.path.createDirectories
-import kotlin.io.path.exists
-import kotlin.io.path.readText
-import kotlin.io.path.writeText
+import kotlin.io.path.*
 
 class PageCache(val type: DocSourceType) {
     private val globalLock = ReentrantLock()
@@ -22,7 +19,7 @@ class PageCache(val type: DocSourceType) {
 
     private val baseFolder: Path = Main.PAGE_CACHE_FOLDER_PATH.resolve(type.name)
 
-    fun getPage(url: String): Document {
+    private fun <R> withLockedPath(url: String, block: (Path) -> R): R {
         val cachedFilePath = url.toHttpUrl().let { httpUrl ->
             httpUrl.pathSegments.fold(baseFolder.resolve(httpUrl.host)) { path, segment -> path.resolve(segment) }
         }
@@ -30,12 +27,40 @@ class PageCache(val type: DocSourceType) {
         globalLock.lock() //Wait for clearing to stop
         globalLock.unlock()
 
-        pathMutexMap
+        return pathMutexMap
             .getOrPut(cachedFilePath) { ReentrantLock() }
-            .withLock {
-                val body = if (cachedFilePath.exists()) {
-                    cachedFilePath.readText()
-                } else {
+            .withLock { block(cachedFilePath) }
+    }
+
+    fun getRawOrNull(url: String): ByteArray? {
+        return withLockedPath(url) { cachedFilePath ->
+            when {
+                cachedFilePath.exists() -> cachedFilePath.readBytes()
+                else -> {
+                    HttpUtils.CLIENT.newCall(
+                        Request.Builder()
+                            .url(url)
+                            .build()
+                    ).execute().use { response ->
+                        if (!response.isSuccessful) return@use null
+                        val body = response.body ?: return@use null
+                        return@use body.bytes()
+                    }.also { body ->
+                        if (body == null) return@also
+
+                        cachedFilePath.parent.createDirectories()
+                        cachedFilePath.writeBytes(body)
+                    }
+                }
+            }
+        }
+    }
+
+    fun getPage(url: String): Document {
+        return withLockedPath(url) { cachedFilePath ->
+            val body = when {
+                cachedFilePath.exists() -> cachedFilePath.readText()
+                else -> {
                     HttpUtils.CLIENT.newCall(
                         Request.Builder()
                             .url(url)
@@ -48,9 +73,10 @@ class PageCache(val type: DocSourceType) {
                         cachedFilePath.writeText(body)
                     }
                 }
-
-                return HttpUtils.parseDocument(body, url)
             }
+
+            HttpUtils.parseDocument(body, url)
+        }
     }
 
     fun clearCache() {
