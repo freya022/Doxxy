@@ -16,9 +16,9 @@ suspend fun main() {
     val jdaIndex = DocIndex(DocSourceType.JDA, database)
     val javaIndex = DocIndex(DocSourceType.JAVA, database)
 
-    bcIndex.reindex()
+//    bcIndex.reindex()
     jdaIndex.reindex()
-    javaIndex.reindex()
+//    javaIndex.reindex()
 
     for (index in listOf(bcIndex, jdaIndex, javaIndex)) {
         val cachedClass = index.getClassDoc("AppOption")

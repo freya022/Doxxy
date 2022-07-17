@@ -5,7 +5,9 @@ import com.freya02.bot.commands.slash.docs.CommonDocsHandlers
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.utils.Utils.withTemporaryFile
 import com.freya02.bot.versioning.VersionsUtils.downloadJitpackJavadoc
+import com.freya02.bot.versioning.VersionsUtils.downloadJitpackSources
 import com.freya02.bot.versioning.VersionsUtils.downloadMavenJavadoc
+import com.freya02.bot.versioning.VersionsUtils.downloadMavenSources
 import com.freya02.bot.versioning.jitpack.JitpackVersionChecker
 import com.freya02.bot.versioning.maven.MavenProjectDependencyVersionChecker
 import com.freya02.bot.versioning.maven.MavenVersionChecker
@@ -41,7 +43,7 @@ class Versions(private val docIndexMap: DocIndexMap) {
     suspend fun initUpdateLoop(context: BContext?) {
         val scheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 
-        scheduledExecutorService.scheduleWithFixedDelay({ checkLatestBCVersion(context) }, 0, 30, TimeUnit.MINUTES)
+//        scheduledExecutorService.scheduleWithFixedDelay({ checkLatestBCVersion(context) }, 0, 30, TimeUnit.MINUTES)
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDAVersionFromBC() }, 0, 30, TimeUnit.MINUTES)
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDA4Version() }, 0, 30, TimeUnit.MINUTES)
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDA5Version(context) }, 0, 30, TimeUnit.MINUTES)
@@ -64,13 +66,18 @@ class Versions(private val docIndexMap: DocIndexMap) {
             if (changed) {
                 LOGGER.info("JDA 5 version changed")
 
-                LOGGER.debug("Downloading JDA 5 javadocs")
+                LOGGER.trace("Downloading JDA 5 javadocs")
                 jda5Checker.latest.downloadMavenJavadoc().withTemporaryFile { tempZip ->
-                    LOGGER.debug("Extracting JDA 5 javadocs")
-                    VersionsUtils.replaceWithZipContent(tempZip, JDA_DOCS_FOLDER)
+                    LOGGER.trace("Extracting JDA 5 javadocs")
+                    VersionsUtils.replaceWithZipContent(tempZip, JDA_DOCS_FOLDER, "html")
                 }
 
-                LOGGER.debug("Invalidating JDA 5 index")
+                jda5Checker.latest.downloadMavenSources().withTemporaryFile { tempZip ->
+                    LOGGER.trace("Extracting JDA 5 sources")
+                    VersionsUtils.extractZip(tempZip, JDA_DOCS_FOLDER, "java")
+                }
+
+                LOGGER.trace("Invalidating JDA 5 index")
                 runBlocking { docIndexMap.refreshAndInvalidateIndex(DocSourceType.JDA) }
                 for (handlerName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
                     context?.invalidateAutocompletionCache(handlerName)
@@ -122,10 +129,16 @@ class Versions(private val docIndexMap: DocIndexMap) {
                 LOGGER.info("BotCommands version changed")
 
                 bcChecker.latest.downloadJitpackJavadoc().withTemporaryFile { javadocPath ->
-                    VersionsUtils.replaceWithZipContent(javadocPath, BC_DOCS_FOLDER)
+                    LOGGER.trace("Extracting BC javadocs")
+                    VersionsUtils.replaceWithZipContent(javadocPath, BC_DOCS_FOLDER, "html")
                 }
 
-                LOGGER.debug("Invalidating BotCommands index")
+                bcChecker.latest.downloadJitpackSources().withTemporaryFile { javadocPath ->
+                    LOGGER.trace("Extracting BC sources")
+                    VersionsUtils.extractZip(javadocPath, BC_DOCS_FOLDER, "java")
+                }
+
+                LOGGER.trace("Invalidating BotCommands index")
                 runBlocking { docIndexMap.refreshAndInvalidateIndex(DocSourceType.BOT_COMMANDS) }
                 for (handlerName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
                     context?.invalidateAutocompletionCache(handlerName)

@@ -13,7 +13,7 @@ import java.util.function.Consumer
 
 class ClassDoc @JvmOverloads constructor(
     docsSession: DocsSession,
-    private val sourceURL: String,
+    val sourceURL: String,
     document: Document = HttpUtils.getDocument(sourceURL)
 ) : BaseDoc() {
     val source: DocSourceType = DocSourceType.fromUrl(sourceURL) ?: throw DocParseException()
