@@ -1,19 +1,20 @@
 package com.freya02.docs
 
-import com.freya02.bot.docs.metadata.SourceRootMetadata
-import com.freya02.bot.utils.Utils.measureTime
+import com.github.javaparser.ast.body.MethodDeclaration
+import com.github.javaparser.ast.visitor.VoidVisitorAdapter
+import com.github.javaparser.utils.SourceRoot
 import kotlin.io.path.Path
 
 fun main() {
-    val sourceRootMetadata = measureTime("lol") {
-         SourceRootMetadata(Path("C:\\Users\\freya02\\Programming\\IntelliJ-Workspace\\Forks\\JDA-Stuff\\JDA\\src\\main\\java"))
-    }
+    val sourceRoot = SourceRoot(Path("C:\\Users\\freya02\\Programming\\IntelliJ-Workspace\\Forks\\JDA-Stuff\\JDA\\src\\main\\java"))
 
-//    val map =
-//        sourceRootMetadata.getCombinedResolvedMaps("net.dv8tion.jda.api.utils.ConcurrentSessionController")
-//
-//    val map2 =
-//        sourceRootMetadata.getCombinedResolvedMaps("net.dv8tion.jda.api.utils.ConcurrentSessionController.Worker")
+    val compilationUnit = sourceRoot.parse("net.dv8tion.jda.api.utils", "AllowedMentions.java")
 
-    println(sourceRootMetadata)
+    compilationUnit.accept(object : VoidVisitorAdapter<Void>() {
+        override fun visit(n: MethodDeclaration, arg: Void?) {
+
+
+            super.visit(n, arg)
+        }
+    }, null)
 }

@@ -1,5 +1,6 @@
 package com.freya02.bot.docs.index
 
+import com.freya02.bot.Main
 import com.freya02.bot.db.Database
 import com.freya02.bot.db.Transaction
 import com.freya02.bot.docs.DocEmbeds.toEmbed
@@ -9,12 +10,35 @@ import com.freya02.docs.DocSourceType
 import com.freya02.docs.DocsSession
 import com.freya02.docs.data.BaseDoc
 import com.freya02.docs.data.ClassDoc
+import com.github.javaparser.ast.NodeList
+import com.github.javaparser.ast.body.ConstructorDeclaration
+import com.github.javaparser.ast.body.MethodDeclaration
+import com.github.javaparser.ast.nodeTypes.NodeWithParameters
+import com.github.javaparser.ast.nodeTypes.NodeWithRange
+import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName
+import com.github.javaparser.ast.visitor.VoidVisitorAdapter
+import com.github.javaparser.utils.SourceRoot
 import com.google.gson.GsonBuilder
 import net.dv8tion.jda.api.entities.MessageEmbed
 
 private val LOGGER = Logging.getLogger()
 
 internal class DocIndexWriter(private val database_: Database, private val docsSession: DocsSession, private val sourceType: DocSourceType) {
+    private val sourceRoot: SourceRoot?
+
+    init {
+        val docsFolderName = when (sourceType) {
+            DocSourceType.JDA -> "JDA"
+            DocSourceType.BOT_COMMANDS -> "BotCommands"
+            else -> null
+        }
+
+        sourceRoot = when {
+            docsFolderName != null -> SourceRoot(Main.JAVADOCS_PATH.resolve(docsFolderName))
+            else -> null
+        }
+    }
+
     suspend fun doReindex() = database_.transactional {
         val updatedSource = ClassDocs.getUpdatedSource(sourceType)
 
@@ -43,8 +67,8 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
                 val classDocId = insertDoc(DocType.CLASS, classDoc.className, classDoc, classEmbedJson, sourceLink)
                 insertSeeAlso(classDoc, classDocId)
 
-                insertMethodDocs(classDoc)
-                insertFieldDocs(classDoc)
+                insertMethodDocs(classDoc, sourceLink)
+                insertFieldDocs(classDoc, sourceLink)
             } catch (e: Exception) {
                 throw RuntimeException("An exception occurred while reading the docs of '$className' at '$classUrl'", e)
             }
@@ -52,13 +76,113 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
     }
 
     context(Transaction)
-    private suspend fun insertMethodDocs(classDoc: ClassDoc) {
+    private suspend fun insertMethodDocs(classDoc: ClassDoc, sourceLink: String?) {
         for (methodDoc in classDoc.getMethodDocs().values) {
             try {
                 val methodEmbed = toEmbed(classDoc, methodDoc).build()
                 val methodEmbedJson = GSON.toJson(methodEmbed)
 
-                val methodDocId = insertDoc(DocType.METHOD, classDoc.className, methodDoc, methodEmbedJson, null)
+                val methodRange: IntRange? = when (sourceLink) {
+                    null -> null
+                    else -> sourceRoot?.let { sourceRoot ->
+//                        val docsMethodParams: List<Pair<String, String>> = when (methodDoc.methodParameters) {
+//                            null -> emptyList()
+//                            else -> {
+//                                methodDoc
+//                                    .methodParameters
+//                                    .substring(1, methodDoc.methodParameters.length - 1)
+//                                    .split(",").map(String::trim).map { parameterStr ->
+//                                        val match =
+//                                            "(\\S+\\s*)*?(\\S+)\\s+(\\S+)".toRegex().matchEntire(parameterStr)
+//                                                ?: return@let null
+//
+//                                        match.groups[2]!!.value
+//                                            .replace("...", "[]")
+//                                            .let { originalStr ->
+//                                                "[\\w.]+".toRegex().replace(originalStr) { result ->
+//                                                    result.value.split(".").last()
+//                                                }
+//                                            } to match.groups[3]!!.value
+//                                    }
+//                            }
+//                        }
+
+                        val docsParametersString = methodDoc.methodParameters
+                            ?.drop(1)
+                            ?.dropLast(1)
+                            ?.replace("@\\w+ ".toRegex(), "")
+//                            ?.split(",".toRegex())
+//                            ?.joinToString(",") {
+//                                it.substringBefore(' ').replace("(\\w+)\\.(?=\\w)".toRegex(), "") + " " + it.substringAfter(' ')
+//                            }
+                            ?: ""
+
+                        val compilationUnit = sourceRoot.parse(
+                            methodDoc.classDocs.packageName,
+                            "${methodDoc.classDocs.className}.java"
+                        )
+
+                        var range: IntRange? = null
+                        compilationUnit.accept(object : VoidVisitorAdapter<Void>() {
+                            override fun visit(n: ConstructorDeclaration, arg: Void?) {
+                                if (range != null) return
+                                handleDeclaration(n)
+                                super.visit(n, arg)
+                            }
+
+                            override fun visit(n: MethodDeclaration, arg: Void?) {
+                                if (range != null) return
+                                handleDeclaration(n)
+                                super.visit(n, arg)
+                            }
+
+                            private fun <T> handleDeclaration(n: T)
+                                    where T : NodeWithSimpleName<T>,
+                                          T : NodeWithParameters<T>,
+                                          T : NodeWithRange<*> {
+                                if (n.getName().asString() == methodDoc.methodName) {
+                                    val parametersString = n.getParameters()
+                                        .onEach { it.annotations = NodeList.nodeList() }
+                                        .joinToString()
+
+                                    LOGGER.debug(docsParametersString)
+                                    LOGGER.debug(parametersString)
+
+                                    if (parametersString == docsParametersString) {
+                                        range = n.begin.get().line..n.end.get().line
+                                    }
+                                }
+                            }
+                        }, null)
+
+//                        val classInfo = sourceRoot["${methodDoc.classDocs.packageName}.${methodDoc.classDocs.className}"]
+//
+//                        methodLoop@ for (methodInfo in classInfo.getDeclaredMethodInfo(methodDoc.methodName)) {
+//                            for ((i, parameterInfo) in methodInfo.parameterInfo.withIndex()) {
+//                                val descriptor = parameterInfo.typeSignatureOrTypeDescriptor
+//
+//                                if (descriptor.toStringWithSimpleNames() != docsMethodParams[i].first) {
+//                                    continue@methodLoop
+//                                }
+//                            }
+//
+//                            return@let methodInfo.minLineNum..methodInfo.maxLineNum
+//                        }
+
+                        if (range != null) return@let range
+
+                        LOGGER.warn("Method not found: ${methodDoc.methodSignature}")
+
+                        null
+                    }
+                }
+
+                val methodLink = when (methodRange) {
+                    null -> null
+                    else -> "$sourceLink#L${methodRange.first}-L${methodRange.last}"
+                }
+
+                val methodDocId = insertDoc(DocType.METHOD, classDoc.className, methodDoc, methodEmbedJson, methodLink)
                 insertSeeAlso(methodDoc, methodDocId)
             } catch (e: Exception) {
                 throw RuntimeException(
@@ -70,7 +194,7 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
     }
 
     context(Transaction)
-    private suspend fun insertFieldDocs(classDoc: ClassDoc) {
+    private suspend fun insertFieldDocs(classDoc: ClassDoc, sourceLink: String?) {
         for (fieldDoc in classDoc.getFieldDocs().values) {
             try {
                 val fieldEmbed = toEmbed(classDoc, fieldDoc).build()

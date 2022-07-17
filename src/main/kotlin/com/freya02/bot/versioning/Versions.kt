@@ -3,12 +3,13 @@ package com.freya02.bot.versioning
 import com.freya02.bot.Main
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers
 import com.freya02.bot.docs.DocIndexMap
-import com.freya02.bot.docs.index.ReindexData
 import com.freya02.bot.utils.Utils.withTemporaryFile
+import com.freya02.bot.versioning.VersionsUtils.downloadJitpackJavadoc
+import com.freya02.bot.versioning.VersionsUtils.downloadJitpackSources
 import com.freya02.bot.versioning.VersionsUtils.downloadMavenJavadoc
 import com.freya02.bot.versioning.VersionsUtils.downloadMavenSources
-import com.freya02.bot.versioning.github.GithubUtils
-import com.freya02.bot.versioning.maven.MavenBranchProjectDependencyVersionChecker
+import com.freya02.bot.versioning.jitpack.JitpackVersionChecker
+import com.freya02.bot.versioning.maven.MavenProjectDependencyVersionChecker
 import com.freya02.bot.versioning.maven.MavenVersionChecker
 import com.freya02.bot.versioning.maven.RepoType
 import com.freya02.botcommands.api.BContext
@@ -30,9 +31,9 @@ private val BC_DOCS_FOLDER: Path = Main.JAVADOCS_PATH.resolve("BotCommands")
 
 class Versions(private val docIndexMap: DocIndexMap) {
     private val bcChecker =
-        MavenVersionChecker(lastKnownBotCommandsPath, RepoType.MAVEN, "io.github.freya022", "BotCommands")
-    private val jdaVersionFromBCChecker: MavenBranchProjectDependencyVersionChecker =
-        MavenBranchProjectDependencyVersionChecker(lastKnownJDAFromBCPath, "freya022", "BotCommands", "JDA", "master")
+        JitpackVersionChecker(lastKnownBotCommandsPath, "freya022", "com.github.freya022", "BotCommands")
+    private val jdaVersionFromBCChecker: MavenProjectDependencyVersionChecker =
+        MavenProjectDependencyVersionChecker(lastKnownJDAFromBCPath, "freya022", "BotCommands", "JDA")
     private val jda4Checker: MavenVersionChecker =
         MavenVersionChecker(lastKnownJDA4Path, RepoType.M2, "net.dv8tion", "JDA")
     private val jda5Checker: MavenVersionChecker =
@@ -42,14 +43,14 @@ class Versions(private val docIndexMap: DocIndexMap) {
     suspend fun initUpdateLoop(context: BContext?) {
         val scheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 
-        scheduledExecutorService.scheduleWithFixedDelay({ checkLatestBCVersion(context) }, 0, 30, TimeUnit.MINUTES)
+//        scheduledExecutorService.scheduleWithFixedDelay({ checkLatestBCVersion(context) }, 0, 30, TimeUnit.MINUTES)
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDAVersionFromBC() }, 0, 30, TimeUnit.MINUTES)
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDA4Version() }, 0, 30, TimeUnit.MINUTES)
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDA5Version(context) }, 0, 30, TimeUnit.MINUTES)
 
         //First index for Java's docs, may take some time
         if (docIndexMap[DocSourceType.JAVA]!!.getClassDoc("Object") == null) {
-            docIndexMap[DocSourceType.JAVA]!!.reindex(ReindexData())
+            docIndexMap[DocSourceType.JAVA]!!.reindex()
 
             //Once java's docs are indexed, invalidate caches if the user had time to use the commands before docs were loaded
             for (autocompleteName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
@@ -76,11 +77,8 @@ class Versions(private val docIndexMap: DocIndexMap) {
                     VersionsUtils.extractZip(tempZip, JDA_DOCS_FOLDER, "java")
                 }
 
-                val sourceUrl = GithubUtils.getLatestReleaseHash("DV8FromTheWorld", "JDA")
-                    ?.let { hash -> "https://github.com/DV8FromTheWorld/JDA/blob/${hash.hash}/src/main/java/" }
-
                 LOGGER.trace("Invalidating JDA 5 index")
-                runBlocking { docIndexMap.refreshAndInvalidateIndex(DocSourceType.JDA, ReindexData(sourceUrl)) }
+                runBlocking { docIndexMap.refreshAndInvalidateIndex(DocSourceType.JDA) }
                 for (handlerName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
                     context?.invalidateAutocompletionCache(handlerName)
                 }
@@ -89,9 +87,8 @@ class Versions(private val docIndexMap: DocIndexMap) {
 
                 LOGGER.info("JDA 5 version updated to {}", jda5Checker.latest.version)
             }
-
             return changed
-        } catch (e: Exception) {
+        } catch (e: IOException) {
             LOGGER.error("An exception occurred while retrieving versions", e)
         }
 
@@ -106,7 +103,7 @@ class Versions(private val docIndexMap: DocIndexMap) {
                 jda4Checker.saveVersion()
                 LOGGER.info("JDA 4 version updated to {}", jda4Checker.latest.version)
             }
-        } catch (e: Exception) {
+        } catch (e: IOException) {
             LOGGER.error("An exception occurred while retrieving versions", e)
         }
     }
@@ -119,7 +116,7 @@ class Versions(private val docIndexMap: DocIndexMap) {
                 jdaVersionFromBCChecker.saveVersion()
                 LOGGER.info("BotCommands's JDA version updated to {}", jdaVersionFromBCChecker.latest.version)
             }
-        } catch (e: Exception) {
+        } catch (e: IOException) {
             LOGGER.error("An exception occurred while retrieving versions", e)
         }
     }
@@ -131,18 +128,18 @@ class Versions(private val docIndexMap: DocIndexMap) {
             if (changed) {
                 LOGGER.info("BotCommands version changed")
 
-                bcChecker.latest.downloadMavenJavadoc().withTemporaryFile { javadocPath ->
+                bcChecker.latest.downloadJitpackJavadoc().withTemporaryFile { javadocPath ->
                     LOGGER.trace("Extracting BC javadocs")
                     VersionsUtils.replaceWithZipContent(javadocPath, BC_DOCS_FOLDER, "html")
                 }
 
-                bcChecker.latest.downloadMavenSources().withTemporaryFile { javadocPath ->
+                bcChecker.latest.downloadJitpackSources().withTemporaryFile { javadocPath ->
                     LOGGER.trace("Extracting BC sources")
                     VersionsUtils.extractZip(javadocPath, BC_DOCS_FOLDER, "java")
                 }
 
                 LOGGER.trace("Invalidating BotCommands index")
-                runBlocking { docIndexMap.refreshAndInvalidateIndex(DocSourceType.BOT_COMMANDS, ReindexData()) }
+                runBlocking { docIndexMap.refreshAndInvalidateIndex(DocSourceType.BOT_COMMANDS) }
                 for (handlerName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
                     context?.invalidateAutocompletionCache(handlerName)
                 }
@@ -153,7 +150,9 @@ class Versions(private val docIndexMap: DocIndexMap) {
             }
 
             return changed
-        } catch (e: Exception) {
+        } catch (e: IOException) {
+            LOGGER.error("An exception occurred while retrieving versions", e)
+        } catch (e: InterruptedException) {
             LOGGER.error("An exception occurred while retrieving versions", e)
         }
 
