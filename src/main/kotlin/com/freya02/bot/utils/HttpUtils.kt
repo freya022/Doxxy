@@ -2,10 +2,14 @@ package com.freya02.bot.utils
 
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.Response
+import okhttp3.ResponseBody
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.io.IOException
+import java.nio.file.Path
 import java.util.concurrent.TimeUnit
+import kotlin.io.path.outputStream
 
 object HttpUtils {
     @JvmField
@@ -25,16 +29,28 @@ object HttpUtils {
         return parseDocument(downloadBody(url), url)
     }
 
-    @Throws(IOException::class)
-    fun downloadBody(url: String): String {
+    fun <R> doRequest(url: String, block: (Response, ResponseBody) -> R): R {
         CLIENT.newCall(
             Request.Builder()
                 .url(url)
                 .build()
         ).execute().use { response ->
-            val body = response.body ?: throw IllegalArgumentException("Got no body from url: $url")
-            return body.string()
+            if (!response.isSuccessful) throw IOException("Got an unsuccessful response from ${response.request.url}, code: ${response.code}")
+
+            val body: ResponseBody = response.body
+                ?: throw IOException("Got no ResponseBody for ${response.request.url}")
+
+            return block(response, body)
         }
+    }
+
+    @Throws(IOException::class)
+    fun downloadBody(url: String): String = doRequest(url) { _, body ->
+        body.string()
+    }
+
+    fun downloadAt(url: String, path: Path): Path = doRequest(url) { _, body ->
+        path.also { it.outputStream().use { stream -> body.byteStream().transferTo(stream) } }
     }
 
     fun doesStartByLocalhost(link: String): Boolean {
