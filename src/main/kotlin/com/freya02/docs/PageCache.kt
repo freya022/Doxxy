@@ -45,11 +45,11 @@ class PageCache(val type: DocSourceType) {
                         if (!response.isSuccessful) return@use null
                         val body = response.body ?: return@use null
                         return@use body.bytes()
-                    }.also { body ->
-                        if (body == null) return@also
+                    }.also { bytes ->
+                        if (bytes == null) return@also
 
                         cachedFilePath.parent.createDirectories()
-                        cachedFilePath.writeBytes(body)
+                        cachedFilePath.writeBytes(bytes)
                     }
                 }
             }
