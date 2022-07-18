@@ -22,7 +22,8 @@ class SourceRootMetadata(sourceRootPath: Path) {
     private val map: MutableMap<ClassName, MethodMap> = sortedMapOf()
 
     init {
-        sourceRoot.parse("net.dv8tion.jda.api") { localPath, _, result ->
+        sourceRoot.parse("net.dv8tion.jda.api.utils", "ConcurrentSessionController.java") { localPath, _, result ->
+//        sourceRoot.parse("net.dv8tion.jda.api") { localPath, _, result ->
             if (result.problems.isNotEmpty()) {
                 result.problems.forEach { logger.error(it.toString()) }
             }
@@ -41,6 +42,8 @@ class SourceRootMetadata(sourceRootPath: Path) {
             ?: emptyList()
     }
 
+    //TODO inherited inner classes should be accessible
+
     // We need to transform source code `getPremadeWidgetHtml(Guild, WidgetTheme, int, int)` into `getPremadeWidgetHtml(Guild, WidgetUtil.WidgetTheme, int, int)`
     // so transform parameter types into their full simple name
     // There should be a pool which is a Map<[insert all FullSimpleName variants], FullSimpleName>
@@ -52,7 +55,6 @@ class SourceRootMetadata(sourceRootPath: Path) {
 
         compilationUnit.accept(object : VoidVisitorAdapter<Void>() {
             override fun visit(n: ClassOrInterfaceDeclaration, arg: Void?) {
-                if (!n.isPublic && !n.isProtected) return
                 if (n.isLocalClassDeclaration) return
 
                 addVariants(n)
@@ -60,15 +62,11 @@ class SourceRootMetadata(sourceRootPath: Path) {
             }
 
             override fun visit(n: EnumDeclaration, arg: Void?) {
-                if (!n.isPublic && !n.isProtected) return
-
                 addVariants(n)
                 super.visit(n, arg)
             }
 
             override fun visit(n: AnnotationDeclaration, arg: Void?) {
-                if (!n.isPublic && !n.isProtected) return
-
                 addVariants(n)
                 super.visit(n, arg)
             }
@@ -119,7 +117,17 @@ class SourceRootMetadata(sourceRootPath: Path) {
                 }
             }
 
+            override fun visit(n: ConstructorDeclaration, arg: Void?) {
+                processMethod(n)
+                super.visit(n, arg)
+            }
+
             override fun visit(n: MethodDeclaration, arg: Void?) {
+                processMethod(n)
+                super.visit(n, arg)
+            }
+
+            private fun processMethod(n: CallableDeclaration<*>) {
                 currentClassStack.peek().let { currentClass ->
                     n.parameters.forEach { parameter ->
                         val typeStr = parameter.typeAsString
@@ -131,13 +139,13 @@ class SourceRootMetadata(sourceRootPath: Path) {
                     return@let map
                         .getOrPut(currentClass) { hashMapOf() }
                         .getOrPut(n.nameAsString) { arrayListOf() }
-                        .add(MethodMetadata(
-                            n.parameters.toSimpleParameterString(),
-                            n.begin.get().line .. n.end.get().line
-                        ))
+                        .add(
+                            MethodMetadata(
+                                n.parameters.toSimpleParameterString(),
+                                n.begin.get().line..n.end.get().line
+                            )
+                        )
                 }
-
-                super.visit(n, arg)
             }
         }, null)
     }
