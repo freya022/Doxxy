@@ -17,7 +17,7 @@ create table Doc
     source_id   int  not null,
     type        int  not null,
     className   text not null,
-    identifier  text,
+    identifier  text, --TODO see if we can have a separate column for identifier-without-args as to take advantage of GiST
     embed       text not null,
     source_link text,
 
