@@ -9,5 +9,11 @@ fun main() {
          SourceRootMetadata(Path("C:\\Users\\freya02\\Programming\\IntelliJ-Workspace\\Forks\\JDA-Stuff\\JDA\\src\\main\\java"))
     }
 
+    val map =
+        sourceRootMetadata.getCombinedResolvedMaps("net.dv8tion.jda.api.utils.ConcurrentSessionController")
+
+    val map2 =
+        sourceRootMetadata.getCombinedResolvedMaps("net.dv8tion.jda.api.utils.ConcurrentSessionController.Worker")
+
     println(sourceRootMetadata)
 }
