@@ -4,27 +4,20 @@ import com.freya02.bot.Main
 import com.freya02.bot.db.Database
 import com.freya02.bot.db.Transaction
 import com.freya02.bot.docs.DocEmbeds.toEmbed
+import com.freya02.bot.docs.metadata.SourceRootMetadata
 import com.freya02.botcommands.api.Logging
 import com.freya02.docs.ClassDocs
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.DocsSession
 import com.freya02.docs.data.BaseDoc
 import com.freya02.docs.data.ClassDoc
-import com.github.javaparser.ast.NodeList
-import com.github.javaparser.ast.body.ConstructorDeclaration
-import com.github.javaparser.ast.body.MethodDeclaration
-import com.github.javaparser.ast.nodeTypes.NodeWithParameters
-import com.github.javaparser.ast.nodeTypes.NodeWithRange
-import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName
-import com.github.javaparser.ast.visitor.VoidVisitorAdapter
-import com.github.javaparser.utils.SourceRoot
 import com.google.gson.GsonBuilder
 import net.dv8tion.jda.api.entities.MessageEmbed
 
 private val LOGGER = Logging.getLogger()
 
 internal class DocIndexWriter(private val database_: Database, private val docsSession: DocsSession, private val sourceType: DocSourceType) {
-    private val sourceRoot: SourceRoot?
+    private val sourceRootMetadata: SourceRootMetadata?
 
     init {
         val docsFolderName = when (sourceType) {
@@ -33,8 +26,8 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
             else -> null
         }
 
-        sourceRoot = when {
-            docsFolderName != null -> SourceRoot(Main.JAVADOCS_PATH.resolve(docsFolderName))
+        sourceRootMetadata = when {
+            docsFolderName != null -> SourceRootMetadata(Main.JAVADOCS_PATH.resolve(docsFolderName))
             else -> null
         }
     }
@@ -84,76 +77,17 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
 
                 val methodRange: IntRange? = when (sourceLink) {
                     null -> null
-                    else -> sourceRoot?.let { sourceRoot ->
-//                        val docsMethodParams: List<Pair<String, String>> = when (methodDoc.methodParameters) {
-//                            null -> emptyList()
-//                            else -> {
-//                                methodDoc
-//                                    .methodParameters
-//                                    .substring(1, methodDoc.methodParameters.length - 1)
-//                                    .split(",").map(String::trim).map { parameterStr ->
-//                                        val match =
-//                                            "(\\S+\\s*)*?(\\S+)\\s+(\\S+)".toRegex().matchEntire(parameterStr)
-//                                                ?: return@let null
-//
-//                                        match.groups[2]!!.value
-//                                            .replace("...", "[]")
-//                                            .let { originalStr ->
-//                                                "[\\w.]+".toRegex().replace(originalStr) { result ->
-//                                                    result.value.split(".").last()
-//                                                }
-//                                            } to match.groups[3]!!.value
-//                                    }
-//                            }
-//                        }
-
+                    else -> sourceRootMetadata?.let { sourceRootMetadata ->
                         val docsParametersString = methodDoc.methodParameters
                             ?.drop(1)
                             ?.dropLast(1)
                             ?.replace("@\\w+ ".toRegex(), "")
-//                            ?.split(",".toRegex())
-//                            ?.joinToString(",") {
-//                                it.substringBefore(' ').replace("(\\w+)\\.(?=\\w)".toRegex(), "") + " " + it.substringAfter(' ')
-//                            }
                             ?: ""
 
-                        val compilationUnit = sourceRoot.parse(
-                            methodDoc.classDocs.packageName,
-                            "${methodDoc.classDocs.className}.java"
-                        )
-
-                        var range: IntRange? = null
-                        compilationUnit.accept(object : VoidVisitorAdapter<Void>() {
-                            override fun visit(n: ConstructorDeclaration, arg: Void?) {
-                                if (range != null) return
-                                handleDeclaration(n)
-                                super.visit(n, arg)
-                            }
-
-                            override fun visit(n: MethodDeclaration, arg: Void?) {
-                                if (range != null) return
-                                handleDeclaration(n)
-                                super.visit(n, arg)
-                            }
-
-                            private fun <T> handleDeclaration(n: T)
-                                    where T : NodeWithSimpleName<T>,
-                                          T : NodeWithParameters<T>,
-                                          T : NodeWithRange<*> {
-                                if (n.getName().asString() == methodDoc.methodName) {
-                                    val parametersString = n.getParameters()
-                                        .onEach { it.annotations = NodeList.nodeList() }
-                                        .joinToString()
-
-                                    LOGGER.debug(docsParametersString)
-                                    LOGGER.debug(parametersString)
-
-                                    if (parametersString == docsParametersString) {
-                                        range = n.begin.get().line..n.end.get().line
-                                    }
-                                }
-                            }
-                        }, null)
+                        val range: IntRange? = sourceRootMetadata
+                            .getMethodsParameters(methodDoc.classDocs.packageName + "." + methodDoc.classDocs.className, methodDoc.methodName)
+                            .find { it.parametersString == docsParametersString }
+                            ?.methodRange
 
 //                        val classInfo = sourceRoot["${methodDoc.classDocs.packageName}.${methodDoc.classDocs.className}"]
 //
