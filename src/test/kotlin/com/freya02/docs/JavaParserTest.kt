@@ -1,6 +1,6 @@
 package com.freya02.docs
 
-import com.freya02.bot.docs.SourceRootMetadata
+import com.freya02.bot.docs.metadata.SourceRootMetadata
 import com.freya02.bot.utils.Utils.measureTime
 import kotlin.io.path.Path
 

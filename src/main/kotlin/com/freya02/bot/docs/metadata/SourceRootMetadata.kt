@@ -1,4 +1,4 @@
-package com.freya02.bot.docs
+package com.freya02.bot.docs.metadata
 
 import com.freya02.botcommands.api.Logging
 import com.github.javaparser.ast.CompilationUnit
@@ -12,9 +12,8 @@ import java.util.*
 
 private typealias ClassName = String
 private typealias FullSimpleClassName = String
-private typealias MethodParameters = String
 private typealias ResolvedClassesList = MutableMap<FullSimpleClassName, FullSimpleClassName>
-private typealias MethodMap = MutableMap<String, MutableList<MethodParameters>>
+private typealias MethodMap = MutableMap<String, MutableList<MethodMetadata>>
 
 class SourceRootMetadata(sourceRootPath: Path) {
     private val logger = Logging.getLogger()
@@ -36,7 +35,7 @@ class SourceRootMetadata(sourceRootPath: Path) {
         }
     }
 
-    fun getMethodsParameters(className: ClassName, methodName: String): List<MethodParameters> {
+    fun getMethodsParameters(className: ClassName, methodName: String): List<MethodMetadata> {
         return map[className]
             ?.get(methodName)
             ?: emptyList()
@@ -129,10 +128,13 @@ class SourceRootMetadata(sourceRootPath: Path) {
                         parameter.setType(resolvedType)
                     }
 
-                    map
+                    return@let map
                         .getOrPut(currentClass) { hashMapOf() }
                         .getOrPut(n.nameAsString) { arrayListOf() }
-                        .add(n.parameters.toSimpleParameterString())
+                        .add(MethodMetadata(
+                            n.parameters.toSimpleParameterString(),
+                            n.begin.get().line .. n.end.get().line
+                        ))
                 }
 
                 super.visit(n, arg)
@@ -140,7 +142,12 @@ class SourceRootMetadata(sourceRootPath: Path) {
         }, null)
     }
 
-    private fun NodeList<Parameter>.toSimpleParameterString(): String = joinToString(", ") { "${it.typeAsString} ${it.nameAsString}" }
+    private fun NodeList<Parameter>.toSimpleParameterString(): String = joinToString(", ") {
+        when {
+            it.isVarArgs -> "${it.typeAsString}... ${it.nameAsString}"
+            else -> "${it.typeAsString} ${it.nameAsString}"
+        }
+    }
 
     private fun TypeDeclaration<*>.findAllImportVariants(): List<String> {
         val split = findSimpleFullName().split('.')
