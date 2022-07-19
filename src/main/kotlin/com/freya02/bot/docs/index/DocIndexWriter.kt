@@ -117,7 +117,6 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
                 }
 
                 val methodClassSourceLink = methodDoc.classDocs.asGithubLink()
-
                 val methodLink = when (methodRange) {
                     null -> null
                     else -> "$methodClassSourceLink#L${methodRange.first}-L${methodRange.last}"
@@ -141,7 +140,28 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
                 val fieldEmbed = toEmbed(classDoc, fieldDoc).build()
                 val fieldEmbedJson = GSON.toJson(fieldEmbed)
 
-                val fieldDocId = insertDoc(DocType.FIELD, classDoc.className, fieldDoc, fieldEmbedJson, null)
+                val fieldRange: IntRange? = when (sourceLink) {
+                    null -> null
+                    else -> sourceRootMetadata?.let { sourceRootMetadata ->
+                        val range: IntRange? = sourceRootMetadata
+                            .getFieldMetadata(fieldDoc.classDocs.classNameFqcn, fieldDoc.fieldName)
+                            ?.fieldRange
+
+                        if (range != null) return@let range
+
+                        LOGGER.warn("Field not found: ${fieldDoc.classDocs.className}#${fieldDoc.simpleSignature}")
+
+                        null
+                    }
+                }
+
+                val fieldClassSourceLink = fieldDoc.classDocs.asGithubLink()
+                val fieldLink = when (fieldRange) {
+                    null -> null
+                    else -> "$fieldClassSourceLink#L${fieldRange.first}-L${fieldRange.last}"
+                }
+
+                val fieldDocId = insertDoc(DocType.FIELD, classDoc.className, fieldDoc, fieldEmbedJson, fieldLink)
                 insertSeeAlso(fieldDoc, fieldDocId)
             } catch (e: Exception) {
                 throw RuntimeException(
