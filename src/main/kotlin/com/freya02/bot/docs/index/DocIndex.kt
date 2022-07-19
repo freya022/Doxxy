@@ -90,7 +90,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
     override fun getClassesWithFields(query: String?): Collection<String> =
         getClassNamesWithChildren(DocType.FIELD, query)
 
-    suspend fun reindex(): DocIndex {
+    suspend fun reindex(reindexData: ReindexData): DocIndex {
         mutex.withLock {
             LOGGER.info("Re-indexing docs for {}", sourceType.name)
 
@@ -102,7 +102,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
 
             val docsSession = DocsSession()
 
-            DocIndexWriter(database, docsSession, sourceType).doReindex()
+            DocIndexWriter(database, docsSession, sourceType, reindexData).doReindex()
 
             LOGGER.info("Re-indexed docs for {}", sourceType.name)
         }

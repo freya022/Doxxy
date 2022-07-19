@@ -17,7 +17,12 @@ import net.dv8tion.jda.api.entities.MessageEmbed
 
 private val LOGGER = Logging.getLogger()
 
-internal class DocIndexWriter(private val database_: Database, private val docsSession: DocsSession, private val sourceType: DocSourceType) {
+internal class DocIndexWriter(
+    private val database_: Database,
+    private val docsSession: DocsSession,
+    private val sourceType: DocSourceType,
+    private val reindexData: ReindexData
+) {
     private val sourceRootMetadata: SourceRootMetadata?
     private val annotationRegex: Regex = "@\\w+ ".toRegex()
 
@@ -52,7 +57,7 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
 
                 val classEmbed = toEmbed(classDoc).build()
                 val classEmbedJson = GSON.toJson(classEmbed)
-                val sourceLink = classDoc.asGithubLink()
+                val sourceLink = reindexData.getClassSourceUrl(classDoc)
 
                 val classDocId = insertDoc(DocType.CLASS, classDoc.className, classDoc, classEmbedJson, sourceLink)
                 insertSeeAlso(classDoc, classDocId)
@@ -91,7 +96,7 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
                             return@let null
                         } else if (docsParametersString.contains("gnu.")) {
                             return@let null
-                        }  else {
+                        } else {
                             if (docsParametersString.isEmpty() && methodDoc.methodName == "values"
                                 && methodDoc.classDocs.enumConstants.isNotEmpty()
                             ) {
@@ -116,7 +121,7 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
                     }
                 }
 
-                val methodClassSourceLink = methodDoc.classDocs.asGithubLink()
+                val methodClassSourceLink = reindexData.getClassSourceUrl(methodDoc.classDocs)
                 val methodLink = when (methodRange) {
                     null -> null
                     else -> "$methodClassSourceLink#L${methodRange.first}-L${methodRange.last}"
@@ -155,7 +160,7 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
                     }
                 }
 
-                val fieldClassSourceLink = fieldDoc.classDocs.asGithubLink()
+                val fieldClassSourceLink = reindexData.getClassSourceUrl(fieldDoc.classDocs)
                 val fieldLink = when (fieldRange) {
                     null -> null
                     else -> "$fieldClassSourceLink#L${fieldRange.first}-L${fieldRange.last}"
@@ -198,14 +203,6 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
                 )
             }
         }
-    }
-
-    private fun ClassDoc.asGithubLink(): String? {
-        if (sourceType.githubSourceURL == null) return null
-
-        val packageName = packageName.replace('.', '/')
-        val topLevelClassName = className.substringBefore('.')
-        return "${sourceType.githubSourceURL}$packageName/$topLevelClassName.java"
     }
 
     companion object {

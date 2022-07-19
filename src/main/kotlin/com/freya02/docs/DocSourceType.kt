@@ -4,20 +4,17 @@ enum class DocSourceType(
     val id: Int,
     val sourceUrl: String,
     private val onlineURL: String?,
-    val githubSourceURL: String?,
     vararg validPackagePatterns: String
 ) {
     JDA(
         1,
         "http://localhost:25566/JDA",
         "https://ci.dv8tion.net/job/JDA5/javadoc",
-        "https://github.com/DV8FromTheWorld/JDA/blob/master/src/main/java/",
         "net\\.dv8tion\\.jda.*"
     ),
     BOT_COMMANDS(
         2,
         "http://localhost:25566/BotCommands",
-        null,
         null,
         "com\\.freya02\\.botcommands\\.api.*"
     ),
@@ -25,12 +22,10 @@ enum class DocSourceType(
         3,
         "https://docs.oracle.com/en/java/javase/17/docs/api",
         "https://docs.oracle.com/en/java/javase/17/docs/api",
-        null,
         "java\\.io.*",
         "java\\.lang",
         "java\\.lang\\.annotation.*",
         "java\\.lang\\.invoke.*",
-        "java\\.lang\\.reflect.*",
         "java\\.lang\\.reflect.*",
         "java\\.math.*",
         "java\\.nio",
