@@ -121,4 +121,33 @@ object GithubUtils {
 
         return pullRequests
     }
+
+    fun getLatestRelease(ownerName: String, repoName: String): GithubRelease? {
+        val url = "https://api.github.com/repos/$ownerName/$repoName/releases/latest".toHttpUrl()
+
+        return HttpUtils.doRequest(newGithubRequest(url).build(), false) { response, body ->
+            if (!response.isSuccessful) return@doRequest null
+
+            val obj = DataObject.fromJson(body.string())
+            GithubRelease(obj.getString("tag_name"))
+        }
+    }
+
+    fun getAllTags(ownerName: String, repoName: String): List<GithubTag> {
+        val url = "https://api.github.com/repos/$ownerName/$repoName/tags".toHttpUrl()
+
+        return HttpUtils.doRequest(newGithubRequest(url).build()) { _, body ->
+            val array = DataArray.fromJson(body.string())
+            (0 until array.length()).map { i ->
+                val obj = array.getObject(i)
+                GithubTag(obj.getString("name"), CommitHash(obj.getObject("commit").getString("sha")))
+            }
+        }
+    }
+
+    fun getLatestReleaseHash(ownerName: String, repoName: String): CommitHash? {
+        return getLatestRelease(ownerName, repoName)?.let { release ->
+            getAllTags(ownerName, repoName).find { tag -> tag.name == release.tagName }?.commitHash
+        }
+    }
 }
