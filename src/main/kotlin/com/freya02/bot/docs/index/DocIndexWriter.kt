@@ -27,7 +27,7 @@ internal class DocIndexWriter(
     private val annotationRegex: Regex = "@\\w+ ".toRegex()
 
     init {
-        val docsFolderName = when (sourceType) {
+        val docsFolderName = when (sourceType) { //TODO move to reindexData prob
             DocSourceType.JDA -> "JDA"
             DocSourceType.BOT_COMMANDS -> "BotCommands"
             else -> null
