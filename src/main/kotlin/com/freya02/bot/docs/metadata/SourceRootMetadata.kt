@@ -48,6 +48,12 @@ class SourceRootMetadata(sourceRootPath: Path) {
             ?: emptyList()
     }
 
+    fun getFieldMetadata(className: ClassName, fieldName: String): FieldMetadata? {
+        return classMetadataMap[className]
+            ?.fieldMetadataMap
+            ?.get(fieldName)
+    }
+
     fun getCombinedResolvedMaps(className: ClassName, map: ResolvedClassesList = hashMapOf()): ResolvedClassesList {
         val metadata = classMetadataMap[className] ?: let {
 //            logger.warn("Class metadata not found for $className")
@@ -227,6 +233,26 @@ class SourceRootMetadata(sourceRootPath: Path) {
 
             override fun visit(n: MethodDeclaration, arg: Void?) {
                 processMethod(n)
+                super.visit(n, arg)
+            }
+
+            override fun visit(n: FieldDeclaration, arg: Void?) {
+                currentClassStack.peek().let { currentClass ->
+                    n.variables.forEach {
+                        classMetadataMap[currentClass]!!.fieldMetadataMap[it.nameAsString] =
+                            FieldMetadata(n.begin.get().line..n.end.get().line)
+                    }
+                }
+
+                super.visit(n, arg)
+            }
+
+            override fun visit(n: EnumConstantDeclaration, arg: Void?) {
+                currentClassStack.peek().let { currentClass ->
+                    classMetadataMap[currentClass]!!.fieldMetadataMap[n.nameAsString] =
+                        FieldMetadata(n.begin.get().line..n.end.get().line)
+                }
+
                 super.visit(n, arg)
             }
 
