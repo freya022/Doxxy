@@ -19,6 +19,7 @@ private val LOGGER = Logging.getLogger()
 
 internal class DocIndexWriter(private val database_: Database, private val docsSession: DocsSession, private val sourceType: DocSourceType) {
     private val sourceRootMetadata: SourceRootMetadata?
+    private val annotationRegex: Regex = "@\\w+ ".toRegex()
 
     init {
         val docsFolderName = when (sourceType) {
@@ -82,7 +83,7 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
                         val docsParametersString = methodDoc.methodParameters
                             ?.drop(1)
                             ?.dropLast(1)
-                            ?.replace("@\\w+ ".toRegex(), "")
+                            ?.replace(annotationRegex, "")
                             ?: ""
 
                         if (docsParametersString.isEmpty() && methodDoc.classDetailType == ClassDetailType.CONSTRUCTOR) {
@@ -123,7 +124,11 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
                 val methodClassSourceLink = run {
                     when (sourceType.githubSourceURL) {
                         null -> null
-                        else -> sourceType.githubSourceURL + methodDoc.classDocs.packageName.replace('.', '/') + "/${methodDoc.classDocs.className}.java"
+                        else -> {
+                            val packageName = methodDoc.classDocs.packageName.replace('.', '/')
+                            val topLevelClassName = methodDoc.classDocs.className.substringBefore('.')
+                            "${sourceType.githubSourceURL}$packageName/$topLevelClassName.java"
+                        }
                     }
                 }
 
