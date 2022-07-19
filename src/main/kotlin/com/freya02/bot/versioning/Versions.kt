@@ -3,6 +3,7 @@ package com.freya02.bot.versioning
 import com.freya02.bot.Main
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers
 import com.freya02.bot.docs.DocIndexMap
+import com.freya02.bot.docs.index.ReindexData
 import com.freya02.bot.utils.Utils.withTemporaryFile
 import com.freya02.bot.versioning.VersionsUtils.downloadJitpackJavadoc
 import com.freya02.bot.versioning.VersionsUtils.downloadJitpackSources
@@ -50,7 +51,7 @@ class Versions(private val docIndexMap: DocIndexMap) {
 
         //First index for Java's docs, may take some time
         if (docIndexMap[DocSourceType.JAVA]!!.getClassDoc("Object") == null) {
-            docIndexMap[DocSourceType.JAVA]!!.reindex()
+            docIndexMap[DocSourceType.JAVA]!!.reindex(ReindexData())
 
             //Once java's docs are indexed, invalidate caches if the user had time to use the commands before docs were loaded
             for (autocompleteName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
@@ -78,7 +79,7 @@ class Versions(private val docIndexMap: DocIndexMap) {
                 }
 
                 LOGGER.trace("Invalidating JDA 5 index")
-                runBlocking { docIndexMap.refreshAndInvalidateIndex(DocSourceType.JDA) }
+                runBlocking { docIndexMap.refreshAndInvalidateIndex(DocSourceType.JDA, ReindexData("https://github.com/DV8FromTheWorld/JDA/tree/master/src/main/java/")) }
                 for (handlerName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
                     context?.invalidateAutocompletionCache(handlerName)
                 }
@@ -139,7 +140,7 @@ class Versions(private val docIndexMap: DocIndexMap) {
                 }
 
                 LOGGER.trace("Invalidating BotCommands index")
-                runBlocking { docIndexMap.refreshAndInvalidateIndex(DocSourceType.BOT_COMMANDS) }
+                runBlocking { docIndexMap.refreshAndInvalidateIndex(DocSourceType.BOT_COMMANDS, ReindexData()) }
                 for (handlerName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
                     context?.invalidateAutocompletionCache(handlerName)
                 }
