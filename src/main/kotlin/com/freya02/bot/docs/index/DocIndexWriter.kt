@@ -10,6 +10,7 @@ import com.freya02.docs.ClassDocs
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.DocsSession
 import com.freya02.docs.data.BaseDoc
+import com.freya02.docs.data.ClassDetailType
 import com.freya02.docs.data.ClassDoc
 import com.google.gson.GsonBuilder
 import net.dv8tion.jda.api.entities.MessageEmbed
@@ -84,8 +85,30 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
                             ?.replace("@\\w+ ".toRegex(), "")
                             ?: ""
 
+                        if (docsParametersString.isEmpty() && methodDoc.classDetailType == ClassDetailType.CONSTRUCTOR) {
+                            return@let null
+                        } else if (docsParametersString.isEmpty() && methodDoc.classDetailType == ClassDetailType.ANNOTATION_ELEMENT) {
+                            return@let null
+                        } else if (docsParametersString.contains("net.dv8tion.jda.internal")) {
+                            return@let null
+                        } else if (docsParametersString.contains("okhttp3")) {
+                            return@let null
+                        } else if (docsParametersString.contains("gnu.")) {
+                            return@let null
+                        }  else {
+                            if (docsParametersString.isEmpty() && methodDoc.methodName == "values"
+                                && methodDoc.classDocs.enumConstants.isNotEmpty()
+                            ) {
+                                return@let null
+                            } else if (docsParametersString == "String name" && methodDoc.methodName == "valueOf"
+                                && methodDoc.classDocs.enumConstants.isNotEmpty()
+                            ) {
+                                return@let null
+                            }
+                        }
+
                         val range: IntRange? = sourceRootMetadata
-                            .getMethodsParameters(methodDoc.classDocs.packageName + "." + methodDoc.classDocs.className, methodDoc.methodName)
+                            .getMethodsParameters(methodDoc.classDocs.classNameFqcn, methodDoc.methodName)
                             .find { it.parametersString == docsParametersString }
                             ?.methodRange
 
@@ -111,9 +134,16 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
                     }
                 }
 
+                val methodClassSourceLink = run {
+                    when (sourceType.githubSourceURL) {
+                        null -> null
+                        else -> sourceType.githubSourceURL + methodDoc.classDocs.packageName.replace('.', '/') + "/${methodDoc.classDocs.className}.java"
+                    }
+                }
+
                 val methodLink = when (methodRange) {
                     null -> null
-                    else -> "$sourceLink#L${methodRange.first}-L${methodRange.last}"
+                    else -> "$methodClassSourceLink#L${methodRange.first}-L${methodRange.last}"
                 }
 
                 val methodDocId = insertDoc(DocType.METHOD, classDoc.className, methodDoc, methodEmbedJson, methodLink)
