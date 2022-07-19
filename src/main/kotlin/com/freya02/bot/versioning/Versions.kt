@@ -9,6 +9,7 @@ import com.freya02.bot.versioning.VersionsUtils.downloadJitpackJavadoc
 import com.freya02.bot.versioning.VersionsUtils.downloadJitpackSources
 import com.freya02.bot.versioning.VersionsUtils.downloadMavenJavadoc
 import com.freya02.bot.versioning.VersionsUtils.downloadMavenSources
+import com.freya02.bot.versioning.github.GithubUtils
 import com.freya02.bot.versioning.jitpack.JitpackVersionChecker
 import com.freya02.bot.versioning.maven.MavenProjectDependencyVersionChecker
 import com.freya02.bot.versioning.maven.MavenVersionChecker
@@ -44,7 +45,7 @@ class Versions(private val docIndexMap: DocIndexMap) {
     suspend fun initUpdateLoop(context: BContext?) {
         val scheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 
-//        scheduledExecutorService.scheduleWithFixedDelay({ checkLatestBCVersion(context) }, 0, 30, TimeUnit.MINUTES)
+        scheduledExecutorService.scheduleWithFixedDelay({ checkLatestBCVersion(context) }, 0, 30, TimeUnit.MINUTES)
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDAVersionFromBC() }, 0, 30, TimeUnit.MINUTES)
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDA4Version() }, 0, 30, TimeUnit.MINUTES)
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDA5Version(context) }, 0, 30, TimeUnit.MINUTES)
@@ -78,8 +79,11 @@ class Versions(private val docIndexMap: DocIndexMap) {
                     VersionsUtils.extractZip(tempZip, JDA_DOCS_FOLDER, "java")
                 }
 
+                val sourceUrl = GithubUtils.getLatestReleaseHash("DV8FromTheWorld", "JDA")
+                    ?.let { hash -> "https://github.com/DV8FromTheWorld/JDA/blob/${hash.hash}/src/main/java/" }
+
                 LOGGER.trace("Invalidating JDA 5 index")
-                runBlocking { docIndexMap.refreshAndInvalidateIndex(DocSourceType.JDA, ReindexData("https://github.com/DV8FromTheWorld/JDA/tree/master/src/main/java/")) }
+                runBlocking { docIndexMap.refreshAndInvalidateIndex(DocSourceType.JDA, ReindexData(sourceUrl)) }
                 for (handlerName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
                     context?.invalidateAutocompletionCache(handlerName)
                 }
