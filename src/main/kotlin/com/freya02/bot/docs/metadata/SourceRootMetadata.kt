@@ -50,7 +50,7 @@ class SourceRootMetadata(sourceRootPath: Path) {
 
     fun getCombinedResolvedMaps(className: ClassName, map: ResolvedClassesList = hashMapOf()): ResolvedClassesList {
         val metadata = classMetadataMap[className] ?: let {
-            logger.warn("Class metadata not found for $className")
+//            logger.warn("Class metadata not found for $className")
             return map
         }
         map.putAll(metadata.resolvedMap)
@@ -153,7 +153,7 @@ class SourceRootMetadata(sourceRootPath: Path) {
 
                 if (n.isAsterisk) {
                     val classes = packageToClasses[n.nameAsString] ?: let {
-                        logger.warn("Package not found for ${n.name.getPackageString()}")
+//                        logger.warn("Package not found for ${n.name.getPackageString()}")
                         return
                     }
 
