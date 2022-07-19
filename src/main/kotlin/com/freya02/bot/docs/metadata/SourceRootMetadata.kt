@@ -6,7 +6,9 @@ import com.github.javaparser.ast.ImportDeclaration
 import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.body.*
+import com.github.javaparser.ast.expr.Name
 import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName
+import com.github.javaparser.ast.type.ClassOrInterfaceType
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter
 import com.github.javaparser.utils.SourceRoot
 import java.nio.file.Path
@@ -17,10 +19,22 @@ class SourceRootMetadata(sourceRootPath: Path) {
     private val sourceRoot: SourceRoot = SourceRoot(sourceRootPath)
 
     private val classMetadataMap: MutableMap<ClassName, ClassMetadata> = sortedMapOf()
+    private val packageToClasses: MutableMap<String, MutableList<Pair<String, ClassName>>> = sortedMapOf()
 
     init {
         sourceRoot.parse("net.dv8tion.jda.api") { localPath, _, result ->
-//        sourceRoot.parse("net.dv8tion.jda.api") { localPath, _, result ->
+            if (result.problems.isNotEmpty()) {
+                result.problems.forEach { logger.error(it.toString()) }
+            }
+            result.ifSuccessful {
+                kotlin.runCatching { parsePackages(it) }.onFailure {
+                    logger.error("Failed to parse $localPath", it)
+                }
+            }
+            SourceRoot.Callback.Result.DONT_SAVE
+        }
+
+        sourceRoot.parse("net.dv8tion.jda.api") { localPath, _, result ->
             if (result.problems.isNotEmpty()) {
                 result.problems.forEach { logger.error(it.toString()) }
             }
@@ -33,7 +47,6 @@ class SourceRootMetadata(sourceRootPath: Path) {
         }
 
         sourceRoot.parse("net.dv8tion.jda.api") { localPath, _, result ->
-//        sourceRoot.parse("net.dv8tion.jda.api") { localPath, _, result ->
             if (result.problems.isNotEmpty()) {
                 result.problems.forEach { logger.error(it.toString()) }
             }
@@ -47,7 +60,10 @@ class SourceRootMetadata(sourceRootPath: Path) {
     }
 
     fun getMethodsParameters(className: ClassName, methodName: String): List<MethodMetadata> {
-        return emptyList()
+        return classMetadataMap[className]
+            ?.methodMetadataMap
+            ?.get(methodName)
+            ?: emptyList()
     }
 
     fun getCombinedResolvedMaps(className: ClassName, map: ResolvedClassesList = hashMapOf()): ResolvedClassesList {
@@ -63,6 +79,49 @@ class SourceRootMetadata(sourceRootPath: Path) {
         return map
     }
 
+    private fun parsePackages(compilationUnit: CompilationUnit) {
+        compilationUnit.accept(object : VoidVisitorAdapter<Void>() {
+            private val metadataStack: Stack<ClassMetadata> = Stack()
+
+            private fun withClassName(n: TypeDeclaration<*>, block: () -> Unit) {
+//                metadataStack.push(classMetadataMap.getOrPut(n.fullyQualifiedName.get()) {
+//                    ClassMetadata(n.fullyQualifiedName.get(), metadataStack.lastOrNull()?.name)
+//                })
+                block()
+//                metadataStack.pop()
+            }
+
+            private fun insertFullSimpleNameWithPackage(n: TypeDeclaration<*>) {
+                packageToClasses.getOrPut(n.findCompilationUnit().get().packageDeclaration.get().nameAsString) {
+                    arrayListOf()
+                }.add(n.findSimpleFullName() to n.findCompilationUnit().get().packageDeclaration.get().nameAsString)
+            }
+
+            override fun visit(n: ClassOrInterfaceDeclaration, arg: Void?) {
+                if (n.isLocalClassDeclaration) return
+
+                withClassName(n) {
+                    insertFullSimpleNameWithPackage(n)
+                    super.visit(n, arg)
+                }
+            }
+
+            override fun visit(n: EnumDeclaration, arg: Void?) {
+                withClassName(n) {
+                    insertFullSimpleNameWithPackage(n)
+                    super.visit(n, arg)
+                }
+            }
+
+            override fun visit(n: AnnotationDeclaration, arg: Void?) {
+                withClassName(n) {
+                    insertFullSimpleNameWithPackage(n)
+                    super.visit(n, arg)
+                }
+            }
+        }, null)
+    }
+
     //TODO inherited inner classes should be accessible
 
     //TODO do a service where simple names can be resolved to package + name in certain compilation units ?
@@ -74,13 +133,23 @@ class SourceRootMetadata(sourceRootPath: Path) {
     // If a type's class name cannot be found in the pool then keep the original type's class name
     private fun parseResult(compilationUnit: CompilationUnit) {
         val imports: MutableMap<String, String> = hashMapOf()
+        val importedVariants: MutableMap<String, String> = hashMapOf()
 
+        imports.putAll(packageToClasses[compilationUnit.packageDeclaration.get().nameAsString]!!)
+
+        //TODO Class MemberCachePolicy somehow have WidgetUtil.Widget.Member in it's resolved types
         compilationUnit.accept(object : VoidVisitorAdapter<Void>() {
             private val metadataStack: Stack<ClassMetadata> = Stack()
 
             private fun withClassName(n: TypeDeclaration<*>, block: () -> Unit) {
                 metadataStack.push(classMetadataMap.getOrPut(n.fullyQualifiedName.get()) {
-                    ClassMetadata(n.fullyQualifiedName.get(), metadataStack.lastOrNull()?.name)
+                    ClassMetadata(n.fullyQualifiedName.get(), metadataStack.lastOrNull()?.name).also {
+//                        for (importIdentifier in imports.keys) {
+//                            it.resolvedMap[importIdentifier] = importIdentifier
+//                        }
+
+                        it.resolvedMap.putAll(importedVariants)
+                    }
                 })
                 block()
                 metadataStack.pop()
@@ -122,7 +191,6 @@ class SourceRootMetadata(sourceRootPath: Path) {
 
             override fun visit(n: ImportDeclaration, arg: Void?) {
                 if (n.isStatic) return
-                if (n.isAsterisk) return
 
 //                val fullSimpleName = n.name.identifier
 //                findAllImportVariants(fullSimpleName).forEach {
@@ -130,7 +198,22 @@ class SourceRootMetadata(sourceRootPath: Path) {
 //                    if (old != null) logger.warn("Variant '$it' already existed, old value: $old, new value: $fullSimpleName")
 //                }
 
-                imports[n.name.identifier] = n.name.qualifier.get().asString()
+                if (n.isAsterisk) {
+                    val classes = packageToClasses[n.nameAsString] ?: let {
+                        logger.warn("Package not found for ${n.name.getPackageString()}")
+                        return
+                    }
+
+                    imports.putAll(classes)
+                } else {
+                    val importFullSimpleClassName = n.name.getClassString()
+
+                    imports[importFullSimpleClassName] = n.name.getPackageString()
+                    findAllImportVariants(importFullSimpleClassName).forEach { variant ->
+                        importedVariants[variant] = importFullSimpleClassName
+                    }
+                }
+
                 super.visit(n, arg)
             }
 
@@ -144,6 +227,14 @@ class SourceRootMetadata(sourceRootPath: Path) {
                 }
             }
         }, null)
+    }
+
+    private fun Name.getPackageString(): String {
+        return asString().split(".").filter { it.all { c -> c.isLowerCase() } }.joinToString(".")
+    }
+
+    private fun Name.getClassString(): String {
+        return asString().split(".").filter { it.any { c -> c.isUpperCase() } }.joinToString(".")
     }
 
     private fun scanMethods(compilationUnit: CompilationUnit) {
@@ -190,7 +281,24 @@ class SourceRootMetadata(sourceRootPath: Path) {
                 currentClassStack.peek().let { currentClass ->
                     n.parameters.forEach { parameter ->
                         val typeStr = parameter.typeAsString
-                        val resolvedType = getCombinedResolvedMaps(currentClass)[typeStr] ?: typeStr
+                        val resolvedType = when (val type = parameter.type) {
+                            is ClassOrInterfaceType -> {
+                                when {
+                                    type.typeArguments.isEmpty -> getCombinedResolvedMaps(currentClass)[typeStr] ?: typeStr
+                                    else -> {
+                                        buildString {
+                                            append(type.nameAsString)
+                                            append("<")
+                                            append(type.typeArguments.get().joinToString(", ") {
+                                                getCombinedResolvedMaps(currentClass)[it.asString()] ?: it.asString()
+                                            })
+                                            append(">")
+                                        }
+                                    }
+                                }
+                            }
+                            else -> getCombinedResolvedMaps(currentClass)[typeStr] ?: typeStr
+                        }
 
                         parameter.setType(resolvedType)
                     }

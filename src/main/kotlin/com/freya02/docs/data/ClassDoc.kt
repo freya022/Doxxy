@@ -19,6 +19,7 @@ class ClassDoc @JvmOverloads constructor(
     val source: DocSourceType = DocSourceType.fromUrl(sourceURL) ?: throw DocParseException()
 
     val docTitleElement: HTMLElement
+    val classNameFqcn: String by lazy { "$packageName.$className" }
     val packageName: String
     override val className: String
     override val descriptionElements: HTMLElementList

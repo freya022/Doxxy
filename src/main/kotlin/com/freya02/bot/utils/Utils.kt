@@ -63,7 +63,7 @@ object Utils {
     inline fun Statement.logQuery() = logQuery(walker.callerClass)
 
     fun Statement.logQuery(callerClass: Class<*>) {
-        JDALogger.getLog(callerClass).debug("Running query '${this.toSQLString()}'")
+        JDALogger.getLog(callerClass).trace("Running query '${this.toSQLString()}'")
     }
 
     inline fun <R> measureTime(desc: String, block: () -> R): R {
