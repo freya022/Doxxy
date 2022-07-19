@@ -37,13 +37,7 @@ class MethodDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, e
         methodAnnotations = methodAnnotationsElement?.text()
 
         val methodParametersElement = element.selectFirst("div.member-signature > span.parameters")
-        methodParameters = methodParametersElement
-//            ?.also {
-//                it.select("wbr").forEach { e ->
-//                    e.replaceWith(Element("span").html(" "))
-//                }
-//            }
-            ?.text()
+        methodParameters = methodParametersElement?.text()
 
         val methodReturnTypeElement = element.selectFirst("div.member-signature > span.return-type")
         methodReturnType = when (methodReturnTypeElement) {

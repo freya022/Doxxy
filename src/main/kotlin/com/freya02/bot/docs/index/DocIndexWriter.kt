@@ -112,20 +112,6 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
                             .find { it.parametersString == docsParametersString }
                             ?.methodRange
 
-//                        val classInfo = sourceRoot["${methodDoc.classDocs.packageName}.${methodDoc.classDocs.className}"]
-//
-//                        methodLoop@ for (methodInfo in classInfo.getDeclaredMethodInfo(methodDoc.methodName)) {
-//                            for ((i, parameterInfo) in methodInfo.parameterInfo.withIndex()) {
-//                                val descriptor = parameterInfo.typeSignatureOrTypeDescriptor
-//
-//                                if (descriptor.toStringWithSimpleNames() != docsMethodParams[i].first) {
-//                                    continue@methodLoop
-//                                }
-//                            }
-//
-//                            return@let methodInfo.minLineNum..methodInfo.maxLineNum
-//                        }
-
                         if (range != null) return@let range
 
                         LOGGER.warn("Method not found: ${methodDoc.methodSignature}")
