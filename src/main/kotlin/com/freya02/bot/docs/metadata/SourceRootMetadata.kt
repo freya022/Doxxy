@@ -22,36 +22,18 @@ class SourceRootMetadata(sourceRootPath: Path) {
     private val packageToClasses: MutableMap<String, MutableList<Pair<String, ClassName>>> = sortedMapOf()
 
     init {
-        sourceRoot.parse("net.dv8tion.jda.api") { localPath, _, result ->
-            if (result.problems.isNotEmpty()) {
-                result.problems.forEach { logger.error(it.toString()) }
-            }
-            result.ifSuccessful {
-                kotlin.runCatching { parsePackages(it) }.onFailure {
-                    logger.error("Failed to parse $localPath", it)
-                }
-            }
-            SourceRoot.Callback.Result.DONT_SAVE
-        }
+        parseSourceRoot { parsePackages(it) }
+        parseSourceRoot { parseResult(it) }
+        parseSourceRoot { scanMethods(it) }
+    }
 
+    private fun parseSourceRoot(block: (CompilationUnit) -> Unit) {
         sourceRoot.parse("net.dv8tion.jda.api") { localPath, _, result ->
             if (result.problems.isNotEmpty()) {
                 result.problems.forEach { logger.error(it.toString()) }
             }
-            result.ifSuccessful {
-                kotlin.runCatching { parseResult(it) }.onFailure {
-                    logger.error("Failed to parse $localPath", it)
-                }
-            }
-            SourceRoot.Callback.Result.DONT_SAVE
-        }
-
-        sourceRoot.parse("net.dv8tion.jda.api") { localPath, _, result ->
-            if (result.problems.isNotEmpty()) {
-                result.problems.forEach { logger.error(it.toString()) }
-            }
-            result.ifSuccessful {
-                kotlin.runCatching { scanMethods(it) }.onFailure {
+            result.ifSuccessful { unit ->
+                kotlin.runCatching { block(unit) }.onFailure {
                     logger.error("Failed to parse method of $localPath", it)
                 }
             }
@@ -80,17 +62,9 @@ class SourceRootMetadata(sourceRootPath: Path) {
     }
 
     private fun parsePackages(compilationUnit: CompilationUnit) {
+        //First add all classes to their packages so other methods can see which class can implicitly access other classes
+
         compilationUnit.accept(object : VoidVisitorAdapter<Void>() {
-            private val metadataStack: Stack<ClassMetadata> = Stack()
-
-            private fun withClassName(n: TypeDeclaration<*>, block: () -> Unit) {
-//                metadataStack.push(classMetadataMap.getOrPut(n.fullyQualifiedName.get()) {
-//                    ClassMetadata(n.fullyQualifiedName.get(), metadataStack.lastOrNull()?.name)
-//                })
-                block()
-//                metadataStack.pop()
-            }
-
             private fun insertFullSimpleNameWithPackage(n: TypeDeclaration<*>) {
                 packageToClasses.getOrPut(n.findCompilationUnit().get().packageDeclaration.get().nameAsString) {
                     arrayListOf()
@@ -100,31 +74,21 @@ class SourceRootMetadata(sourceRootPath: Path) {
             override fun visit(n: ClassOrInterfaceDeclaration, arg: Void?) {
                 if (n.isLocalClassDeclaration) return
 
-                withClassName(n) {
-                    insertFullSimpleNameWithPackage(n)
-                    super.visit(n, arg)
-                }
+                insertFullSimpleNameWithPackage(n)
+                super.visit(n, arg)
             }
 
             override fun visit(n: EnumDeclaration, arg: Void?) {
-                withClassName(n) {
-                    insertFullSimpleNameWithPackage(n)
-                    super.visit(n, arg)
-                }
+                insertFullSimpleNameWithPackage(n)
+                super.visit(n, arg)
             }
 
             override fun visit(n: AnnotationDeclaration, arg: Void?) {
-                withClassName(n) {
-                    insertFullSimpleNameWithPackage(n)
-                    super.visit(n, arg)
-                }
+                insertFullSimpleNameWithPackage(n)
+                super.visit(n, arg)
             }
         }, null)
     }
-
-    //TODO inherited inner classes should be accessible
-
-    //TODO do a service where simple names can be resolved to package + name in certain compilation units ?
 
     // We need to transform source code `getPremadeWidgetHtml(Guild, WidgetTheme, int, int)` into `getPremadeWidgetHtml(Guild, WidgetUtil.WidgetTheme, int, int)`
     // so transform parameter types into their full simple name
@@ -137,17 +101,12 @@ class SourceRootMetadata(sourceRootPath: Path) {
 
         imports.putAll(packageToClasses[compilationUnit.packageDeclaration.get().nameAsString]!!)
 
-        //TODO Class MemberCachePolicy somehow have WidgetUtil.Widget.Member in it's resolved types
         compilationUnit.accept(object : VoidVisitorAdapter<Void>() {
             private val metadataStack: Stack<ClassMetadata> = Stack()
 
             private fun withClassName(n: TypeDeclaration<*>, block: () -> Unit) {
                 metadataStack.push(classMetadataMap.getOrPut(n.fullyQualifiedName.get()) {
                     ClassMetadata(n.fullyQualifiedName.get(), metadataStack.lastOrNull()?.name).also {
-//                        for (importIdentifier in imports.keys) {
-//                            it.resolvedMap[importIdentifier] = importIdentifier
-//                        }
-
                         it.resolvedMap.putAll(importedVariants)
                     }
                 })
@@ -191,12 +150,6 @@ class SourceRootMetadata(sourceRootPath: Path) {
 
             override fun visit(n: ImportDeclaration, arg: Void?) {
                 if (n.isStatic) return
-
-//                val fullSimpleName = n.name.identifier
-//                findAllImportVariants(fullSimpleName).forEach {
-//                    val old = resolvedMap.put(it, fullSimpleName)
-//                    if (old != null) logger.warn("Variant '$it' already existed, old value: $old, new value: $fullSimpleName")
-//                }
 
                 if (n.isAsterisk) {
                     val classes = packageToClasses[n.nameAsString] ?: let {
@@ -316,9 +269,6 @@ class SourceRootMetadata(sourceRootPath: Path) {
             }
         }, null)
     }
-
-    private fun getMasterKey(compilationUnit: CompilationUnit) =
-        "${compilationUnit.packageDeclaration.get().nameAsString}.${compilationUnit.primaryTypeName.get()}"
 
     private fun NodeList<Parameter>.toSimpleParameterString(): String = joinToString(", ") {
         when {
