@@ -52,12 +52,7 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
 
                 val classEmbed = toEmbed(classDoc).build()
                 val classEmbedJson = GSON.toJson(classEmbed)
-                val sourceLink = run {
-                    when (sourceType.githubSourceURL) {
-                        null -> null
-                        else -> sourceType.githubSourceURL + classDoc.packageName.replace('.', '/') + "/${classDoc.className}.java"
-                    }
-                }
+                val sourceLink = classDoc.asGithubLink()
 
                 val classDocId = insertDoc(DocType.CLASS, classDoc.className, classDoc, classEmbedJson, sourceLink)
                 insertSeeAlso(classDoc, classDocId)
@@ -121,16 +116,7 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
                     }
                 }
 
-                val methodClassSourceLink = run {
-                    when (sourceType.githubSourceURL) {
-                        null -> null
-                        else -> {
-                            val packageName = methodDoc.classDocs.packageName.replace('.', '/')
-                            val topLevelClassName = methodDoc.classDocs.className.substringBefore('.')
-                            "${sourceType.githubSourceURL}$packageName/$topLevelClassName.java"
-                        }
-                    }
-                }
+                val methodClassSourceLink = methodDoc.classDocs.asGithubLink()
 
                 val methodLink = when (methodRange) {
                     null -> null
@@ -192,6 +178,14 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
                 )
             }
         }
+    }
+
+    private fun ClassDoc.asGithubLink(): String? {
+        if (sourceType.githubSourceURL == null) return null
+
+        val packageName = packageName.replace('.', '/')
+        val topLevelClassName = className.substringBefore('.')
+        return "${sourceType.githubSourceURL}$packageName/$topLevelClassName.java"
     }
 
     companion object {
