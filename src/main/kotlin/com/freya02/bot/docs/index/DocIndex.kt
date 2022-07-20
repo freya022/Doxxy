@@ -22,7 +22,7 @@ private val LOGGER: Logger = Logging.getLogger()
 
 //Initial construct just allows database access
 // Further updates must be invoked by external methods such as version checkers
-class DocIndex(private val sourceType: DocSourceType, private val database: Database) : IDocIndexKt {
+class DocIndex(private val sourceType: DocSourceType, private val database: Database) : IDocIndex {
     private val mutex = Mutex()
 
     override fun getClassDoc(className: String): CachedClass? {
@@ -48,7 +48,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
 
     override fun findAnySignatures(docType: DocType, query: String?): Collection<String> = getAllSignatures(docType, query)
 
-    override fun findSignatures(className: String, query: String?, vararg docTypes: DocType): List<String> {
+    override fun findSignaturesIn(className: String, query: String?, vararg docTypes: DocType): List<String> {
         val typeCheck = docTypes.joinToString(" or ") { "doc.type = ${it.id}" }
 
         @Language("PostgreSQL", prefix = "select * from doc ")
