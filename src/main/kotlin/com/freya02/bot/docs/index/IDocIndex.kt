@@ -31,11 +31,11 @@ interface IDocIndex {
     fun findAnyMethodSignatures(query: String? = null): Collection<String> = findAnySignatures(DocType.METHOD, query)
     fun findAnyFieldSignatures(query: String? = null): Collection<String> = findAnySignatures(DocType.FIELD, query)
 
-    //TODO findSignaturesIn
     fun findSignaturesIn(className: String, query: String? = null, vararg docTypes: DocType): Collection<String>
     fun findMethodSignaturesIn(className: String, query: String? = null) = findSignaturesIn(className, query, DocType.METHOD)
     fun findFieldSignaturesIn(className: String, query: String? = null) = findSignaturesIn(className, query, DocType.FIELD)
-    fun findMethodAndFieldSignaturesIn(className: String, query: String? = null) = findSignaturesIn(className, query, DocType.METHOD, DocType.FIELD)
+    fun findMethodAndFieldSignaturesIn(className: String, query: String? = null) =
+        findSignaturesIn(className, query, DocType.METHOD, DocType.FIELD)
 
     fun getClasses(query: String? = null): Collection<String>
     fun getClassesWithMethods(query: String? = null): Collection<String>
