@@ -4,7 +4,7 @@ import com.freya02.bot.docs.cached.CachedClass
 import com.freya02.bot.docs.cached.CachedField
 import com.freya02.bot.docs.cached.CachedMethod
 
-interface IDocIndexKt {
+interface IDocIndex {
     fun getClassDoc(className: String): CachedClass?
 
     fun getMethodDoc(className: String, identifier: String): CachedMethod?
@@ -32,10 +32,10 @@ interface IDocIndexKt {
     fun findAnyFieldSignatures(query: String? = null): Collection<String> = findAnySignatures(DocType.FIELD, query)
 
     //TODO findSignaturesIn
-    fun findSignatures(className: String, query: String? = null, vararg docTypes: DocType): Collection<String>
-    fun findMethodSignatures(className: String, query: String? = null) = findSignatures(className, query, DocType.METHOD)
-    fun findFieldSignatures(className: String, query: String? = null) = findSignatures(className, query, DocType.FIELD)
-    fun findMethodAndFieldSignatures(className: String, query: String? = null) = findSignatures(className, query, DocType.METHOD, DocType.FIELD)
+    fun findSignaturesIn(className: String, query: String? = null, vararg docTypes: DocType): Collection<String>
+    fun findMethodSignaturesIn(className: String, query: String? = null) = findSignaturesIn(className, query, DocType.METHOD)
+    fun findFieldSignaturesIn(className: String, query: String? = null) = findSignaturesIn(className, query, DocType.FIELD)
+    fun findMethodAndFieldSignaturesIn(className: String, query: String? = null) = findSignaturesIn(className, query, DocType.METHOD, DocType.FIELD)
 
     fun getClasses(query: String? = null): Collection<String>
     fun getClassesWithMethods(query: String? = null): Collection<String>
