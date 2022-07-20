@@ -10,7 +10,6 @@ import com.freya02.botcommands.api.CommandsBuilder
 import com.freya02.botcommands.api.Logging
 import com.freya02.botcommands.api.builder.ApplicationCommandsBuilder
 import com.freya02.botcommands.api.builder.ExtensionsBuilder
-import com.freya02.botcommands.api.builder.TextCommandsBuilder
 import com.freya02.botcommands.api.components.DefaultComponentManager
 import com.freya02.botcommands.api.runner.KotlinMethodRunnerFactory
 import com.freya02.docs.DocWebServer
@@ -87,10 +86,6 @@ object Main {
                         .registerConstructorParameter(DocIndexMap::class.java) { docIndexMap }
                         .registerParameterResolver(LibraryTypeResolver())
                         .setMethodRunnerFactory(KotlinMethodRunnerFactory(Dispatchers.IO, scope))
-                }
-                .textCommandBuilder { textCommandsBuilder: TextCommandsBuilder ->
-                    textCommandsBuilder
-                        .addPrefix("!")
                 }
                 .applicationCommandBuilder { applicationCommandsBuilder: ApplicationCommandsBuilder ->
                     applicationCommandsBuilder
