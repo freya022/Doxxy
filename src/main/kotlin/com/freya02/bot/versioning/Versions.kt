@@ -5,13 +5,10 @@ import com.freya02.bot.commands.slash.docs.CommonDocsHandlers
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.index.ReindexData
 import com.freya02.bot.utils.Utils.withTemporaryFile
-import com.freya02.bot.versioning.VersionsUtils.downloadJitpackJavadoc
-import com.freya02.bot.versioning.VersionsUtils.downloadJitpackSources
 import com.freya02.bot.versioning.VersionsUtils.downloadMavenJavadoc
 import com.freya02.bot.versioning.VersionsUtils.downloadMavenSources
 import com.freya02.bot.versioning.github.GithubUtils
-import com.freya02.bot.versioning.jitpack.JitpackVersionChecker
-import com.freya02.bot.versioning.maven.MavenProjectDependencyVersionChecker
+import com.freya02.bot.versioning.maven.MavenBranchProjectDependencyVersionChecker
 import com.freya02.bot.versioning.maven.MavenVersionChecker
 import com.freya02.bot.versioning.maven.RepoType
 import com.freya02.botcommands.api.BContext
@@ -33,9 +30,9 @@ private val BC_DOCS_FOLDER: Path = Main.JAVADOCS_PATH.resolve("BotCommands")
 
 class Versions(private val docIndexMap: DocIndexMap) {
     private val bcChecker =
-        JitpackVersionChecker(lastKnownBotCommandsPath, "freya022", "com.github.freya022", "BotCommands")
-    private val jdaVersionFromBCChecker: MavenProjectDependencyVersionChecker =
-        MavenProjectDependencyVersionChecker(lastKnownJDAFromBCPath, "freya022", "BotCommands", "JDA")
+        MavenVersionChecker(lastKnownBotCommandsPath, RepoType.MAVEN, "io.github.freya022", "BotCommands")
+    private val jdaVersionFromBCChecker: MavenBranchProjectDependencyVersionChecker =
+        MavenBranchProjectDependencyVersionChecker(lastKnownJDAFromBCPath, "freya022", "BotCommands", "JDA", "master")
     private val jda4Checker: MavenVersionChecker =
         MavenVersionChecker(lastKnownJDA4Path, RepoType.M2, "net.dv8tion", "JDA")
     private val jda5Checker: MavenVersionChecker =
@@ -133,12 +130,12 @@ class Versions(private val docIndexMap: DocIndexMap) {
             if (changed) {
                 LOGGER.info("BotCommands version changed")
 
-                bcChecker.latest.downloadJitpackJavadoc().withTemporaryFile { javadocPath ->
+                bcChecker.latest.downloadMavenJavadoc().withTemporaryFile { javadocPath ->
                     LOGGER.trace("Extracting BC javadocs")
                     VersionsUtils.replaceWithZipContent(javadocPath, BC_DOCS_FOLDER, "html")
                 }
 
-                bcChecker.latest.downloadJitpackSources().withTemporaryFile { javadocPath ->
+                bcChecker.latest.downloadMavenSources().withTemporaryFile { javadocPath ->
                     LOGGER.trace("Extracting BC sources")
                     VersionsUtils.extractZip(javadocPath, BC_DOCS_FOLDER, "java")
                 }
