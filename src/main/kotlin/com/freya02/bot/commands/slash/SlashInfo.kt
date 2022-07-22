@@ -2,6 +2,7 @@ package com.freya02.bot.commands.slash
 
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.application.ApplicationCommand
+import com.freya02.botcommands.api.application.CommandScope
 import com.freya02.botcommands.api.application.slash.GuildSlashEvent
 import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand
 import dev.minn.jda.ktx.messages.Embed
@@ -9,7 +10,7 @@ import net.dv8tion.jda.api.JDAInfo
 
 @CommandMarker
 class SlashInfo : ApplicationCommand() {
-    @JDASlashCommand(name = "info", description = "Gives info on the bot")
+    @JDASlashCommand(scope = CommandScope.GLOBAL_NO_DM, name = "info", description = "Gives info on the bot")
     fun onSlashInfo(event: GuildSlashEvent) {
         event.replyEmbeds(Embed {
             author {
