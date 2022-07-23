@@ -192,7 +192,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         return DBAction.of(
             database,
             """
-                select classname, identifier
+                select concat(classname, '#', identifier) as full_identifier
                 from doc
                 where source_id = ?
                   and type = ?
@@ -202,7 +202,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
             "classname"
         ).use { action ->
             action.executeQuery(sourceType.id, docType.id, *sortArgs)
-                .transformEach { "${it.get<String>("classname")}#${it.get<String>("identifier")}" }
+                .transformEach { it["full_identifier"] }
         }
     }
 
