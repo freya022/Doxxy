@@ -1,6 +1,7 @@
 package com.freya02.docs.data
 
 import com.github.javaparser.JavaParser
+import com.github.javaparser.ast.nodeTypes.NodeWithTypeArguments
 
 data class MethodDocParameters(val asString: String) {
     val parameters: List<MethodDocParameter> = asString
@@ -11,6 +12,9 @@ data class MethodDocParameters(val asString: String) {
             try {
                 val parsedParameter = synchronized(parser) {
                     parser.parseParameter(parameter).result.get()
+                }.also {
+                    val type = it.type
+                    if (type is NodeWithTypeArguments<*>) type.removeTypeArguments()
                 }
 
                 val annotations = parsedParameter.annotations.map { it.nameAsString }.toSet()
