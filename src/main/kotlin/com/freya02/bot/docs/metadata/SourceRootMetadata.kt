@@ -1,6 +1,7 @@
 package com.freya02.bot.docs.metadata
 
 import com.freya02.botcommands.api.Logging
+import com.github.javaparser.ParseResult
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.ImportDeclaration
 import com.github.javaparser.ast.Node
@@ -22,22 +23,23 @@ class SourceRootMetadata(sourceRootPath: Path) {
     private val packageToClasses: MutableMap<String, MutableList<Pair<String, ClassName>>> = sortedMapOf()
 
     init {
-        parseSourceRoot { parsePackages(it) }
-        parseSourceRoot { parseResult(it) }
-        parseSourceRoot { scanMethods(it) }
+        val results = sourceRoot.tryToParse("net.dv8tion.jda.api")
+
+        processParseResults(results) { parsePackages(it) }
+        processParseResults(results) { parseResult(it) }
+        processParseResults(results) { scanMethods(it) }
     }
 
-    private fun parseSourceRoot(block: (CompilationUnit) -> Unit) {
-        sourceRoot.parse("net.dv8tion.jda.api") { localPath, _, result ->
+    private fun processParseResults(results: List<ParseResult<CompilationUnit>>, block: (CompilationUnit) -> Unit) {
+        results.forEach { result ->
             if (result.problems.isNotEmpty()) {
                 result.problems.forEach { logger.error(it.toString()) }
             }
             result.ifSuccessful { unit ->
                 kotlin.runCatching { block(unit) }.onFailure {
-                    logger.error("Failed to parse method of $localPath", it)
+                    logger.error("Failed to parse method $result", it)
                 }
             }
-            SourceRoot.Callback.Result.DONT_SAVE
         }
     }
 
