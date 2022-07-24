@@ -5,31 +5,33 @@ import java.nio.file.Path
 import kotlin.io.path.notExists
 import kotlin.io.path.readLines
 
-private const val MAVEN_JAVADOC_FORMAT = "https://repo1.maven.org/maven2/%s/%s/%s/%s-%s-javadoc.jar"
-private const val JITPACK_JAVADOC_FORMAT = "https://jitpack.io/%s/%s/%s/%s-%s-javadoc.jar"
+private const val MAVEN_JAVADOC_FORMAT = "https://repo1.maven.org/maven2/%s/%s/%s/%s-%s%s.jar"
+private const val JITPACK_JAVADOC_FORMAT = "https://jitpack.io/%s/%s/%s/%s-%s%s.jar"
 
 data class ArtifactInfo(val groupId: String, val artifactId: String, val version: String) {
     fun toFileString(): String {
         return arrayOf(groupId, artifactId, version).joinToString("\n")
     }
 
-    fun toMavenJavadocUrl(): String {
+    fun toMavenUrl(fileType: FileType): String {
         return MAVEN_JAVADOC_FORMAT.format(
             groupId.replace('.', '/'),
             artifactId,
             version,
             artifactId,
-            version
+            version,
+            fileType.fileSuffix
         )
     }
 
-    fun toJitpackJavadocUrl(): String {
+    fun toJitpackUrl(fileType: FileType): String {
         return JITPACK_JAVADOC_FORMAT.format(
             groupId.replace('.', '/'),
             artifactId,
             version,
             artifactId,
-            version
+            version,
+            fileType.fileSuffix
         )
     }
 

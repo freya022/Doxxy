@@ -3,7 +3,6 @@ package com.freya02.docs
 import com.freya02.bot.utils.DecomposedName
 import com.freya02.bot.utils.HttpUtils
 import com.freya02.botcommands.api.Logging
-import com.freya02.docs.PageCache.getPage
 import com.freya02.docs.utils.DocsURL
 import java.io.IOException
 import java.util.*
@@ -29,7 +28,7 @@ class ClassDocs private constructor(private val source: DocSourceType) {
         val indexURL = source.allClassesIndexURL
 
         LOGGER.info("Parsing ClassDocs URLs for: {}", source)
-        val document = getPage(indexURL)
+        val document = PageCache[source].getPage(indexURL)
 
         simpleNameToUrlMap.clear()
         urlSet.clear()

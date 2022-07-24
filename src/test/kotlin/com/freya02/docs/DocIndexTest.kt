@@ -3,6 +3,8 @@ package com.freya02.docs
 import com.freya02.bot.Config.Companion.getConfig
 import com.freya02.bot.db.Database
 import com.freya02.bot.docs.index.DocIndex
+import com.freya02.bot.docs.index.ReindexData
+import com.freya02.bot.versioning.github.GithubUtils
 import com.freya02.docs.DocWebServer.startDocWebServer
 import kotlin.system.exitProcess
 
@@ -16,9 +18,11 @@ suspend fun main() {
     val jdaIndex = DocIndex(DocSourceType.JDA, database)
     val javaIndex = DocIndex(DocSourceType.JAVA, database)
 
-    bcIndex.reindex()
-    jdaIndex.reindex()
-    javaIndex.reindex()
+//    bcIndex.reindex()
+    val sourceUrl = GithubUtils.getLatestReleaseHash("DV8FromTheWorld", "JDA")
+        ?.let { hash -> "https://github.com/DV8FromTheWorld/JDA/blobl/${hash.hash}/src/main/java/" }
+    jdaIndex.reindex(ReindexData(sourceUrl))
+//    javaIndex.reindex()
 
     for (index in listOf(bcIndex, jdaIndex, javaIndex)) {
         val cachedClass = index.getClassDoc("AppOption")

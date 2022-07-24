@@ -2,6 +2,7 @@ package com.freya02.bot.docs
 
 import com.freya02.bot.db.Database
 import com.freya02.bot.docs.index.DocIndex
+import com.freya02.bot.docs.index.ReindexData
 import com.freya02.docs.DocSourceType
 import java.io.IOException
 import java.util.*
@@ -14,7 +15,7 @@ class DocIndexMap(database: Database) : EnumMap<DocSourceType, DocIndex>(DocSour
     }
 
     @Throws(IOException::class)
-    suspend fun refreshAndInvalidateIndex(sourceType: DocSourceType) {
-        this[sourceType]?.reindex()
+    suspend fun refreshAndInvalidateIndex(sourceType: DocSourceType, reindexData: ReindexData) {
+        this[sourceType]?.reindex(reindexData)
     }
 }

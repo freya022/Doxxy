@@ -7,7 +7,7 @@ import kotlin.io.path.readText
 
 data class DBConfig(val serverName: String, val portNumber: Int, val user: String, val password: String, val dbName: String) {
     val dbURL: String
-        get() = "jdbc:postgresql://localhost:$portNumber/$dbName"
+        get() = "jdbc:postgresql://$serverName:$portNumber/$dbName"
 }
 
 data class Config(val token: String, val dbConfig: DBConfig) {

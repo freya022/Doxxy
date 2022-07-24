@@ -3,9 +3,13 @@ package com.freya02.bot.versioning
 import com.freya02.bot.Main
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers
 import com.freya02.bot.docs.DocIndexMap
+import com.freya02.bot.docs.index.ReindexData
 import com.freya02.bot.utils.Utils.withTemporaryFile
 import com.freya02.bot.versioning.VersionsUtils.downloadJitpackJavadoc
+import com.freya02.bot.versioning.VersionsUtils.downloadJitpackSources
 import com.freya02.bot.versioning.VersionsUtils.downloadMavenJavadoc
+import com.freya02.bot.versioning.VersionsUtils.downloadMavenSources
+import com.freya02.bot.versioning.github.GithubUtils
 import com.freya02.bot.versioning.jitpack.JitpackVersionChecker
 import com.freya02.bot.versioning.maven.MavenProjectDependencyVersionChecker
 import com.freya02.bot.versioning.maven.MavenVersionChecker
@@ -48,7 +52,7 @@ class Versions(private val docIndexMap: DocIndexMap) {
 
         //First index for Java's docs, may take some time
         if (docIndexMap[DocSourceType.JAVA]!!.getClassDoc("Object") == null) {
-            docIndexMap[DocSourceType.JAVA]!!.reindex()
+            docIndexMap[DocSourceType.JAVA]!!.reindex(ReindexData())
 
             //Once java's docs are indexed, invalidate caches if the user had time to use the commands before docs were loaded
             for (autocompleteName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
@@ -64,14 +68,22 @@ class Versions(private val docIndexMap: DocIndexMap) {
             if (changed) {
                 LOGGER.info("JDA 5 version changed")
 
-                LOGGER.debug("Downloading JDA 5 javadocs")
+                LOGGER.trace("Downloading JDA 5 javadocs")
                 jda5Checker.latest.downloadMavenJavadoc().withTemporaryFile { tempZip ->
-                    LOGGER.debug("Extracting JDA 5 javadocs")
-                    VersionsUtils.replaceWithZipContent(tempZip, JDA_DOCS_FOLDER)
+                    LOGGER.trace("Extracting JDA 5 javadocs")
+                    VersionsUtils.replaceWithZipContent(tempZip, JDA_DOCS_FOLDER, "html")
                 }
 
-                LOGGER.debug("Invalidating JDA 5 index")
-                runBlocking { docIndexMap.refreshAndInvalidateIndex(DocSourceType.JDA) }
+                jda5Checker.latest.downloadMavenSources().withTemporaryFile { tempZip ->
+                    LOGGER.trace("Extracting JDA 5 sources")
+                    VersionsUtils.extractZip(tempZip, JDA_DOCS_FOLDER, "java")
+                }
+
+                val sourceUrl = GithubUtils.getLatestReleaseHash("DV8FromTheWorld", "JDA")
+                    ?.let { hash -> "https://github.com/DV8FromTheWorld/JDA/blob/${hash.hash}/src/main/java/" }
+
+                LOGGER.trace("Invalidating JDA 5 index")
+                runBlocking { docIndexMap.refreshAndInvalidateIndex(DocSourceType.JDA, ReindexData(sourceUrl)) }
                 for (handlerName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
                     context?.invalidateAutocompletionCache(handlerName)
                 }
@@ -122,11 +134,17 @@ class Versions(private val docIndexMap: DocIndexMap) {
                 LOGGER.info("BotCommands version changed")
 
                 bcChecker.latest.downloadJitpackJavadoc().withTemporaryFile { javadocPath ->
-                    VersionsUtils.replaceWithZipContent(javadocPath, BC_DOCS_FOLDER)
+                    LOGGER.trace("Extracting BC javadocs")
+                    VersionsUtils.replaceWithZipContent(javadocPath, BC_DOCS_FOLDER, "html")
                 }
 
-                LOGGER.debug("Invalidating BotCommands index")
-                runBlocking { docIndexMap.refreshAndInvalidateIndex(DocSourceType.BOT_COMMANDS) }
+                bcChecker.latest.downloadJitpackSources().withTemporaryFile { javadocPath ->
+                    LOGGER.trace("Extracting BC sources")
+                    VersionsUtils.extractZip(javadocPath, BC_DOCS_FOLDER, "java")
+                }
+
+                LOGGER.trace("Invalidating BotCommands index")
+                runBlocking { docIndexMap.refreshAndInvalidateIndex(DocSourceType.BOT_COMMANDS, ReindexData()) }
                 for (handlerName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
                     context?.invalidateAutocompletionCache(handlerName)
                 }

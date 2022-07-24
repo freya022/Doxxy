@@ -13,12 +13,14 @@ import java.util.function.Consumer
 
 class ClassDoc @JvmOverloads constructor(
     docsSession: DocsSession,
-    private val sourceURL: String,
+    val sourceURL: String,
     document: Document = HttpUtils.getDocument(sourceURL)
 ) : BaseDoc() {
     val source: DocSourceType = DocSourceType.fromUrl(sourceURL) ?: throw DocParseException()
 
     val docTitleElement: HTMLElement
+    val classNameFqcn: String by lazy { "$packageName.$className" }
+    val packageName: String
     override val className: String
     override val descriptionElements: HTMLElementList
     override val deprecationElement: HTMLElement?
@@ -35,6 +37,9 @@ class ClassDoc @JvmOverloads constructor(
 
         //Get javadoc title
         docTitleElement = HTMLElement.wrap(document.selectFirst("body > div.flex-box > div > main > div > h1"))
+
+        //Get package name
+        packageName = document.selectFirst("body > div > div > main > div.header > div.sub-title > a")?.text() ?: throw DocParseException()
 
         //Get class name
         className = getClassName(sourceURL)

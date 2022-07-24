@@ -27,7 +27,6 @@ enum class DocSourceType(
         "java\\.lang\\.annotation.*",
         "java\\.lang\\.invoke.*",
         "java\\.lang\\.reflect.*",
-        "java\\.lang\\.reflect.*",
         "java\\.math.*",
         "java\\.nio",
         "java\\.nio\\.channels",

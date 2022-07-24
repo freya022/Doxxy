@@ -26,33 +26,35 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
     private val mutex = Mutex()
 
     fun getClassDoc(className: String): CachedClass? {
-        val (docId, embed) = findDoc(DocType.CLASS, className) ?: return null
+        val (docId, embed, sourceLink) = findDoc(DocType.CLASS, className) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
 
-        return CachedClass(embed, seeAlsoReferences)
+        return CachedClass(embed, seeAlsoReferences, sourceLink)
     }
 
     override fun getMethodDoc(className: String, identifier: String): CachedMethod? {
-        val (docId, embed) = findDoc(DocType.METHOD, className, identifier) ?: return null
+        val (docId, embed, sourceLink) = findDoc(DocType.METHOD, className, identifier) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
 
-        return CachedMethod(embed, seeAlsoReferences)
+        return CachedMethod(embed, seeAlsoReferences, sourceLink)
     }
 
     override fun getFieldDoc(className: String, fieldName: String): CachedField? {
-        val (docId, embed) = findDoc(DocType.FIELD, className, fieldName) ?: return null
+        val (docId, embed, sourceLink) = findDoc(DocType.FIELD, className, fieldName) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
 
-        return CachedField(embed, seeAlsoReferences)
+        return CachedField(embed, seeAlsoReferences, sourceLink)
     }
 
     override fun findAnyMethodSignatures(query: String?): Collection<String> = getAllSignatures(DocType.METHOD, query)
 
-    override fun findMethodSignatures(className: String, query: String?): Collection<String> = findSignatures(className, query, DocType.METHOD)
+    override fun findMethodSignatures(className: String, query: String?): Collection<String> =
+        findSignatures(className, query, DocType.METHOD)
 
     override fun findAnyFieldSignatures(query: String?): Collection<String> = getAllSignatures(DocType.FIELD, query)
 
-    override fun findFieldSignatures(className: String, query: String?): Collection<String> = findSignatures(className, query, DocType.FIELD)
+    override fun findFieldSignatures(className: String, query: String?): Collection<String> =
+        findSignatures(className, query, DocType.FIELD)
 
     override fun findMethodAndFieldSignatures(className: String, query: String?): Collection<String> =
         findSignatures(className, query, DocType.METHOD, DocType.FIELD)
@@ -82,23 +84,25 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         }
     }
 
-    override fun getClassesWithMethods(query: String?): Collection<String> = getClassNamesWithChildren(DocType.METHOD, query)
+    override fun getClassesWithMethods(query: String?): Collection<String> =
+        getClassNamesWithChildren(DocType.METHOD, query)
 
-    override fun getClassesWithFields(query: String?): Collection<String> = getClassNamesWithChildren(DocType.FIELD, query)
+    override fun getClassesWithFields(query: String?): Collection<String> =
+        getClassNamesWithChildren(DocType.FIELD, query)
 
-    suspend fun reindex(): DocIndex {
+    suspend fun reindex(reindexData: ReindexData): DocIndex {
         mutex.withLock {
             LOGGER.info("Re-indexing docs for {}", sourceType.name)
 
             if (sourceType != DocSourceType.JAVA) {
                 LOGGER.info("Clearing cache for {}", sourceType.name)
-                PageCache.clearCache(sourceType)
+                PageCache[sourceType].clearCache()
                 LOGGER.info("Cleared cache of {}", sourceType.name)
             }
 
             val docsSession = DocsSession()
 
-            DocIndexWriter(database, docsSession, sourceType).doReindex()
+            DocIndexWriter(database, docsSession, sourceType, reindexData).doReindex()
 
             LOGGER.info("Re-indexed docs for {}", sourceType.name)
         }
@@ -108,10 +112,14 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         return this
     }
 
-    private fun findDoc(docType: DocType, className: String, identifier: String? = null): Pair<Int, MessageEmbed>? = DBAction.of(
+    private fun findDoc(
+        docType: DocType,
+        className: String,
+        identifier: String? = null
+    ): Triple<Int, MessageEmbed, String>? = DBAction.of(
         database,
         """
-            select id, embed
+            select id, embed, source_link
             from doc
             where source_id = ?
               and type = ?
@@ -121,9 +129,10 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         "id", "embed"
     ).use {
         val result = it.executeQuery(sourceType.id, docType.id, className, identifier).readOnce() ?: return null
-        return@use result.getInt("id") to DocIndexWriter.GSON.fromJson(
-            result.getString("embed"),
-            MessageEmbed::class.java
+        return@use Triple(
+            result.getInt("id"),
+            DocIndexWriter.GSON.fromJson(result.getString("embed"), MessageEmbed::class.java),
+            result["source_link"]
         )
     }
 
@@ -154,7 +163,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         }
 
         val sortArgs = when {
-            query == null || query.isEmpty()  -> arrayOf()
+            query == null || query.isEmpty() -> arrayOf()
             '#' in query -> arrayOf(query.substringBefore('#'), query.substringAfter('#'))
             else -> arrayOf(query)
         }
@@ -186,7 +195,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         }
 
         val sortArgs = when {
-            query == null || query.isEmpty()  -> arrayOf()
+            query == null || query.isEmpty() -> arrayOf()
             else -> arrayOf(query)
         }
 

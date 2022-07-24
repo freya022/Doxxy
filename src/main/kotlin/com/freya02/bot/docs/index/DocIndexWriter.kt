@@ -1,20 +1,44 @@
 package com.freya02.bot.docs.index
 
+import com.freya02.bot.Main
 import com.freya02.bot.db.Database
 import com.freya02.bot.db.Transaction
 import com.freya02.bot.docs.DocEmbeds.toEmbed
+import com.freya02.bot.docs.metadata.SourceRootMetadata
 import com.freya02.botcommands.api.Logging
 import com.freya02.docs.ClassDocs
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.DocsSession
 import com.freya02.docs.data.BaseDoc
+import com.freya02.docs.data.ClassDetailType
 import com.freya02.docs.data.ClassDoc
 import com.google.gson.GsonBuilder
 import net.dv8tion.jda.api.entities.MessageEmbed
 
 private val LOGGER = Logging.getLogger()
 
-internal class DocIndexWriter(private val database_: Database, private val docsSession: DocsSession, private val sourceType: DocSourceType) {
+internal class DocIndexWriter(
+    private val database_: Database,
+    private val docsSession: DocsSession,
+    private val sourceType: DocSourceType,
+    private val reindexData: ReindexData
+) {
+    private val sourceRootMetadata: SourceRootMetadata?
+    private val annotationRegex: Regex = "@\\w+ ".toRegex()
+
+    init {
+        val docsFolderName = when (sourceType) { //TODO move to reindexData prob
+            DocSourceType.JDA -> "JDA"
+            DocSourceType.BOT_COMMANDS -> "BotCommands"
+            else -> null
+        }
+
+        sourceRootMetadata = when {
+            docsFolderName != null -> SourceRootMetadata(Main.JAVADOCS_PATH.resolve(docsFolderName))
+            else -> null
+        }
+    }
+
     suspend fun doReindex() = database_.transactional {
         val updatedSource = ClassDocs.getUpdatedSource(sourceType)
 
@@ -33,12 +57,13 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
 
                 val classEmbed = toEmbed(classDoc).build()
                 val classEmbedJson = GSON.toJson(classEmbed)
+                val sourceLink = reindexData.getClassSourceUrl(classDoc)
 
-                val classDocId = insertDoc(null, DocType.CLASS, classDoc.className, classDoc, classEmbedJson)
+                val classDocId = insertDoc(DocType.CLASS, classDoc.className, classDoc, classEmbedJson, sourceLink)
                 insertSeeAlso(classDoc, classDocId)
 
-                insertMethodDocs(classDoc, classDocId)
-                insertFieldDocs(classDoc, classDocId)
+                insertMethodDocs(classDoc, sourceLink)
+                insertFieldDocs(classDoc, sourceLink)
             } catch (e: Exception) {
                 throw RuntimeException("An exception occurred while reading the docs of '$className' at '$classUrl'", e)
             }
@@ -46,13 +71,63 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
     }
 
     context(Transaction)
-    private suspend fun insertMethodDocs(classDoc: ClassDoc, classDocId: Int) {
+    private suspend fun insertMethodDocs(classDoc: ClassDoc, sourceLink: String?) {
         for (methodDoc in classDoc.getMethodDocs().values) {
             try {
                 val methodEmbed = toEmbed(classDoc, methodDoc).build()
                 val methodEmbedJson = GSON.toJson(methodEmbed)
 
-                val methodDocId = insertDoc(classDocId, DocType.METHOD, classDoc.className, methodDoc, methodEmbedJson)
+                val methodRange: IntRange? = when (sourceLink) {
+                    null -> null
+                    else -> sourceRootMetadata?.let { sourceRootMetadata ->
+                        val docsParametersString = methodDoc.methodParameters
+                            ?.drop(1)
+                            ?.dropLast(1)
+                            ?.replace(annotationRegex, "")
+                            ?: ""
+
+                        if (docsParametersString.isEmpty() && methodDoc.classDetailType == ClassDetailType.CONSTRUCTOR) {
+                            return@let null
+                        } else if (docsParametersString.isEmpty() && methodDoc.classDetailType == ClassDetailType.ANNOTATION_ELEMENT) {
+                            return@let null
+                        } else if (docsParametersString.contains("net.dv8tion.jda.internal")) {
+                            return@let null
+                        } else if (docsParametersString.contains("okhttp3")) {
+                            return@let null
+                        } else if (docsParametersString.contains("gnu.")) {
+                            return@let null
+                        } else {
+                            if (docsParametersString.isEmpty() && methodDoc.methodName == "values"
+                                && methodDoc.classDocs.enumConstants.isNotEmpty()
+                            ) {
+                                return@let null
+                            } else if (docsParametersString == "String name" && methodDoc.methodName == "valueOf"
+                                && methodDoc.classDocs.enumConstants.isNotEmpty()
+                            ) {
+                                return@let null
+                            }
+                        }
+
+                        val range: IntRange? = sourceRootMetadata
+                            .getMethodsParameters(methodDoc.classDocs.classNameFqcn, methodDoc.methodName)
+                            .find { it.parametersString == docsParametersString }
+                            ?.methodRange
+
+                        if (range != null) return@let range
+
+                        LOGGER.warn("Method not found: ${methodDoc.methodSignature}")
+
+                        null
+                    }
+                }
+
+                val methodClassSourceLink = reindexData.getClassSourceUrl(methodDoc.classDocs)
+                val methodLink = when (methodRange) {
+                    null -> null
+                    else -> "$methodClassSourceLink#L${methodRange.first}-L${methodRange.last}"
+                }
+
+                val methodDocId = insertDoc(DocType.METHOD, classDoc.className, methodDoc, methodEmbedJson, methodLink)
                 insertSeeAlso(methodDoc, methodDocId)
             } catch (e: Exception) {
                 throw RuntimeException(
@@ -64,13 +139,34 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
     }
 
     context(Transaction)
-    private suspend fun insertFieldDocs(classDoc: ClassDoc, classDocId: Int) {
+    private suspend fun insertFieldDocs(classDoc: ClassDoc, sourceLink: String?) {
         for (fieldDoc in classDoc.getFieldDocs().values) {
             try {
                 val fieldEmbed = toEmbed(classDoc, fieldDoc).build()
                 val fieldEmbedJson = GSON.toJson(fieldEmbed)
 
-                val fieldDocId = insertDoc(classDocId, DocType.FIELD, classDoc.className, fieldDoc, fieldEmbedJson)
+                val fieldRange: IntRange? = when (sourceLink) {
+                    null -> null
+                    else -> sourceRootMetadata?.let { sourceRootMetadata ->
+                        val range: IntRange? = sourceRootMetadata
+                            .getFieldMetadata(fieldDoc.classDocs.classNameFqcn, fieldDoc.fieldName)
+                            ?.fieldRange
+
+                        if (range != null) return@let range
+
+                        LOGGER.warn("Field not found: ${fieldDoc.classDocs.className}#${fieldDoc.simpleSignature}")
+
+                        null
+                    }
+                }
+
+                val fieldClassSourceLink = reindexData.getClassSourceUrl(fieldDoc.classDocs)
+                val fieldLink = when (fieldRange) {
+                    null -> null
+                    else -> "$fieldClassSourceLink#L${fieldRange.first}-L${fieldRange.last}"
+                }
+
+                val fieldDocId = insertDoc(DocType.FIELD, classDoc.className, fieldDoc, fieldEmbedJson, fieldLink)
                 insertSeeAlso(fieldDoc, fieldDocId)
             } catch (e: Exception) {
                 throw RuntimeException(
@@ -83,14 +179,14 @@ internal class DocIndexWriter(private val database_: Database, private val docsS
 
     context(Transaction)
     private suspend fun insertDoc(
-        classDocId: Int? = null,
         docType: DocType,
         className: String,
         baseDoc: BaseDoc,
-        embedJson: String
+        embedJson: String,
+        sourceLink: String?
     ): Int {
-        return preparedStatement("insert into doc (source_id, type, parent_id, classname, identifier, embed) VALUES (?, ?, ?, ?, ?, ?) returning id") {
-            executeReturningInsert(sourceType.id, docType.id, classDocId, className, baseDoc.identifier, embedJson).readOnce()!!["id"]
+        return preparedStatement("insert into doc (source_id, type, classname, identifier, embed, source_link) VALUES (?, ?, ?, ?, ?, ?) returning id") {
+            executeReturningInsert(sourceType.id, docType.id, className, baseDoc.identifier, embedJson, sourceLink).readOnce()!!["id"]
         }
     }
 
