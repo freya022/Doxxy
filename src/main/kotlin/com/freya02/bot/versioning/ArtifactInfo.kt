@@ -5,8 +5,9 @@ import java.nio.file.Path
 import kotlin.io.path.notExists
 import kotlin.io.path.readLines
 
-private const val MAVEN_JAVADOC_FORMAT = "https://repo1.maven.org/maven2/%s/%s/%s/%s-%s%s.jar"
-private const val JITPACK_JAVADOC_FORMAT = "https://jitpack.io/%s/%s/%s/%s-%s%s.jar"
+//see https://central.sonatype.org/search/rest-api-guide/
+private const val MAVEN_URL_FORMAT = "https://search.maven.org/remotecontent?filepath=%s/%s/%s/%s-%s%s.jar"
+private const val JITPACK_URL_FORMAT = "https://jitpack.io/%s/%s/%s/%s-%s%s.jar"
 
 data class ArtifactInfo(val groupId: String, val artifactId: String, val version: String) {
     fun toFileString(): String {
@@ -14,7 +15,7 @@ data class ArtifactInfo(val groupId: String, val artifactId: String, val version
     }
 
     fun toMavenUrl(fileType: FileType): String {
-        return MAVEN_JAVADOC_FORMAT.format(
+        return MAVEN_URL_FORMAT.format(
             groupId.replace('.', '/'),
             artifactId,
             version,
@@ -25,7 +26,7 @@ data class ArtifactInfo(val groupId: String, val artifactId: String, val version
     }
 
     fun toJitpackUrl(fileType: FileType): String {
-        return JITPACK_JAVADOC_FORMAT.format(
+        return JITPACK_URL_FORMAT.format(
             groupId.replace('.', '/'),
             artifactId,
             version,
