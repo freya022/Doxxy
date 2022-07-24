@@ -142,8 +142,8 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
 
     private fun Iterable<String>.toChoices() = this.map { Choice(it, it) }
     private fun Iterable<DocSearchResult>.searchResultToChoices(nameExtractor: (DocSearchResult) -> String) = this
-        .filter { it.fullIdentifier.length <= Choice.MAX_STRING_VALUE_LENGTH }
-        .map { Choice(nameExtractor(it), it.fullIdentifier) }
+        .filter { it.identifierOrFullIdentifier.length <= Choice.MAX_STRING_VALUE_LENGTH }
+        .map { Choice(nameExtractor(it), it.identifierOrFullIdentifier) }
 
     companion object {
         const val CLASS_NAME_AUTOCOMPLETE_NAME = "CommonDocsHandlers: className"
