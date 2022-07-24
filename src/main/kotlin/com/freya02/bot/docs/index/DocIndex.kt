@@ -65,7 +65,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         return DBAction.of(
             database,
             """
-                select concat(classname, '#', identifier) as full_identifier, human_identifier, human_class_identifier
+                select identifier, human_identifier, human_class_identifier
                 from doc
                 where source_id = ?
                   and ($typeCheck)
@@ -78,7 +78,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
             action.executeQuery(sourceType.id, className, *sortArgs)
                 .transformEach {
                     DocSearchResult(
-                        it["full_identifier"],
+                        it["identifier"],
                         it["human_identifier"],
                         it["human_class_identifier"],
                     )
