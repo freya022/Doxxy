@@ -81,6 +81,7 @@ internal class DocIndexWriter(
                     null -> null
                     else -> sourceRootMetadata?.let { sourceRootMetadata ->
                         val docsParametersString = methodDoc.methodParameters
+                            ?.asString
                             ?.drop(1)
                             ?.dropLast(1)
                             ?.replace(annotationRegex, "")
@@ -185,8 +186,8 @@ internal class DocIndexWriter(
         embedJson: String,
         sourceLink: String?
     ): Int {
-        return preparedStatement("insert into doc (source_id, type, classname, identifier, embed, source_link) VALUES (?, ?, ?, ?, ?, ?) returning id") {
-            executeReturningInsert(sourceType.id, docType.id, className, baseDoc.identifier, embedJson, sourceLink).readOnce()!!["id"]
+        return preparedStatement("insert into doc (source_id, type, classname, identifier, identifier_no_args, human_identifier, human_class_identifier, embed, source_link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) returning id") {
+            executeReturningInsert(sourceType.id, docType.id, className, baseDoc.identifier, baseDoc.identifierNoArgs, baseDoc.humanIdentifier, baseDoc.toHumanClassIdentifier(className), embedJson, sourceLink).readOnce()!!["id"]
         }
     }
 

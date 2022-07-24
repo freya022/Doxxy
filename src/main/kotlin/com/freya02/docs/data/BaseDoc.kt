@@ -11,7 +11,13 @@ abstract class BaseDoc {
     abstract val seeAlso: SeeAlso?
 
     abstract val className: String
+    /** method(Type1, Type2) */
     abstract val identifier: String?
+    /** method */
+    abstract val identifierNoArgs: String?
+    /** method(Type name, name2) */
+    abstract val humanIdentifier: String?
+    abstract fun toHumanClassIdentifier(className: String): String?
 
     protected abstract val detailToElementsMap: DetailToElementsMap
 

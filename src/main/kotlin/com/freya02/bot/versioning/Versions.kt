@@ -89,8 +89,9 @@ class Versions(private val docIndexMap: DocIndexMap) {
 
                 LOGGER.info("JDA 5 version updated to {}", jda5Checker.latest.version)
             }
+
             return changed
-        } catch (e: IOException) {
+        } catch (e: Exception) {
             LOGGER.error("An exception occurred while retrieving versions", e)
         }
 
@@ -105,7 +106,7 @@ class Versions(private val docIndexMap: DocIndexMap) {
                 jda4Checker.saveVersion()
                 LOGGER.info("JDA 4 version updated to {}", jda4Checker.latest.version)
             }
-        } catch (e: IOException) {
+        } catch (e: Exception) {
             LOGGER.error("An exception occurred while retrieving versions", e)
         }
     }
@@ -118,7 +119,7 @@ class Versions(private val docIndexMap: DocIndexMap) {
                 jdaVersionFromBCChecker.saveVersion()
                 LOGGER.info("BotCommands's JDA version updated to {}", jdaVersionFromBCChecker.latest.version)
             }
-        } catch (e: IOException) {
+        } catch (e: Exception) {
             LOGGER.error("An exception occurred while retrieving versions", e)
         }
     }
@@ -152,9 +153,7 @@ class Versions(private val docIndexMap: DocIndexMap) {
             }
 
             return changed
-        } catch (e: IOException) {
-            LOGGER.error("An exception occurred while retrieving versions", e)
-        } catch (e: InterruptedException) {
+        } catch (e: Exception) {
             LOGGER.error("An exception occurred while retrieving versions", e)
         }
 
