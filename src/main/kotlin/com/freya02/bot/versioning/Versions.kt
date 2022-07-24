@@ -8,8 +8,6 @@ import com.freya02.bot.utils.Utils.withTemporaryFile
 import com.freya02.bot.versioning.VersionsUtils.downloadMavenJavadoc
 import com.freya02.bot.versioning.VersionsUtils.downloadMavenSources
 import com.freya02.bot.versioning.github.GithubUtils
-import com.freya02.bot.versioning.VersionsUtils.downloadMavenSources
-import com.freya02.bot.versioning.github.GithubUtils
 import com.freya02.bot.versioning.maven.MavenBranchProjectDependencyVersionChecker
 import com.freya02.bot.versioning.maven.MavenVersionChecker
 import com.freya02.bot.versioning.maven.RepoType
