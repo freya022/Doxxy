@@ -7,6 +7,7 @@ import com.freya02.bot.docs.cached.CachedDoc
 import com.freya02.bot.docs.cached.CachedField
 import com.freya02.bot.docs.cached.CachedMethod
 import com.freya02.bot.docs.index.DocIndex
+import com.freya02.bot.docs.index.DocSearchResult
 import com.freya02.botcommands.api.Logging
 import com.freya02.botcommands.api.application.ApplicationCommand
 import com.freya02.botcommands.api.application.annotations.AppOption
@@ -24,7 +25,6 @@ import dev.minn.jda.ktx.messages.reply_
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
-import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.ActionRow
 import net.dv8tion.jda.api.interactions.components.ItemComponent
 import net.dv8tion.jda.api.interactions.components.buttons.Button
@@ -94,7 +94,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
     ): Collection<Choice> = withDocIndex(sourceType) {
-        findMethodSignaturesIn(className, event.focusedOption.value).toChoices()
+        findMethodSignaturesIn(className, event.focusedOption.value).searchResultToChoices { it.humanIdentifier }
     }
 
     @CacheAutocompletion
@@ -103,10 +103,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
     ): Collection<Choice> = withDocIndex(sourceType) {
-        //TODO real fix hopefully
-        findAnyMethodSignatures(event.focusedOption.value)
-            .filter { s: String -> s.length <= OptionData.MAX_CHOICE_VALUE_LENGTH }
-            .toChoices()
+        findAnyMethodSignatures(event.focusedOption.value).searchResultToChoices { it.humanClassIdentifier }
     }
 
     @CacheAutocompletion
@@ -116,7 +113,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
     ): Collection<Choice> = withDocIndex(sourceType) {
-        findFieldSignaturesIn(className, event.focusedOption.value).toChoices()
+        findFieldSignaturesIn(className, event.focusedOption.value).searchResultToChoices { it.humanIdentifier }
     }
 
     @CacheAutocompletion
@@ -125,7 +122,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
     ): Collection<Choice> = withDocIndex(sourceType) {
-        findAnyFieldSignatures(event.focusedOption.value).toChoices()
+        findAnyFieldSignatures(event.focusedOption.value).searchResultToChoices { it.humanClassIdentifier }
     }
 
     @CacheAutocompletion
@@ -135,7 +132,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
     ): Collection<Choice> = withDocIndex(sourceType) {
-        findMethodAndFieldSignaturesIn(className, event.focusedOption.value).toChoices()
+        findMethodAndFieldSignaturesIn(className, event.focusedOption.value).searchResultToChoices { it.humanIdentifier }
     }
 
     private fun withDocIndex(sourceType: DocSourceType, block: DocIndex.() -> List<Choice>): List<Choice> {
@@ -144,6 +141,9 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
     }
 
     private fun Iterable<String>.toChoices() = this.map { Choice(it, it) }
+    private fun Iterable<DocSearchResult>.searchResultToChoices(nameExtractor: (DocSearchResult) -> String) = this
+        .filter { it.fullIdentifier.length <= Choice.MAX_STRING_VALUE_LENGTH }
+        .map { Choice(nameExtractor(it), it.fullIdentifier) }
 
     companion object {
         const val CLASS_NAME_AUTOCOMPLETE_NAME = "CommonDocsHandlers: className"

@@ -1,3 +1,5 @@
+create extension if not exists pg_trgm;
+
 create table Tag
 (
     guildId     bigint    not null,
@@ -13,16 +15,21 @@ create table Tag
 
 create table Doc
 (
-    id          serial primary key,
-    source_id   int  not null,
-    type        int  not null,
-    className   text not null,
-    identifier  text, --TODO see if we can have a separate column for identifier-without-args as to take advantage of GiST
-    embed       text not null,
-    source_link text,
+    id                     serial primary key,
+    source_id              int  not null,
+    type                   int  not null,
+    className              text not null,
+    identifier             text,                                               --For choice value, "method(Type1, Type2)"
+    identifier_no_args     text check (length(identifier_no_args) <= 100),     --For search purposes, "method"
+    human_identifier       text check (length(human_identifier) <= 100),       --For class-specific choice name, "method(Type name, name2)"
+    human_class_identifier text check (length(human_class_identifier) <= 100), --For any-class choice name, "Class#method(Type name, name2)"
+    embed                  text not null,
+    source_link            text,
 
     unique (source_id, className, identifier)
 );
+
+create index doc_identifier_no_args_gist on doc using gist(identifier_no_args gist_trgm_ops(siglen=256));
 
 create table DocSeeAlsoReference
 (

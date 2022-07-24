@@ -46,15 +46,15 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         return CachedField(embed, seeAlsoReferences, sourceLink)
     }
 
-    override fun findAnySignatures(docType: DocType, query: String?): Collection<String> = getAllSignatures(docType, query)
+    override fun findAnySignatures(docType: DocType, query: String?): List<DocSearchResult> = getAllSignatures(docType, query)
 
-    override fun findSignaturesIn(className: String, query: String?, vararg docTypes: DocType): List<String> {
+    override fun findSignaturesIn(className: String, query: String?, vararg docTypes: DocType): List<DocSearchResult> {
         val typeCheck = docTypes.joinToString(" or ") { "doc.type = ${it.id}" }
 
         @Language("PostgreSQL", prefix = "select * from doc ")
         val sort = when {
             query.isNullOrEmpty() -> "order by identifier"
-            else -> "order by similarity(left(identifier, strpos(identifier, '(')), ?) desc"
+            else -> "order by similarity(identifier_no_args, ?) desc"
         }
 
         val sortArgs = when {
@@ -65,7 +65,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         return DBAction.of(
             database,
             """
-                select identifier
+                select concat(classname, '#', identifier) as full_identifier, human_identifier, human_class_identifier
                 from doc
                 where source_id = ?
                   and ($typeCheck)
@@ -76,11 +76,17 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
             "identifier"
         ).use { action ->
             action.executeQuery(sourceType.id, className, *sortArgs)
-                .transformEach { it.getString("identifier") }
+                .transformEach {
+                    DocSearchResult(
+                        it["full_identifier"],
+                        it["human_identifier"],
+                        it["human_class_identifier"],
+                    )
+                }
         }
     }
 
-    override fun getClasses(query: String?): Collection<String> = runBlocking {
+    override fun getClasses(query: String?): List<String> = runBlocking {
         @Language("PostgreSQL", prefix = "select * from doc ")
         val limitingSort = when {
             query.isNullOrEmpty() -> "order by classname limit 25"
@@ -101,14 +107,14 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
             $limitingSort
             """.trimIndent()
         ) {
-            executeQuery(sourceType.id, DocType.CLASS.id, *sortArgs).transformEach { it.getString("classname") }
+            executeQuery(sourceType.id, DocType.CLASS.id, *sortArgs).transformEach { it["classname"] }
         }
     }
 
-    override fun getClassesWithMethods(query: String?): Collection<String> =
+    override fun getClassesWithMethods(query: String?): List<String> =
         getClassNamesWithChildren(DocType.METHOD, query)
 
-    override fun getClassesWithFields(query: String?): Collection<String> =
+    override fun getClassesWithFields(query: String?): List<String> =
         getClassNamesWithChildren(DocType.FIELD, query)
 
     suspend fun reindex(reindexData: ReindexData): DocIndex {
@@ -175,12 +181,12 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         }
     }
 
-    private fun getAllSignatures(docType: DocType, query: String?): List<String> {
+    private fun getAllSignatures(docType: DocType, query: String?): List<DocSearchResult> {
         @Language("PostgreSQL", prefix = "select * from doc ")
         val sort = when {
             query.isNullOrEmpty() -> "order by classname, identifier"
-            '#' in query -> "order by similarity(classname, ?) * similarity(left(identifier, strpos(identifier, '(')), ?) desc"
-            else -> "order by similarity(concat(classname, '#', left(identifier, strpos(identifier, '('))), ?) desc"
+            '#' in query -> "order by similarity(classname, ?) * similarity(identifier_no_args, ?) desc"
+            else -> "order by similarity(concat(classname, '#', identifier_no_args), ?) desc"
         }
 
         val sortArgs = when {
@@ -192,7 +198,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         return DBAction.of(
             database,
             """
-                select concat(classname, '#', identifier) as full_identifier
+                select concat(classname, '#', identifier) as full_identifier, human_identifier, human_class_identifier
                 from doc
                 where source_id = ?
                   and type = ?
@@ -202,7 +208,13 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
             "classname"
         ).use { action ->
             action.executeQuery(sourceType.id, docType.id, *sortArgs)
-                .transformEach { it["full_identifier"] }
+                .transformEach {
+                    DocSearchResult(
+                        it["full_identifier"],
+                        it["human_identifier"],
+                        it["human_class_identifier"]
+                    )
+                }
         }
     }
 

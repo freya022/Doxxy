@@ -33,7 +33,7 @@ object DocUtils {
         val effectiveAnnotations = if (methodDoc.methodAnnotations == null) "" else "${methodDoc.methodAnnotations}\n"
 
         return StringBuilder(effectiveAnnotations + targetClassdoc.className + "#" + methodDoc.methodName).apply {
-            val methodParameters = methodDoc.methodParameters ?: return@apply
+            val methodParameters = methodDoc.methodParameters?.asString ?: return@apply
 
             val parameters = methodParameters.substring(1, methodParameters.length - 1).split(",")
                 .joinToString(",\n", "(", ")") {

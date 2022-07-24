@@ -18,11 +18,11 @@ suspend fun main() {
     val jdaIndex = DocIndex(DocSourceType.JDA, database)
     val javaIndex = DocIndex(DocSourceType.JAVA, database)
 
-//    bcIndex.reindex()
+//    bcIndex.reindex(ReindexData())
     val sourceUrl = GithubUtils.getLatestReleaseHash("DV8FromTheWorld", "JDA")
-        ?.let { hash -> "https://github.com/DV8FromTheWorld/JDA/blobl/${hash.hash}/src/main/java/" }
+        ?.let { hash -> "https://github.com/DV8FromTheWorld/JDA/blob/${hash.hash}/src/main/java/" }
     jdaIndex.reindex(ReindexData(sourceUrl))
-//    javaIndex.reindex()
+//    javaIndex.reindex(ReindexData())
 
     for (index in listOf(bcIndex, jdaIndex, javaIndex)) {
         val cachedClass = index.getClassDoc("AppOption")
