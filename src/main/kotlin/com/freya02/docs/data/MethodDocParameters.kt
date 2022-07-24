@@ -17,11 +17,17 @@ data class MethodDocParameters(val asString: String) {
                     if (type is NodeWithTypeArguments<*>) type.removeTypeArguments()
                 }
 
+                val typeAsString = parsedParameter.typeAsString
+
                 val annotations = parsedParameter.annotations.map { it.nameAsString }.toSet()
-                val type = parsedParameter.typeAsString + if (parsedParameter.isVarArgs) "..." else ""
+                val type = typeAsString + if (parsedParameter.isVarArgs) "..." else ""
+                val simpleType = run {
+                    val startIndex = typeAsString.indexOfFirst { it.isUpperCase() }.coerceAtLeast(0)
+                    typeAsString.substring(startIndex) + if (parsedParameter.isVarArgs) "..." else ""
+                }
                 val name = parsedParameter.nameAsString
 
-                MethodDocParameter(annotations, type, name)
+                MethodDocParameter(annotations, type, simpleType, name)
             } catch (e: Exception) {
                 throw RuntimeException("Unable to parse parameter '$parameter'", e)
             }
