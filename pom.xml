@@ -6,7 +6,7 @@
 
     <groupId>com.freya02</groupId>
     <artifactId>DocsBot</artifactId>
-    <version>1.5</version>
+    <version>1.6</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -116,6 +116,7 @@
                             </transformers>
 
                             <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <finalName>Doxxy</finalName>
                         </configuration>
                     </execution>
                 </executions>
