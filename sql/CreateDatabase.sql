@@ -29,7 +29,9 @@ create table Doc
     unique (source_id, className, identifier)
 );
 
-create index doc_identifier_no_args_gist on doc using gist(identifier_no_args gist_trgm_ops(siglen=256));
+-- raspbian doesn't support postgresql 12+ lmao
+-- create index doc_identifier_no_args_gist on doc using gist(identifier_no_args gist_trgm_ops(siglen=256));
+create index doc_identifier_no_args_gist on doc using gist(identifier_no_args gist_trgm_ops);
 
 create table DocSeeAlsoReference
 (
