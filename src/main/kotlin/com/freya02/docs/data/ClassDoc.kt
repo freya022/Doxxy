@@ -172,6 +172,9 @@ class ClassDoc @JvmOverloads constructor(
         get() = source.toOnlineURL(sourceURL)
 
     override val identifier: String? = null
+    override val identifierNoArgs: String? = null
+    override val humanIdentifier: String? = null
+    override fun toHumanClassIdentifier(className: String): String? = null
 
     val enumConstants: List<FieldDoc>
         get() = getFieldDocs()

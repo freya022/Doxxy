@@ -5,6 +5,7 @@ import com.freya02.docs.DocUtils
 import com.freya02.docs.HTMLElement
 import com.freya02.docs.HTMLElementList
 import com.freya02.docs.utils.requireDoc
+import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import org.jsoup.nodes.Element
 
 class MethodDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, element: Element) : BaseDoc() {
@@ -12,7 +13,7 @@ class MethodDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, e
     val methodAnnotations: String?
     val methodName: String
     val methodSignature: String
-    val methodParameters: String?
+    val methodParameters: MethodDocParameters?
     val methodReturnType: String
 
     override val descriptionElements: HTMLElementList
@@ -37,7 +38,7 @@ class MethodDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, e
         methodAnnotations = methodAnnotationsElement?.text()
 
         val methodParametersElement = element.selectFirst("div.member-signature > span.parameters")
-        methodParameters = methodParametersElement?.text()
+        methodParameters = methodParametersElement?.let { MethodDocParameters(it.text()) }
 
         val methodReturnTypeElement = element.selectFirst("div.member-signature > span.return-type")
         methodReturnType = when (methodReturnTypeElement) {
@@ -70,9 +71,42 @@ class MethodDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, e
 
     override val identifier: String
         get() = simpleSignature
+    override val identifierNoArgs: String
+        get() = methodName
+    override val humanIdentifier: String by lazy { generateHumanIdentifier("") }
+    override fun toHumanClassIdentifier(className: String): String = generateHumanIdentifier("$className#")
 
     fun getSimpleAnnotatedSignature(targetClassdoc: ClassDoc): String {
         return DocUtils.getSimpleAnnotatedSignature(targetClassdoc, this)
+    }
+
+    private fun MethodDocParameters.asParametersString(numTypes: Int): String {
+        var i = 0
+        return this.parameters.joinToString { param ->
+            i++
+
+            when {
+                i <= numTypes -> param.simpleType + " " + param.name
+                else -> param.name
+            }
+        }
+    }
+
+    private fun generateHumanIdentifier(initialString: String) = buildString {
+        append(initialString)
+
+        append(methodName)
+        append('(')
+        if (methodParameters != null) {
+            for (numTypes in methodParameters.parameters.size downTo 0) {
+                val asParametersString = methodParameters.asParametersString(numTypes)
+                if (asParametersString.length + this.length + 1 <= Choice.MAX_NAME_LENGTH) {
+                    append(asParametersString)
+                    break
+                }
+            }
+        }
+        append(')')
     }
 
     override val effectiveURL: String
