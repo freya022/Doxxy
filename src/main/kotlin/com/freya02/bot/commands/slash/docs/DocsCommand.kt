@@ -19,7 +19,7 @@ class DocsCommand(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
         @AppOption(description = "The docs to search upon") sourceType: DocSourceType,
         @AppOption(
             description = "Name of the Java class",
-            autocomplete = CommonDocsHandlers.CLASS_NAME_WITH_METHODS_AUTOCOMPLETE_NAME
+            autocomplete = CommonDocsHandlers.CLASS_NAME_AUTOCOMPLETE_NAME
         ) className: String,
         @AppOption(
             description = "Signature of the method / field name",
@@ -39,7 +39,7 @@ class DocsCommand(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
         @AppOption(description = "The docs to search upon") sourceType: DocSourceType,
         @AppOption(
             description = "Name of the Java class",
-            autocomplete = CommonDocsHandlers.CLASS_NAME_WITH_METHODS_AUTOCOMPLETE_NAME
+            autocomplete = CommonDocsHandlers.CLASS_NAME_AUTOCOMPLETE_NAME
         ) className: String,
         @AppOption(
             description = "Signature of the method / field name",
@@ -59,7 +59,7 @@ class DocsCommand(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
         @AppOption(description = "The docs to search upon") sourceType: DocSourceType,
         @AppOption(
             description = "Name of the Java class",
-            autocomplete = CommonDocsHandlers.CLASS_NAME_WITH_METHODS_AUTOCOMPLETE_NAME
+            autocomplete = CommonDocsHandlers.CLASS_NAME_AUTOCOMPLETE_NAME
         ) className: String,
         @AppOption(
             description = "Signature of the method / field name",

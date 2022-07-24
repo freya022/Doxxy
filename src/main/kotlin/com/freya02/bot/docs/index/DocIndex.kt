@@ -22,10 +22,10 @@ private val LOGGER: Logger = Logging.getLogger()
 
 //Initial construct just allows database access
 // Further updates must be invoked by external methods such as version checkers
-class DocIndex(private val sourceType: DocSourceType, private val database: Database) : IDocIndexKt {
+class DocIndex(private val sourceType: DocSourceType, private val database: Database) : IDocIndex {
     private val mutex = Mutex()
 
-    fun getClassDoc(className: String): CachedClass? {
+    override fun getClassDoc(className: String): CachedClass? {
         val (docId, embed, sourceLink) = findDoc(DocType.CLASS, className) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
 
@@ -46,28 +46,49 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         return CachedField(embed, seeAlsoReferences, sourceLink)
     }
 
-    override fun findAnyMethodSignatures(query: String?): Collection<String> = getAllSignatures(DocType.METHOD, query)
+    override fun findAnySignatures(docType: DocType, query: String?): Collection<String> = getAllSignatures(docType, query)
 
-    override fun findMethodSignatures(className: String, query: String?): Collection<String> =
-        findSignatures(className, query, DocType.METHOD)
+    override fun findSignaturesIn(className: String, query: String?, vararg docTypes: DocType): List<String> {
+        val typeCheck = docTypes.joinToString(" or ") { "doc.type = ${it.id}" }
 
-    override fun findAnyFieldSignatures(query: String?): Collection<String> = getAllSignatures(DocType.FIELD, query)
+        @Language("PostgreSQL", prefix = "select * from doc ")
+        val sort = when {
+            query.isNullOrEmpty() -> "order by identifier"
+            else -> "order by similarity(left(identifier, strpos(identifier, '(')), ?) desc"
+        }
 
-    override fun findFieldSignatures(className: String, query: String?): Collection<String> =
-        findSignatures(className, query, DocType.FIELD)
+        val sortArgs = when {
+            query.isNullOrEmpty() -> arrayOf()
+            else -> arrayOf(query)
+        }
 
-    override fun findMethodAndFieldSignatures(className: String, query: String?): Collection<String> =
-        findSignatures(className, query, DocType.METHOD, DocType.FIELD)
+        return DBAction.of(
+            database,
+            """
+                select identifier
+                from doc
+                where source_id = ?
+                  and ($typeCheck)
+                  and classname = ?
+                $sort
+                limit 25
+                """.trimIndent(),
+            "identifier"
+        ).use { action ->
+            action.executeQuery(sourceType.id, className, *sortArgs)
+                .transformEach { it.getString("identifier") }
+        }
+    }
 
     override fun getClasses(query: String?): Collection<String> = runBlocking {
         @Language("PostgreSQL", prefix = "select * from doc ")
-        val limitingSort = when (query) {
-            null -> ""
+        val limitingSort = when {
+            query.isNullOrEmpty() -> "order by classname limit 25"
             else -> "order by similarity(classname, ?) desc limit 25"
         }
 
-        val sortArgs = when (query) {
-            null -> arrayOf()
+        val sortArgs = when {
+            query.isNullOrEmpty() -> arrayOf()
             else -> arrayOf(query)
         }
 
@@ -157,13 +178,13 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
     private fun getAllSignatures(docType: DocType, query: String?): List<String> {
         @Language("PostgreSQL", prefix = "select * from doc ")
         val sort = when {
-            query == null || query.isEmpty() -> "order by classname, identifier"
+            query.isNullOrEmpty() -> "order by classname, identifier"
             '#' in query -> "order by similarity(classname, ?) * similarity(left(identifier, strpos(identifier, '(')), ?) desc"
             else -> "order by similarity(concat(classname, '#', left(identifier, strpos(identifier, '('))), ?) desc"
         }
 
         val sortArgs = when {
-            query == null || query.isEmpty() -> arrayOf()
+            query.isNullOrEmpty() -> arrayOf()
             '#' in query -> arrayOf(query.substringBefore('#'), query.substringAfter('#'))
             else -> arrayOf(query)
         }
@@ -185,47 +206,15 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         }
     }
 
-    private fun findSignatures(className: String, query: String?, vararg docTypes: DocType): List<String> {
-        val typeCheck = docTypes.joinToString(" or ") { "doc.type = ${it.id}" }
-
-        @Language("PostgreSQL", prefix = "select * from doc ")
-        val sort = when {
-            query == null || query.isEmpty() -> "order by identifier"
-            else -> "order by similarity(left(identifier, strpos(identifier, '(')), ?) desc"
-        }
-
-        val sortArgs = when {
-            query == null || query.isEmpty() -> arrayOf()
-            else -> arrayOf(query)
-        }
-
-        return DBAction.of(
-            database,
-            """
-                select identifier
-                from doc
-                where source_id = ?
-                  and ($typeCheck)
-                  and classname = ?
-                $sort
-                limit 25
-                """.trimIndent(),
-            "identifier"
-        ).use { action ->
-            action.executeQuery(sourceType.id, className, *sortArgs)
-                .transformEach { it.getString("identifier") }
-        }
-    }
-
     private fun getClassNamesWithChildren(docType: DocType, query: String?): List<String> {
         @Language("PostgreSQL", prefix = "select * from doc ")
         val sort = when {
-            query == null || query.isEmpty() -> "order by classname"
+            query.isNullOrEmpty() -> "order by classname"
             else -> "order by similarity(classname, ?) desc"
         }
 
         val sortArgs = when {
-            query == null || query.isEmpty() -> arrayOf()
+            query.isNullOrEmpty() -> arrayOf()
             else -> arrayOf(query)
         }
 

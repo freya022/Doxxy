@@ -6,6 +6,7 @@ import com.freya02.bot.tag.*
 import com.freya02.botcommands.api.Logging
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.application.ApplicationCommand
+import com.freya02.botcommands.api.application.CommandScope
 import com.freya02.botcommands.api.application.annotations.AppOption
 import com.freya02.botcommands.api.application.slash.GuildSlashEvent
 import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand
@@ -82,7 +83,7 @@ class SlashTag(database: Database) : ApplicationCommand() {
         consumer(tag)
     }
 
-    @JDASlashCommand(name = "tag", description = "Sends a predefined tag")
+    @JDASlashCommand(scope = CommandScope.GLOBAL_NO_DM, name = "tag", description = "Sends a predefined tag")
     suspend fun sendTag(
         event: GuildSlashEvent,
         @AppOption(description = "Name of the tag", autocomplete = GUILD_TAGS_AUTOCOMPLETE) name: String
@@ -94,6 +95,7 @@ class SlashTag(database: Database) : ApplicationCommand() {
     }
 
     @JDASlashCommand(
+        scope = CommandScope.GLOBAL_NO_DM,
         name = "tags",
         subcommand = "raw",
         description = "Sends a predefined tag with all the markdown escaped"
@@ -105,7 +107,7 @@ class SlashTag(database: Database) : ApplicationCommand() {
         withTag(event, name) { tag: Tag -> event.reply(MarkdownSanitizer.escape(tag.content)).queue() }
     }
 
-    @JDASlashCommand(name = "tags", subcommand = "create", description = "Creates a tag in this guild")
+    @JDASlashCommand(scope = CommandScope.GLOBAL_NO_DM, name = "tags", subcommand = "create", description = "Creates a tag in this guild")
     fun createTag(event: GuildSlashEvent) {
         val modal = Modals.create("Create a tag", TAGS_CREATE_MODAL_HANDLER)
             .addActionRow(Modals.createTextInput("tagName", "Tag name", TextInputStyle.SHORT).build())
@@ -137,7 +139,7 @@ class SlashTag(database: Database) : ApplicationCommand() {
         }
     }
 
-    @JDASlashCommand(name = "tags", subcommand = "edit", description = "Edits a tag in this guild")
+    @JDASlashCommand(scope = CommandScope.GLOBAL_NO_DM, name = "tags", subcommand = "edit", description = "Edits a tag in this guild")
     suspend fun editTag(
         event: GuildSlashEvent,
         @AppOption(description = "Name of the tag", autocomplete = USER_TAGS_AUTOCOMPLETE) name: String
@@ -184,6 +186,7 @@ class SlashTag(database: Database) : ApplicationCommand() {
     }
 
     @JDASlashCommand(
+        scope = CommandScope.GLOBAL_NO_DM,
         name = "tags",
         subcommand = "transfer",
         description = "Transfers a tag ownership to someone else in this guild"
@@ -211,7 +214,7 @@ class SlashTag(database: Database) : ApplicationCommand() {
         }
     }
 
-    @JDASlashCommand(name = "tags", subcommand = "delete", description = "Deletes a tag you own in this guild")
+    @JDASlashCommand(scope = CommandScope.GLOBAL_NO_DM, name = "tags", subcommand = "delete", description = "Deletes a tag you own in this guild")
     suspend fun deleteTag(
         event: GuildSlashEvent,
         @AppOption(description = "Name of the tag", autocomplete = USER_TAGS_AUTOCOMPLETE) name: String
@@ -237,7 +240,7 @@ class SlashTag(database: Database) : ApplicationCommand() {
         btnEvt.editMessageFormat("Tag '%s' deleted successfully", name).setActionRows().queue()
     }
 
-    @JDASlashCommand(name = "tags", subcommand = "list", description = "Creates a tag in this guild")
+    @JDASlashCommand(scope = CommandScope.GLOBAL_NO_DM, name = "tags", subcommand = "list", description = "Creates a tag in this guild")
     fun listTags(
         event: GuildSlashEvent,
         @AppOption(name = "sorting", description = "Type of tag sorting") criteria: TagCriteria?
@@ -279,7 +282,7 @@ class SlashTag(database: Database) : ApplicationCommand() {
         event.reply(paginator.get()).setEphemeral(true).queue()
     }
 
-    @JDASlashCommand(name = "tags", subcommand = "info", description = "Gives information about a tag in this guild")
+    @JDASlashCommand(scope = CommandScope.GLOBAL_NO_DM, name = "tags", subcommand = "info", description = "Gives information about a tag in this guild")
     suspend fun infoTags(
         event: GuildSlashEvent,
         @AppOption(description = "Name of the tag", autocomplete = GUILD_TAGS_AUTOCOMPLETE) tagName: String

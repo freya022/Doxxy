@@ -94,7 +94,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
     ): Collection<Choice> = withDocIndex(sourceType) {
-        findMethodSignatures(className, event.focusedOption.value).toChoices()
+        findMethodSignaturesIn(className, event.focusedOption.value).toChoices()
     }
 
     @CacheAutocompletion
@@ -116,7 +116,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
     ): Collection<Choice> = withDocIndex(sourceType) {
-        findFieldSignatures(className, event.focusedOption.value).toChoices()
+        findFieldSignaturesIn(className, event.focusedOption.value).toChoices()
     }
 
     @CacheAutocompletion
@@ -135,7 +135,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
     ): Collection<Choice> = withDocIndex(sourceType) {
-        findMethodAndFieldSignatures(className, event.focusedOption.value).toChoices()
+        findMethodAndFieldSignaturesIn(className, event.focusedOption.value).toChoices()
     }
 
     private fun withDocIndex(sourceType: DocSourceType, block: DocIndex.() -> List<Choice>): List<Choice> {

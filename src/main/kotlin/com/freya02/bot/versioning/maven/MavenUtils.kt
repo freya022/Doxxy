@@ -55,6 +55,6 @@ object MavenUtils {
 
     @Throws(IOException::class)
     private fun getMavenMetadata(formatUrl: String, groupId: String, artifactId: String?): Document {
-        return HttpUtils.getDocument(formatUrl.formatted(groupId.replace('.', '/'), artifactId))
+        return HttpUtils.getDocument(formatUrl.format(groupId.replace('.', '/'), artifactId))
     }
 }
