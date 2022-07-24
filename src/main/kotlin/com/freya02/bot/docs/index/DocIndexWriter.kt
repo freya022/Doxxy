@@ -29,7 +29,6 @@ internal class DocIndexWriter(
     init {
         val docsFolderName = when (sourceType) { //TODO move to reindexData prob
             DocSourceType.JDA -> "JDA"
-            DocSourceType.BOT_COMMANDS -> "BotCommands"
             else -> null
         }
 
