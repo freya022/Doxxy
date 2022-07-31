@@ -16,7 +16,7 @@ data class PullRequest(
     }
 
     val asHumanDescription: String
-        get() = "$number - $title (${branch.ownerName})"
+        get() = "$number - $title (${branch.authorName})"
 
     companion object {
         fun fromData(data: DataObject): PullRequest? {
@@ -29,7 +29,8 @@ data class PullRequest(
             val number = data.getInt("number")
             val title = data.getString("title")
             val draft = data.getBoolean("draft")
-            val headRepoOwnerName = data.getObject("user").getString("login")
+            val authorName = data.getObject("user").getString("login")
+            val headRepoOwnerName = head.getObject("user").getString("login")
             val headRepoName = headRepo.getString("name")
             val headBranchName = head.getString("ref")
             val latestHash = head.getString("sha")
@@ -39,7 +40,7 @@ data class PullRequest(
                 number,
                 title,
                 draft,
-                GithubBranch(headRepoOwnerName, headRepoName, headBranchName, CommitHash(latestHash)),
+                GithubBranch(headRepoOwnerName, authorName, headRepoName, headBranchName, CommitHash(latestHash)),
                 pullUrl
             )
         }

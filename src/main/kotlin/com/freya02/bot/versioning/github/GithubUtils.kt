@@ -82,7 +82,7 @@ object GithubUtils {
                     val name = branchObject.getString("name")
                     val sha = branchObject.getObject("commit").getString("sha")
 
-                    GithubBranch(ownerName, repoName, name, CommitHash(sha))
+                    GithubBranch(ownerName, ownerName, repoName, name, CommitHash(sha))
                 }
             }
     }

@@ -5,6 +5,7 @@ import com.freya02.bot.versioning.ArtifactInfo
 @JvmRecord
 data class GithubBranch(
     val ownerName: String,
+    val authorName: String,
     val repoName: String,
     val branchName: String,
     val latestCommitSha: CommitHash
