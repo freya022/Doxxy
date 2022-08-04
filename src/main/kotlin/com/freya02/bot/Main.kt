@@ -21,6 +21,8 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.events.ShutdownEvent
+import net.dv8tion.jda.api.requests.GatewayIntent
+import net.dv8tion.jda.api.utils.cache.CacheFlag
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
@@ -58,6 +60,9 @@ object Main {
             val config = Config.getConfig()
 
             val jda = light(config.token, enableCoroutines = false) {
+                enableCache(CacheFlag.CLIENT_STATUS)
+                enableIntents(GatewayIntent.GUILD_PRESENCES)
+
                 setActivity(Activity.watching("the docs"))
                 setEventManager(manager)
             }.awaitReady()
