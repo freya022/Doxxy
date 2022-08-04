@@ -21,12 +21,13 @@ import com.freya02.botcommands.api.components.event.SelectionEvent
 import com.freya02.botcommands.api.utils.EmojiUtils
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.data.TargetType
+import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.reply_
+import net.dv8tion.jda.api.OnlineStatus
+import net.dv8tion.jda.api.entities.ClientType
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
-import net.dv8tion.jda.api.interactions.components.ActionRow
-import net.dv8tion.jda.api.interactions.components.ItemComponent
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction
@@ -170,13 +171,8 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         fun sendClass(event: IReplyCallback, ephemeral: Boolean, cachedClass: CachedClass) {
             event.replyEmbeds(cachedClass.embed)
                 .addSeeAlso(cachedClass)
-                .also {
-                    val row: MutableList<ItemComponent> = arrayListOf()
-                    if (!ephemeral) row.add(DeleteButtonListener.getDeleteButton(event.user))
-                    if (cachedClass.link != null) row.add(Button.link(cachedClass.link, "Source"))
-
-                    it.addActionRows(ActionRow.of(row))
-                }
+                .also { addActionRows(ephemeral, event, cachedClass, it) }
+                .also { addLink(event, cachedClass) }
                 .setEphemeral(ephemeral)
                 .queue()
         }
@@ -184,13 +180,8 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         fun sendMethod(event: IReplyCallback, ephemeral: Boolean, cachedMethod: CachedMethod) {
             event.replyEmbeds(cachedMethod.embed)
                 .addSeeAlso(cachedMethod)
-                .also {
-                    val row: MutableList<ItemComponent> = arrayListOf()
-                    if (!ephemeral) row.add(DeleteButtonListener.getDeleteButton(event.user))
-                    if (cachedMethod.link != null) row.add(Button.link(cachedMethod.link, "Source"))
-
-                    it.addActionRows(ActionRow.of(row))
-                }
+                .also { addActionRows(ephemeral, event, cachedMethod, it) }
+                .also { addLink(event, cachedMethod) }
                 .setEphemeral(ephemeral)
                 .queue()
         }
@@ -198,15 +189,32 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         fun sendField(event: IReplyCallback, ephemeral: Boolean, cachedField: CachedField) {
             event.replyEmbeds(cachedField.embed)
                 .addSeeAlso(cachedField)
-                .also {
-                    val row: MutableList<ItemComponent> = arrayListOf()
-                    if (!ephemeral) row.add(DeleteButtonListener.getDeleteButton(event.user))
-                    if (cachedField.link != null) row.add(Button.link(cachedField.link, "Source"))
-
-                    it.addActionRows(ActionRow.of(row))
-                }
+                .also { addActionRows(ephemeral, event, cachedField, it) }
+                .also { addLink(event, cachedField) }
                 .setEphemeral(ephemeral)
                 .queue()
+        }
+
+        private fun addLink(event: IReplyCallback, cachedDoc: CachedDoc) {
+            cachedDoc.javadocLink?.let { javadocLink ->
+                event.member?.let { member ->
+                    if (member.getOnlineStatus(ClientType.MOBILE) != OnlineStatus.OFFLINE) {
+                        //TODO add link to exiting embed in message data
+                    }
+                }
+            }
+        }
+
+        private fun addActionRows(
+            ephemeral: Boolean,
+            event: IReplyCallback,
+            cachedDoc: CachedDoc,
+            it: ReplyCallbackAction
+        ) {
+            it.addActionRows(buildList {
+                if (!ephemeral) add(DeleteButtonListener.getDeleteButton(event.user))
+                cachedDoc.sourceLink?.let { sourceLink -> add(Button.link(sourceLink, "Source")) }
+            }.row())
         }
 
         fun handleClass(event: GuildSlashEvent, className: String, docIndex: DocIndex) {

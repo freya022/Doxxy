@@ -112,6 +112,8 @@ class MethodDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, e
     override val effectiveURL: String
         get() = classDocs.effectiveURL + '#' + elementId
 
+    override val onlineURL: String? = classDocs.onlineURL?.let { "$it#$elementId" }
+
     override fun toString(): String {
         return "$methodSignature : $descriptionElements"
     }

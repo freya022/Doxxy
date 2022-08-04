@@ -6,6 +6,7 @@ import java.util.*
 
 abstract class BaseDoc {
     abstract val effectiveURL: String
+    abstract val onlineURL: String?
     abstract val descriptionElements: HTMLElementList
     abstract val deprecationElement: HTMLElement?
     abstract val seeAlso: SeeAlso?

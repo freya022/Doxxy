@@ -26,24 +26,24 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
     private val mutex = Mutex()
 
     override fun getClassDoc(className: String): CachedClass? {
-        val (docId, embed, sourceLink) = findDoc(DocType.CLASS, className) ?: return null
+        val (docId, embed, javadocLink, sourceLink) = findDoc(DocType.CLASS, className) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
 
-        return CachedClass(embed, seeAlsoReferences, sourceLink)
+        return CachedClass(embed, seeAlsoReferences, javadocLink, sourceLink)
     }
 
     override fun getMethodDoc(className: String, identifier: String): CachedMethod? {
-        val (docId, embed, sourceLink) = findDoc(DocType.METHOD, className, identifier) ?: return null
+        val (docId, embed, javadocLink, sourceLink) = findDoc(DocType.METHOD, className, identifier) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
 
-        return CachedMethod(embed, seeAlsoReferences, sourceLink)
+        return CachedMethod(embed, seeAlsoReferences, javadocLink, sourceLink)
     }
 
     override fun getFieldDoc(className: String, fieldName: String): CachedField? {
-        val (docId, embed, sourceLink) = findDoc(DocType.FIELD, className, fieldName) ?: return null
+        val (docId, embed, javadocLink, sourceLink) = findDoc(DocType.FIELD, className, fieldName) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
 
-        return CachedField(embed, seeAlsoReferences, sourceLink)
+        return CachedField(embed, seeAlsoReferences, javadocLink, sourceLink)
     }
 
     override fun findAnySignatures(docType: DocType, query: String?): List<DocSearchResult> = getAllSignatures(docType, query)
@@ -143,10 +143,10 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         docType: DocType,
         className: String,
         identifier: String? = null
-    ): Triple<Int, MessageEmbed, String>? = DBAction.of(
+    ): DocFindData? = DBAction.of(
         database,
         """
-            select id, embed, source_link
+            select id, embed, javadoc_link, source_link
             from doc
             where source_id = ?
               and type = ?
@@ -156,9 +156,10 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         "id", "embed"
     ).use {
         val result = it.executeQuery(sourceType.id, docType.id, className, identifier).readOnce() ?: return null
-        return@use Triple(
-            result.getInt("id"),
+        return@use DocFindData(
+            result["id"],
             DocIndexWriter.GSON.fromJson(result.getString("embed"), MessageEmbed::class.java),
+            result["javadoc_link"],
             result["source_link"]
         )
     }

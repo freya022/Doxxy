@@ -169,6 +169,8 @@ class ClassDoc @JvmOverloads constructor(
     }
 
     override val effectiveURL: String
+        get() = source.toEffectiveURL(sourceURL)
+    override val onlineURL: String?
         get() = source.toOnlineURL(sourceURL)
 
     override val identifier: String? = null

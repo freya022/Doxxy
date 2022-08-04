@@ -51,7 +51,7 @@ class ClassDocs private constructor(private val source: DocSourceType) {
                     classUrl,
                     oldUrl
                 )
-                else -> urlSet.add(source.toOnlineURL(classUrl)) //For quick checks
+                else -> urlSet.add(source.toEffectiveURL(classUrl)) //For quick checks
             }
         }
     }

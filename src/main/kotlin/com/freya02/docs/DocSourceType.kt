@@ -45,8 +45,17 @@ enum class DocSourceType(
 
     val allClassesIndexURL: String = "$sourceUrl/allclasses-index.html"
 
-    fun toOnlineURL(url: String): String {
+    fun toEffectiveURL(url: String): String {
         if (onlineURL == null) return url
+
+        return when {
+            url.startsWith(sourceUrl) -> onlineURL + url.substring(sourceUrl.length)
+            else -> url
+        }
+    }
+
+    fun toOnlineURL(url: String): String? {
+        if (onlineURL == null) return null
 
         return when {
             url.startsWith(sourceUrl) -> onlineURL + url.substring(sourceUrl.length)
