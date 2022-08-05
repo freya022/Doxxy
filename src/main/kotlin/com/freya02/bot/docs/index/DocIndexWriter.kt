@@ -188,8 +188,8 @@ internal class DocIndexWriter(
         return preparedStatement(
             """
             insert into doc (source_id, type, classname, identifier, identifier_no_args, human_identifier, human_class_identifier,
-                             embed, javadoc_link, source_link)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                             return_type, embed, javadoc_link, source_link)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             returning id""".trimIndent()
         ) {
             executeReturningInsert(
@@ -200,6 +200,7 @@ internal class DocIndexWriter(
                 baseDoc.identifierNoArgs,
                 baseDoc.humanIdentifier,
                 baseDoc.toHumanClassIdentifier(className),
+                baseDoc.returnType,
                 embedJson,
                 baseDoc.onlineURL,
                 sourceLink

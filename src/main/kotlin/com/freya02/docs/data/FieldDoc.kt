@@ -72,5 +72,8 @@ class FieldDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, el
     override val humanIdentifier: String
         get() = simpleSignature
 
+    override val returnType: String
+        get() = fieldType
+
     override fun toHumanClassIdentifier(className: String): String = "$className#$simpleSignature"
 }
