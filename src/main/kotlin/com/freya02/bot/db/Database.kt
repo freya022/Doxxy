@@ -34,7 +34,7 @@ class Database(config: Config) {
         throw RuntimeException("Unable to get a SQL connection", e)
     }
 
-    suspend fun <R> transactional(block: suspend Transaction.() -> R): R {
+    inline fun <R> transactional(block: Transaction.() -> R): R {
         val connection = fetchConnection()
 
         try {
