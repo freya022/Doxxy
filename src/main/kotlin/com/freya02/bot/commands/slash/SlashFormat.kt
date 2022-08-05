@@ -40,9 +40,9 @@ class SlashFormat : ApplicationCommand() {
         val formattedSource =
             Formatter.format(code)?.let {
                 """
-                    \`\`\`java
-                    $it
-                    \`\`\`""".trimIndent()
+\`\`\`java
+$it
+\`\`\`"""
             } ?: "Cannot format this code, this formatter only supports Java, your snippet may have a syntax error."
 
         if (formattedSource.length > Message.MAX_CONTENT_LENGTH) {

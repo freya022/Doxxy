@@ -7,6 +7,10 @@ fun main() {
         Formatter.format(
             """
             String bruh = "lmao"; 
+            
+            String sike;
+            
+            
             """.trimIndent()
         )
     )
