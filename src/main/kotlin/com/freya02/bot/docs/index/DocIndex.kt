@@ -151,6 +151,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         }
     }
 
+    //TODO make it resolve incrementally with each token, so that it picks the #1 result of the previous chain before resolving the next token
     override fun resolveDocAutocomplete(query: String): List<DocResolveResult> = runBlocking {
         // TextChannel#getIter ==> TextChannel#getIterableHistory()
         // TextChannel#getIterableHistory()#forEachAsy ==> MessagePaginationAction#forEachAsync()
@@ -179,7 +180,10 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
             lastToken != null -> {
                 findSignaturesIn(currentClass, lastToken, DocType.METHOD, DocType.FIELD)
                     //Current class is added because findSignaturesIn doesn't return "identifier", not "full_signature"
-                    .map { DocResolveResult(it.humanClassIdentifier, "$currentClass#${it.identifierOrFullIdentifier}") }
+                    .map { "$currentClass#${it.identifierOrFullIdentifier}" }
+                    //Not showing the parameter names makes it easier for the user to continue using autocompletion with shift+tab
+                    // as parameter names breaks the resolver
+                    .map { DocResolveResult(it, it) }
             }
             else -> getClasses(currentClass).map { DocResolveResult(it, it) }
         }
