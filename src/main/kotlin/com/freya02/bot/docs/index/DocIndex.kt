@@ -192,7 +192,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
 
         val sortArgs = when {
             query.isNullOrEmpty() -> arrayOf()
-            '#' in query -> arrayOf(query.substringBefore('#'), query.substringAfter('#'))
+            '#' in query -> arrayOf(query.substringBefore('#'), query.substringAfter('#').substringBefore('('))
             else -> arrayOf(query)
         }
 
