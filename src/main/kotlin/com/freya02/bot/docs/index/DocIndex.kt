@@ -3,6 +3,7 @@ package com.freya02.bot.docs.index
 import com.freya02.bot.db.DBAction
 import com.freya02.bot.db.Database
 import com.freya02.bot.docs.cached.CachedClass
+import com.freya02.bot.docs.cached.CachedDoc
 import com.freya02.bot.docs.cached.CachedField
 import com.freya02.bot.docs.cached.CachedMethod
 import com.freya02.botcommands.api.Logging
@@ -116,6 +117,73 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
 
     override fun getClassesWithFields(query: String?): List<String> =
         getClassNamesWithChildren(DocType.FIELD, query)
+
+    override fun resolveDoc(query: String): CachedDoc? = runBlocking {
+        // TextChannel#getIterableHistory()
+        val tokens = query.split('#').toMutableList()
+        var currentClass: String = tokens.removeFirst()
+        var docsOf: String? = currentClass
+
+        database.transactional {
+            tokens.forEach {
+                if (it.isEmpty()) {
+                    // TextChannel#getIterableHistory()#
+                    //  This means the last return type's docs must be sent
+                    docsOf = currentClass
+                    return@transactional
+                }
+
+                preparedStatement("select return_type from doc where source_id = ? and classname = ? and identifier = ?") {
+                    val result = executeQuery(sourceType.id, currentClass, it).readOnce() ?: return@runBlocking null
+
+                    docsOf = "$currentClass#$it"
+                    currentClass = result["return_type"]
+                }
+            }
+        }
+
+        return@runBlocking docsOf?.let { docsOf ->
+            when {
+                '(' in docsOf -> getMethodDoc(docsOf)
+                '#' in docsOf -> getFieldDoc(docsOf)
+                else -> getClassDoc(docsOf)
+            }
+        }
+    }
+
+    override fun resolveDocAutocomplete(query: String): List<DocResolveData> = runBlocking {
+        // TextChannel#getIter ==> TextChannel#getIterableHistory()
+        // TextChannel#getIterableHistory()#forEachAsy ==> MessagePaginationAction#forEachAsync()
+        val tokens = query.split('#').toMutableList()
+        var currentClass: String = tokens.removeFirst()
+        val lastToken = tokens.lastOrNull()
+
+        //Get class name of the last returned object
+        database.transactional {
+            tokens.dropLast(1).forEach {
+                preparedStatement("select return_type from doc where source_id = ? and classname = ? and identifier = ?") {
+                    val result = executeQuery(sourceType.id, currentClass, it).readOnce() ?: return@runBlocking emptyList()
+
+                    currentClass = result["return_type"]
+                }
+            }
+        }
+
+        //This happens with "TextChannel#getIterableHistory()#", this gets the docs of the return type of getIterableHistory
+        if (lastToken?.isEmpty() == true) {
+            return@runBlocking listOf(DocResolveData(currentClass, currentClass))
+        }
+
+        //Do a classic search on the latest return type + optionally last token (might be a method or a field)
+        return@runBlocking when {
+            lastToken != null -> {
+                findSignaturesIn(currentClass, lastToken, DocType.METHOD, DocType.FIELD)
+                    //Current class is added because findSignaturesIn doesn't return "identifier", not "full_signature"
+                    .map { DocResolveData(it.humanClassIdentifier, "$currentClass#${it.identifierOrFullIdentifier}") }
+            }
+            else -> getClasses(currentClass).map { DocResolveData(it, it) }
+        }
+    }
 
     suspend fun reindex(reindexData: ReindexData): DocIndex {
         mutex.withLock {
