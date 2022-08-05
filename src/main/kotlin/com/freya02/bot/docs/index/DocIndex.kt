@@ -133,7 +133,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
                     return@transactional
                 }
 
-                preparedStatement("select return_type from doc where source_id = ? and classname = ? and identifier = ?") {
+                preparedStatement("select return_type from doc where source_id = ? and lower(classname) = lower(?) and lower(identifier) = lower(?)") {
                     val result = executeQuery(sourceType.id, currentClass, it).readOnce() ?: return@runBlocking null
 
                     docsOf = "$currentClass#$it"

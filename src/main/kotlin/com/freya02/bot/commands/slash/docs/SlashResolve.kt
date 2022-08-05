@@ -1,5 +1,6 @@
 package com.freya02.bot.commands.slash.docs
 
+import com.freya02.bot.commands.slash.docs.CommonDocsHandlers.Companion.transformResolveChain
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.cached.CachedClass
 import com.freya02.bot.docs.cached.CachedField
@@ -71,7 +72,7 @@ class SlashResolve(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
     ) {
         val docIndex = docIndexMap[sourceType]!!
 
-        when (val doc = docIndex.resolveDoc(chain)) {
+        when (val doc = docIndex.resolveDoc(chain.transformResolveChain())) {
             is CachedClass -> CommonDocsHandlers.sendClass(event, false, doc)
             is CachedMethod -> CommonDocsHandlers.sendMethod(event, false, doc)
             is CachedField -> CommonDocsHandlers.sendField(event, false, doc)

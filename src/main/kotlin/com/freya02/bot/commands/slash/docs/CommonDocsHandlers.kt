@@ -143,7 +143,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
     ): Collection<Choice> = withDocIndex(sourceType) {
-        resolveDocAutocomplete(event.focusedOption.value).resolveResultToChoices()
+        resolveDocAutocomplete(event.focusedOption.value.transformResolveChain()).resolveResultToChoices()
     }
 
     private fun withDocIndex(sourceType: DocSourceType, block: DocIndex.() -> List<Choice>): List<Choice> {
@@ -259,6 +259,8 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
 
             sendField(event, false, cachedField)
         }
+
+        fun String.transformResolveChain() = this.replace('.', '#')
 
         private fun ReplyCallbackAction.addSeeAlso(cachedDoc: CachedDoc): ReplyCallbackAction {
             cachedDoc.seeAlsoReferences.let { referenceList ->
