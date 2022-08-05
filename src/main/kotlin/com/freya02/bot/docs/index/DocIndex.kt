@@ -151,7 +151,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         }
     }
 
-    override fun resolveDocAutocomplete(query: String): List<DocResolveData> = runBlocking {
+    override fun resolveDocAutocomplete(query: String): List<DocResolveResult> = runBlocking {
         // TextChannel#getIter ==> TextChannel#getIterableHistory()
         // TextChannel#getIterableHistory()#forEachAsy ==> MessagePaginationAction#forEachAsync()
         val tokens = query.split('#').toMutableList()
@@ -171,7 +171,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
 
         //This happens with "TextChannel#getIterableHistory()#", this gets the docs of the return type of getIterableHistory
         if (lastToken?.isEmpty() == true) {
-            return@runBlocking listOf(DocResolveData(currentClass, currentClass))
+            return@runBlocking listOf(DocResolveResult(currentClass, currentClass))
         }
 
         //Do a classic search on the latest return type + optionally last token (might be a method or a field)
@@ -179,9 +179,9 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
             lastToken != null -> {
                 findSignaturesIn(currentClass, lastToken, DocType.METHOD, DocType.FIELD)
                     //Current class is added because findSignaturesIn doesn't return "identifier", not "full_signature"
-                    .map { DocResolveData(it.humanClassIdentifier, "$currentClass#${it.identifierOrFullIdentifier}") }
+                    .map { DocResolveResult(it.humanClassIdentifier, "$currentClass#${it.identifierOrFullIdentifier}") }
             }
-            else -> getClasses(currentClass).map { DocResolveData(it, it) }
+            else -> getClasses(currentClass).map { DocResolveResult(it, it) }
         }
     }
 

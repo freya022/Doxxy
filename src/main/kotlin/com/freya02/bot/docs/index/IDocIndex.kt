@@ -43,5 +43,5 @@ interface IDocIndex {
     fun getClassesWithFields(query: String? = null): List<String>
 
     fun resolveDoc(query: String): CachedDoc?
-    fun resolveDocAutocomplete(query: String): List<DocResolveData>
+    fun resolveDocAutocomplete(query: String): List<DocResolveResult>
 }

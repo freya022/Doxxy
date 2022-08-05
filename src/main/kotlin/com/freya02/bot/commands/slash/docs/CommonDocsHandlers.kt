@@ -7,7 +7,7 @@ import com.freya02.bot.docs.cached.CachedDoc
 import com.freya02.bot.docs.cached.CachedField
 import com.freya02.bot.docs.cached.CachedMethod
 import com.freya02.bot.docs.index.DocIndex
-import com.freya02.bot.docs.index.DocResolveData
+import com.freya02.bot.docs.index.DocResolveResult
 import com.freya02.bot.docs.index.DocSearchResult
 import com.freya02.botcommands.api.Logging
 import com.freya02.botcommands.api.application.ApplicationCommand
@@ -155,7 +155,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
     private fun Iterable<DocSearchResult>.searchResultToChoices(nameExtractor: (DocSearchResult) -> String) = this
         .filter { it.identifierOrFullIdentifier.length <= Choice.MAX_STRING_VALUE_LENGTH }
         .map { Choice(nameExtractor(it), it.identifierOrFullIdentifier) }
-    private fun Iterable<DocResolveData>.resolveResultToChoices() = this
+    private fun Iterable<DocResolveResult>.resolveResultToChoices() = this
         .filter { it.value.length <= Choice.MAX_STRING_VALUE_LENGTH }
         .map { Choice(it.name, it.value) }
 
