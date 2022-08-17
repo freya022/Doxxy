@@ -21,7 +21,6 @@ import com.freya02.botcommands.api.components.event.SelectionEvent
 import com.freya02.botcommands.api.utils.EmojiUtils
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.data.TargetType
-import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.reply_
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.ClientType
@@ -211,10 +210,10 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
             cachedDoc: CachedDoc,
             it: ReplyCallbackAction
         ) {
-            it.addActionRows(buildList {
+            it.addActionRow(buildList {
                 if (!ephemeral) add(DeleteButtonListener.getDeleteButton(event.user))
                 cachedDoc.sourceLink?.let { sourceLink -> add(Button.link(sourceLink, "Source")) }
-            }.row())
+            })
         }
 
         fun handleClass(event: GuildSlashEvent, className: String, docIndex: DocIndex) {
