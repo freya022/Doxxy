@@ -34,6 +34,7 @@ import net.dv8tion.jda.api.interactions.commands.Command
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
+import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import org.jetbrains.annotations.Contract
 import java.sql.SQLException
 import java.util.concurrent.TimeUnit
@@ -226,7 +227,7 @@ class SlashTag(database: Database) : ApplicationCommand() {
                         Components.dangerButton { btnEvt: ButtonEvent -> doDeleteTag(event, name, btnEvt) }
                             .build("Delete"),
                         Components.primaryButton { btnEvt: ButtonEvent ->
-                            btnEvt.editMessage("Cancelled").setActionRows().queue()
+                            btnEvt.editMessage("Cancelled").setComponents().queue()
                         }.build("No")
                     )
                 )
@@ -237,7 +238,7 @@ class SlashTag(database: Database) : ApplicationCommand() {
 
     private fun doDeleteTag(event: GuildSlashEvent, name: String, btnEvt: ButtonEvent) {
         tagDB.delete(event.guild.idLong, event.user.idLong, name)
-        btnEvt.editMessageFormat("Tag '%s' deleted successfully", name).setActionRows().queue()
+        btnEvt.editMessageFormat("Tag '%s' deleted successfully", name).setComponents().queue()
     }
 
     @JDASlashCommand(scope = CommandScope.GLOBAL_NO_DM, name = "tags", subcommand = "list", description = "Creates a tag in this guild")
@@ -279,7 +280,7 @@ class SlashTag(database: Database) : ApplicationCommand() {
                 }
             }
             .build()
-        event.reply(paginator.get()).setEphemeral(true).queue()
+        event.reply(MessageCreateData.fromEditData(paginator.get())).setEphemeral(true).queue()
     }
 
     @JDASlashCommand(scope = CommandScope.GLOBAL_NO_DM, name = "tags", subcommand = "info", description = "Gives information about a tag in this guild")
