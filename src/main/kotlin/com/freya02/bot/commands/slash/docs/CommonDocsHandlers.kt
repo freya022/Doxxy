@@ -7,6 +7,7 @@ import com.freya02.bot.docs.cached.CachedDoc
 import com.freya02.bot.docs.cached.CachedField
 import com.freya02.bot.docs.cached.CachedMethod
 import com.freya02.bot.docs.index.DocIndex
+import com.freya02.bot.docs.index.DocResolveResult
 import com.freya02.bot.docs.index.DocSearchResult
 import com.freya02.botcommands.api.Logging
 import com.freya02.botcommands.api.application.ApplicationCommand
@@ -137,6 +138,15 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         findMethodAndFieldSignaturesIn(className, event.focusedOption.value).searchResultToChoices { it.humanIdentifier }
     }
 
+    @CacheAutocompletion
+    @AutocompletionHandler(name = RESOLVE_AUTOCOMPLETE_NAME, showUserInput = false)
+    fun onResolveAutocomplete(
+        event: CommandAutoCompleteInteractionEvent,
+        @CompositeKey @AppOption sourceType: DocSourceType
+    ): Collection<Choice> = withDocIndex(sourceType) {
+        resolveDocAutocomplete(event.focusedOption.value.transformResolveChain()).resolveResultToChoices()
+    }
+
     private fun withDocIndex(sourceType: DocSourceType, block: DocIndex.() -> List<Choice>): List<Choice> {
         val map = docIndexMap[sourceType] ?: return emptyList()
         return block(map)
@@ -146,6 +156,9 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
     private fun Iterable<DocSearchResult>.searchResultToChoices(nameExtractor: (DocSearchResult) -> String) = this
         .filter { it.identifierOrFullIdentifier.length <= Choice.MAX_STRING_VALUE_LENGTH }
         .map { Choice(nameExtractor(it), it.identifierOrFullIdentifier) }
+    private fun Iterable<DocResolveResult>.resolveResultToChoices() = this
+        .filter { it.value.length <= Choice.MAX_STRING_VALUE_LENGTH }
+        .map { Choice(it.name, it.value) }
 
     companion object {
         const val CLASS_NAME_AUTOCOMPLETE_NAME = "CommonDocsHandlers: className"
@@ -156,6 +169,8 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         const val FIELD_NAME_BY_CLASS_AUTOCOMPLETE_NAME = "FieldCommand: fieldNameByClass"
         const val ANY_FIELD_NAME_AUTOCOMPLETE_NAME = "CommonDocsHandlers: anyFieldName"
         const val METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME = "CommonDocsHandlers: methodNameOrFieldByClass"
+        const val RESOLVE_AUTOCOMPLETE_NAME = "CommonDocsHandlers: resolve"
+
         const val SEE_ALSO_SELECT_LISTENER_NAME = "CommonDocsHandlers: seeAlso"
 
         val AUTOCOMPLETE_NAMES = arrayOf(
@@ -166,7 +181,8 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
             ANY_METHOD_NAME_AUTOCOMPLETE_NAME,
             FIELD_NAME_BY_CLASS_AUTOCOMPLETE_NAME,
             ANY_FIELD_NAME_AUTOCOMPLETE_NAME,
-            METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME
+            METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME,
+            RESOLVE_AUTOCOMPLETE_NAME
         )
 
         fun sendClass(event: IReplyCallback, ephemeral: Boolean, cachedClass: CachedClass) {
@@ -246,6 +262,8 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
 
             sendField(event, false, cachedField)
         }
+
+        fun String.transformResolveChain() = this.replace('.', '#')
 
         private fun ReplyCallbackAction.addSeeAlso(cachedDoc: CachedDoc): ReplyCallbackAction {
             cachedDoc.seeAlsoReferences.let { referenceList ->

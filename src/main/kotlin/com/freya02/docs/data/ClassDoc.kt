@@ -177,6 +177,8 @@ class ClassDoc @JvmOverloads constructor(
     override val identifierNoArgs: String? = null
     override val humanIdentifier: String? = null
     override fun toHumanClassIdentifier(className: String): String? = null
+    override val returnType: String
+        get() = className
 
     val enumConstants: List<FieldDoc>
         get() = getFieldDocs()

@@ -1,6 +1,7 @@
 package com.freya02.bot.docs.index
 
 import com.freya02.bot.docs.cached.CachedClass
+import com.freya02.bot.docs.cached.CachedDoc
 import com.freya02.bot.docs.cached.CachedField
 import com.freya02.bot.docs.cached.CachedMethod
 
@@ -40,4 +41,7 @@ interface IDocIndex {
     fun getClasses(query: String? = null): List<String>
     fun getClassesWithMethods(query: String? = null): List<String>
     fun getClassesWithFields(query: String? = null): List<String>
+
+    fun resolveDoc(query: String): CachedDoc?
+    fun resolveDocAutocomplete(query: String): List<DocResolveResult>
 }

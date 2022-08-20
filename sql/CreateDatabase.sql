@@ -25,8 +25,9 @@ create table Doc
     identifier_no_args     text check (length(identifier_no_args) <= 100),     --For search purposes, "method"
     human_identifier       text check (length(human_identifier) <= 100),       --For class-specific choice name, "method(Type name, name2)"
     human_class_identifier text check (length(human_class_identifier) <= 100), --For any-class choice name, "Class#method(Type name, name2)"
+    return_type            text not null,
     embed                  text not null,
-    javadoc_link           text, --Null for offline docs
+    javadoc_link           text,                                               --Null for offline docs
     source_link            text,
 
     unique (source_id, className, identifier)

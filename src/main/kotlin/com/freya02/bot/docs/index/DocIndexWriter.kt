@@ -8,6 +8,7 @@ import com.freya02.bot.docs.metadata.SourceRootMetadata
 import com.freya02.botcommands.api.Logging
 import com.freya02.docs.ClassDocs
 import com.freya02.docs.DocSourceType
+import com.freya02.docs.DocUtils.getReturnTypeNoAnnotations
 import com.freya02.docs.DocsSession
 import com.freya02.docs.data.BaseDoc
 import com.freya02.docs.data.ClassDetailType
@@ -188,8 +189,8 @@ internal class DocIndexWriter(
         return preparedStatement(
             """
             insert into doc (source_id, type, classname, identifier, identifier_no_args, human_identifier, human_class_identifier,
-                             embed, javadoc_link, source_link)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                             return_type, embed, javadoc_link, source_link)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             returning id""".trimIndent()
         ) {
             executeReturningInsert(
@@ -200,6 +201,7 @@ internal class DocIndexWriter(
                 baseDoc.identifierNoArgs,
                 baseDoc.humanIdentifier,
                 baseDoc.toHumanClassIdentifier(className),
+                baseDoc.getReturnTypeNoAnnotations(),
                 embedJson,
                 baseDoc.onlineURL,
                 sourceLink
