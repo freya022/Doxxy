@@ -40,7 +40,7 @@ class SeeAlso(type: DocSourceType, docDetail: DocDetail) {
     init {
         for (seeAlsoClassElement in docDetail.htmlElements[0].targetElement.select("dd > ul > li > a")) {
             try {
-                val href = type.toOnlineURL(seeAlsoClassElement.absUrl("href"))
+                val href = type.toEffectiveURL(seeAlsoClassElement.absUrl("href"))
                 val sourceType = DocSourceType.fromUrl(href)
                 if (sourceType == null) {
                     tryAddReference(SeeAlsoReference(seeAlsoClassElement.text(), href, TargetType.UNKNOWN, null))

@@ -22,17 +22,19 @@ import com.freya02.botcommands.api.utils.EmojiUtils
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.data.TargetType
 import dev.minn.jda.ktx.messages.reply_
+import net.dv8tion.jda.api.EmbedBuilder
+import net.dv8tion.jda.api.OnlineStatus
+import net.dv8tion.jda.api.entities.ClientType
+import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
-import net.dv8tion.jda.api.interactions.components.ActionRow
-import net.dv8tion.jda.api.interactions.components.ItemComponent
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction
 import java.util.concurrent.TimeUnit
 
-private val LOGGER = Logging.getLogger()
+private val logger = Logging.getLogger()
 
 class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationCommand() {
     @JDASelectionMenuListener(name = SEE_ALSO_SELECT_LISTENER_NAME)
@@ -168,45 +170,54 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         )
 
         fun sendClass(event: IReplyCallback, ephemeral: Boolean, cachedClass: CachedClass) {
-            event.replyEmbeds(cachedClass.embed)
+            event.replyEmbeds(cachedClass.embed.withLink(event, cachedClass))
                 .addSeeAlso(cachedClass)
-                .also {
-                    val row: MutableList<ItemComponent> = arrayListOf()
-                    if (!ephemeral) row.add(DeleteButtonListener.getDeleteButton(event.user))
-                    if (cachedClass.link != null) row.add(Button.link(cachedClass.link, "Source"))
-
-                    it.addActionRows(ActionRow.of(row))
-                }
+                .also { addActionRows(ephemeral, event, cachedClass, it) }
                 .setEphemeral(ephemeral)
                 .queue()
         }
 
         fun sendMethod(event: IReplyCallback, ephemeral: Boolean, cachedMethod: CachedMethod) {
-            event.replyEmbeds(cachedMethod.embed)
+            event.replyEmbeds(cachedMethod.embed.withLink(event, cachedMethod))
                 .addSeeAlso(cachedMethod)
-                .also {
-                    val row: MutableList<ItemComponent> = arrayListOf()
-                    if (!ephemeral) row.add(DeleteButtonListener.getDeleteButton(event.user))
-                    if (cachedMethod.link != null) row.add(Button.link(cachedMethod.link, "Source"))
-
-                    it.addActionRows(ActionRow.of(row))
-                }
+                .also { addActionRows(ephemeral, event, cachedMethod, it) }
                 .setEphemeral(ephemeral)
                 .queue()
         }
 
         fun sendField(event: IReplyCallback, ephemeral: Boolean, cachedField: CachedField) {
-            event.replyEmbeds(cachedField.embed)
+            event.replyEmbeds(cachedField.embed.withLink(event, cachedField))
                 .addSeeAlso(cachedField)
-                .also {
-                    val row: MutableList<ItemComponent> = arrayListOf()
-                    if (!ephemeral) row.add(DeleteButtonListener.getDeleteButton(event.user))
-                    if (cachedField.link != null) row.add(Button.link(cachedField.link, "Source"))
-
-                    it.addActionRows(ActionRow.of(row))
-                }
+                .also { addActionRows(ephemeral, event, cachedField, it) }
                 .setEphemeral(ephemeral)
                 .queue()
+        }
+
+        private fun MessageEmbed.withLink(event: IReplyCallback, cachedDoc: CachedDoc): MessageEmbed {
+            cachedDoc.javadocLink?.let { javadocLink ->
+                val member = event.member ?: run {
+                    logger.warn("Got a null member")
+                    return@let
+                }
+
+                if (member.getOnlineStatus(ClientType.MOBILE) != OnlineStatus.OFFLINE) {
+                    return EmbedBuilder(this).addField("Link", javadocLink, false).build()
+                }
+            }
+
+            return this
+        }
+
+        private fun addActionRows(
+            ephemeral: Boolean,
+            event: IReplyCallback,
+            cachedDoc: CachedDoc,
+            it: ReplyCallbackAction
+        ) {
+            it.addActionRow(buildList {
+                if (!ephemeral) add(DeleteButtonListener.getDeleteButton(event.user))
+                cachedDoc.sourceLink?.let { sourceLink -> add(Button.link(sourceLink, "Source")) }
+            })
         }
 
         fun handleClass(event: GuildSlashEvent, className: String, docIndex: DocIndex) {
@@ -246,7 +257,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
                         if (reference.targetType != TargetType.UNKNOWN) {
                             val optionValue = reference.targetType.name + ":" + reference.fullSignature
                             if (optionValue.length > SelectMenu.ID_MAX_LENGTH) {
-                                LOGGER.warn(
+                                logger.warn(
                                     "Option value was too large ({}) for: '{}'",
                                     optionValue.length,
                                     optionValue

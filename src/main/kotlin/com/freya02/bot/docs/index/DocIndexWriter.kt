@@ -185,8 +185,25 @@ internal class DocIndexWriter(
         embedJson: String,
         sourceLink: String?
     ): Int {
-        return preparedStatement("insert into doc (source_id, type, classname, identifier, identifier_no_args, human_identifier, human_class_identifier, embed, source_link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) returning id") {
-            executeReturningInsert(sourceType.id, docType.id, className, baseDoc.identifier, baseDoc.identifierNoArgs, baseDoc.humanIdentifier, baseDoc.toHumanClassIdentifier(className), embedJson, sourceLink).readOnce()!!["id"]
+        return preparedStatement(
+            """
+            insert into doc (source_id, type, classname, identifier, identifier_no_args, human_identifier, human_class_identifier,
+                             embed, javadoc_link, source_link)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            returning id""".trimIndent()
+        ) {
+            executeReturningInsert(
+                sourceType.id,
+                docType.id,
+                className,
+                baseDoc.identifier,
+                baseDoc.identifierNoArgs,
+                baseDoc.humanIdentifier,
+                baseDoc.toHumanClassIdentifier(className),
+                embedJson,
+                baseDoc.onlineURL,
+                sourceLink
+            ).readOnce()!!["id"]
         }
     }
 

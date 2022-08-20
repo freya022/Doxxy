@@ -6,5 +6,6 @@ import net.dv8tion.jda.api.entities.MessageEmbed
 interface CachedDoc {
     val embed: MessageEmbed
     val seeAlsoReferences: List<SeeAlsoReference>
-    val link: String?
+    val javadocLink: String?
+    val sourceLink: String?
 }

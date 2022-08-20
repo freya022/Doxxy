@@ -7,6 +7,7 @@ import org.jsoup.nodes.Element
 
 class FieldDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, element: Element) : BaseDoc() {
     override val effectiveURL: String
+    override val onlineURL: String?
     val fieldName: String
     val fieldType: String
     override val descriptionElements: HTMLElementList
@@ -22,6 +23,7 @@ class FieldDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, el
     init {
         elementId = element.id()
         effectiveURL = classDocs.effectiveURL + "#" + elementId
+        onlineURL = classDocs.onlineURL?.let { "$it#$elementId" }
 
         //Get field modifiers
         val modifiersElement = element.selectFirst("div.member-signature > span.modifiers") ?: throw DocParseException()

@@ -1,3 +1,5 @@
+drop table if exists tag, doc, docseealsoreference;
+
 create extension if not exists pg_trgm;
 
 create table Tag
@@ -24,6 +26,7 @@ create table Doc
     human_identifier       text check (length(human_identifier) <= 100),       --For class-specific choice name, "method(Type name, name2)"
     human_class_identifier text check (length(human_class_identifier) <= 100), --For any-class choice name, "Class#method(Type name, name2)"
     embed                  text not null,
+    javadoc_link           text, --Null for offline docs
     source_link            text,
 
     unique (source_id, className, identifier)
@@ -31,7 +34,7 @@ create table Doc
 
 -- raspbian doesn't support postgresql 12+ lmao
 -- create index doc_identifier_no_args_gist on doc using gist(identifier_no_args gist_trgm_ops(siglen=256));
-create index doc_identifier_no_args_gist on doc using gist(identifier_no_args gist_trgm_ops);
+create index doc_identifier_no_args_gist on doc using gist (identifier_no_args gist_trgm_ops);
 
 create table DocSeeAlsoReference
 (
