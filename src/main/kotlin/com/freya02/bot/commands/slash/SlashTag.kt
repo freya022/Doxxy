@@ -5,13 +5,13 @@ import com.freya02.bot.db.isUniqueViolation
 import com.freya02.bot.tag.*
 import com.freya02.botcommands.api.Logging
 import com.freya02.botcommands.api.annotations.CommandMarker
-import com.freya02.botcommands.api.application.ApplicationCommand
-import com.freya02.botcommands.api.application.CommandScope
-import com.freya02.botcommands.api.application.annotations.AppOption
-import com.freya02.botcommands.api.application.slash.GuildSlashEvent
-import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand
-import com.freya02.botcommands.api.application.slash.autocomplete.AutocompleteAlgorithms
-import com.freya02.botcommands.api.application.slash.autocomplete.annotations.AutocompletionHandler
+import com.freya02.botcommands.api.commands.application.ApplicationCommand
+import com.freya02.botcommands.api.commands.application.CommandScope
+import com.freya02.botcommands.api.commands.application.annotations.AppOption
+import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
+import com.freya02.botcommands.api.commands.application.slash.annotations.JDASlashCommand
+import com.freya02.botcommands.api.commands.application.slash.autocomplete.AutocompleteAlgorithms
+import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
 import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.components.InteractionConstraints
 import com.freya02.botcommands.api.components.event.ButtonEvent
@@ -50,7 +50,7 @@ private const val TAGS_CREATE_MODAL_HANDLER = "SlashTag: tagsCreate"
 private const val TAGS_EDIT_MODAL_HANDLER = "SlashTag: tagsEdit"
 
 @CommandMarker
-class SlashTag(database: Database) : ApplicationCommand() {
+class SlashTag(database: Database, private val modals: Modals, private val components: Components) : ApplicationCommand() {
     private val tagDB: TagDB = TagDB(database)
 
     @Contract(value = "null -> fail", pure = true)
@@ -110,10 +110,10 @@ class SlashTag(database: Database) : ApplicationCommand() {
 
     @JDASlashCommand(scope = CommandScope.GLOBAL_NO_DM, name = "tags", subcommand = "create", description = "Creates a tag in this guild")
     fun createTag(event: GuildSlashEvent) {
-        val modal = Modals.create("Create a tag", TAGS_CREATE_MODAL_HANDLER)
-            .addActionRow(Modals.createTextInput("tagName", "Tag name", TextInputStyle.SHORT).build())
-            .addActionRow(Modals.createTextInput("tagDescription", "Tag description", TextInputStyle.SHORT).build())
-            .addActionRow(Modals.createTextInput("tagContent", "Tag content", TextInputStyle.PARAGRAPH).build())
+        val modal = modals.create("Create a tag", TAGS_CREATE_MODAL_HANDLER)
+            .addActionRow(modals.createTextInput("tagName", "Tag name", TextInputStyle.SHORT).build())
+            .addActionRow(modals.createTextInput("tagDescription", "Tag description", TextInputStyle.SHORT).build())
+            .addActionRow(modals.createTextInput("tagContent", "Tag content", TextInputStyle.PARAGRAPH).build())
             .build()
 
         event.replyModal(modal).queue()
@@ -146,19 +146,19 @@ class SlashTag(database: Database) : ApplicationCommand() {
         @AppOption(description = "Name of the tag", autocomplete = USER_TAGS_AUTOCOMPLETE) name: String
     ) {
         withOwnedTag(event, name) { tag: Tag ->
-            val modal = Modals.create("Edit a tag", TAGS_EDIT_MODAL_HANDLER, name)
+            val modal = modals.create("Edit a tag", TAGS_EDIT_MODAL_HANDLER, name)
                 .addActionRow(
-                    Modals.createTextInput("tagName", "Tag name", TextInputStyle.SHORT)
+                    modals.createTextInput("tagName", "Tag name", TextInputStyle.SHORT)
                         .setValue(tag.name)
                         .build()
                 )
                 .addActionRow(
-                    Modals.createTextInput("tagDescription", "Tag description", TextInputStyle.SHORT)
+                    modals.createTextInput("tagDescription", "Tag description", TextInputStyle.SHORT)
                         .setValue(tag.description)
                         .build()
                 )
                 .addActionRow(
-                    Modals.createTextInput("tagContent", "Tag content", TextInputStyle.PARAGRAPH)
+                    modals.createTextInput("tagContent", "Tag content", TextInputStyle.PARAGRAPH)
                         .setValue(tag.content)
                         .build()
                 )
@@ -223,10 +223,10 @@ class SlashTag(database: Database) : ApplicationCommand() {
         withOwnedTag(event, name) { tag: Tag ->
             event.reply("Are you sure you want to delete the tag '${tag.name}' ?")
                 .addActionRow(
-                    *Components.group(
-                        Components.dangerButton { btnEvt: ButtonEvent -> doDeleteTag(event, name, btnEvt) }
+                    *components.group(
+                        components.dangerButton { btnEvt: ButtonEvent -> doDeleteTag(event, name, btnEvt) }
                             .build("Delete"),
-                        Components.primaryButton { btnEvt: ButtonEvent ->
+                        components.primaryButton { btnEvt: ButtonEvent ->
                             btnEvt.editMessage("Cancelled").setComponents().queue()
                         }.build("No")
                     )
@@ -324,7 +324,7 @@ class SlashTag(database: Database) : ApplicationCommand() {
         }
     }
 
-    @AutocompletionHandler(name = GUILD_TAGS_AUTOCOMPLETE, showUserInput = false)
+    @AutocompleteHandler(name = GUILD_TAGS_AUTOCOMPLETE, showUserInput = false)
     fun guildTagsAutocomplete(event: CommandAutoCompleteInteractionEvent): List<Command.Choice> {
         val guild = checkGuild(event.guild)
         return AutocompleteAlgorithms
@@ -335,7 +335,7 @@ class SlashTag(database: Database) : ApplicationCommand() {
             .map { r: BoundExtractedResult<ShortTag> -> Command.Choice(r.referent.asChoiceName(), r.string) }
     }
 
-    @AutocompletionHandler(name = USER_TAGS_AUTOCOMPLETE, showUserInput = false)
+    @AutocompleteHandler(name = USER_TAGS_AUTOCOMPLETE, showUserInput = false)
     fun userTagsAutocomplete(event: CommandAutoCompleteInteractionEvent): List<Command.Choice> {
         val guild = checkGuild(event.guild)
         return AutocompleteAlgorithms

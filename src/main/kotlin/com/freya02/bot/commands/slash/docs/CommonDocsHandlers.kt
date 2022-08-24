@@ -1,6 +1,6 @@
 package com.freya02.bot.commands.slash.docs
 
-import com.freya02.bot.commands.slash.DeleteButtonListener
+import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.cached.CachedClass
 import com.freya02.bot.docs.cached.CachedDoc
@@ -10,12 +10,12 @@ import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocResolveResult
 import com.freya02.bot.docs.index.DocSearchResult
 import com.freya02.botcommands.api.Logging
-import com.freya02.botcommands.api.application.ApplicationCommand
-import com.freya02.botcommands.api.application.annotations.AppOption
-import com.freya02.botcommands.api.application.slash.GuildSlashEvent
-import com.freya02.botcommands.api.application.slash.autocomplete.annotations.AutocompletionHandler
-import com.freya02.botcommands.api.application.slash.autocomplete.annotations.CacheAutocompletion
-import com.freya02.botcommands.api.application.slash.autocomplete.annotations.CompositeKey
+import com.freya02.botcommands.api.commands.application.ApplicationCommand
+import com.freya02.botcommands.api.commands.application.annotations.AppOption
+import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
+import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
+import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.CacheAutocomplete
+import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.CompositeKey
 import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.components.annotations.JDASelectionMenuListener
 import com.freya02.botcommands.api.components.event.SelectionEvent
@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit
 
 private val logger = Logging.getLogger()
 
-class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationCommand() {
+class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val components: Components) : ApplicationCommand() {
     @JDASelectionMenuListener(name = SEE_ALSO_SELECT_LISTENER_NAME)
     fun onSeeAlsoSelect(event: SelectionEvent) {
         val option = event.selectedOptions[0] //Forced to use 1
@@ -53,9 +53,9 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
             }
             if (doc != null) {
                 when (targetType) {
-                    TargetType.CLASS -> sendClass(event, true, doc as CachedClass)
-                    TargetType.METHOD -> sendMethod(event, true, doc as CachedMethod)
-                    TargetType.FIELD -> sendField(event, true, doc as CachedField)
+                    TargetType.CLASS -> sendClass(event, true, doc as CachedClass, components)
+                    TargetType.METHOD -> sendMethod(event, true, doc as CachedMethod, components)
+                    TargetType.FIELD -> sendField(event, true, doc as CachedField, components)
                     else -> throw IllegalArgumentException("Invalid target type: $targetType")
                 }
                 break
@@ -63,8 +63,8 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         }
     }
 
-    @CacheAutocompletion
-    @AutocompletionHandler(name = CLASS_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
+    @CacheAutocomplete
+    @AutocompleteHandler(name = CLASS_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onClassNameAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
@@ -72,8 +72,8 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         getClasses(event.focusedOption.value).toChoices()
     }
 
-    @CacheAutocompletion
-    @AutocompletionHandler(name = CLASS_NAME_WITH_METHODS_AUTOCOMPLETE_NAME, showUserInput = false)
+    @CacheAutocomplete
+    @AutocompleteHandler(name = CLASS_NAME_WITH_METHODS_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onClassNameWithMethodsAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
@@ -81,8 +81,8 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         getClassesWithMethods(event.focusedOption.value).toChoices()
     }
 
-    @CacheAutocompletion
-    @AutocompletionHandler(name = CLASS_NAME_WITH_FIELDS_AUTOCOMPLETE_NAME, showUserInput = false)
+    @CacheAutocomplete
+    @AutocompleteHandler(name = CLASS_NAME_WITH_FIELDS_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onClassNameWithFieldsAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
@@ -90,8 +90,8 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         getClassesWithFields(event.focusedOption.value).toChoices()
     }
 
-    @CacheAutocompletion
-    @AutocompletionHandler(name = METHOD_NAME_BY_CLASS_AUTOCOMPLETE_NAME, showUserInput = false)
+    @CacheAutocomplete
+    @AutocompleteHandler(name = METHOD_NAME_BY_CLASS_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onMethodNameByClassAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType,
@@ -100,8 +100,8 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         findMethodSignaturesIn(className, event.focusedOption.value).searchResultToChoices { it.humanIdentifier }
     }
 
-    @CacheAutocompletion
-    @AutocompletionHandler(name = ANY_METHOD_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
+    @CacheAutocomplete
+    @AutocompleteHandler(name = ANY_METHOD_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onAnyMethodNameAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
@@ -109,8 +109,8 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         findAnyMethodSignatures(event.focusedOption.value).searchResultToChoices { it.humanClassIdentifier }
     }
 
-    @CacheAutocompletion
-    @AutocompletionHandler(name = FIELD_NAME_BY_CLASS_AUTOCOMPLETE_NAME, showUserInput = false)
+    @CacheAutocomplete
+    @AutocompleteHandler(name = FIELD_NAME_BY_CLASS_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onFieldNameByClassAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType,
@@ -119,8 +119,8 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         findFieldSignaturesIn(className, event.focusedOption.value).searchResultToChoices { it.humanIdentifier }
     }
 
-    @CacheAutocompletion
-    @AutocompletionHandler(name = ANY_FIELD_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
+    @CacheAutocomplete
+    @AutocompleteHandler(name = ANY_FIELD_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onAnyFieldNameAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
@@ -128,8 +128,8 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         findAnyFieldSignatures(event.focusedOption.value).searchResultToChoices { it.humanClassIdentifier }
     }
 
-    @CacheAutocompletion
-    @AutocompletionHandler(name = METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME, showUserInput = false)
+    @CacheAutocomplete
+    @AutocompleteHandler(name = METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onMethodOrFieldByClassAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType,
@@ -138,8 +138,8 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         findMethodAndFieldSignaturesIn(className, event.focusedOption.value).searchResultToChoices { it.humanIdentifier }
     }
 
-    @CacheAutocompletion
-    @AutocompletionHandler(name = RESOLVE_AUTOCOMPLETE_NAME, showUserInput = false)
+    @CacheAutocomplete
+    @AutocompleteHandler(name = RESOLVE_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onResolveAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
@@ -185,26 +185,26 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
             RESOLVE_AUTOCOMPLETE_NAME
         )
 
-        fun sendClass(event: IReplyCallback, ephemeral: Boolean, cachedClass: CachedClass) {
+        fun sendClass(event: IReplyCallback, ephemeral: Boolean, cachedClass: CachedClass, components: Components) {
             event.replyEmbeds(cachedClass.embed.withLink(event, cachedClass))
-                .addSeeAlso(cachedClass)
-                .also { addActionRows(ephemeral, event, cachedClass, it) }
+                .addSeeAlso(cachedClass, components)
+                .also { addActionRows(ephemeral, event, cachedClass, it, components) }
                 .setEphemeral(ephemeral)
                 .queue()
         }
 
-        fun sendMethod(event: IReplyCallback, ephemeral: Boolean, cachedMethod: CachedMethod) {
+        fun sendMethod(event: IReplyCallback, ephemeral: Boolean, cachedMethod: CachedMethod, components: Components) {
             event.replyEmbeds(cachedMethod.embed.withLink(event, cachedMethod))
-                .addSeeAlso(cachedMethod)
-                .also { addActionRows(ephemeral, event, cachedMethod, it) }
+                .addSeeAlso(cachedMethod, components)
+                .also { addActionRows(ephemeral, event, cachedMethod, it, components) }
                 .setEphemeral(ephemeral)
                 .queue()
         }
 
-        fun sendField(event: IReplyCallback, ephemeral: Boolean, cachedField: CachedField) {
+        fun sendField(event: IReplyCallback, ephemeral: Boolean, cachedField: CachedField, components: Components) {
             event.replyEmbeds(cachedField.embed.withLink(event, cachedField))
-                .addSeeAlso(cachedField)
-                .also { addActionRows(ephemeral, event, cachedField, it) }
+                .addSeeAlso(cachedField, components)
+                .also { addActionRows(ephemeral, event, cachedField, it, components) }
                 .setEphemeral(ephemeral)
                 .queue()
         }
@@ -228,47 +228,48 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
             ephemeral: Boolean,
             event: IReplyCallback,
             cachedDoc: CachedDoc,
-            it: ReplyCallbackAction
+            it: ReplyCallbackAction,
+            components: Components
         ) {
             it.addActionRow(buildList {
-                if (!ephemeral) add(DeleteButtonListener.getDeleteButton(event.user))
+                if (!ephemeral) add(components.messageDeleteButton(event.user))
                 cachedDoc.sourceLink?.let { sourceLink -> add(Button.link(sourceLink, "Source")) }
             })
         }
 
-        fun handleClass(event: GuildSlashEvent, className: String, docIndex: DocIndex) {
+        fun handleClass(event: GuildSlashEvent, className: String, docIndex: DocIndex, components: Components) {
             val cachedClass = docIndex.getClassDoc(className) ?: run {
                 event.reply("Class '$className' does not exist").setEphemeral(true).queue()
                 return
             }
 
-            sendClass(event, false, cachedClass)
+            sendClass(event, false, cachedClass, components)
         }
 
-        fun handleMethodDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex) {
+        fun handleMethodDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex, components: Components) {
             val cachedMethod = docIndex.getMethodDoc(className, identifier) ?: run {
                 event.reply_("'$className' does not contain a '$identifier' method", ephemeral = true).queue()
                 return
             }
 
-            sendMethod(event, false, cachedMethod)
+            sendMethod(event, false, cachedMethod, components)
         }
 
-        fun handleFieldDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex) {
+        fun handleFieldDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex, components: Components) {
             val cachedField = docIndex.getFieldDoc(className, identifier) ?: run {
                 event.reply_("'$className' does not contain a '$identifier' field", ephemeral = true).queue()
                 return
             }
 
-            sendField(event, false, cachedField)
+            sendField(event, false, cachedField, components)
         }
 
         fun String.transformResolveChain() = this.replace('.', '#')
 
-        private fun ReplyCallbackAction.addSeeAlso(cachedDoc: CachedDoc): ReplyCallbackAction {
+        private fun ReplyCallbackAction.addSeeAlso(cachedDoc: CachedDoc, components: Components): ReplyCallbackAction {
             cachedDoc.seeAlsoReferences.let { referenceList ->
                 if (referenceList.any { it.targetType != TargetType.UNKNOWN }) {
-                    val selectionMenuBuilder = Components.selectionMenu(SEE_ALSO_SELECT_LISTENER_NAME)
+                    val selectionMenuBuilder = components.selectionMenu(SEE_ALSO_SELECT_LISTENER_NAME)
                         .timeout(15, TimeUnit.MINUTES)
                         .setPlaceholder("See also")
                     for (reference in referenceList) {

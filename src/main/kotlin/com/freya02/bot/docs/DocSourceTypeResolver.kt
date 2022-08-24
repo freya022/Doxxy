@@ -4,7 +4,7 @@ import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.botcommands.api.BContext
 import com.freya02.botcommands.api.parameters.ParameterResolver
 import com.freya02.botcommands.api.parameters.SlashParameterResolver
-import com.freya02.botcommands.internal.application.slash.SlashCommandInfo
+import com.freya02.botcommands.internal.commands.application.slash.SlashCommandInfo
 import com.freya02.docs.DocSourceType
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.interactions.commands.Command
@@ -12,15 +12,15 @@ import net.dv8tion.jda.api.interactions.commands.CommandInteractionPayload
 import net.dv8tion.jda.api.interactions.commands.OptionMapping
 import net.dv8tion.jda.api.interactions.commands.OptionType
 
-class DocSourceTypeResolver : ParameterResolver(DocSourceType::class.java), SlashParameterResolver {
-    override fun getOptionType(): OptionType = OptionType.STRING
+class DocSourceTypeResolver : ParameterResolver<DocSourceTypeResolver, DocSourceType>(DocSourceType::class), SlashParameterResolver<DocSourceTypeResolver, DocSourceType> {
+    override val optionType: OptionType = OptionType.STRING
 
     override fun resolve(
         context: BContext,
         info: SlashCommandInfo,
         event: CommandInteractionPayload,
         optionMapping: OptionMapping
-    ): Any = DocSourceType.valueOf(optionMapping.asString)
+    ): DocSourceType = DocSourceType.valueOf(optionMapping.asString)
 
     override fun getPredefinedChoices(guild: Guild?): Collection<Command.Choice> {
         return when {

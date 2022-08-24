@@ -1,20 +1,21 @@
 package com.freya02.bot.commands.slash.versioning
 
-import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.getDeleteButton
+import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
 import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.bot.versioning.LibraryType
 import com.freya02.bot.versioning.Versions
 import com.freya02.bot.versioning.supplier.BuildToolType
 import com.freya02.bot.versioning.supplier.DependencySupplier
 import com.freya02.botcommands.api.annotations.CommandMarker
-import com.freya02.botcommands.api.application.ApplicationCommand
-import com.freya02.botcommands.api.application.annotations.AppOption
-import com.freya02.botcommands.api.application.slash.GuildSlashEvent
-import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand
+import com.freya02.botcommands.api.commands.application.ApplicationCommand
+import com.freya02.botcommands.api.commands.application.annotations.AppOption
+import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
+import com.freya02.botcommands.api.commands.application.slash.annotations.JDASlashCommand
+import com.freya02.botcommands.api.components.Components
 import dev.minn.jda.ktx.messages.Embed
 
 @CommandMarker
-class SlashGradle(private val versions: Versions) : ApplicationCommand() {
+class SlashGradle(private val versions: Versions, private val components: Components) : ApplicationCommand() {
     @JDASlashCommand(name = "gradle", description = "Shows the Gradle dependencies for a library")
     fun onSlashGradle(
         event: GuildSlashEvent,
@@ -41,7 +42,7 @@ class SlashGradle(private val versions: Versions) : ApplicationCommand() {
         }
 
         event.replyEmbeds(embed)
-            .addActionRow(getDeleteButton(event.user))
+            .addActionRow(components.messageDeleteButton(event.user))
             .queue()
     }
 }

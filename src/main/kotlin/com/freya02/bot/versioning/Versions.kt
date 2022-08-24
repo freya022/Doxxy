@@ -13,9 +13,11 @@ import com.freya02.bot.versioning.maven.MavenVersionChecker
 import com.freya02.bot.versioning.maven.RepoType
 import com.freya02.botcommands.api.BContext
 import com.freya02.botcommands.api.Logging
+import com.freya02.botcommands.api.core.annotations.BEventListener
+import com.freya02.botcommands.api.core.annotations.BService
+import com.freya02.botcommands.internal.core.events.FirstReadyEvent
 import com.freya02.docs.DocSourceType
 import kotlinx.coroutines.runBlocking
-import java.io.IOException
 import java.nio.file.Path
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -28,6 +30,7 @@ private val lastKnownJDA5Path: Path = Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resol
 private val JDA_DOCS_FOLDER: Path = Main.JAVADOCS_PATH.resolve("JDA")
 private val BC_DOCS_FOLDER: Path = Main.JAVADOCS_PATH.resolve("BotCommands")
 
+@BService
 class Versions(private val docIndexMap: DocIndexMap) {
     private val bcChecker =
         MavenVersionChecker(lastKnownBotCommandsPath, RepoType.MAVEN, "io.github.freya022", "BotCommands")
@@ -38,8 +41,8 @@ class Versions(private val docIndexMap: DocIndexMap) {
     private val jda5Checker: MavenVersionChecker =
         MavenVersionChecker(lastKnownJDA5Path, RepoType.MAVEN, "net.dv8tion", "JDA")
 
-    @Throws(IOException::class)
-    suspend fun initUpdateLoop(context: BContext?) {
+    @BEventListener
+    suspend fun initUpdateLoop(event: FirstReadyEvent, context: BContext) {
         val scheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestBCVersion(context) }, 0, 30, TimeUnit.MINUTES)
@@ -53,7 +56,7 @@ class Versions(private val docIndexMap: DocIndexMap) {
 
             //Once java's docs are indexed, invalidate caches if the user had time to use the commands before docs were loaded
             for (autocompleteName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
-                context?.invalidateAutocompletionCache(autocompleteName)
+                context.invalidateAutocompleteCache(autocompleteName)
             }
         }
     }
@@ -82,7 +85,7 @@ class Versions(private val docIndexMap: DocIndexMap) {
                 LOGGER.trace("Invalidating JDA 5 index")
                 runBlocking { docIndexMap.refreshAndInvalidateIndex(DocSourceType.JDA, ReindexData(sourceUrl)) }
                 for (handlerName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
-                    context?.invalidateAutocompletionCache(handlerName)
+                    context?.invalidateAutocompleteCache(handlerName)
                 }
 
                 jda5Checker.saveVersion()
@@ -144,7 +147,7 @@ class Versions(private val docIndexMap: DocIndexMap) {
                 LOGGER.trace("Invalidating BotCommands index")
                 runBlocking { docIndexMap.refreshAndInvalidateIndex(DocSourceType.BOT_COMMANDS, ReindexData()) }
                 for (handlerName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
-                    context?.invalidateAutocompletionCache(handlerName)
+                    context?.invalidateAutocompleteCache(handlerName)
                 }
 
                 bcChecker.saveVersion()

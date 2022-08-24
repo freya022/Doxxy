@@ -2,13 +2,15 @@ package com.freya02.bot.commands.slash.docs
 
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.botcommands.api.annotations.CommandMarker
-import com.freya02.botcommands.api.application.annotations.AppOption
-import com.freya02.botcommands.api.application.slash.GuildSlashEvent
-import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand
+import com.freya02.botcommands.api.commands.annotations.GeneratedOption
+import com.freya02.botcommands.api.commands.application.annotations.AppOption
+import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
+import com.freya02.botcommands.api.commands.application.slash.annotations.JDASlashCommand
+import com.freya02.botcommands.api.components.Components
 import com.freya02.docs.DocSourceType
 
 @CommandMarker
-class MethodCommand(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
+class MethodCommand(private val docIndexMap: DocIndexMap, private val components: Components) : BaseDocCommand() {
     @JDASlashCommand(
         name = "method",
         subcommand = "botcommands",
@@ -16,7 +18,7 @@ class MethodCommand(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
     )
     fun onSlashMethodBC(
         event: GuildSlashEvent,
-        @AppOption(description = "The docs to search upon") sourceType: DocSourceType,
+        @GeneratedOption sourceType: DocSourceType,
         @AppOption(
             description = "Name of the Java class",
             autocomplete = CommonDocsHandlers.CLASS_NAME_WITH_METHODS_AUTOCOMPLETE_NAME
@@ -36,7 +38,7 @@ class MethodCommand(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
     )
     fun onSlashMethodJDA(
         event: GuildSlashEvent,
-        @AppOption(description = "The docs to search upon") sourceType: DocSourceType,
+        @GeneratedOption sourceType: DocSourceType,
         @AppOption(
             description = "Name of the Java class",
             autocomplete = CommonDocsHandlers.CLASS_NAME_WITH_METHODS_AUTOCOMPLETE_NAME
@@ -56,7 +58,7 @@ class MethodCommand(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
     )
     fun onSlashMethodJava(
         event: GuildSlashEvent,
-        @AppOption(description = "The docs to search upon") sourceType: DocSourceType,
+        @GeneratedOption sourceType: DocSourceType,
         @AppOption(
             description = "Name of the Java class",
             autocomplete = CommonDocsHandlers.CLASS_NAME_WITH_METHODS_AUTOCOMPLETE_NAME
@@ -76,6 +78,6 @@ class MethodCommand(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
         methodId: String
     ) {
         val docIndex = docIndexMap[sourceType]!!
-        CommonDocsHandlers.handleMethodDocs(event, className, methodId, docIndex)
+        CommonDocsHandlers.handleMethodDocs(event, className, methodId, docIndex, components)
     }
 }

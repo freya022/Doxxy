@@ -2,13 +2,15 @@ package com.freya02.bot.commands.slash.docs
 
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.botcommands.api.annotations.CommandMarker
-import com.freya02.botcommands.api.application.annotations.AppOption
-import com.freya02.botcommands.api.application.slash.GuildSlashEvent
-import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand
+import com.freya02.botcommands.api.commands.annotations.GeneratedOption
+import com.freya02.botcommands.api.commands.application.annotations.AppOption
+import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
+import com.freya02.botcommands.api.commands.application.slash.annotations.JDASlashCommand
+import com.freya02.botcommands.api.components.Components
 import com.freya02.docs.DocSourceType
 
 @CommandMarker
-class FieldCommand(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
+class FieldCommand(private val docIndexMap: DocIndexMap, private val components: Components) : BaseDocCommand() {
     @JDASlashCommand(
         name = "field",
         subcommand = "botcommands",
@@ -16,7 +18,7 @@ class FieldCommand(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
     )
     fun onSlashFieldBC(
         event: GuildSlashEvent,
-        @AppOption(description = "The docs to search upon") sourceType: DocSourceType,
+        @GeneratedOption sourceType: DocSourceType,
         @AppOption(
             description = "The class to search the field in",
             autocomplete = CommonDocsHandlers.CLASS_NAME_WITH_FIELDS_AUTOCOMPLETE_NAME
@@ -32,7 +34,7 @@ class FieldCommand(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
     @JDASlashCommand(name = "field", subcommand = "jda", description = "Shows the documentation for a field of a class")
     fun onSlashFieldJDA(
         event: GuildSlashEvent,
-        @AppOption(description = "The docs to search upon") sourceType: DocSourceType,
+        @GeneratedOption sourceType: DocSourceType,
         @AppOption(
             description = "The class to search the field in",
             autocomplete = CommonDocsHandlers.CLASS_NAME_WITH_FIELDS_AUTOCOMPLETE_NAME
@@ -52,7 +54,7 @@ class FieldCommand(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
     )
     fun onSlashFieldJava(
         event: GuildSlashEvent,
-        @AppOption(description = "The docs to search upon") sourceType: DocSourceType,
+        @GeneratedOption sourceType: DocSourceType,
         @AppOption(
             description = "The class to search the field in",
             autocomplete = CommonDocsHandlers.CLASS_NAME_WITH_FIELDS_AUTOCOMPLETE_NAME
@@ -72,6 +74,6 @@ class FieldCommand(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
         fieldName: String
     ) {
         val docIndex = docIndexMap[sourceType]!!
-        CommonDocsHandlers.handleFieldDocs(event, className, fieldName, docIndex)
+        CommonDocsHandlers.handleFieldDocs(event, className, fieldName, docIndex, components)
     }
 }

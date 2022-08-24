@@ -1,7 +1,7 @@
 package com.freya02.bot.commands.slash.versioning
 
 import com.freya02.bot.Main.BRANCH_VERSIONS_FOLDER_PATH
-import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.getDeleteButton
+import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
 import com.freya02.bot.utils.CryptoUtils
 import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.bot.versioning.LibraryType
@@ -9,17 +9,19 @@ import com.freya02.bot.versioning.github.*
 import com.freya02.bot.versioning.maven.MavenBranchProjectDependencyVersionChecker
 import com.freya02.bot.versioning.supplier.BuildToolType
 import com.freya02.bot.versioning.supplier.DependencySupplier
-import com.freya02.botcommands.api.BContext
 import com.freya02.botcommands.api.annotations.CommandMarker
-import com.freya02.botcommands.api.application.ApplicationCommand
-import com.freya02.botcommands.api.application.CommandPath
-import com.freya02.botcommands.api.application.annotations.AppOption
-import com.freya02.botcommands.api.application.slash.DefaultValueSupplier
-import com.freya02.botcommands.api.application.slash.GuildSlashEvent
-import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand
-import com.freya02.botcommands.api.application.slash.autocomplete.annotations.AutocompletionHandler
-import com.freya02.botcommands.api.application.slash.autocomplete.annotations.CacheAutocompletion
-import com.freya02.botcommands.api.application.slash.autocomplete.annotations.CompositeKey
+import com.freya02.botcommands.api.commands.CommandPath
+import com.freya02.botcommands.api.commands.annotations.GeneratedOption
+import com.freya02.botcommands.api.commands.application.ApplicationCommand
+import com.freya02.botcommands.api.commands.application.annotations.AppOption
+import com.freya02.botcommands.api.commands.application.slash.ApplicationGeneratedValueSupplier
+import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
+import com.freya02.botcommands.api.commands.application.slash.annotations.JDASlashCommand
+import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
+import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.CacheAutocomplete
+import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.CompositeKey
+import com.freya02.botcommands.api.components.Components
+import com.freya02.botcommands.api.parameters.ParameterType
 import dev.minn.jda.ktx.messages.Embed
 import me.xdrop.fuzzywuzzy.FuzzySearch
 import me.xdrop.fuzzywuzzy.ToStringFunction
@@ -35,7 +37,7 @@ import kotlin.time.Duration.Companion.minutes
 
 //TODO refactor
 @CommandMarker
-class SlashJitpack : ApplicationCommand() {
+class SlashJitpack(private val components: Components) : ApplicationCommand() {
     private val bcPullRequestCache = PullRequestCache("freya022", "BotCommands", null)
     private val jdaPullRequestCache = PullRequestCache("DV8FromTheWorld", "JDA", "master")
     private val branchNameToJdaVersionChecker: MutableMap<String, MavenBranchProjectDependencyVersionChecker> =
@@ -44,8 +46,8 @@ class SlashJitpack : ApplicationCommand() {
     private val updateMap: MutableMap<LibraryType, UpdateCountdown> = EnumMap(LibraryType::class.java)
     private val branchMap: MutableMap<LibraryType, GithubBranchMap> = EnumMap(LibraryType::class.java)
 
-    override fun getOptionChoices(guild: Guild?, commandPath: CommandPath, optionIndex: Int): List<Command.Choice> {
-        if (optionIndex == 0) {
+    override fun getOptionChoices(guild: Guild?, commandPath: CommandPath, optionName: String): List<Command.Choice> {
+        if (optionName == "library_type") {
             return when {
                 guild.isBCGuild() -> listOf(
                     Command.Choice("BotCommands", LibraryType.BOT_COMMANDS.name),
@@ -57,22 +59,24 @@ class SlashJitpack : ApplicationCommand() {
             }
         }
 
-        return super.getOptionChoices(guild, commandPath, optionIndex)
+        return super.getOptionChoices(guild, commandPath, optionName)
     }
 
     //Need to set JDA 5 as a default value if in a non-BC guild
-    override fun getDefaultValueSupplier(
-        context: BContext, guild: Guild,
-        commandId: String?, commandPath: CommandPath,
-        optionName: String, parameterType: Class<*>
-    ): DefaultValueSupplier? {
+    override fun getGeneratedValueSupplier(
+        guild: Guild?,
+        commandId: String?,
+        commandPath: CommandPath,
+        optionName: String,
+        parameterType: ParameterType
+    ): ApplicationGeneratedValueSupplier {
         if (optionName == "library_type") {
             if (!guild.isBCGuild()) {
-                return DefaultValueSupplier { LibraryType.JDA5 }
+                return ApplicationGeneratedValueSupplier { LibraryType.JDA5 }
             }
         }
 
-        return super.getDefaultValueSupplier(context, guild, commandId, commandPath, optionName, parameterType)
+        return super.getGeneratedValueSupplier(guild, commandId, commandPath, optionName, parameterType)
     }
 
     @JDASlashCommand(
@@ -83,7 +87,7 @@ class SlashJitpack : ApplicationCommand() {
     )
     fun onSlashJitpackPRMaven(
         event: GuildSlashEvent,
-        @AppOption(description = "Type of library") libraryType: LibraryType,
+        @GeneratedOption libraryType: LibraryType,
         @AppOption(
             description = "The number of the issue",
             autocomplete = BRANCH_NUMBER_AUTOCOMPLETE_NAME
@@ -100,7 +104,7 @@ class SlashJitpack : ApplicationCommand() {
     )
     fun onSlashJitpackPRGradle(
         event: GuildSlashEvent,
-        @AppOption(description = "Type of library") libraryType: LibraryType,
+        @GeneratedOption libraryType: LibraryType,
         @AppOption(
             description = "The number of the issue",
             autocomplete = BRANCH_NUMBER_AUTOCOMPLETE_NAME
@@ -117,7 +121,7 @@ class SlashJitpack : ApplicationCommand() {
     )
     fun onSlashJitpackPRKT(
         event: GuildSlashEvent,
-        @AppOption(description = "Type of library") libraryType: LibraryType,
+        @GeneratedOption libraryType: LibraryType,
         @AppOption(
             description = "The number of the issue",
             autocomplete = BRANCH_NUMBER_AUTOCOMPLETE_NAME
@@ -179,7 +183,7 @@ class SlashJitpack : ApplicationCommand() {
         }
 
         event.replyEmbeds(embed)
-            .addActionRow(getDeleteButton(event.user))
+            .addActionRow(components.messageDeleteButton(event.user))
             .queue()
     }
 
@@ -191,7 +195,7 @@ class SlashJitpack : ApplicationCommand() {
     )
     fun onSlashJitpackBranchMaven(
         event: GuildSlashEvent,
-        @AppOption(description = "Type of library") libraryType: LibraryType,
+        @GeneratedOption libraryType: LibraryType,
         @AppOption(
             description = "The name of the branch",
             autocomplete = BRANCH_NAME_AUTOCOMPLETE_NAME
@@ -208,7 +212,7 @@ class SlashJitpack : ApplicationCommand() {
     )
     fun onSlashJitpackBranchGradle(
         event: GuildSlashEvent,
-        @AppOption(description = "Type of library") libraryType: LibraryType,
+        @GeneratedOption libraryType: LibraryType,
         @AppOption(
             description = "The name of the branch",
             autocomplete = BRANCH_NAME_AUTOCOMPLETE_NAME
@@ -225,7 +229,7 @@ class SlashJitpack : ApplicationCommand() {
     )
     fun onSlashJitpackBranchKT(
         event: GuildSlashEvent,
-        @AppOption(description = "Type of library") libraryType: LibraryType,
+        @GeneratedOption libraryType: LibraryType,
         @AppOption(
             description = "The name of the branch",
             autocomplete = BRANCH_NAME_AUTOCOMPLETE_NAME
@@ -234,8 +238,8 @@ class SlashJitpack : ApplicationCommand() {
         onSlashJitpackBranch(event, libraryType, BuildToolType.GRADLE_KTS, branchName)
     }
 
-    @CacheAutocompletion
-    @AutocompletionHandler(name = BRANCH_NUMBER_AUTOCOMPLETE_NAME, showUserInput = false)
+    @CacheAutocomplete
+    @AutocompleteHandler(name = BRANCH_NUMBER_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onBranchNumberAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption libraryType: LibraryType?
@@ -257,8 +261,8 @@ class SlashJitpack : ApplicationCommand() {
         }
     }
 
-    @CacheAutocompletion
-    @AutocompletionHandler(name = BRANCH_NAME_AUTOCOMPLETE_NAME)
+    @CacheAutocomplete
+    @AutocompleteHandler(name = BRANCH_NAME_AUTOCOMPLETE_NAME)
     fun onBranchNameAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption libraryType: LibraryType
@@ -323,7 +327,7 @@ class SlashJitpack : ApplicationCommand() {
         }
 
         event.replyEmbeds(embed)
-            .addActionRow(getDeleteButton(event.user))
+            .addActionRow(components.messageDeleteButton(event.user))
             .queue()
     }
 
@@ -335,7 +339,7 @@ class SlashJitpack : ApplicationCommand() {
         val updateCountdown = updateCountdownMap.getOrPut(branch.branchName) { UpdateCountdown(5.minutes) }
         if (updateCountdown.needsUpdate()) {
             checker.checkVersion()
-            event.context.invalidateAutocompletionCache(BRANCH_NUMBER_AUTOCOMPLETE_NAME)
+            event.context.invalidateAutocompleteCache(BRANCH_NUMBER_AUTOCOMPLETE_NAME)
             checker.saveVersion()
         }
     }

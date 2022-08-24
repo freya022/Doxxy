@@ -1,27 +1,29 @@
 package com.freya02.bot.commands.slash.docs
 
-import com.freya02.botcommands.api.BContext
-import com.freya02.botcommands.api.application.ApplicationCommand
-import com.freya02.botcommands.api.application.CommandPath
-import com.freya02.botcommands.api.application.slash.DefaultValueSupplier
+import com.freya02.botcommands.api.commands.CommandPath
+import com.freya02.botcommands.api.commands.application.ApplicationCommand
+import com.freya02.botcommands.api.commands.application.slash.ApplicationGeneratedValueSupplier
+import com.freya02.botcommands.api.parameters.ParameterType
 import com.freya02.docs.DocSourceType
 import net.dv8tion.jda.api.entities.Guild
 
 abstract class BaseDocCommand : ApplicationCommand() {
-    override fun getDefaultValueSupplier(
-        context: BContext, guild: Guild,
-        commandId: String?, commandPath: CommandPath,
-        optionName: String, parameterType: Class<*>
-    ): DefaultValueSupplier? {
+    override fun getGeneratedValueSupplier(
+        guild: Guild?,
+        commandId: String?,
+        commandPath: CommandPath,
+        optionName: String,
+        parameterType: ParameterType
+    ): ApplicationGeneratedValueSupplier {
         if (optionName == "source_type") {
             //use subcommand as a default value
             when (commandPath.subname) {
-                "botcommands" -> return DefaultValueSupplier { DocSourceType.BOT_COMMANDS }
-                "jda" -> return DefaultValueSupplier { DocSourceType.JDA }
-                "java" -> return DefaultValueSupplier { DocSourceType.JAVA }
+                "botcommands" -> return ApplicationGeneratedValueSupplier { DocSourceType.BOT_COMMANDS }
+                "jda" -> return ApplicationGeneratedValueSupplier { DocSourceType.JDA }
+                "java" -> return ApplicationGeneratedValueSupplier { DocSourceType.JAVA }
             }
         }
 
-        return super.getDefaultValueSupplier(context, guild, commandId, commandPath, optionName, parameterType)
+        return super.getGeneratedValueSupplier(guild, commandId, commandPath, optionName, parameterType)
     }
 }

@@ -2,28 +2,21 @@ package com.freya02.bot
 
 import com.freya02.bot.db.Database
 import com.freya02.bot.docs.DocIndexMap
-import com.freya02.bot.docs.DocSourceTypeResolver
-import com.freya02.bot.tag.TagCriteriaResolver
-import com.freya02.bot.versioning.LibraryTypeResolver
 import com.freya02.bot.versioning.Versions
-import com.freya02.botcommands.api.CommandsBuilder
 import com.freya02.botcommands.api.Logging
-import com.freya02.botcommands.api.builder.ApplicationCommandsBuilder
-import com.freya02.botcommands.api.builder.ExtensionsBuilder
 import com.freya02.botcommands.api.components.DefaultComponentManager
-import com.freya02.botcommands.api.runner.KotlinMethodRunnerFactory
+import com.freya02.botcommands.api.core.BBuilder
 import com.freya02.docs.DocWebServer
 import dev.minn.jda.ktx.events.CoroutineEventManager
 import dev.minn.jda.ktx.events.getDefaultScope
 import dev.minn.jda.ktx.jdabuilder.light
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.events.ShutdownEvent
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.utils.cache.CacheFlag
 import java.nio.file.Path
+import java.util.function.Supplier
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
 import kotlin.system.exitProcess
@@ -59,16 +52,6 @@ object Main {
 
             val config = Config.getConfig()
 
-            val jda = light(config.token, enableCoroutines = false) {
-                enableCache(CacheFlag.CLIENT_STATUS)
-                enableIntents(GatewayIntent.GUILD_PRESENCES)
-
-                setActivity(Activity.watching("the docs"))
-                setEventManager(manager)
-            }.awaitReady()
-
-            LOGGER.info("Loaded JDA")
-
             val database = Database(config)
 
             LOGGER.info("Starting docs web server")
@@ -78,33 +61,43 @@ object Main {
             val docIndexMap = DocIndexMap(database)
 
             val versions = Versions(docIndexMap)
-            val commandsBuilder = CommandsBuilder.newBuilder(222046562543468545L)
 
-            commandsBuilder
-                .extensionsBuilder { extensionsBuilder: ExtensionsBuilder ->
-                    extensionsBuilder
-                        .registerConstructorParameter(Config::class.java) { config }
-                        .registerConstructorParameter(Database::class.java) { database }
-                        .registerParameterResolver(TagCriteriaResolver())
-                        .registerParameterResolver(DocSourceTypeResolver())
-                        .registerConstructorParameter(Versions::class.java) { versions }
-                        .registerConstructorParameter(DocIndexMap::class.java) { docIndexMap }
-                        .registerParameterResolver(LibraryTypeResolver())
-                        .setMethodRunnerFactory(KotlinMethodRunnerFactory(Dispatchers.IO, scope))
-                }
-                .applicationCommandBuilder { applicationCommandsBuilder: ApplicationCommandsBuilder ->
-                    applicationCommandsBuilder
-                        .addTestGuilds(722891685755093072L)
-                }
-                .setComponentManager(DefaultComponentManager { database.fetchConnection() })
-                .setSettingsProvider(BotSettings())
-                .build(jda, "com.freya02.bot.commands")
+            BBuilder.newBuilder({
+                addOwners(222046562543468545L)
 
-            runBlocking {
-                versions.initUpdateLoop(commandsBuilder.context)
-            }
+                addSearchPath("com.freya02.bot")
+
+                serviceConfig.apply {
+                    registerInstanceSupplier(Config::class.java) { config }
+                    registerInstanceSupplier(Database::class.java) { database }
+                    registerInstanceSupplier(Versions::class.java) { versions }
+                    registerInstanceSupplier(DocIndexMap::class.java) { docIndexMap }
+                }
+
+                connectionProvider = Supplier { database.fetchConnection() }
+
+                applicationCommands {
+                    testGuildIds += 722891685755093072
+                }
+
+                components {
+                    componentManagerStrategy = DefaultComponentManager::class.java
+                }
+
+                settingsProvider = BotSettings
+            }, manager)
 
             LOGGER.info("Loaded commands")
+
+            light(config.token, enableCoroutines = false) {
+                enableCache(CacheFlag.CLIENT_STATUS)
+                enableIntents(GatewayIntent.GUILD_PRESENCES)
+
+                setActivity(Activity.watching("the docs"))
+                setEventManager(manager)
+            }.awaitReady()
+
+            LOGGER.info("Loaded JDA")
         } catch (e: Exception) {
             LOGGER.error("Unable to start the bot", e)
             exitProcess(-1)

@@ -36,6 +36,11 @@
         <appender-ref ref="FILE"/>
     </logger>
 
+    <logger name="com.freya02.botcommands" level="trace" additivity="false">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FILE"/>
+    </logger>
+
     <root level="debug">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FILE"/>
