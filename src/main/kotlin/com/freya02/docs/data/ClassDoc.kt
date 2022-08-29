@@ -39,7 +39,7 @@ class ClassDoc @JvmOverloads constructor(
         docTitleElement = HTMLElement.wrap(document.selectFirst("body > div.flex-box > div > main > div > h1"))
 
         //Get package name
-        packageName = document.selectFirst("body > div > div > main > div.header > div.sub-title > a")?.text() ?: throw DocParseException()
+        packageName = document.selectFirst("body > div > div > main > div.header > div.sub-title > a[href='package-summary.html']")?.text() ?: throw DocParseException()
 
         //Get class name
         className = getClassName(sourceURL)
