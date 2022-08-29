@@ -242,9 +242,14 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
             })
         }
 
-        fun handleClass(event: GuildSlashEvent, className: String, docIndex: DocIndex) {
+        fun handleClass(event: GuildSlashEvent, className: String, docIndex: DocIndex, block: () -> List<DocSuggestion>) {
             val cachedClass = docIndex.getClassDoc(className) ?: run {
-                event.reply("Class '$className' does not exist").setEphemeral(true).queue()
+                val menu = getDocSuggestionsMenu(event, docIndex, block)
+
+                event.reply(MessageCreateData.fromEditData(menu.get()))
+                    .setEphemeral(true)
+                    .queue()
+
                 return
             }
 
@@ -268,6 +273,37 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
 
             sendField(event, false, cachedField)
         }
+
+        private fun getDocSuggestionsMenu(
+            event: GuildSlashEvent,
+            docIndex: DocIndex,
+            block: () -> List<DocSuggestion>
+        ) = ChoiceMenuBuilder(block())
+            .setButtonContentSupplier { _, index -> ButtonContent.withString(index.toString()) }
+            .setTransformer { it.humanIdentifier }
+            .setTimeout(2, TimeUnit.MINUTES) { _, _ ->
+                event.hook
+                    .editOriginalComponents()
+                    .queue(null, ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE, ErrorResponse.UNKNOWN_WEBHOOK))
+            }
+            .setCallback { buttonEvent, entry ->
+                event.hook.editOriginalComponents().queue()
+
+                val identifier = entry.identifier
+                val doc = when {
+                    '(' in identifier -> docIndex.getMethodDoc(identifier)
+                    '#' in identifier -> docIndex.getFieldDoc(identifier)
+                    else -> docIndex.getClassDoc(identifier)
+                }
+
+                when (doc) {
+                    is CachedClass -> sendClass(buttonEvent, false, doc)
+                    is CachedMethod -> sendMethod(buttonEvent, false, doc)
+                    is CachedField -> sendField(buttonEvent, false, doc)
+                    else -> buttonEvent.reply_("This item is now invalid, try again", ephemeral = true).queue()
+                }
+            }
+            .build()
 
         fun String.transformResolveChain() = this.replace('.', '#')
 

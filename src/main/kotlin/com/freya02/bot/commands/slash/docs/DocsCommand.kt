@@ -1,6 +1,7 @@
 package com.freya02.bot.commands.slash.docs
 
 import com.freya02.bot.docs.DocIndexMap
+import com.freya02.bot.docs.index.DocSuggestion
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.application.annotations.AppOption
 import com.freya02.botcommands.api.application.slash.GuildSlashEvent
@@ -77,7 +78,9 @@ class DocsCommand(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
     ) {
         val docIndex = docIndexMap[sourceType]!!
         if (identifier == null) {
-            CommonDocsHandlers.handleClass(event, className, docIndex)
+            CommonDocsHandlers.handleClass(event, className, docIndex) {
+                return@handleClass classNameAutocomplete(docIndex, className).map { DocSuggestion(it, it) }
+            }
         } else if (identifier.contains("(")) { //prob a method
             CommonDocsHandlers.handleMethodDocs(event, className, identifier, docIndex)
         } else {
