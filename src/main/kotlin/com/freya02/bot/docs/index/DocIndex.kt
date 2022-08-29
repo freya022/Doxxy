@@ -47,9 +47,9 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         return CachedField(embed, seeAlsoReferences, javadocLink, sourceLink)
     }
 
-    override fun findAnySignatures(docType: DocType, query: String?): List<DocSearchResult> = getAllSignatures(docType, query)
+    override fun findAnySignatures(docType: DocType, query: String?, limit: Int): List<DocSearchResult> = getAllSignatures(docType, query, limit)
 
-    override fun findSignaturesIn(className: String, query: String?, vararg docTypes: DocType): List<DocSearchResult> {
+    override fun findSignaturesIn(className: String, query: String?, vararg docTypes: DocType, limit: Int): List<DocSearchResult> {
         val typeCheck = docTypes.joinToString(" or ") { "doc.type = ${it.id}" }
 
         @Language("PostgreSQL", prefix = "select * from doc ")
@@ -72,11 +72,11 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
                   and ($typeCheck)
                   and classname = ?
                 $sort
-                limit 25
+                limit ?
                 """.trimIndent(),
             "identifier"
         ).use { action ->
-            action.executeQuery(sourceType.id, className, *sortArgs)
+            action.executeQuery(sourceType.id, className, *sortArgs, limit)
                 .transformEach {
                     DocSearchResult(
                         it["identifier"],
@@ -87,16 +87,16 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         }
     }
 
-    override fun getClasses(query: String?): List<String> = runBlocking {
+    override fun getClasses(query: String?, limit: Int): List<String> = runBlocking {
         @Language("PostgreSQL", prefix = "select * from doc ")
         val limitingSort = when {
-            query.isNullOrEmpty() -> "order by classname limit 25"
-            else -> "order by similarity(classname, ?) desc limit 25"
+            query.isNullOrEmpty() -> "order by classname limit ?"
+            else -> "order by similarity(classname, ?) desc limit ?"
         }
 
         val sortArgs = when {
-            query.isNullOrEmpty() -> arrayOf()
-            else -> arrayOf(query)
+            query.isNullOrEmpty() -> arrayOf(limit)
+            else -> arrayOf(query, limit)
         }
 
         database.preparedStatement(
@@ -254,7 +254,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         }
     }
 
-    private fun getAllSignatures(docType: DocType, query: String?): List<DocSearchResult> {
+    private fun getAllSignatures(docType: DocType, query: String?, limit: Int): List<DocSearchResult> {
         @Language("PostgreSQL", prefix = "select * from doc ")
         val sort = when {
             query.isNullOrEmpty() -> "order by classname, identifier"
@@ -276,11 +276,11 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
                 where source_id = ?
                   and type = ?
                 $sort
-                limit 25
+                limit ?
                 """.trimIndent(),
             "classname"
         ).use { action ->
-            action.executeQuery(sourceType.id, docType.id, *sortArgs)
+            action.executeQuery(sourceType.id, docType.id, *sortArgs, limit)
                 .transformEach {
                     DocSearchResult(
                         it["full_identifier"],
