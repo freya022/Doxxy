@@ -256,18 +256,28 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
             sendClass(event, false, cachedClass)
         }
 
-        fun handleMethodDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex) {
+        fun handleMethodDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex, block: () -> List<DocSuggestion>) {
             val cachedMethod = docIndex.getMethodDoc(className, identifier) ?: run {
-                event.reply_("'$className' does not contain a '$identifier' method", ephemeral = true).queue()
+                val menu = getDocSuggestionsMenu(event, docIndex, block)
+
+                event.reply(MessageCreateData.fromEditData(menu.get()))
+                    .setEphemeral(true)
+                    .queue()
+
                 return
             }
 
             sendMethod(event, false, cachedMethod)
         }
 
-        fun handleFieldDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex) {
+        fun handleFieldDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex, block: () -> List<DocSuggestion>) {
             val cachedField = docIndex.getFieldDoc(className, identifier) ?: run {
-                event.reply_("'$className' does not contain a '$identifier' field", ephemeral = true).queue()
+                val menu = getDocSuggestionsMenu(event, docIndex, block)
+
+                event.reply(MessageCreateData.fromEditData(menu.get()))
+                    .setEphemeral(true)
+                    .queue()
+
                 return
             }
 
@@ -279,7 +289,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
             docIndex: DocIndex,
             block: () -> List<DocSuggestion>
         ) = ChoiceMenuBuilder(block())
-            .setButtonContentSupplier { _, index -> ButtonContent.withString(index.toString()) }
+            .setButtonContentSupplier { _, index -> ButtonContent.withString((index + 1).toString()) }
             .setTransformer { it.humanIdentifier }
             .setTimeout(2, TimeUnit.MINUTES) { _, _ ->
                 event.hook
