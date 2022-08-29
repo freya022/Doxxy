@@ -1,15 +1,20 @@
 package com.freya02.docs.data
 
+import com.freya02.docs.ClassDocs
 import com.freya02.docs.DocParseException
 import com.freya02.docs.HTMLElement
 import com.freya02.docs.HTMLElementList
+import net.dv8tion.jda.internal.utils.JDALogger
 import org.jsoup.nodes.Element
 
 class FieldDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, element: Element) : BaseDoc() {
     override val effectiveURL: String
     override val onlineURL: String?
+
     val fieldName: String
     val fieldType: String
+    val fieldValue: String?
+
     override val descriptionElements: HTMLElementList
     override val deprecationElement: HTMLElement?
 
@@ -53,6 +58,23 @@ class FieldDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, el
             seeAlsoDetail != null -> SeeAlso(classDocs.source, seeAlsoDetail)
             else -> null
         }
+
+        fieldValue = when {
+            "static" in modifiers //public might be omitted in interface constants
+                    && "final" in modifiers
+                    && seeAlso != null
+                    && seeAlso.getReferences().any { it.text == "Constant Field Values" && it.link.contains("/constant-values.html") } -> {
+                val constantsMap = ClassDocs.getSource(classDocs.source).getFqcnToConstantsMap()[classDocs.classNameFqcn]
+                when {
+                    constantsMap != null -> constantsMap[fieldName]
+                    else -> {
+                        logger.warn("Could not find constants in ${classDocs.classNameFqcn}")
+                        null
+                    }
+                }
+            }
+            else -> null
+        }
     }
 
     override fun toString(): String {
@@ -76,4 +98,8 @@ class FieldDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, el
         get() = fieldType
 
     override fun toHumanClassIdentifier(className: String): String = "$className#$simpleSignature"
+
+    companion object {
+        private val logger = JDALogger.getLog(FieldDoc::class.java)
+    }
 }

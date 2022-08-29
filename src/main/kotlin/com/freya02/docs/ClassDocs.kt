@@ -12,10 +12,13 @@ private val LOGGER = Logging.getLogger()
 class ClassDocs private constructor(private val source: DocSourceType) {
     private val simpleNameToUrlMap: MutableMap<String, DocsURL> = HashMap()
     private val urlSet: MutableSet<String> = HashSet()
+    private val fqcnToConstantsMap: MutableMap<String, MutableMap<String, String>> = hashMapOf()
 
     fun getSimpleNameToUrlMap(): Map<String, DocsURL> {
         return simpleNameToUrlMap
     }
+
+    fun getFqcnToConstantsMap(): Map<String, Map<String, String>> = fqcnToConstantsMap
 
     fun isValidURL(url: String?): Boolean {
         val cleanURL = HttpUtils.removeFragment(url!!)
@@ -26,9 +29,11 @@ class ClassDocs private constructor(private val source: DocSourceType) {
     @Throws(IOException::class)
     private fun tryIndexAll() {
         val indexURL = source.allClassesIndexURL
+        val constantValuesURL = source.constantValuesURL
 
         LOGGER.info("Parsing ClassDocs URLs for: {}", source)
         val document = PageCache[source].getPage(indexURL)
+        val constantsDocument = PageCache[source].getPage(constantValuesURL)
 
         simpleNameToUrlMap.clear()
         urlSet.clear()
@@ -52,6 +57,21 @@ class ClassDocs private constructor(private val source: DocSourceType) {
                     oldUrl
                 )
                 else -> urlSet.add(source.toEffectiveURL(classUrl)) //For quick checks
+            }
+        }
+
+        for (classConstantSection in constantsDocument.select("main section.constants-summary ul.block-list li")) {
+            val titleSpan = classConstantSection.selectFirst("div.caption > span") ?: throw DocParseException("Expected constant title FQCN name")
+            val map = fqcnToConstantsMap.getOrPut(titleSpan.text().substringBefore('<')) { hashMapOf() }
+
+            //Constant values document wasn't modernized so the html layout sucks.
+            val elements = classConstantSection.select("div.summary-table > div").drop(3).toMutableList()
+            while (elements.isNotEmpty()) {
+                elements.removeFirst() //Modifier & type
+                val constantName = elements.removeFirst().text()
+                val constantValue = elements.removeFirst().text()
+
+                map[constantName] = constantValue
             }
         }
     }

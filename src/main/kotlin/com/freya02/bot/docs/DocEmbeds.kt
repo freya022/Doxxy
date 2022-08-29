@@ -102,6 +102,14 @@ object DocEmbeds {
 
             builder.addDocDescription(fieldDoc)
             builder.addDocDeprecation(fieldDoc)
+
+            fieldDoc.fieldValue?.let { fieldValue ->
+                field {
+                    name = "Value"
+                    value = fieldValue
+                }
+            }
+
             builder.addDocDetails(fieldDoc, includedTypes)
             builder.addSeeAlso(fieldDoc.seeAlso, getDocURL(fieldDoc))
         }.builder
