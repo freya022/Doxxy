@@ -20,6 +20,8 @@ import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand
 import com.freya02.botcommands.api.application.slash.autocomplete.annotations.AutocompletionHandler
 import com.freya02.botcommands.api.application.slash.autocomplete.annotations.CacheAutocompletion
 import com.freya02.botcommands.api.application.slash.autocomplete.annotations.CompositeKey
+import com.freya02.botcommands.api.utils.EmojiUtils
+import dev.minn.jda.ktx.interactions.components.link
 import dev.minn.jda.ktx.messages.Embed
 import me.xdrop.fuzzywuzzy.FuzzySearch
 import me.xdrop.fuzzywuzzy.ToStringFunction
@@ -179,7 +181,10 @@ class SlashJitpack : ApplicationCommand() {
         }
 
         event.replyEmbeds(embed)
-            .addActionRow(getDeleteButton(event.user))
+            .addActionRow(
+                getDeleteButton(event.user),
+                link("https://jda.wiki/using-jda/using-new-features/", "How ? (Wiki)", EmojiUtils.resolveJDAEmoji("face_with_monocle"))
+            )
             .queue()
     }
 
