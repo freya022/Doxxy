@@ -337,7 +337,7 @@ class SlashJitpack : ApplicationCommand() {
         branch: GithubBranch,
         checker: MavenBranchProjectDependencyVersionChecker
     ) {
-        val updateCountdown = updateCountdownMap.getOrPut(branch.branchName) { UpdateCountdown(5.minutes) }
+        val updateCountdown = updateCountdownMap.getOrPut(branch.branchName) { UpdateCountdown(1.minutes) }
         if (updateCountdown.needsUpdate()) {
             checker.checkVersion()
             event.context.invalidateAutocompletionCache(BRANCH_NUMBER_AUTOCOMPLETE_NAME)
@@ -347,7 +347,7 @@ class SlashJitpack : ApplicationCommand() {
 
     private fun getBranchMap(libraryType: LibraryType): GithubBranchMap {
         val updateCountdown =
-            updateMap.computeIfAbsent(libraryType) { UpdateCountdown(5.minutes) }
+            updateMap.computeIfAbsent(libraryType) { UpdateCountdown(1.minutes) }
 
         synchronized(branchMap) {
             branchMap[libraryType].let { githubBranchMap: GithubBranchMap? ->

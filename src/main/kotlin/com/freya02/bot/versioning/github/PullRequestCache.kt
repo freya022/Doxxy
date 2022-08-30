@@ -9,7 +9,7 @@ class PullRequestCache(
     private val artifactId: String,
     private val baseBranchName: String?
 ) {
-    val pullRequests: TIntObjectMap<PullRequest> by UpdateCountdownDelegate(5.minutes) {
+    val pullRequests: TIntObjectMap<PullRequest> by UpdateCountdownDelegate(1.minutes) {
         retrievePullRequests(ownerName, artifactId, baseBranchName)
     }
 }
