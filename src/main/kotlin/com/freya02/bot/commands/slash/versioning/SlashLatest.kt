@@ -30,6 +30,7 @@ class SlashLatest(private val versions: Versions) : ApplicationCommand() {
             LibraryType.BOT_COMMANDS -> builder.addBCVersion()
             LibraryType.JDA5 -> builder.addJDA5Version()
             LibraryType.JDA4 -> builder.addJDA4Version()
+            LibraryType.JDA_KTX -> builder.addJDAKtxVersion()
         }
 
         event.replyEmbeds(builder.build())
@@ -43,6 +44,10 @@ class SlashLatest(private val versions: Versions) : ApplicationCommand() {
 
     private fun EmbedBuilder.addJDA5Version() {
         addField("JDA 5", '`'.toString() + versions.latestJDA5Version.version + '`', true)
+    }
+
+    private fun EmbedBuilder.addJDAKtxVersion() {
+        addField("JDA KTX", '`'.toString() + versions.latestJDAKtxVersion.version + '`', true)
     }
 
     private fun EmbedBuilder.addBCVersion() {

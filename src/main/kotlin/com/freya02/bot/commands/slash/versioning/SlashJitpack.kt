@@ -9,12 +9,10 @@ import com.freya02.bot.versioning.github.*
 import com.freya02.bot.versioning.maven.MavenBranchProjectDependencyVersionChecker
 import com.freya02.bot.versioning.supplier.BuildToolType
 import com.freya02.bot.versioning.supplier.DependencySupplier
-import com.freya02.botcommands.api.BContext
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.application.ApplicationCommand
 import com.freya02.botcommands.api.application.CommandPath
 import com.freya02.botcommands.api.application.annotations.AppOption
-import com.freya02.botcommands.api.application.slash.DefaultValueSupplier
 import com.freya02.botcommands.api.application.slash.GuildSlashEvent
 import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand
 import com.freya02.botcommands.api.application.slash.autocomplete.annotations.AutocompletionHandler
@@ -40,6 +38,7 @@ import kotlin.time.Duration.Companion.minutes
 class SlashJitpack : ApplicationCommand() {
     private val bcPullRequestCache = PullRequestCache("freya022", "BotCommands", null)
     private val jdaPullRequestCache = PullRequestCache("DV8FromTheWorld", "JDA", "master")
+    private val jdaKtxPullRequestCache = PullRequestCache("MinnDevelopment", "jda-ktx", "master")
     private val branchNameToJdaVersionChecker: MutableMap<String, MavenBranchProjectDependencyVersionChecker> =
         Collections.synchronizedMap(hashMapOf())
     private val updateCountdownMap: MutableMap<String, UpdateCountdown> = HashMap()
@@ -51,30 +50,17 @@ class SlashJitpack : ApplicationCommand() {
             return when {
                 guild.isBCGuild() -> listOf(
                     Command.Choice("BotCommands", LibraryType.BOT_COMMANDS.name),
-                    Command.Choice("JDA 5", LibraryType.JDA5.name)
+                    Command.Choice("JDA 5", LibraryType.JDA5.name),
+                    Command.Choice("JDA-KTX", LibraryType.JDA_KTX.name)
                 )
                 else -> listOf(
-                    Command.Choice("JDA 5", LibraryType.JDA5.name)
+                    Command.Choice("JDA 5", LibraryType.JDA5.name),
+                    Command.Choice("JDA-KTX", LibraryType.JDA_KTX.name)
                 )
             }
         }
 
         return super.getOptionChoices(guild, commandPath, optionIndex)
-    }
-
-    //Need to set JDA 5 as a default value if in a non-BC guild
-    override fun getDefaultValueSupplier(
-        context: BContext, guild: Guild,
-        commandId: String?, commandPath: CommandPath,
-        optionName: String, parameterType: Class<*>
-    ): DefaultValueSupplier? {
-        if (optionName == "library_type") {
-            if (!guild.isBCGuild()) {
-                return DefaultValueSupplier { LibraryType.JDA5 }
-            }
-        }
-
-        return super.getDefaultValueSupplier(context, guild, commandId, commandPath, optionName, parameterType)
     }
 
     @JDASlashCommand(
@@ -137,6 +123,7 @@ class SlashJitpack : ApplicationCommand() {
         val pullRequest = when (libraryType) {
             LibraryType.BOT_COMMANDS -> bcPullRequestCache.pullRequests[issueNumber]
             LibraryType.JDA5 -> jdaPullRequestCache.pullRequests[issueNumber]
+            LibraryType.JDA_KTX -> jdaKtxPullRequestCache.pullRequests[issueNumber]
             else -> throw IllegalArgumentException()
         } ?: run {
             event.reply("Unknown Pull Request").setEphemeral(true).queue()
@@ -164,7 +151,8 @@ class SlashJitpack : ApplicationCommand() {
                 val jdaVersionFromBotCommands = jdaVersionChecker.latest
                 DependencySupplier.formatBC(buildToolType, jdaVersionFromBotCommands, latestBotCommands)
             }
-            else -> DependencySupplier.formatJDA5Jitpack(buildToolType, pullRequest.toJitpackArtifact())
+            LibraryType.JDA5, LibraryType.JDA_KTX -> DependencySupplier.formatJDA5Jitpack(buildToolType, pullRequest.toJitpackArtifact())
+            else -> throw IllegalArgumentException("Invalid library type: $libraryType")
         }
 
         val embed = Embed {
@@ -248,6 +236,7 @@ class SlashJitpack : ApplicationCommand() {
         val pullRequests = when (libraryType) {
             LibraryType.BOT_COMMANDS -> bcPullRequestCache.pullRequests.values(arrayOfNulls(0))
             LibraryType.JDA5 -> jdaPullRequestCache.pullRequests.values(arrayOfNulls(0))
+            LibraryType.JDA_KTX -> jdaKtxPullRequestCache.pullRequests.values(arrayOfNulls(0))
             else -> throw IllegalArgumentException()
         }
         return fuzzyMatching(
@@ -288,8 +277,8 @@ class SlashJitpack : ApplicationCommand() {
 
         val branchName = branch.branchName
 
-        val dependencyStr = when (libraryType) {
-            LibraryType.JDA5 -> DependencySupplier.formatJDA5Jitpack(buildToolType, branch.asJitpackArtifact)
+        val dependencyStr = when (libraryType) { //TODO rename formatJDA5Jitpack to formatJitpack, and related build files
+            LibraryType.JDA5, LibraryType.JDA_KTX -> DependencySupplier.formatJDA5Jitpack(buildToolType, branch.asJitpackArtifact)
             LibraryType.BOT_COMMANDS -> {
                 val jdaVersionChecker = branchNameToJdaVersionChecker.getOrPut(branchName) {
                     try {
@@ -365,6 +354,7 @@ class SlashJitpack : ApplicationCommand() {
         val (ownerName: String, repoName: String) = when (libraryType) {
             LibraryType.JDA5 -> arrayOf("DV8FromTheWorld", "JDA")
             LibraryType.BOT_COMMANDS -> arrayOf("freya022", "BotCommands")
+            LibraryType.JDA_KTX -> arrayOf("MinnDevelopment", "jda-ktx")
             else -> throw IllegalArgumentException("No branches for $libraryType")
         }
 
