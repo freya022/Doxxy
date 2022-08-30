@@ -151,7 +151,7 @@ class SlashJitpack : ApplicationCommand() {
                 val jdaVersionFromBotCommands = jdaVersionChecker.latest
                 DependencySupplier.formatBC(buildToolType, jdaVersionFromBotCommands, latestBotCommands)
             }
-            LibraryType.JDA5, LibraryType.JDA_KTX -> DependencySupplier.formatJDA5Jitpack(buildToolType, pullRequest.toJitpackArtifact())
+            LibraryType.JDA5, LibraryType.JDA_KTX -> DependencySupplier.formatJitpack(buildToolType, pullRequest.toJitpackArtifact())
             else -> throw IllegalArgumentException("Invalid library type: $libraryType")
         }
 
@@ -277,8 +277,8 @@ class SlashJitpack : ApplicationCommand() {
 
         val branchName = branch.branchName
 
-        val dependencyStr = when (libraryType) { //TODO rename formatJDA5Jitpack to formatJitpack, and related build files
-            LibraryType.JDA5, LibraryType.JDA_KTX -> DependencySupplier.formatJDA5Jitpack(buildToolType, branch.asJitpackArtifact)
+        val dependencyStr = when (libraryType) {
+            LibraryType.JDA5, LibraryType.JDA_KTX -> DependencySupplier.formatJitpack(buildToolType, branch.asJitpackArtifact)
             LibraryType.BOT_COMMANDS -> {
                 val jdaVersionChecker = branchNameToJdaVersionChecker.getOrPut(branchName) {
                     try {
