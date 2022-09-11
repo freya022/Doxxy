@@ -22,6 +22,8 @@ import com.freya02.botcommands.api.commands.application.slash.autocomplete.annot
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.CompositeKey
 import com.freya02.botcommands.api.commands.application.slash.builder.SlashCommandBuilder
 import com.freya02.botcommands.api.components.Components
+import com.freya02.botcommands.api.utils.EmojiUtils
+import dev.minn.jda.ktx.interactions.components.link
 import dev.minn.jda.ktx.messages.Embed
 import me.xdrop.fuzzywuzzy.FuzzySearch
 import me.xdrop.fuzzywuzzy.ToStringFunction

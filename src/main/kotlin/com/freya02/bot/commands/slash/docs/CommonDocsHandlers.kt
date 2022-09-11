@@ -245,7 +245,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
 
         fun handleClass(event: GuildSlashEvent, className: String, docIndex: DocIndex, components: Components, block: () -> List<DocSuggestion>) {
             val cachedClass = docIndex.getClassDoc(className) ?: run {
-                val menu = getDocSuggestionsMenu(event, docIndex, block)
+                val menu = getDocSuggestionsMenu(event, docIndex, components, block)
 
                 event.reply(MessageCreateData.fromEditData(menu.get()))
                     .setEphemeral(true)
@@ -259,7 +259,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
 
         fun handleMethodDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex, components: Components, block: () -> List<DocSuggestion>) {
             val cachedMethod = docIndex.getMethodDoc(className, identifier) ?: run {
-                val menu = getDocSuggestionsMenu(event, docIndex, block)
+                val menu = getDocSuggestionsMenu(event, docIndex, components, block)
 
                 event.reply(MessageCreateData.fromEditData(menu.get()))
                     .setEphemeral(true)
@@ -273,7 +273,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
 
         fun handleFieldDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex, components: Components, block: () -> List<DocSuggestion>) {
             val cachedField = docIndex.getFieldDoc(className, identifier) ?: run {
-                val menu = getDocSuggestionsMenu(event, docIndex, block)
+                val menu = getDocSuggestionsMenu(event, docIndex, components, block)
 
                 event.reply(MessageCreateData.fromEditData(menu.get()))
                     .setEphemeral(true)
@@ -288,6 +288,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
         private fun getDocSuggestionsMenu(
             event: GuildSlashEvent,
             docIndex: DocIndex,
+            components: Components,
             block: () -> List<DocSuggestion>
         ) = ChoiceMenuBuilder(block())
             .setButtonContentSupplier { _, index -> ButtonContent.withString((index + 1).toString()) }
@@ -308,9 +309,9 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
                 }
 
                 when (doc) {
-                    is CachedClass -> sendClass(buttonEvent, false, doc)
-                    is CachedMethod -> sendMethod(buttonEvent, false, doc)
-                    is CachedField -> sendField(buttonEvent, false, doc)
+                    is CachedClass -> sendClass(buttonEvent, false, doc, components)
+                    is CachedMethod -> sendMethod(buttonEvent, false, doc, components)
+                    is CachedField -> sendField(buttonEvent, false, doc, components)
                     else -> buttonEvent.reply_("This item is now invalid, try again", ephemeral = true).queue()
                 }
             }
