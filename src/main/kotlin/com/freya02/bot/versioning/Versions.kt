@@ -8,6 +8,7 @@ import com.freya02.bot.utils.Utils.withTemporaryFile
 import com.freya02.bot.versioning.VersionsUtils.downloadMavenJavadoc
 import com.freya02.bot.versioning.VersionsUtils.downloadMavenSources
 import com.freya02.bot.versioning.github.GithubUtils
+import com.freya02.bot.versioning.jitpack.JitpackVersionChecker
 import com.freya02.bot.versioning.maven.MavenBranchProjectDependencyVersionChecker
 import com.freya02.bot.versioning.maven.MavenVersionChecker
 import com.freya02.bot.versioning.maven.RepoType
@@ -27,6 +28,7 @@ private val lastKnownBotCommandsPath: Path = Main.LAST_KNOWN_VERSIONS_FOLDER_PAT
 private val lastKnownJDAFromBCPath: Path = Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("JDA_from_BC.txt")
 private val lastKnownJDA4Path: Path = Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("JDA4.txt")
 private val lastKnownJDA5Path: Path = Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("JDA5.txt")
+private val lastKnownJDAKtxPath: Path = Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("JDA-KTX.txt")
 private val JDA_DOCS_FOLDER: Path = Main.JAVADOCS_PATH.resolve("JDA")
 private val BC_DOCS_FOLDER: Path = Main.JAVADOCS_PATH.resolve("BotCommands")
 
@@ -40,6 +42,8 @@ class Versions(private val docIndexMap: DocIndexMap) {
         MavenVersionChecker(lastKnownJDA4Path, RepoType.M2, "net.dv8tion", "JDA")
     private val jda5Checker: MavenVersionChecker =
         MavenVersionChecker(lastKnownJDA5Path, RepoType.MAVEN, "net.dv8tion", "JDA")
+    private val jdaKtxChecker: JitpackVersionChecker =
+        JitpackVersionChecker(lastKnownJDAKtxPath, "MinnDevelopment", "com.github.MinnDevelopment", "jda-ktx")
 
     @BEventListener
     suspend fun initUpdateLoop(event: FirstReadyEvent, context: BContext) {
@@ -49,6 +53,7 @@ class Versions(private val docIndexMap: DocIndexMap) {
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDAVersionFromBC() }, 0, 30, TimeUnit.MINUTES)
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDA4Version() }, 0, 30, TimeUnit.MINUTES)
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDA5Version(context) }, 0, 30, TimeUnit.MINUTES)
+        scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDAKtxVersion() }, 0, 30, TimeUnit.MINUTES)
 
         //First index for Java's docs, may take some time
         if (docIndexMap[DocSourceType.JAVA]!!.getClassDoc("Object") == null) {
@@ -114,6 +119,19 @@ class Versions(private val docIndexMap: DocIndexMap) {
         }
     }
 
+    private fun checkLatestJDAKtxVersion() {
+        try {
+            val changed = jdaKtxChecker.checkVersion()
+            if (changed) {
+                LOGGER.info("JDA-KTX version changed")
+                jdaKtxChecker.saveVersion()
+                LOGGER.info("JDA-KTX version updated to {}", jdaKtxChecker.latest.version)
+            }
+        } catch (e: Exception) {
+            LOGGER.error("An exception occurred while retrieving versions", e)
+        }
+    }
+
     private fun checkLatestJDAVersionFromBC() {
         try {
             val changed = jdaVersionFromBCChecker.checkVersion()
@@ -171,4 +189,6 @@ class Versions(private val docIndexMap: DocIndexMap) {
         get() = jda4Checker.latest
     val latestJDA5Version: ArtifactInfo
         get() = jda5Checker.latest
+    val latestJDAKtxVersion: ArtifactInfo
+        get() = jdaKtxChecker.latest
 }

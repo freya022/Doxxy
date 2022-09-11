@@ -28,17 +28,19 @@ interface IDocIndex {
         }
     }
 
-    fun findAnySignatures(docType: DocType, query: String?): List<DocSearchResult>
-    fun findAnyMethodSignatures(query: String? = null): List<DocSearchResult> = findAnySignatures(DocType.METHOD, query)
-    fun findAnyFieldSignatures(query: String? = null): List<DocSearchResult> = findAnySignatures(DocType.FIELD, query)
+    fun findAnySignatures(docType: DocType, query: String?, limit: Int = 25): List<DocSearchResult>
+    fun findAnyMethodSignatures(query: String? = null, limit: Int = 25): List<DocSearchResult> = findAnySignatures(DocType.METHOD, query, limit)
+    fun findAnyFieldSignatures(query: String? = null, limit: Int = 25): List<DocSearchResult> = findAnySignatures(DocType.FIELD, query, limit)
 
-    fun findSignaturesIn(className: String, query: String? = null, vararg docTypes: DocType): List<DocSearchResult>
-    fun findMethodSignaturesIn(className: String, query: String? = null) = findSignaturesIn(className, query, DocType.METHOD)
-    fun findFieldSignaturesIn(className: String, query: String? = null) = findSignaturesIn(className, query, DocType.FIELD)
-    fun findMethodAndFieldSignaturesIn(className: String, query: String? = null) =
-        findSignaturesIn(className, query, DocType.METHOD, DocType.FIELD)
+    fun findSignaturesIn(className: String, query: String? = null, vararg docTypes: DocType, limit: Int = 25): List<DocSearchResult>
+    fun findMethodSignaturesIn(className: String, query: String? = null, limit: Int = 25) =
+        findSignaturesIn(className, query, DocType.METHOD, limit = limit)
+    fun findFieldSignaturesIn(className: String, query: String? = null, limit: Int = 25) =
+        findSignaturesIn(className, query, DocType.FIELD, limit = limit)
+    fun findMethodAndFieldSignaturesIn(className: String, query: String? = null, limit: Int = 25) =
+        findSignaturesIn(className, query, DocType.METHOD, DocType.FIELD, limit = limit)
 
-    fun getClasses(query: String? = null): List<String>
+    fun getClasses(query: String? = null, limit: Int = 25): List<String>
     fun getClassesWithMethods(query: String? = null): List<String>
     fun getClassesWithFields(query: String? = null): List<String>
 

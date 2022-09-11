@@ -9,6 +9,7 @@ import com.freya02.bot.docs.cached.CachedMethod
 import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocResolveResult
 import com.freya02.bot.docs.index.DocSearchResult
+import com.freya02.bot.docs.index.DocSuggestion
 import com.freya02.botcommands.api.Logging
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.annotations.AppOption
@@ -19,6 +20,8 @@ import com.freya02.botcommands.api.commands.application.slash.autocomplete.annot
 import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.components.annotations.JDASelectionMenuListener
 import com.freya02.botcommands.api.components.event.SelectionEvent
+import com.freya02.botcommands.api.pagination.menu.ChoiceMenuBuilder
+import com.freya02.botcommands.api.utils.ButtonContent
 import com.freya02.botcommands.api.utils.EmojiUtils
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.data.TargetType
@@ -28,11 +31,14 @@ import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.ClientType
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
+import net.dv8tion.jda.api.exceptions.ErrorHandler
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
+import net.dv8tion.jda.api.requests.ErrorResponse
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction
+import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import java.util.concurrent.TimeUnit
 
 private val logger = Logging.getLogger()
@@ -69,7 +75,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
     ): Collection<Choice> = withDocIndex(sourceType) {
-        getClasses(event.focusedOption.value).toChoices()
+        classNameAutocomplete(this, event.focusedOption.value).toChoices()
     }
 
     @CacheAutocomplete
@@ -78,7 +84,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
     ): Collection<Choice> = withDocIndex(sourceType) {
-        getClassesWithMethods(event.focusedOption.value).toChoices()
+        classNameWithMethodsAutocomplete(this, event.focusedOption.value).toChoices()
     }
 
     @CacheAutocomplete
@@ -87,7 +93,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
     ): Collection<Choice> = withDocIndex(sourceType) {
-        getClassesWithFields(event.focusedOption.value).toChoices()
+        classNameWithFieldsAutocomplete(this, event.focusedOption.value).toChoices()
     }
 
     @CacheAutocomplete
@@ -97,7 +103,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
     ): Collection<Choice> = withDocIndex(sourceType) {
-        findMethodSignaturesIn(className, event.focusedOption.value).searchResultToChoices { it.humanIdentifier }
+        methodNameByClassAutocomplete(this, className, event.focusedOption.value).searchResultToChoices { it.humanIdentifier }
     }
 
     @CacheAutocomplete
@@ -106,7 +112,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
     ): Collection<Choice> = withDocIndex(sourceType) {
-        findAnyMethodSignatures(event.focusedOption.value).searchResultToChoices { it.humanClassIdentifier }
+        anyMethodNameAutocomplete(this, event.focusedOption.value).searchResultToChoices { it.humanClassIdentifier }
     }
 
     @CacheAutocomplete
@@ -116,7 +122,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
     ): Collection<Choice> = withDocIndex(sourceType) {
-        findFieldSignaturesIn(className, event.focusedOption.value).searchResultToChoices { it.humanIdentifier }
+        fieldNameByClassAutocomplete(this, className, event.focusedOption.value).searchResultToChoices { it.humanIdentifier }
     }
 
     @CacheAutocomplete
@@ -125,7 +131,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
     ): Collection<Choice> = withDocIndex(sourceType) {
-        findAnyFieldSignatures(event.focusedOption.value).searchResultToChoices { it.humanClassIdentifier }
+        anyFieldNameAutocomplete(this, event.focusedOption.value).searchResultToChoices { it.humanClassIdentifier }
     }
 
     @CacheAutocomplete
@@ -135,7 +141,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
     ): Collection<Choice> = withDocIndex(sourceType) {
-        findMethodAndFieldSignaturesIn(className, event.focusedOption.value).searchResultToChoices { it.humanIdentifier }
+        methodOrFieldByClassAutocomplete(this, className, event.focusedOption.value).searchResultToChoices { it.humanIdentifier }
     }
 
     @CacheAutocomplete
@@ -237,32 +243,78 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
             })
         }
 
-        fun handleClass(event: GuildSlashEvent, className: String, docIndex: DocIndex, components: Components) {
+        fun handleClass(event: GuildSlashEvent, className: String, docIndex: DocIndex, components: Components, block: () -> List<DocSuggestion>) {
             val cachedClass = docIndex.getClassDoc(className) ?: run {
-                event.reply("Class '$className' does not exist").setEphemeral(true).queue()
+                val menu = getDocSuggestionsMenu(event, docIndex, block)
+
+                event.reply(MessageCreateData.fromEditData(menu.get()))
+                    .setEphemeral(true)
+                    .queue()
+
                 return
             }
 
             sendClass(event, false, cachedClass, components)
         }
 
-        fun handleMethodDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex, components: Components) {
+        fun handleMethodDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex, components: Components, block: () -> List<DocSuggestion>) {
             val cachedMethod = docIndex.getMethodDoc(className, identifier) ?: run {
-                event.reply_("'$className' does not contain a '$identifier' method", ephemeral = true).queue()
+                val menu = getDocSuggestionsMenu(event, docIndex, block)
+
+                event.reply(MessageCreateData.fromEditData(menu.get()))
+                    .setEphemeral(true)
+                    .queue()
+
                 return
             }
 
             sendMethod(event, false, cachedMethod, components)
         }
 
-        fun handleFieldDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex, components: Components) {
+        fun handleFieldDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex, components: Components, block: () -> List<DocSuggestion>) {
             val cachedField = docIndex.getFieldDoc(className, identifier) ?: run {
-                event.reply_("'$className' does not contain a '$identifier' field", ephemeral = true).queue()
+                val menu = getDocSuggestionsMenu(event, docIndex, block)
+
+                event.reply(MessageCreateData.fromEditData(menu.get()))
+                    .setEphemeral(true)
+                    .queue()
+
                 return
             }
 
             sendField(event, false, cachedField, components)
         }
+
+        private fun getDocSuggestionsMenu(
+            event: GuildSlashEvent,
+            docIndex: DocIndex,
+            block: () -> List<DocSuggestion>
+        ) = ChoiceMenuBuilder(block())
+            .setButtonContentSupplier { _, index -> ButtonContent.withString((index + 1).toString()) }
+            .setTransformer { it.humanIdentifier }
+            .setTimeout(2, TimeUnit.MINUTES) { _, _ ->
+                event.hook
+                    .editOriginalComponents()
+                    .queue(null, ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE, ErrorResponse.UNKNOWN_WEBHOOK))
+            }
+            .setCallback { buttonEvent, entry ->
+                event.hook.editOriginalComponents().queue()
+
+                val identifier = entry.identifier
+                val doc = when {
+                    '(' in identifier -> docIndex.getMethodDoc(identifier)
+                    '#' in identifier -> docIndex.getFieldDoc(identifier)
+                    else -> docIndex.getClassDoc(identifier)
+                }
+
+                when (doc) {
+                    is CachedClass -> sendClass(buttonEvent, false, doc)
+                    is CachedMethod -> sendMethod(buttonEvent, false, doc)
+                    is CachedField -> sendField(buttonEvent, false, doc)
+                    else -> buttonEvent.reply_("This item is now invalid, try again", ephemeral = true).queue()
+                }
+            }
+            .build()
 
         fun String.transformResolveChain() = this.replace('.', '#')
 

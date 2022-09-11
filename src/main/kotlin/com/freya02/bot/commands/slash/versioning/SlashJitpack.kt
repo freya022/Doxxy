@@ -40,6 +40,7 @@ import kotlin.time.Duration.Companion.minutes
 class SlashJitpack(private val components: Components) : ApplicationCommand() {
     private val bcPullRequestCache = PullRequestCache("freya022", "BotCommands", null)
     private val jdaPullRequestCache = PullRequestCache("DV8FromTheWorld", "JDA", "master")
+    private val jdaKtxPullRequestCache = PullRequestCache("MinnDevelopment", "jda-ktx", "master")
     private val branchNameToJdaVersionChecker: MutableMap<String, MavenBranchProjectDependencyVersionChecker> =
         Collections.synchronizedMap(hashMapOf())
     private val updateCountdownMap: MutableMap<String, UpdateCountdown> = HashMap()
@@ -51,10 +52,12 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
             return when {
                 guild.isBCGuild() -> listOf(
                     Command.Choice("BotCommands", LibraryType.BOT_COMMANDS.name),
-                    Command.Choice("JDA 5", LibraryType.JDA5.name)
+                    Command.Choice("JDA 5", LibraryType.JDA5.name),
+                    Command.Choice("JDA-KTX", LibraryType.JDA_KTX.name)
                 )
                 else -> listOf(
-                    Command.Choice("JDA 5", LibraryType.JDA5.name)
+                    Command.Choice("JDA 5", LibraryType.JDA5.name),
+                    Command.Choice("JDA-KTX", LibraryType.JDA_KTX.name)
                 )
             }
         }
@@ -67,6 +70,7 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
         val pullRequest = when (libraryType) {
             LibraryType.BOT_COMMANDS -> bcPullRequestCache.pullRequests[issueNumber]
             LibraryType.JDA5 -> jdaPullRequestCache.pullRequests[issueNumber]
+            LibraryType.JDA_KTX -> jdaKtxPullRequestCache.pullRequests[issueNumber]
             else -> throw IllegalArgumentException()
         } ?: run {
             event.reply("Unknown Pull Request").setEphemeral(true).queue()
@@ -94,7 +98,8 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
                 val jdaVersionFromBotCommands = jdaVersionChecker.latest
                 DependencySupplier.formatBC(buildToolType, jdaVersionFromBotCommands, latestBotCommands)
             }
-            else -> DependencySupplier.formatJDA5Jitpack(buildToolType, pullRequest.toJitpackArtifact())
+            LibraryType.JDA5, LibraryType.JDA_KTX -> DependencySupplier.formatJitpack(buildToolType, pullRequest.toJitpackArtifact())
+            else -> throw IllegalArgumentException("Invalid library type: $libraryType")
         }
 
         val embed = Embed {
@@ -111,7 +116,10 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
         }
 
         event.replyEmbeds(embed)
-            .addActionRow(components.messageDeleteButton(event.user))
+            .addActionRow(
+                components.messageDeleteButton(event.user),
+                link("https://jda.wiki/using-jda/using-new-features/", "How ? (Wiki)", EmojiUtils.resolveJDAEmoji("face_with_monocle"))
+            )
             .queue()
     }
 
@@ -124,6 +132,7 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
         val pullRequests = when (libraryType) {
             LibraryType.BOT_COMMANDS -> bcPullRequestCache.pullRequests.values(arrayOfNulls(0))
             LibraryType.JDA5 -> jdaPullRequestCache.pullRequests.values(arrayOfNulls(0))
+            LibraryType.JDA_KTX -> jdaKtxPullRequestCache.pullRequests.values(arrayOfNulls(0))
             else -> throw IllegalArgumentException()
         }
         return fuzzyMatching(
@@ -215,7 +224,7 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
         val branchName = branch.branchName
 
         val dependencyStr = when (libraryType) {
-            LibraryType.JDA5 -> DependencySupplier.formatJDA5Jitpack(buildToolType, branch.asJitpackArtifact)
+            LibraryType.JDA5, LibraryType.JDA_KTX -> DependencySupplier.formatJitpack(buildToolType, branch.asJitpackArtifact)
             LibraryType.BOT_COMMANDS -> {
                 val jdaVersionChecker = branchNameToJdaVersionChecker.getOrPut(branchName) {
                     try {
@@ -263,7 +272,7 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
         branch: GithubBranch,
         checker: MavenBranchProjectDependencyVersionChecker
     ) {
-        val updateCountdown = updateCountdownMap.getOrPut(branch.branchName) { UpdateCountdown(5.minutes) }
+        val updateCountdown = updateCountdownMap.getOrPut(branch.branchName) { UpdateCountdown(1.minutes) }
         if (updateCountdown.needsUpdate()) {
             checker.checkVersion()
             event.context.invalidateAutocompleteCache(BRANCH_NUMBER_AUTOCOMPLETE_NAME)
@@ -273,7 +282,7 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
 
     private fun getBranchMap(libraryType: LibraryType): GithubBranchMap {
         val updateCountdown =
-            updateMap.computeIfAbsent(libraryType) { UpdateCountdown(5.minutes) }
+            updateMap.computeIfAbsent(libraryType) { UpdateCountdown(1.minutes) }
 
         synchronized(branchMap) {
             branchMap[libraryType].let { githubBranchMap: GithubBranchMap? ->
@@ -291,6 +300,7 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
         val (ownerName: String, repoName: String) = when (libraryType) {
             LibraryType.JDA5 -> arrayOf("DV8FromTheWorld", "JDA")
             LibraryType.BOT_COMMANDS -> arrayOf("freya022", "BotCommands")
+            LibraryType.JDA_KTX -> arrayOf("MinnDevelopment", "jda-ktx")
             else -> throw IllegalArgumentException("No branches for $libraryType")
         }
 

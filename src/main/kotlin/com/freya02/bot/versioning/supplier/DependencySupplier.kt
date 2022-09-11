@@ -20,8 +20,8 @@ object DependencySupplier {
         Utils.readResource("/build_scripts/${buildToolType.folderName}/JDA5.txt")
             .format(version.groupId, version.artifactId, version.version)
 
-    fun formatJDA5Jitpack(buildToolType: BuildToolType, version: ArtifactInfo): String =
-        Utils.readResource("/build_scripts/${buildToolType.folderName}/JDA_Jitpack.txt")
+    fun formatJitpack(buildToolType: BuildToolType, version: ArtifactInfo): String =
+        Utils.readResource("/build_scripts/${buildToolType.folderName}/Jitpack.txt")
             .format(version.groupId, version.artifactId, version.version)
 
     fun formatJDA4(buildToolType: BuildToolType, version: ArtifactInfo): String =

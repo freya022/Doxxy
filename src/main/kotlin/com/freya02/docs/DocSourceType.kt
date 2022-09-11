@@ -44,6 +44,7 @@ enum class DocSourceType(
     private val validPackagePatterns: List<Regex> = validPackagePatterns.map { it.toRegex() }
 
     val allClassesIndexURL: String = "$sourceUrl/allclasses-index.html"
+    val constantValuesURL: String = "$sourceUrl/constant-values.html"
 
     fun toEffectiveURL(url: String): String {
         if (onlineURL == null) return url

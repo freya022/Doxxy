@@ -1,6 +1,8 @@
 package com.freya02.bot.commands.slash.docs
 
 import com.freya02.bot.docs.DocIndexMap
+import com.freya02.bot.docs.index.DocSuggestion
+import com.freya02.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.commands.annotations.GeneratedOption
 import com.freya02.botcommands.api.commands.application.annotations.AppOption
@@ -79,11 +81,18 @@ class DocsCommand(private val docIndexMap: DocIndexMap, private val components: 
     ) {
         val docIndex = docIndexMap[sourceType]!!
         if (identifier == null) {
-            CommonDocsHandlers.handleClass(event, className, docIndex, components)
+            CommonDocsHandlers.handleClass(event, className, docIndex, components) {
+                return@handleClass classNameAutocomplete(docIndex, className, 100)
+                    .map { DocSuggestion(it, it) }
+            }
         } else if (identifier.contains("(")) { //prob a method
-            CommonDocsHandlers.handleMethodDocs(event, className, identifier, docIndex, components)
+            CommonDocsHandlers.handleMethodDocs(event, className, identifier, docIndex, components) {
+                return@handleMethodDocs methodOrFieldByClassAutocomplete(docIndex, className, identifier, 100).mapToSuggestions(className)
+            }
         } else {
-            CommonDocsHandlers.handleFieldDocs(event, className, identifier, docIndex, components)
+            CommonDocsHandlers.handleFieldDocs(event, className, identifier, docIndex, components) {
+                return@handleFieldDocs methodOrFieldByClassAutocomplete(docIndex, className, identifier, 100).mapToSuggestions(className)
+            }
         }
     }
 }

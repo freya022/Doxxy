@@ -33,6 +33,7 @@ class SlashGradleKts(private val versions: Versions, private val components: Com
             )
             LibraryType.JDA5 -> DependencySupplier.formatJDA5(BuildToolType.GRADLE_KTS, versions.latestJDA5Version)
             LibraryType.JDA4 -> DependencySupplier.formatJDA4(BuildToolType.GRADLE_KTS, versions.latestJDA4Version)
+            LibraryType.JDA_KTX -> DependencySupplier.formatJitpack(BuildToolType.GRADLE_KTS, versions.latestJDAKtxVersion)
         }
 
         val embed = Embed {

@@ -1,6 +1,7 @@
 package com.freya02.bot.commands.slash.docs
 
 import com.freya02.bot.docs.DocIndexMap
+import com.freya02.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.commands.annotations.GeneratedOption
 import com.freya02.botcommands.api.commands.application.annotations.AppOption
@@ -67,6 +68,8 @@ class AnyMethodCommand(private val docIndexMap: DocIndexMap, private val compone
         }
 
         val docIndex = docIndexMap[sourceType]!!
-        CommonDocsHandlers.handleMethodDocs(event, split[0], split[1], docIndex, components)
+        CommonDocsHandlers.handleMethodDocs(event, split[0], split[1], docIndex, components) {
+            return@handleMethodDocs anyMethodNameAutocomplete(docIndex, fullSignature, 100).mapToSuggestions()
+        }
     }
 }
