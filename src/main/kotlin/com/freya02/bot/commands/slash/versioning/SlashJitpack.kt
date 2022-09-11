@@ -10,7 +10,6 @@ import com.freya02.bot.versioning.maven.MavenBranchProjectDependencyVersionCheck
 import com.freya02.bot.versioning.supplier.BuildToolType
 import com.freya02.bot.versioning.supplier.DependencySupplier
 import com.freya02.botcommands.api.annotations.CommandMarker
-import com.freya02.botcommands.api.commands.CommandPath
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.CommandScope
 import com.freya02.botcommands.api.commands.application.GuildApplicationCommandManager
@@ -28,7 +27,6 @@ import dev.minn.jda.ktx.messages.Embed
 import me.xdrop.fuzzywuzzy.FuzzySearch
 import me.xdrop.fuzzywuzzy.ToStringFunction
 import me.xdrop.fuzzywuzzy.model.BoundExtractedResult
-import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
@@ -48,24 +46,6 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
     private val updateCountdownMap: MutableMap<String, UpdateCountdown> = HashMap()
     private val updateMap: MutableMap<LibraryType, UpdateCountdown> = EnumMap(LibraryType::class.java)
     private val branchMap: MutableMap<LibraryType, GithubBranchMap> = EnumMap(LibraryType::class.java)
-
-    override fun getOptionChoices(guild: Guild?, commandPath: CommandPath, optionName: String): List<Command.Choice> {
-        if (optionName == "library_type") {
-            return when {
-                guild.isBCGuild() -> listOf(
-                    Command.Choice("BotCommands", LibraryType.BOT_COMMANDS.name),
-                    Command.Choice("JDA 5", LibraryType.JDA5.name),
-                    Command.Choice("JDA-KTX", LibraryType.JDA_KTX.name)
-                )
-                else -> listOf(
-                    Command.Choice("JDA 5", LibraryType.JDA5.name),
-                    Command.Choice("JDA-KTX", LibraryType.JDA_KTX.name)
-                )
-            }
-        }
-
-        return super.getOptionChoices(guild, commandPath, optionName)
-    }
 
     @CommandMarker
     fun onSlashJitpackPR(event: GuildSlashEvent, libraryType: LibraryType, buildToolType: BuildToolType, issueNumber: Int) {
@@ -160,44 +140,62 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
 
     @AppDeclaration
     fun declare(manager: GuildApplicationCommandManager) {
-        BuildToolType.values().forEach { toolType ->
-            manager.slashCommand("jitpack", "branch", toolType.cmdName, CommandScope.GUILD) {
+        manager.slashCommand("jitpack", CommandScope.GUILD) {
+            description = "Shows you how to use jitpack for your bot"
+
+            subcommandGroup("branch") {
                 description = "Shows you how to use a branch for your bot"
 
-                addCommonJitpackOptions(manager, toolType)
-                option("branchName") {
-                    autocompleteReference(BRANCH_NAME_AUTOCOMPLETE_NAME)
-                }
+                BuildToolType.values().forEach { toolType ->
+                    subcommand(toolType.cmdName) {
+                        description = "Shows you how to use a branch for your bot"
 
-                function = SlashJitpack::onSlashJitpackBranch
+                        addCommonJitpackOptions(manager, toolType)
+                        option("branchName") {
+                            autocompleteReference(BRANCH_NAME_AUTOCOMPLETE_NAME)
+                        }
+
+                        function = SlashJitpack::onSlashJitpackBranch
+                    }
+                }
             }
 
-            manager.slashCommand("jitpack", "pr", toolType.cmdName, CommandScope.GUILD) {
+            subcommandGroup("pr") {
                 description = "Shows you how to use Pull Requests for your bot"
 
-                addCommonJitpackOptions(manager, toolType)
-                option("issueNumber") {
-                    description = "The number of the issue"
+                BuildToolType.values().forEach { toolType ->
+                    subcommand(toolType.cmdName) {
+                        description = "Shows you how to use Pull Requests for your bot"
 
-                    autocompleteReference(BRANCH_NUMBER_AUTOCOMPLETE_NAME) //TODO rename constant
+                        addCommonJitpackOptions(manager, toolType)
+                        option("issueNumber") {
+                            description = "The number of the issue"
+
+                            autocompleteReference(BRANCH_NUMBER_AUTOCOMPLETE_NAME) //TODO rename constant
+                        }
+
+                        function = SlashJitpack::onSlashJitpackPR
+                    }
                 }
-
-                function = SlashJitpack::onSlashJitpackPR
             }
         }
     }
 
     private fun SlashCommandBuilder.addCommonJitpackOptions(manager: GuildApplicationCommandManager, toolType: BuildToolType) {
-        when {
-            manager.guild.isBCGuild() -> option("libraryType") {
-                description = "Type of library"
+        option("libraryType") {
+            description = "Type of library"
 
-                choices = listOf(
+            choices = when {
+                manager.guild.isBCGuild() -> listOf(
                     Command.Choice("BotCommands", LibraryType.BOT_COMMANDS.name),
-                    Command.Choice("JDA 5", LibraryType.JDA5.name)
+                    Command.Choice("JDA 5", LibraryType.JDA5.name),
+                    Command.Choice("JDA-KTX", LibraryType.JDA_KTX.name)
+                )
+                else -> listOf(
+                    Command.Choice("JDA 5", LibraryType.JDA5.name),
+                    Command.Choice("JDA-KTX", LibraryType.JDA_KTX.name)
                 )
             }
-            else -> generatedOption("libraryType") { LibraryType.JDA5 }
         }
 
         generatedOption("buildToolType") { toolType }
