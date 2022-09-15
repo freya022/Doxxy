@@ -48,11 +48,11 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
     private val branchMap: MutableMap<LibraryType, GithubBranchMap> = EnumMap(LibraryType::class.java)
 
     @CommandMarker
-    fun onSlashJitpackPR(event: GuildSlashEvent, libraryType: LibraryType, buildToolType: BuildToolType, issueNumber: Int) {
+    fun onSlashJitpackPR(event: GuildSlashEvent, libraryType: LibraryType, buildToolType: BuildToolType, pullNumber: Int) {
         val pullRequest = when (libraryType) {
-            LibraryType.BOT_COMMANDS -> bcPullRequestCache.pullRequests[issueNumber]
-            LibraryType.JDA5 -> jdaPullRequestCache.pullRequests[issueNumber]
-            LibraryType.JDA_KTX -> jdaKtxPullRequestCache.pullRequests[issueNumber]
+            LibraryType.BOT_COMMANDS -> bcPullRequestCache.pullRequests[pullNumber]
+            LibraryType.JDA5 -> jdaPullRequestCache.pullRequests[pullNumber]
+            LibraryType.JDA_KTX -> jdaKtxPullRequestCache.pullRequests[pullNumber]
             else -> throw IllegalArgumentException()
         } ?: run {
             event.reply("Unknown Pull Request").setEphemeral(true).queue()
@@ -106,8 +106,8 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
     }
 
     @CacheAutocomplete
-    @AutocompleteHandler(name = BRANCH_NUMBER_AUTOCOMPLETE_NAME, showUserInput = false)
-    fun onBranchNumberAutocomplete(
+    @AutocompleteHandler(name = PR_NUMBER_AUTOCOMPLETE_NAME, showUserInput = false)
+    fun onPRNumberAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption libraryType: LibraryType?
     ): Collection<Command.Choice> {
@@ -169,10 +169,10 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
                         description = "Shows you how to use Pull Requests for your bot"
 
                         addCommonJitpackOptions(manager, toolType)
-                        option("issueNumber") {
+                        option("pullNumber") {
                             description = "The number of the issue"
 
-                            autocompleteReference(BRANCH_NUMBER_AUTOCOMPLETE_NAME) //TODO rename constant
+                            autocompleteReference(PR_NUMBER_AUTOCOMPLETE_NAME)
                         }
 
                         function = SlashJitpack::onSlashJitpackPR
@@ -276,7 +276,7 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
         val updateCountdown = updateCountdownMap.getOrPut(branch.branchName) { UpdateCountdown(1.minutes) }
         if (updateCountdown.needsUpdate()) {
             checker.checkVersion()
-            event.context.invalidateAutocompleteCache(BRANCH_NUMBER_AUTOCOMPLETE_NAME)
+            event.context.invalidateAutocompleteCache(PR_NUMBER_AUTOCOMPLETE_NAME)
             checker.saveVersion()
         }
     }
@@ -322,7 +322,7 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
     }
 
     companion object {
-        private const val BRANCH_NUMBER_AUTOCOMPLETE_NAME = "SlashJitpack: branchNumber"
+        private const val PR_NUMBER_AUTOCOMPLETE_NAME = "SlashJitpack: prNumber"
         private const val BRANCH_NAME_AUTOCOMPLETE_NAME = "SlashJitpack: branchName"
 
         private fun Collection<PullRequest>.fuzzyMatching(
