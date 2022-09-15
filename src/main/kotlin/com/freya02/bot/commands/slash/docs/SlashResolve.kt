@@ -6,6 +6,7 @@ import com.freya02.bot.docs.cached.CachedClass
 import com.freya02.bot.docs.cached.CachedField
 import com.freya02.bot.docs.cached.CachedMethod
 import com.freya02.botcommands.api.annotations.CommandMarker
+import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.GlobalApplicationCommandManager
 import com.freya02.botcommands.api.commands.application.annotations.AppDeclaration
 import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
@@ -16,7 +17,7 @@ private const val commandDescription = "Experimental - Resolves method/field cal
 private const val chainArgDescription = "Chain of method/field calls, can also just be a class name. Each component is separated with an #"
 
 @CommandMarker
-class SlashResolve(private val docIndexMap: DocIndexMap, private val components: Components) : BaseDocCommand() {
+class SlashResolve(private val docIndexMap: DocIndexMap, private val components: Components) : ApplicationCommand() {
     @AppDeclaration
     fun declare(manager: GlobalApplicationCommandManager) {
         manager.slashCommand("resolve") {
