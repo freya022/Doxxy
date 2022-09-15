@@ -23,7 +23,6 @@ import com.freya02.botcommands.api.pagination.paginator.Paginator
 import com.freya02.botcommands.api.pagination.paginator.PaginatorBuilder
 import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.messages.Embed
-import me.xdrop.fuzzywuzzy.model.BoundExtractedResult
 import net.dv8tion.jda.api.Permission.MANAGE_ROLES
 import net.dv8tion.jda.api.Permission.MANAGE_SERVER
 import net.dv8tion.jda.api.entities.Member
@@ -330,9 +329,9 @@ class SlashTag(database: Database, private val modals: Modals, private val compo
         return AutocompleteAlgorithms
             .fuzzyMatching(
                 tagDB.getShortTagsSorted(guild.idLong, TagCriteria.USES), { obj: ShortTag -> obj.name },
-                event
+                event.focusedOption.value
             )
-            .map { r: BoundExtractedResult<ShortTag> -> Command.Choice(r.referent.asChoiceName(), r.string) }
+            .map { r -> Command.Choice(r.item.asChoiceName(), r.string) }
     }
 
     @AutocompleteHandler(name = USER_TAGS_AUTOCOMPLETE, showUserInput = false)
@@ -342,9 +341,9 @@ class SlashTag(database: Database, private val modals: Modals, private val compo
             .fuzzyMatching(
                 tagDB.getShortTagsSorted(guild.idLong, event.user.idLong, TagCriteria.NAME),
                 { obj: ShortTag -> obj.name },
-                event
+                event.focusedOption.value
             )
-            .map { r: BoundExtractedResult<ShortTag> -> Command.Choice(r.referent.asChoiceName(), r.string) }
+            .map { r -> Command.Choice(r.item.asChoiceName(), r.string) }
     }
 
     private fun ShortTag.asChoiceName(): String {
