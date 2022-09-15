@@ -16,6 +16,9 @@ import com.freya02.botcommands.api.commands.application.GuildApplicationCommandM
 import com.freya02.botcommands.api.commands.application.annotations.AppDeclaration
 import com.freya02.botcommands.api.commands.application.annotations.AppOption
 import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
+import com.freya02.botcommands.api.commands.application.slash.autocomplete.AutocompleteAlgorithms
+import com.freya02.botcommands.api.commands.application.slash.autocomplete.FuzzyResult
+import com.freya02.botcommands.api.commands.application.slash.autocomplete.ToStringFunction
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.CacheAutocomplete
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.CompositeKey
@@ -24,9 +27,6 @@ import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.utils.EmojiUtils
 import dev.minn.jda.ktx.interactions.components.link
 import dev.minn.jda.ktx.messages.Embed
-import me.xdrop.fuzzywuzzy.FuzzySearch
-import me.xdrop.fuzzywuzzy.ToStringFunction
-import me.xdrop.fuzzywuzzy.model.BoundExtractedResult
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
@@ -112,21 +112,22 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
         @CompositeKey @AppOption libraryType: LibraryType?
     ): Collection<Command.Choice> {
         val pullRequests = when (libraryType) {
-            LibraryType.BOT_COMMANDS -> bcPullRequestCache.pullRequests.values(arrayOfNulls(0))
-            LibraryType.JDA5 -> jdaPullRequestCache.pullRequests.values(arrayOfNulls(0))
-            LibraryType.JDA_KTX -> jdaKtxPullRequestCache.pullRequests.values(arrayOfNulls(0))
+            LibraryType.BOT_COMMANDS -> bcPullRequestCache.pullRequests.valueCollection()
+            LibraryType.JDA5 -> jdaPullRequestCache.pullRequests.valueCollection()
+            LibraryType.JDA_KTX -> jdaKtxPullRequestCache.pullRequests.valueCollection()
             else -> throw IllegalArgumentException()
         }
-        return fuzzyMatching(
-            pullRequests.asList(),
-            { referent: PullRequest -> referent.asHumanDescription },
-            event
-        ).map { r: BoundExtractedResult<PullRequest> ->
-            Command.Choice(
-                r.referent.asHumanDescription,
-                r.referent.number.toLong()
+        return pullRequests
+            .fuzzyMatching(
+                { referent: PullRequest -> referent.title + referent.branch.authorName }, //Don't autocomplete based on the branch number
+                event.focusedOption.value
             )
-        }
+            .map { r ->
+                Command.Choice(
+                    r.item.asHumanDescription,
+                    r.item.number.toLong()
+                )
+            }
     }
 
     @CacheAutocomplete
@@ -324,32 +325,22 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
         private const val BRANCH_NUMBER_AUTOCOMPLETE_NAME = "SlashJitpack: branchNumber"
         private const val BRANCH_NAME_AUTOCOMPLETE_NAME = "SlashJitpack: branchName"
 
-        private fun fuzzyMatching(
-            items: Collection<PullRequest>,
+        private fun Collection<PullRequest>.fuzzyMatching(
             toStringFunction: ToStringFunction<PullRequest>,
-            event: CommandAutoCompleteInteractionEvent
-        ): List<BoundExtractedResult<PullRequest>> {
-            val list = items.sortedWith(Comparator.comparingInt { obj: PullRequest -> obj.number }.reversed())
-            val autoCompleteQuery = event.focusedOption
-            if (autoCompleteQuery.value.isBlank()) {
-                return list.mapIndexed { i, it -> BoundExtractedResult(it, "", 100, i) }
+            query: String
+        ): Collection<FuzzyResult<PullRequest>> {
+            if (query.firstOrNull()?.isDigit() == true) {
+                return filter { it.number.toString().startsWith(query) }
+                    .take(OptionData.MAX_CHOICES)
+                    .map { FuzzyResult(it, "", 0.0) }
             }
 
-            //First sort the results by similarities but by taking into account an incomplete input
-            val bigLengthDiffResults = FuzzySearch.extractTop(
-                autoCompleteQuery.value,
-                list,
-                toStringFunction, { s1: String, s2: String -> FuzzySearch.partialRatio(s1, s2) },
-                OptionData.MAX_CHOICES
-            )
-
-            //Then sort the results by similarities but don't take length into account
-            return FuzzySearch.extractTop(
-                autoCompleteQuery.value,
-                bigLengthDiffResults.stream().map { obj: BoundExtractedResult<PullRequest> -> obj.referent }.toList(),
-                toStringFunction, { s1: String, s2: String -> FuzzySearch.ratio(s1, s2) },
-                OptionData.MAX_CHOICES
-            )
+            return sortedWith(Comparator.comparingInt { obj: PullRequest -> obj.number }.reversed()).let {
+                when {
+                    query.isBlank() -> take(OptionData.MAX_CHOICES).map { FuzzyResult(it, "", 0.0) }
+                    else -> AutocompleteAlgorithms.fuzzyMatching(this, toStringFunction, query).take(OptionData.MAX_CHOICES)
+                }
+            }
         }
     }
 }
