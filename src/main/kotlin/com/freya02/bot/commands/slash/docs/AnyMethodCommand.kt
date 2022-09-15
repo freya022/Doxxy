@@ -1,63 +1,42 @@
 package com.freya02.bot.commands.slash.docs
 
+import com.freya02.bot.commands.slash.docs.CommonDocsHandlers.Companion.ANY_METHOD_NAME_AUTOCOMPLETE_NAME
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
 import com.freya02.botcommands.api.annotations.CommandMarker
-import com.freya02.botcommands.api.commands.annotations.GeneratedOption
-import com.freya02.botcommands.api.commands.application.annotations.AppOption
+import com.freya02.botcommands.api.commands.application.GlobalApplicationCommandManager
+import com.freya02.botcommands.api.commands.application.annotations.AppDeclaration
 import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
-import com.freya02.botcommands.api.commands.application.slash.annotations.JDASlashCommand
 import com.freya02.botcommands.api.components.Components
 import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.messages.reply_
 
 @CommandMarker
 class AnyMethodCommand(private val docIndexMap: DocIndexMap, private val components: Components) : BaseDocCommand() {
-    @JDASlashCommand(
-        name = "anymethod",
-        subcommand = "botcommands",
-        description = "Shows the documentation for any method"
-    )
-    fun onSlashAnyMethodBC(
-        event: GuildSlashEvent,
-        @GeneratedOption sourceType: DocSourceType,
-        @AppOption(
-            description = "Full signature of the class + method",
-            autocomplete = CommonDocsHandlers.ANY_METHOD_NAME_AUTOCOMPLETE_NAME
-        ) fullSignature: String
-    ) {
-        onSlashAnyMethod(event, sourceType, fullSignature)
+    @AppDeclaration
+    fun declare(manager: GlobalApplicationCommandManager) {
+        manager.slashCommand("anymethod") {
+            description = "Shows the documentation for any method"
+
+            DocSourceType.values().forEach { sourceType ->
+                subcommand(sourceType.cmdName) {
+                    description = "Shows the documentation for any method"
+
+                    generatedOption("sourceType") { sourceType }
+
+                    option("fullSignature") {
+                        description = "Full signature of the class + method"
+                        autocompleteReference(ANY_METHOD_NAME_AUTOCOMPLETE_NAME)
+                    }
+
+                    function = ::onSlashAnyMethod
+                }
+            }
+        }
     }
 
-    @JDASlashCommand(name = "anymethod", subcommand = "jda", description = "Shows the documentation for any method")
-    fun onSlashAnyMethodJDA(
-        event: GuildSlashEvent,
-        @GeneratedOption sourceType: DocSourceType,
-        @AppOption(
-            description = "Full signature of the class + method",
-            autocomplete = CommonDocsHandlers.ANY_METHOD_NAME_AUTOCOMPLETE_NAME
-        ) fullSignature: String
-    ) {
-        onSlashAnyMethod(event, sourceType, fullSignature)
-    }
-
-    @JDASlashCommand(name = "anymethod", subcommand = "java", description = "Shows the documentation for any method")
-    fun onSlashAnyMethodJava(
-        event: GuildSlashEvent,
-        @GeneratedOption sourceType: DocSourceType,
-        @AppOption(
-            description = "Full signature of the class + method",
-            autocomplete = CommonDocsHandlers.ANY_METHOD_NAME_AUTOCOMPLETE_NAME
-        ) fullSignature: String
-    ) {
-        onSlashAnyMethod(event, sourceType, fullSignature)
-    }
-
-    private fun onSlashAnyMethod(
-        event: GuildSlashEvent,
-        sourceType: DocSourceType,
-        fullSignature: String
-    ) {
+    @CommandMarker
+    fun onSlashAnyMethod(event: GuildSlashEvent, sourceType: DocSourceType, fullSignature: String) {
         val split = fullSignature.split("#".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
         if (split.size != 2) {
             event.reply_(
