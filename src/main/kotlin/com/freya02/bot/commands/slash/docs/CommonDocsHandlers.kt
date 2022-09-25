@@ -34,6 +34,7 @@ import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInterac
 import net.dv8tion.jda.api.exceptions.ErrorHandler
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
+import net.dv8tion.jda.api.interactions.components.ItemComponent
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.requests.ErrorResponse
@@ -236,10 +237,14 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
             cachedDoc: CachedDoc,
             it: ReplyCallbackAction
         ) {
-            it.addActionRow(buildList {
+            val list: List<ItemComponent> = buildList {
                 if (!ephemeral) add(DeleteButtonListener.getDeleteButton(event.user))
                 cachedDoc.sourceLink?.let { sourceLink -> add(Button.link(sourceLink, "Source")) }
-            })
+            }
+
+            if (list.isNotEmpty()) {
+                it.addActionRow(list)
+            }
         }
 
         fun handleClass(event: GuildSlashEvent, className: String, docIndex: DocIndex, block: () -> List<DocSuggestion>) {
