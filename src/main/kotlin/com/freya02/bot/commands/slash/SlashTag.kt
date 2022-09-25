@@ -3,6 +3,8 @@ package com.freya02.bot.commands.slash
 import com.freya02.bot.db.Database
 import com.freya02.bot.db.isUniqueViolation
 import com.freya02.bot.tag.*
+import com.freya02.bot.utils.Utils.shortTextInput
+import com.freya02.bot.utils.paragraphTextInput
 import com.freya02.botcommands.api.Logging
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.application.ApplicationCommand
@@ -110,10 +112,25 @@ class SlashTag(database: Database) : ApplicationCommand() {
 
     @JDASlashCommand(scope = CommandScope.GLOBAL_NO_DM, name = "tags", subcommand = "create", description = "Creates a tag in this guild")
     fun createTag(event: GuildSlashEvent) {
+        val tagNameInput = shortTextInput("tagName", "Tag name") {
+            minLength = TagDB.NAME_MIN_LENGTH
+            maxLength = TagDB.NAME_MAX_LENGTH
+        }
+
+        val tagDescriptionInput = shortTextInput("tagDescription", "Tag description") {
+            minLength = TagDB.DESCRIPTION_MIN_LENGTH
+            maxLength = TagDB.DESCRIPTION_MAX_LENGTH
+        }
+
+        val tagContentInput = paragraphTextInput("tagContent", "Tag content") {
+            minLength = TagDB.CONTENT_MIN_LENGTH
+            maxLength = TagDB.CONTENT_MAX_LENGTH
+        }
+
         val modal = Modals.create("Create a tag", TAGS_CREATE_MODAL_HANDLER)
-            .addActionRow(Modals.createTextInput("tagName", "Tag name", TextInputStyle.SHORT).build())
-            .addActionRow(Modals.createTextInput("tagDescription", "Tag description", TextInputStyle.SHORT).build())
-            .addActionRow(Modals.createTextInput("tagContent", "Tag content", TextInputStyle.PARAGRAPH).build())
+            .addActionRow(tagNameInput)
+            .addActionRow(tagDescriptionInput)
+            .addActionRow(tagContentInput)
             .build()
 
         event.replyModal(modal).queue()
@@ -244,7 +261,7 @@ class SlashTag(database: Database) : ApplicationCommand() {
     @JDASlashCommand(scope = CommandScope.GLOBAL_NO_DM, name = "tags", subcommand = "list", description = "Creates a tag in this guild")
     fun listTags(
         event: GuildSlashEvent,
-        @AppOption(name = "sorting", description = "Type of tag sorting") criteria: TagCriteria?
+        @AppOption(name = "sorting", description = "Type of tag sorting") criteria: TagCriteria? //TODO use default
     ) {
         val finalCriteria = criteria ?: TagCriteria.NAME
         val totalTags = tagDB.getTotalTags(event.guild.idLong)

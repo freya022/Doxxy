@@ -1,7 +1,10 @@
 package com.freya02.bot.utils
 
 import com.freya02.botcommands.api.Logging
+import com.freya02.botcommands.api.modals.Modals
+import com.freya02.botcommands.api.modals.TextInputBuilder
 import net.dv8tion.jda.api.entities.Guild
+import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 import net.dv8tion.jda.internal.utils.JDALogger
 import org.jetbrains.annotations.Contract
 import java.io.IOException
@@ -76,4 +79,10 @@ object Utils {
 
         return r
     }
+
+    inline fun shortTextInput(inputName: String, label: String, block: TextInputBuilder.() -> Unit) =
+        Modals.createTextInput(inputName, label, TextInputStyle.SHORT).apply(block).build()
 }
+
+inline fun paragraphTextInput(inputName: String, label: String, block: TextInputBuilder.() -> Unit) =
+    Modals.createTextInput(inputName, label, TextInputStyle.PARAGRAPH).apply(block).build()

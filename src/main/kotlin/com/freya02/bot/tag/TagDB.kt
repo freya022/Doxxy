@@ -8,24 +8,26 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import java.sql.ResultSet
 import java.sql.SQLException
 
-private const val CONTENT_MAX_LENGTH = Message.MAX_CONTENT_LENGTH
-private const val DESCRIPTION_MAX_LENGTH = 512
-private const val NAME_MAX_LENGTH = OptionData.MAX_CHOICE_NAME_LENGTH
-
 class TagDB(private val database: Database) {
     private fun checkName(name: String) {
         if (name.length > NAME_MAX_LENGTH)
             throw TagException("Tag name is too long, it should be under $NAME_MAX_LENGTH characters")
+        if (name.length < NAME_MIN_LENGTH)
+            throw TagException("Tag name is too small, it should be above $NAME_MIN_LENGTH characters")
     }
 
     private fun checkDescription(description: String) {
         if (description.length > DESCRIPTION_MAX_LENGTH)
             throw TagException("Tag description is too long, it should be under $DESCRIPTION_MAX_LENGTH characters")
+        if (description.length < DESCRIPTION_MIN_LENGTH)
+            throw TagException("Tag description is too small, it should be above $DESCRIPTION_MIN_LENGTH characters")
     }
 
     private fun checkContent(content: String) {
         if (content.length > CONTENT_MAX_LENGTH)
             throw TagException("Tag content is too long, it should be under $CONTENT_MAX_LENGTH characters")
+        if (content.length < CONTENT_MIN_LENGTH)
+            throw TagException("Tag content is too small, it should be above $CONTENT_MIN_LENGTH characters")
     }
 
     @Throws(SQLException::class)
@@ -166,5 +168,14 @@ class TagDB(private val database: Database) {
             val set = result.readOnce() ?: throw IllegalStateException()
             return set.getLong(1)
         }
+    }
+
+    companion object {
+        const val NAME_MIN_LENGTH = 2
+        const val NAME_MAX_LENGTH = OptionData.MAX_CHOICE_NAME_LENGTH
+        const val DESCRIPTION_MIN_LENGTH = 10
+        const val DESCRIPTION_MAX_LENGTH = 512
+        const val CONTENT_MIN_LENGTH = 1
+        const val CONTENT_MAX_LENGTH = Message.MAX_CONTENT_LENGTH
     }
 }
