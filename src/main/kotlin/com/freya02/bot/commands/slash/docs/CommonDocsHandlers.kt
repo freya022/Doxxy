@@ -19,7 +19,7 @@ import com.freya02.botcommands.api.application.slash.autocomplete.annotations.Ca
 import com.freya02.botcommands.api.application.slash.autocomplete.annotations.CompositeKey
 import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.components.annotations.JDASelectionMenuListener
-import com.freya02.botcommands.api.components.event.SelectionEvent
+import com.freya02.botcommands.api.components.event.StringSelectionEvent
 import com.freya02.botcommands.api.pagination.menu.ChoiceMenuBuilder
 import com.freya02.botcommands.api.utils.ButtonContent
 import com.freya02.botcommands.api.utils.EmojiUtils
@@ -46,7 +46,7 @@ private val logger = Logging.getLogger()
 
 class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationCommand() {
     @JDASelectionMenuListener(name = SEE_ALSO_SELECT_LISTENER_NAME)
-    fun onSeeAlsoSelect(event: SelectionEvent) {
+    fun onSeeAlsoSelect(event: StringSelectionEvent) {
         val option = event.selectedOptions[0] //Forced to use 1
         val values = option.value.split(":")
         val targetType = TargetType.valueOf(values[0])
@@ -325,7 +325,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         private fun ReplyCallbackAction.addSeeAlso(cachedDoc: CachedDoc): ReplyCallbackAction {
             cachedDoc.seeAlsoReferences.let { referenceList ->
                 if (referenceList.any { it.targetType != TargetType.UNKNOWN }) {
-                    val selectionMenuBuilder = Components.selectionMenu(SEE_ALSO_SELECT_LISTENER_NAME)
+                    val selectionMenuBuilder = Components.stringSelectionMenu(SEE_ALSO_SELECT_LISTENER_NAME)
                         .timeout(15, TimeUnit.MINUTES)
                         .setPlaceholder("See also")
                     for (reference in referenceList) {
