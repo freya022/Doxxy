@@ -20,7 +20,13 @@ class SlashInfo : ApplicationCommand() {
 
             field {
                 name = "JDA version"
-                value = "[${JDAInfo.VERSION}](https://github.com/DV8FromTheWorld/JDA)"
+
+                @Suppress("SENSELESS_COMPARISON") //Might be null depending on version used
+                value = when {
+                    JDAInfo.COMMIT_HASH != null -> "[${JDAInfo.VERSION}](https://github.com/DV8FromTheWorld/JDA/commit/${JDAInfo.COMMIT_HASH})"
+                    else -> "[${JDAInfo.VERSION}](https://github.com/DV8FromTheWorld/JDA)"
+                }
+
                 inline = true
             }
 
