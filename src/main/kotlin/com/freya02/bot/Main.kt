@@ -63,6 +63,7 @@ object Main {
                 enableCache(CacheFlag.CLIENT_STATUS)
                 enableIntents(GatewayIntent.GUILD_PRESENCES)
 
+                setMaxReconnectDelay(128)
                 setActivity(Activity.watching("the docs"))
                 setEventManager(manager)
             }.awaitReady()
