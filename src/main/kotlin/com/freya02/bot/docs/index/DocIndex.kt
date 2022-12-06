@@ -47,7 +47,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         return CachedField(embed, seeAlsoReferences, javadocLink, sourceLink)
     }
 
-    override fun findAnySignatures(docType: DocType, query: String?, limit: Int): List<DocSearchResult> = getAllSignatures(docType, query, limit)
+    override fun findAnySignatures(query: String?, limit: Int, vararg docTypes: DocType): List<DocSearchResult> = getAllSignatures(query, limit, *docTypes)
 
     override fun findSignaturesIn(className: String, query: String?, vararg docTypes: DocType, limit: Int): List<DocSearchResult> {
         val typeCheck = docTypes.joinToString(" or ") { "doc.type = ${it.id}" }
@@ -254,7 +254,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         }
     }
 
-    private fun getAllSignatures(docType: DocType, query: String?, limit: Int): List<DocSearchResult> {
+    private fun getAllSignatures(query: String?, limit: Int, vararg docTypes: DocType): List<DocSearchResult> {
         @Language("PostgreSQL", prefix = "select * from doc ")
         val sort = when {
             query.isNullOrEmpty() -> "order by classname, identifier"
@@ -274,13 +274,13 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
                 select concat(classname, '#', identifier) as full_identifier, human_identifier, human_class_identifier
                 from doc
                 where source_id = ?
-                  and type = ?
+                  and type = any(?)
                 $sort
                 limit ?
                 """.trimIndent(),
             "classname"
         ).use { action ->
-            action.executeQuery(sourceType.id, docType.id, *sortArgs, limit)
+            action.executeQuery(sourceType.id, docTypes.map { it.id }.toTypedArray(), *sortArgs, limit)
                 .transformEach {
                     DocSearchResult(
                         it["full_identifier"],

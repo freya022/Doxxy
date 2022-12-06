@@ -28,9 +28,9 @@ interface IDocIndex {
         }
     }
 
-    fun findAnySignatures(docType: DocType, query: String?, limit: Int = 25): List<DocSearchResult>
-    fun findAnyMethodSignatures(query: String? = null, limit: Int = 25): List<DocSearchResult> = findAnySignatures(DocType.METHOD, query, limit)
-    fun findAnyFieldSignatures(query: String? = null, limit: Int = 25): List<DocSearchResult> = findAnySignatures(DocType.FIELD, query, limit)
+    fun findAnySignatures(query: String?, limit: Int = 25, vararg docTypes: DocType): List<DocSearchResult>
+    fun findAnyMethodSignatures(query: String? = null, limit: Int = 25): List<DocSearchResult> = findAnySignatures(query, limit, DocType.METHOD)
+    fun findAnyFieldSignatures(query: String? = null, limit: Int = 25): List<DocSearchResult> = findAnySignatures(query, limit, DocType.FIELD)
 
     fun findSignaturesIn(className: String, query: String? = null, vararg docTypes: DocType, limit: Int = 25): List<DocSearchResult>
     fun findMethodSignaturesIn(className: String, query: String? = null, limit: Int = 25) =

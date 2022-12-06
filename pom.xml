@@ -156,7 +156,7 @@
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>5.0.0-alpha.22</version>
+            <version>5.0.0-beta.1</version>
             <exclusions>
                 <exclusion>
                     <groupId>club.minnced</groupId>
@@ -169,12 +169,12 @@
             <groupId>io.github.freya022</groupId>
             <artifactId>BotCommands</artifactId>
 <!--            <version>53df90c</version>-->
-            <version>2.7.0</version>
+            <version>2.9.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.github.MinnDevelopment</groupId>
             <artifactId>jda-ktx</artifactId>
-            <version>863470ecee</version>
+            <version>17eb77a138</version>
         </dependency>
         <dependency>
             <groupId>org.jetbrains</groupId>
