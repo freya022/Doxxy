@@ -2,10 +2,7 @@ package com.freya02.bot.commands.slash.docs
 
 import com.freya02.bot.commands.slash.DeleteButtonListener
 import com.freya02.bot.docs.DocIndexMap
-import com.freya02.bot.docs.cached.CachedClass
 import com.freya02.bot.docs.cached.CachedDoc
-import com.freya02.bot.docs.cached.CachedField
-import com.freya02.bot.docs.cached.CachedMethod
 import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocResolveResult
 import com.freya02.bot.docs.index.DocSearchResult
@@ -25,11 +22,14 @@ import com.freya02.botcommands.api.utils.ButtonContent
 import com.freya02.botcommands.api.utils.EmojiUtils
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.data.TargetType
+import dev.minn.jda.ktx.messages.Embed
 import dev.minn.jda.ktx.messages.reply_
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.ClientType
+import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.exceptions.ErrorHandler
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
@@ -38,8 +38,9 @@ import net.dv8tion.jda.api.interactions.components.ItemComponent
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.requests.ErrorResponse
-import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
+import net.dv8tion.jda.api.utils.messages.MessageCreateRequest
 import java.util.concurrent.TimeUnit
 
 private val logger = Logging.getLogger()
@@ -59,12 +60,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
                 else -> throw IllegalArgumentException("Invalid target type: $targetType")
             }
             if (doc != null) {
-                when (targetType) {
-                    TargetType.CLASS -> sendClass(event, true, doc as CachedClass)
-                    TargetType.METHOD -> sendMethod(event, true, doc as CachedMethod)
-                    TargetType.FIELD -> sendField(event, true, doc as CachedField)
-                    else -> throw IllegalArgumentException("Invalid target type: $targetType")
-                }
+                sendClass(event, true, doc)
                 break
             }
         }
@@ -192,37 +188,27 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
             RESOLVE_AUTOCOMPLETE_NAME
         )
 
-        fun sendClass(event: IReplyCallback, ephemeral: Boolean, cachedClass: CachedClass) {
-            event.replyEmbeds(cachedClass.embed.withLink(event, cachedClass))
-                .addSeeAlso(cachedClass)
-                .also { addActionRows(ephemeral, event, cachedClass, it) }
+        fun sendClass(event: IReplyCallback, ephemeral: Boolean, cachedDoc: CachedDoc) {
+            event.reply(getDocMessageData(event.member!!, ephemeral, cachedDoc))
                 .setEphemeral(ephemeral)
                 .queue()
         }
 
-        fun sendMethod(event: IReplyCallback, ephemeral: Boolean, cachedMethod: CachedMethod) {
-            event.replyEmbeds(cachedMethod.embed.withLink(event, cachedMethod))
-                .addSeeAlso(cachedMethod)
-                .also { addActionRows(ephemeral, event, cachedMethod, it) }
-                .setEphemeral(ephemeral)
-                .queue()
+        fun getDocMessageData(caller: Member, ephemeral: Boolean, cachedDoc: CachedDoc): MessageCreateData {
+            return MessageCreateBuilder().apply {
+                addEmbeds(cachedDoc.embed.withLink(cachedDoc, caller))
+                addDocsSeeAlso(cachedDoc)
+                addDocsActionRows(ephemeral, cachedDoc, caller)
+            }.build()
         }
 
-        fun sendField(event: IReplyCallback, ephemeral: Boolean, cachedField: CachedField) {
-            event.replyEmbeds(cachedField.embed.withLink(event, cachedField))
-                .addSeeAlso(cachedField)
-                .also { addActionRows(ephemeral, event, cachedField, it) }
-                .setEphemeral(ephemeral)
-                .queue()
-        }
+        private fun MessageEmbed.withLink(cachedDoc: CachedDoc, member: Member?): MessageEmbed {
+            if (member == null) {
+                logger.warn("Got a null member")
+                return this
+            }
 
-        private fun MessageEmbed.withLink(event: IReplyCallback, cachedDoc: CachedDoc): MessageEmbed {
             cachedDoc.javadocLink?.let { javadocLink ->
-                val member = event.member ?: run {
-                    logger.warn("Got a null member")
-                    return@let
-                }
-
                 if (member.getOnlineStatus(ClientType.MOBILE) != OnlineStatus.OFFLINE) {
                     return EmbedBuilder(this).addField("Link", javadocLink, false).build()
                 }
@@ -231,19 +217,18 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
             return this
         }
 
-        private fun addActionRows(
+        private fun <T : MessageCreateRequest<*>> T.addDocsActionRows(
             ephemeral: Boolean,
-            event: IReplyCallback,
             cachedDoc: CachedDoc,
-            it: ReplyCallbackAction
-        ) {
+            caller: UserSnowflake
+        ): T = this.apply {
             val list: List<ItemComponent> = buildList {
-                if (!ephemeral) add(DeleteButtonListener.getDeleteButton(event.user))
+                if (!ephemeral) add(DeleteButtonListener.getDeleteButton(caller))
                 cachedDoc.sourceLink?.let { sourceLink -> add(Button.link(sourceLink, "Source")) }
             }
 
             if (list.isNotEmpty()) {
-                it.addActionRow(list)
+                addActionRow(list)
             }
         }
 
@@ -272,7 +257,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
                 return
             }
 
-            sendMethod(event, false, cachedMethod)
+            sendClass(event, false, cachedMethod)
         }
 
         fun handleFieldDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex, block: () -> List<DocSuggestion>) {
@@ -286,22 +271,46 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
                 return
             }
 
-            sendField(event, false, cachedField)
+            sendClass(event, false, cachedField)
         }
+
+        fun buildDocSuggestionsMenu(docIndex: DocIndex, suggestions: List<DocSuggestion>, block: ChoiceMenuBuilder<DocSuggestion>.() -> Unit) =
+            ChoiceMenuBuilder(suggestions)
+                .setButtonContentSupplier { _, index -> ButtonContent.withString((index + 1).toString()) }
+                .setTransformer { it.humanIdentifier }
+                .setMaxEntriesPerPage(10)
+                .setPaginatorSupplier { _, _, _, _ ->
+                    return@setPaginatorSupplier Embed {
+                        author {
+                            name = when (docIndex.sourceType) {
+                                DocSourceType.JAVA -> "Java Javadocs"
+                                DocSourceType.JDA -> "JDA Javadocs"
+                                DocSourceType.BOT_COMMANDS -> "BotCommands Javadocs"
+                            }
+                            iconUrl = when (docIndex.sourceType) {
+                                DocSourceType.JAVA -> "https://assets.stickpng.com/images/58480979cef1014c0b5e4901.png"
+                                DocSourceType.JDA -> "https://cdn.discordapp.com/icons/125227483518861312/8be466a3cdafc8591fcec4cdbb0eefc0.webp?size=128"
+                                else -> null
+                            }
+                        }
+                    }
+                }
+                .apply(block)
+                .build()
 
         private fun getDocSuggestionsMenu(
             event: GuildSlashEvent,
             docIndex: DocIndex,
             block: () -> List<DocSuggestion>
-        ) = ChoiceMenuBuilder(block())
-            .setButtonContentSupplier { _, index -> ButtonContent.withString((index + 1).toString()) }
-            .setTransformer { it.humanIdentifier }
-            .setTimeout(2, TimeUnit.MINUTES) { _, _ ->
+        ) = buildDocSuggestionsMenu(docIndex, block()) {
+            setTimeout(2, TimeUnit.MINUTES) { menu, _ ->
+                menu.cleanup(event.context)
                 event.hook
                     .editOriginalComponents()
                     .queue(null, ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE, ErrorResponse.UNKNOWN_WEBHOOK))
             }
-            .setCallback { buttonEvent, entry ->
+
+            setCallback { buttonEvent, entry ->
                 event.hook.editOriginalComponents().queue()
 
                 val identifier = entry.identifier
@@ -312,17 +321,15 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
                 }
 
                 when (doc) {
-                    is CachedClass -> sendClass(buttonEvent, false, doc)
-                    is CachedMethod -> sendMethod(buttonEvent, false, doc)
-                    is CachedField -> sendField(buttonEvent, false, doc)
-                    else -> buttonEvent.reply_("This item is now invalid, try again", ephemeral = true).queue()
+                    null -> buttonEvent.reply_("This item is now invalid, try again", ephemeral = true).queue()
+                    else -> sendClass(buttonEvent, false, doc)
                 }
             }
-            .build()
+        }
 
         fun String.transformResolveChain() = this.replace('.', '#')
 
-        private fun ReplyCallbackAction.addSeeAlso(cachedDoc: CachedDoc): ReplyCallbackAction {
+        private fun <T : MessageCreateRequest<*>> T.addDocsSeeAlso(cachedDoc: CachedDoc): T = this.apply {
             cachedDoc.seeAlsoReferences.let { referenceList ->
                 if (referenceList.any { it.targetType != TargetType.UNKNOWN }) {
                     val selectionMenuBuilder = Components.stringSelectionMenu(SEE_ALSO_SELECT_LISTENER_NAME)
@@ -349,11 +356,9 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
                         }
                     }
 
-                    return addActionRow(selectionMenuBuilder.build())
+                    addActionRow(selectionMenuBuilder.build())
                 }
             }
-
-            return this
         }
     }
 }
