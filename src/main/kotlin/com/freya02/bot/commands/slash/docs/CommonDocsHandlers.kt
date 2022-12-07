@@ -278,6 +278,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
             ChoiceMenuBuilder(suggestions)
                 .setButtonContentSupplier { _, index -> ButtonContent.withString((index + 1).toString()) }
                 .setTransformer { it.humanIdentifier }
+                .setMaxEntriesPerPage(10)
                 .setPaginatorSupplier { _, _, _, _ ->
                     return@setPaginatorSupplier Embed {
                         author {
