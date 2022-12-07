@@ -14,43 +14,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package com.freya02.bot.utils
 
-package com.freya02.bot.utils;
+import com.overzealous.remark.Options
+import com.overzealous.remark.Remark
+import java.util.regex.Pattern
 
-import com.overzealous.remark.Options;
-import com.overzealous.remark.Remark;
+object JDocUtil {
+    private val FIX_NEW_LINES_PATTERN = Pattern.compile("\n{3,}")
+    private val FIX_SPACE_PATTERN = Pattern.compile("\\h")
+    private val REMARK: Remark =
+        Options.github().apply {
+            inlineLinks = true
+            fencedCodeBlocksWidth = 3
+        }.let { Remark(it) }
 
-import java.util.regex.Pattern;
+    fun formatText(docs: String, currentUrl: String): String {
+        var markdown = REMARK.convertFragment(fixSpaces(docs), currentUrl)
 
-public class JDocUtil {
-	private static final Pattern FIX_NEW_LINES_PATTERN = Pattern.compile("\n{3,}");
-	private static final Pattern FIX_SPACE_PATTERN = Pattern.compile("\\h");
+        //remove unnecessary carriage return chars
+        markdown = FIX_NEW_LINES_PATTERN.matcher(
+            markdown.replace("\r", "") //fix codeblocks
+                .replace("\n\n```", "\n\n```java")
+        ).replaceAll("\n\n") //remove too many newlines (max 2)
+        return markdown
+    }
 
-	private static final Remark REMARK;
-
-	static {
-		Options remarkOptions = Options.github();
-		remarkOptions.inlineLinks = true;
-		remarkOptions.fencedCodeBlocksWidth = 3;
-		REMARK = new Remark(remarkOptions);
-	}
-
-	public static String formatText(String docs, String currentUrl) {
-		String markdown = REMARK.convertFragment(fixSpaces(docs), currentUrl);
-
-		//remove unnecessary carriage return chars
-		markdown = FIX_NEW_LINES_PATTERN.matcher(
-						markdown.replace("\r", "")
-								//fix codeblocks
-								.replace("\n\n```", "\n\n```java")
-				)
-				//remove too many newlines (max 2)
-				.replaceAll("\n\n");
-
-		return markdown;
-	}
-
-	static String fixSpaces(String input) {
-		return FIX_SPACE_PATTERN.matcher(input).replaceAll(" ");
-	}
+    private fun fixSpaces(input: String): String {
+        return FIX_SPACE_PATTERN.matcher(input).replaceAll(" ")
+    }
 }
