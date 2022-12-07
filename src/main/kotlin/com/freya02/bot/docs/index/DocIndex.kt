@@ -222,7 +222,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
             from doc
             where source_id = ?
               and type = ?
-              and classname = ?
+              and lower(classname) = lower(?)
               and quote_nullable(identifier) = quote_nullable(?)
             limit 1""".trimIndent(),
         "id", "embed"
