@@ -45,9 +45,18 @@ class DocSourceTypeResolver : ParameterResolver(DocSourceType::class.java), Slas
         info: TextCommandInfo,
         event: MessageReceivedEvent,
         args: Array<out String>
-    ): DocSourceType = DocSourceType.valueOf(args.first())
+    ): DocSourceType? {
+        val typeStr = args.first().lowercase()
+        return when {
+            typeStr.contentEquals("java", true) -> DocSourceType.JAVA
+            typeStr.contentEquals("jda", true) -> DocSourceType.JDA
+            typeStr.contentEquals("botcommands", true) -> DocSourceType.BOT_COMMANDS
+            typeStr.contentEquals("bc", true) -> DocSourceType.BOT_COMMANDS
+            else -> null
+        }
+    }
 
-    override fun getPattern(): Pattern = Pattern.compile("(?i)(JDA|java)(?-i)")
+    override fun getPattern(): Pattern = Pattern.compile("(?i)(JDA|java|BotCommands|BC)(?-i)")
 
     override fun getTestExample(): String = "jda"
 }
