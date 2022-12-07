@@ -51,6 +51,8 @@ class TextDocs(private val context: BContext, private val docIndexMap: DocIndexM
 
     private fun getDocSuggestionMenu(docIndex: DocIndex, suggestions: List<DocSuggestion>) =
         CommonDocsHandlers.buildDocSuggestionsMenu(docIndex, suggestions) {
+            useDeleteButton(true)
+
             setTimeout(2, TimeUnit.MINUTES) { menu, message ->
                 menu.cleanup(context)
                 message!!
