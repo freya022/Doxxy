@@ -23,7 +23,7 @@ private val LOGGER: Logger = Logging.getLogger()
 
 //Initial construct just allows database access
 // Further updates must be invoked by external methods such as version checkers
-class DocIndex(private val sourceType: DocSourceType, private val database: Database) : IDocIndex {
+class DocIndex(val sourceType: DocSourceType, private val database: Database) : IDocIndex {
     private val mutex = Mutex()
 
     override fun getClassDoc(className: String): CachedClass? {

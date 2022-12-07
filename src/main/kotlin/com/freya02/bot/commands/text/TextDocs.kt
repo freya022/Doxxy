@@ -8,12 +8,10 @@ import com.freya02.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
 import com.freya02.bot.docs.index.DocType
 import com.freya02.botcommands.api.BContext
 import com.freya02.botcommands.api.annotations.CommandMarker
-import com.freya02.botcommands.api.pagination.menu.ChoiceMenuBuilder
 import com.freya02.botcommands.api.prefixed.BaseCommandEvent
 import com.freya02.botcommands.api.prefixed.TextCommand
 import com.freya02.botcommands.api.prefixed.annotations.JDATextCommand
 import com.freya02.botcommands.api.prefixed.annotations.TextOption
-import com.freya02.botcommands.api.utils.ButtonContent
 import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.messages.reply_
 import net.dv8tion.jda.api.exceptions.ErrorHandler
@@ -51,10 +49,8 @@ class TextDocs(private val context: BContext, private val docIndexMap: DocIndexM
     }
 
     private fun getDocSuggestionMenu(docIndex: DocIndex, suggestions: List<DocSuggestion>) =
-        ChoiceMenuBuilder(suggestions)
-            .setButtonContentSupplier { _, index -> ButtonContent.withString((index + 1).toString()) }
-            .setTransformer { it.humanIdentifier }
-            .setTimeout(2, TimeUnit.MINUTES) { menu, message ->
+        CommonDocsHandlers.buildDocSuggestionsMenu(docIndex, suggestions) {
+            setTimeout(2, TimeUnit.MINUTES) { menu, message ->
                 menu.cleanup(context)
                 message!!
                     .editMessageComponents()
@@ -63,7 +59,8 @@ class TextDocs(private val context: BContext, private val docIndexMap: DocIndexM
                         ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE, ErrorResponse.UNKNOWN_WEBHOOK)
                     )
             }
-            .setCallback { buttonEvent, entry ->
+
+            setCallback { buttonEvent, entry ->
                 buttonEvent.message.delete().queue();
 
                 val identifier = entry.identifier
@@ -78,5 +75,5 @@ class TextDocs(private val context: BContext, private val docIndexMap: DocIndexM
                     else -> CommonDocsHandlers.sendClass(buttonEvent, false, doc)
                 }
             }
-            .build()
+        }
 }

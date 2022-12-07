@@ -2,10 +2,7 @@ package com.freya02.bot.commands.slash.docs
 
 import com.freya02.bot.commands.slash.DeleteButtonListener
 import com.freya02.bot.docs.DocIndexMap
-import com.freya02.bot.docs.cached.CachedClass
 import com.freya02.bot.docs.cached.CachedDoc
-import com.freya02.bot.docs.cached.CachedField
-import com.freya02.bot.docs.cached.CachedMethod
 import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocResolveResult
 import com.freya02.bot.docs.index.DocSearchResult
@@ -25,6 +22,7 @@ import com.freya02.botcommands.api.utils.ButtonContent
 import com.freya02.botcommands.api.utils.EmojiUtils
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.data.TargetType
+import dev.minn.jda.ktx.messages.Embed
 import dev.minn.jda.ktx.messages.reply_
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.OnlineStatus
@@ -276,20 +274,42 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
             sendClass(event, false, cachedField)
         }
 
+        fun buildDocSuggestionsMenu(docIndex: DocIndex, suggestions: List<DocSuggestion>, block: ChoiceMenuBuilder<DocSuggestion>.() -> Unit) =
+            ChoiceMenuBuilder(suggestions)
+                .setButtonContentSupplier { _, index -> ButtonContent.withString((index + 1).toString()) }
+                .setTransformer { it.humanIdentifier }
+                .setPaginatorSupplier { _, _, _, _ ->
+                    return@setPaginatorSupplier Embed {
+                        author {
+                            name = when (docIndex.sourceType) {
+                                DocSourceType.JAVA -> "Java Javadocs"
+                                DocSourceType.JDA -> "JDA Javadocs"
+                                DocSourceType.BOT_COMMANDS -> "BotCommands Javadocs"
+                            }
+                            iconUrl = when (docIndex.sourceType) {
+                                DocSourceType.JAVA -> "https://assets.stickpng.com/images/58480979cef1014c0b5e4901.png"
+                                DocSourceType.JDA -> "https://cdn.discordapp.com/icons/125227483518861312/8be466a3cdafc8591fcec4cdbb0eefc0.webp?size=128"
+                                else -> null
+                            }
+                        }
+                    }
+                }
+                .apply(block)
+                .build()
+
         private fun getDocSuggestionsMenu(
             event: GuildSlashEvent,
             docIndex: DocIndex,
             block: () -> List<DocSuggestion>
-        ) = ChoiceMenuBuilder(block())
-            .setButtonContentSupplier { _, index -> ButtonContent.withString((index + 1).toString()) }
-            .setTransformer { it.humanIdentifier }
-            .setTimeout(2, TimeUnit.MINUTES) { menu, _ ->
+        ) = buildDocSuggestionsMenu(docIndex, block()) {
+            setTimeout(2, TimeUnit.MINUTES) { menu, _ ->
                 menu.cleanup(event.context)
                 event.hook
                     .editOriginalComponents()
                     .queue(null, ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE, ErrorResponse.UNKNOWN_WEBHOOK))
             }
-            .setCallback { buttonEvent, entry ->
+
+            setCallback { buttonEvent, entry ->
                 event.hook.editOriginalComponents().queue()
 
                 val identifier = entry.identifier
@@ -300,13 +320,11 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
                 }
 
                 when (doc) {
-                    is CachedClass -> sendClass(buttonEvent, false, doc)
-                    is CachedMethod -> sendClass(buttonEvent, false, doc)
-                    is CachedField -> sendClass(buttonEvent, false, doc)
-                    else -> buttonEvent.reply_("This item is now invalid, try again", ephemeral = true).queue()
+                    null -> buttonEvent.reply_("This item is now invalid, try again", ephemeral = true).queue()
+                    else -> sendClass(buttonEvent, false, doc)
                 }
             }
-            .build()
+        }
 
         fun String.transformResolveChain() = this.replace('.', '#')
 
