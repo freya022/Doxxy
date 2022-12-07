@@ -24,18 +24,12 @@ import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.events.session.ShutdownEvent
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.utils.cache.CacheFlag
-import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 import kotlin.system.exitProcess
 import kotlin.time.Duration.Companion.minutes
 
 object Main {
     private val logger by lazy { Logging.getLogger() } // Must not load before system property is set
-
-    val JAVADOCS_PATH: Path = Data.javadocsPath
-    val LAST_KNOWN_VERSIONS_FOLDER_PATH: Path = Data.lastKnownVersionsFolderPath
-    val BRANCH_VERSIONS_FOLDER_PATH: Path = Data.branchVersionsFolderPath
-    val PAGE_CACHE_FOLDER_PATH: Path = Data.pageCacheFolderPath
 
     @JvmStatic
     fun main(args: Array<String>) {

@@ -1,6 +1,6 @@
 package com.freya02.docs
 
-import com.freya02.bot.Main
+import com.freya02.bot.Data
 import com.freya02.botcommands.api.Logging
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpServer
@@ -24,7 +24,7 @@ object DocWebServer {
             }
 
             val path = exchange.requestURI.path
-            val javadocsPath = Main.JAVADOCS_PATH
+            val javadocsPath = Data.javadocsPath
             val file = javadocsPath.resolve(path.substring(1))
             if (!file.startsWith(javadocsPath)) {
                 LOGGER.warn(

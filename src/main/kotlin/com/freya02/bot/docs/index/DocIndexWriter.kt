@@ -1,6 +1,6 @@
 package com.freya02.bot.docs.index
 
-import com.freya02.bot.Main
+import com.freya02.bot.Data
 import com.freya02.bot.db.Database
 import com.freya02.bot.db.Transaction
 import com.freya02.bot.docs.DocEmbeds.toEmbed
@@ -34,7 +34,7 @@ internal class DocIndexWriter(
         }
 
         sourceRootMetadata = when {
-            docsFolderName != null -> SourceRootMetadata(Main.JAVADOCS_PATH.resolve(docsFolderName))
+            docsFolderName != null -> SourceRootMetadata(Data.javadocsPath.resolve(docsFolderName))
             else -> null
         }
     }

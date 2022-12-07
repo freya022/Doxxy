@@ -1,6 +1,6 @@
 package com.freya02.bot.versioning
 
-import com.freya02.bot.Main
+import com.freya02.bot.Data
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.index.ReindexData
@@ -22,13 +22,13 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 private val LOGGER = Logging.getLogger()
-private val lastKnownBotCommandsPath: Path = Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("BC.txt")
-private val lastKnownJDAFromBCPath: Path = Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("JDA_from_BC.txt")
-private val lastKnownJDA4Path: Path = Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("JDA4.txt")
-private val lastKnownJDA5Path: Path = Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("JDA5.txt")
-private val lastKnownJDAKtxPath: Path = Main.LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("JDA-KTX.txt")
-private val JDA_DOCS_FOLDER: Path = Main.JAVADOCS_PATH.resolve("JDA")
-private val BC_DOCS_FOLDER: Path = Main.JAVADOCS_PATH.resolve("BotCommands")
+private val lastKnownBotCommandsPath: Path = Data.lastKnownVersionsFolderPath.resolve("BC.txt")
+private val lastKnownJDAFromBCPath: Path = Data.lastKnownVersionsFolderPath.resolve("JDA_from_BC.txt")
+private val lastKnownJDA4Path: Path = Data.lastKnownVersionsFolderPath.resolve("JDA4.txt")
+private val lastKnownJDA5Path: Path = Data.lastKnownVersionsFolderPath.resolve("JDA5.txt")
+private val lastKnownJDAKtxPath: Path = Data.lastKnownVersionsFolderPath.resolve("JDA-KTX.txt")
+private val JDA_DOCS_FOLDER: Path = Data.javadocsPath.resolve("JDA")
+private val BC_DOCS_FOLDER: Path = Data.javadocsPath.resolve("BotCommands")
 
 class Versions(private val docIndexMap: DocIndexMap) {
     private val bcChecker =

@@ -1,6 +1,6 @@
 package com.freya02.bot.commands.slash.versioning
 
-import com.freya02.bot.Main.BRANCH_VERSIONS_FOLDER_PATH
+import com.freya02.bot.Data
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.getDeleteButton
 import com.freya02.bot.utils.CryptoUtils
 import com.freya02.bot.utils.Utils.isBCGuild
@@ -365,7 +365,7 @@ class SlashJitpack : ApplicationCommand() {
     }
 
     private fun getBranchFileName(branch: GithubBranch): Path {
-        return BRANCH_VERSIONS_FOLDER_PATH.resolve(
+        return Data.branchVersionsFolderPath.resolve(
             "%s-%s-%s.txt".format(
                 branch.ownerName,
                 branch.repoName,

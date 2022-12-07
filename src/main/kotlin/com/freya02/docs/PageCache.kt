@@ -1,6 +1,6 @@
 package com.freya02.docs
 
-import com.freya02.bot.Main
+import com.freya02.bot.Data
 import com.freya02.bot.utils.HttpUtils
 import com.freya02.bot.utils.Utils.deleteRecursively
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -17,7 +17,7 @@ class PageCache(val type: DocSourceType) {
     private val globalLock = ReentrantLock()
     private val pathMutexMap: MutableMap<Path, ReentrantLock> = ConcurrentHashMap()
 
-    private val baseFolder: Path = Main.PAGE_CACHE_FOLDER_PATH.resolve(type.name)
+    private val baseFolder: Path = Data.pageCacheFolderPath.resolve(type.name)
 
     private fun <R> withLockedPath(url: String, block: (Path) -> R): R {
         val cachedFilePath = url.toHttpUrl().let { httpUrl ->
