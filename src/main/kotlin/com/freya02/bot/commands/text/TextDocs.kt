@@ -31,23 +31,23 @@ class TextDocs(private val context: BContext, private val docIndexMap: DocIndexM
     ) {
         val docIndex = docIndexMap[docSourceType ?: DocSourceType.JDA]!!
 
-        if ('#' in query || '.' in query) {
-            // Method or field
-            docIndex.findAnySignatures(query, 25, DocType.FIELD, DocType.METHOD)
-                .mapToSuggestions()
-                .let { suggestions -> getDocSuggestionMenu(docIndex, suggestions) }
-                .also { event.channel.sendMessage(MessageCreateData.fromEditData(it.get())).queue() }
-        } else {
-            docIndex.getClassDoc(query)?.let {
-                event.channel.sendMessage(CommonDocsHandlers.getDocMessageData(event.member, false, it)).queue()
-                return
+        val suggestions = when {
+            '#' in query || '.' in query -> { // Method or field
+                docIndex.findAnySignatures(query, 25, DocType.FIELD, DocType.METHOD).mapToSuggestions()
             }
+            else -> {
+                docIndex.getClassDoc(query)?.let {
+                    event.channel.sendMessage(CommonDocsHandlers.getDocMessageData(event.member, false, it)).queue()
+                    return
+                }
 
-            docIndex.getClasses(query)
-                .map { DocSuggestion(it, it) }
-                .let { suggestions -> getDocSuggestionMenu(docIndex, suggestions) }
-                .also { event.channel.sendMessage(MessageCreateData.fromEditData(it.get())).queue() }
+                docIndex.getClasses(query).map { DocSuggestion(it, it) }
+            }
         }
+
+        getDocSuggestionMenu(docIndex, suggestions)
+            .let { MessageCreateData.fromEditData(it.get()) }
+            .also { event.channel.sendMessage(it).queue() }
     }
 
     private fun getDocSuggestionMenu(docIndex: DocIndex, suggestions: List<DocSuggestion>) =
