@@ -49,7 +49,7 @@ object Main {
 
             val jda = light(config.token, enableCoroutines = false) {
                 enableCache(CacheFlag.CLIENT_STATUS)
-                enableIntents(GatewayIntent.GUILD_PRESENCES)
+                enableIntents(GatewayIntent.GUILD_PRESENCES, GatewayIntent.MESSAGE_CONTENT)
 
                 setMaxReconnectDelay(128)
                 setActivity(Activity.watching("the docs"))
@@ -70,6 +70,7 @@ object Main {
             val commandsBuilder = CommandsBuilder.newBuilder(222046562543468545L)
 
             commandsBuilder
+                .textCommandBuilder { it.addPrefix(";") }
                 .extensionsBuilder { extensionsBuilder: ExtensionsBuilder ->
                     extensionsBuilder
                         .registerConstructorParameter(Config::class.java) { config }
