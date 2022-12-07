@@ -17,6 +17,7 @@ import dev.minn.jda.ktx.messages.reply_
 import net.dv8tion.jda.api.exceptions.ErrorHandler
 import net.dv8tion.jda.api.requests.ErrorResponse
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
+import net.dv8tion.jda.api.utils.messages.MessageEditData
 import java.util.concurrent.TimeUnit
 
 @CommandMarker
@@ -61,8 +62,6 @@ class TextDocs(private val context: BContext, private val docIndexMap: DocIndexM
             }
 
             setCallback { buttonEvent, entry ->
-                buttonEvent.message.delete().queue();
-
                 val identifier = entry.identifier
                 val doc = when {
                     '(' in identifier -> docIndex.getMethodDoc(identifier)
@@ -72,7 +71,9 @@ class TextDocs(private val context: BContext, private val docIndexMap: DocIndexM
 
                 when (doc) {
                     null -> buttonEvent.reply_("This item is now invalid, try again", ephemeral = true).queue()
-                    else -> CommonDocsHandlers.sendClass(buttonEvent, false, doc)
+                    else -> buttonEvent.editMessage(MessageEditData.fromCreateData(
+                        CommonDocsHandlers.getDocMessageData(buttonEvent.member!!, false, doc)
+                    )).queue()
                 }
             }
         }
