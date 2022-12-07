@@ -1,8 +1,8 @@
 package com.freya02.bot
 
+import com.freya02.botcommands.api.Logging
 import com.google.gson.Gson
-import java.nio.file.Path
-import kotlin.io.path.isDirectory
+import kotlin.io.path.exists
 import kotlin.io.path.readText
 
 data class DBConfig(val serverName: String, val portNumber: Int, val user: String, val password: String, val dbName: String) {
@@ -12,21 +12,19 @@ data class DBConfig(val serverName: String, val portNumber: Int, val user: Strin
 
 data class Config(val token: String, val dbConfig: DBConfig) {
     companion object {
-        private var config_: Config? = null
+        private val logger = Logging.getLogger()
 
-        @Synchronized
-        fun getConfig(): Config {
-            if (config_ == null) {
-                val classPath = Path.of(Main::class.java.protectionDomain.codeSource.location.toURI())
-                val configPath = when {
-                    classPath.isDirectory() -> Path.of("Test_Config.json") //Target folder prob IJ
-                    else -> Path.of("Config.json")
+        val config: Config by lazy {
+            val configPath = when {
+                Data.testConfigPath.exists() -> {
+                    logger.info("Loading test config")
+                    Data.testConfigPath //Target folder prob IJ
                 }
 
-                config_ = Gson().fromJson(configPath.readText(), Config::class.java)
+                else -> Data.configPath
             }
 
-            return config_!!
+            Gson().fromJson(configPath.readText(), Config::class.java)
         }
     }
 }

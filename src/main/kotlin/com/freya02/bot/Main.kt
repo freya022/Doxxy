@@ -1,5 +1,6 @@
 package com.freya02.bot
 
+import ch.qos.logback.classic.util.ContextInitializer
 import com.freya02.bot.db.Database
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.DocSourceTypeResolver
@@ -24,38 +25,32 @@ import net.dv8tion.jda.api.events.session.ShutdownEvent
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.utils.cache.CacheFlag
 import java.nio.file.Path
-import kotlin.io.path.createDirectories
-import kotlin.io.path.exists
+import kotlin.io.path.absolutePathString
 import kotlin.system.exitProcess
 import kotlin.time.Duration.Companion.minutes
 
-private val LOGGER = Logging.getLogger()
-
 object Main {
-    val BOT_FOLDER: Path = Path.of(System.getProperty("user.home"), "Downloads", "DocsBot")
-    val JAVADOCS_PATH: Path = BOT_FOLDER.resolve("javadocs")
-    val LAST_KNOWN_VERSIONS_FOLDER_PATH: Path = BOT_FOLDER.resolve("last_versions")
-    val BRANCH_VERSIONS_FOLDER_PATH: Path = LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("branch_versions")
-    val PAGE_CACHE_FOLDER_PATH: Path = BOT_FOLDER.resolve("page_cache")
+    private val logger by lazy { Logging.getLogger() } // Must not load before system property is set
 
-    init {
-        check(BOT_FOLDER.exists()) { "Bot folder at $BOT_FOLDER does not exist !" }
-
-        LAST_KNOWN_VERSIONS_FOLDER_PATH.createDirectories()
-        BRANCH_VERSIONS_FOLDER_PATH.createDirectories()
-        PAGE_CACHE_FOLDER_PATH.createDirectories()
-    }
+    val JAVADOCS_PATH: Path = Data.javadocsPath
+    val LAST_KNOWN_VERSIONS_FOLDER_PATH: Path = Data.lastKnownVersionsFolderPath
+    val BRANCH_VERSIONS_FOLDER_PATH: Path = Data.branchVersionsFolderPath
+    val PAGE_CACHE_FOLDER_PATH: Path = Data.pageCacheFolderPath
 
     @JvmStatic
     fun main(args: Array<String>) {
         try {
+            Data.init()
+
+            System.setProperty(ContextInitializer.CONFIG_FILE_PROPERTY, Data.logbackConfigPath.absolutePathString())
+
             val scope = getDefaultScope()
             val manager = CoroutineEventManager(scope, 1.minutes)
             manager.listener<ShutdownEvent> {
                 scope.cancel()
             }
 
-            val config = Config.getConfig()
+            val config = Config.config
 
             val jda = light(config.token, enableCoroutines = false) {
                 enableCache(CacheFlag.CLIENT_STATUS)
@@ -66,13 +61,13 @@ object Main {
                 setEventManager(manager)
             }.awaitReady()
 
-            LOGGER.info("Loaded JDA")
+            logger.info("Loaded JDA")
 
             val database = Database(config)
 
-            LOGGER.info("Starting docs web server")
+            logger.info("Starting docs web server")
             DocWebServer.startDocWebServer()
-            LOGGER.info("Started docs web server")
+            logger.info("Started docs web server")
 
             val docIndexMap = DocIndexMap(database)
 
@@ -103,9 +98,9 @@ object Main {
                 versions.initUpdateLoop(commandsBuilder.context)
             }
 
-            LOGGER.info("Loaded commands")
+            logger.info("Loaded commands")
         } catch (e: Exception) {
-            LOGGER.error("Unable to start the bot", e)
+            logger.error("Unable to start the bot", e)
             exitProcess(-1)
         }
     }
