@@ -74,8 +74,8 @@ class SlashResolve(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
 
         when (val doc = docIndex.resolveDoc(chain.transformResolveChain())) {
             is CachedClass -> CommonDocsHandlers.sendClass(event, false, doc)
-            is CachedMethod -> CommonDocsHandlers.sendMethod(event, false, doc)
-            is CachedField -> CommonDocsHandlers.sendField(event, false, doc)
+            is CachedMethod -> CommonDocsHandlers.sendClass(event, false, doc)
+            is CachedField -> CommonDocsHandlers.sendClass(event, false, doc)
         }
     }
 }
