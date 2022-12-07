@@ -11,7 +11,7 @@ import java.util.*
 import java.util.function.BiConsumer
 import java.util.function.Consumer
 
-class ClassDoc @JvmOverloads constructor(
+class ClassDoc(
     docsSession: DocsSession,
     val sourceURL: String,
     document: Document = HttpUtils.getDocument(sourceURL)

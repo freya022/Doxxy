@@ -84,7 +84,6 @@ class ClassDocs private constructor(private val source: DocSourceType) {
             return sourceMap.computeIfAbsent(source) { ClassDocs(source) }
         }
 
-        @JvmStatic
         @Synchronized
         @Throws(IOException::class)
         fun getUpdatedSource(source: DocSourceType): ClassDocs {

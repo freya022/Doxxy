@@ -32,9 +32,7 @@ import kotlin.time.Duration.Companion.minutes
 private val LOGGER = Logging.getLogger()
 
 object Main {
-    @JvmField
     val BOT_FOLDER: Path = Path.of(System.getProperty("user.home"), "Downloads", "DocsBot")
-    @JvmField
     val JAVADOCS_PATH: Path = BOT_FOLDER.resolve("javadocs")
     val LAST_KNOWN_VERSIONS_FOLDER_PATH: Path = BOT_FOLDER.resolve("last_versions")
     val BRANCH_VERSIONS_FOLDER_PATH: Path = LAST_KNOWN_VERSIONS_FOLDER_PATH.resolve("branch_versions")

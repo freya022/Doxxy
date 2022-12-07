@@ -14,7 +14,6 @@ import kotlin.io.path.exists
 private val LOGGER = Logging.getLogger()
 
 object DocWebServer {
-    @JvmStatic
     @Throws(IOException::class)
     fun startDocWebServer() {
         val server = HttpServer.create(InetSocketAddress(25566), 0)
