@@ -5,6 +5,7 @@ import com.freya02.bot.db.Database
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.DocSourceTypeResolver
 import com.freya02.bot.tag.TagCriteriaResolver
+import com.freya02.bot.utils.LogLevelResolver
 import com.freya02.bot.versioning.LibraryTypeResolver
 import com.freya02.bot.versioning.Versions
 import com.freya02.botcommands.api.CommandsBuilder
@@ -78,6 +79,7 @@ object Main {
                         .registerConstructorParameter(Versions::class.java) { versions }
                         .registerConstructorParameter(DocIndexMap::class.java) { docIndexMap }
                         .registerParameterResolver(LibraryTypeResolver())
+                        .registerParameterResolver(LogLevelResolver())
                         .setMethodRunnerFactory(KotlinMethodRunnerFactory(Dispatchers.IO, scope))
                 }
                 .applicationCommandBuilder { applicationCommandsBuilder: ApplicationCommandsBuilder ->
