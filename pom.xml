@@ -12,7 +12,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.test.skip>true</maven.test.skip>
 
-        <kotlin.version>1.7.20</kotlin.version>
+        <kotlin.version>1.7.21</kotlin.version>
         <kotlin.coroutine.version>1.6.4</kotlin.coroutine.version>
 
         <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
@@ -79,11 +79,6 @@
 
     <repositories>
         <repository>
-            <id>dv8tion</id>
-            <name>m2-dv8tion</name>
-            <url>https://m2.dv8tion.net/releases</url>
-        </repository>
-        <repository>
             <id>jitpack</id>
             <url>https://jitpack.io</url>
         </repository>
@@ -143,7 +138,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.5.0</version>
+            <version>42.5.1</version>
         </dependency>
         <dependency>
             <groupId>com.zaxxer</groupId>
@@ -159,12 +154,12 @@
         <dependency>
             <groupId>com.github.freya022</groupId>
             <artifactId>remark-java</artifactId>
-            <version>3c3c3ddc82</version>
+            <version>4a18f84801</version>
         </dependency>
         <dependency>
             <groupId>com.github.javaparser</groupId>
             <artifactId>javaparser-core</artifactId>
-            <version>3.24.7</version>
+            <version>3.24.8</version>
         </dependency>
         <dependency>
             <groupId>com.palantir.javaformat</groupId>
