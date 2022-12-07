@@ -1,41 +1,40 @@
-package com.freya02.bot;
+package com.freya02.bot
 
-import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import org.jetbrains.annotations.NotNull;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import kotlin.math.max
 
-public class StringTest {
-	public static void main(String[] args) {
-		String a = "A".repeat(50);
-		String b = "ABCD".repeat(256);
+object StringTest {
+    @JvmStatic
+    fun main(args: Array<String>) {
+        val a = "A".repeat(50)
+        val b = "ABCD".repeat(256)
+        val str = getChoiceName(a, b)
 
-		String str = getChoiceName(a, b);
-		System.out.println("str = " + str);
-		System.out.println("str.length() = " + str.length());
+        println("str = $str")
+        println("str.length() = " + str.length)
 
-		System.out.println("str = " + getChoiceName("abc", "def"));
-		System.out.println("str = " + getChoiceName("abc", "def".repeat(100)));
-		System.out.println("str = " + getChoiceName("abc".repeat(100), "def"));
-		System.out.println("str = " + getChoiceName("abc".repeat(100), "def".repeat(100)));
-	}
+        println("str = " + getChoiceName("abc", "def"))
+        println("str = " + getChoiceName("abc", "def".repeat(100)))
+        println("str = " + getChoiceName("abc".repeat(100), "def"))
+        println("str = " + getChoiceName("abc".repeat(100), "def".repeat(100)))
+    }
 
-	@NotNull
-	private static String getChoiceName(String a, String b) {
-		if (a.length() + b.length() + 5 > 100) {
-			final int min = Math.max(0, OptionData.MAX_CHOICE_NAME_LENGTH - a.length() - 5);
+    private fun getChoiceName(name: String, description: String): String {
+        var a = name
+        var b = description
+        if (a.length + b.length + 5 > 100) {
+            val min = max(0, OptionData.MAX_CHOICE_NAME_LENGTH - a.length - 5)
+            b = when (min) {
+                0 -> ""
+                else -> b.substring(0, min)
+            }
+        }
 
-			if (min == 0) {
-				b = "";
-			} else {
-				b = b.substring(0, min);
-			}
-		}
+        if (a.length > 100) {
+            a = a.substring(0, 100)
+        }
 
-		if (a.length() > 100) {
-			a = a.substring(0, 100);
-		}
-
-		int spaces = Math.max(0, OptionData.MAX_CHOICE_NAME_LENGTH - a.length() - b.length());
-
-		return a + " ".repeat(spaces) + b;
-	}
+        val spaces = max(0, OptionData.MAX_CHOICE_NAME_LENGTH - a.length - b.length)
+        return a + " ".repeat(spaces) + b
+    }
 }

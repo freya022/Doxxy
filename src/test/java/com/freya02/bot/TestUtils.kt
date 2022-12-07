@@ -1,41 +1,47 @@
-package com.freya02.bot;
+package com.freya02.bot
 
-public class TestUtils {
-	/**
-	 * Mesures time to run a method
-	 *
-	 * @param desc       Description of the code
-	 * @param warmup     Number of warmup iterations
-	 * @param iterations Number of real iterations
-	 * @param code       The code to run
-	 * @return The average time in ms
-	 */
-	@SuppressWarnings("SameParameterValue")
-	public static double measureTime(String desc, int warmup, int iterations, Runnable code) {
-		for (int i = 0; i < warmup; i++) {
-			code.run();
-		}
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.system.measureNanoTime
 
-		long worst = Long.MIN_VALUE;
-		long best = Long.MAX_VALUE;
-		long total = 0;
-		for (int i = 0; i < iterations; i++) {
-			final long start = System.nanoTime();
+object TestUtils {
+    /**
+     * Mesures time to run a method
+     *
+     * @param desc       Description of the code
+     * @param warmup     Number of warmup iterations
+     * @param iterations Number of real iterations
+     * @param code       The code to run
+     * @return The average time in ms
+     */
+    @JvmStatic
+    fun measureTime(desc: String, warmup: Int, iterations: Int, code: Runnable): Double {
+        for (i in 0 until warmup) {
+            code.run()
+        }
 
-			code.run();
+        var worst = Long.MIN_VALUE
+        var best = Long.MAX_VALUE
+        var total: Long = 0
+        for (i in 0 until iterations) {
+            val elapsed = measureNanoTime {
+                code.run()
+            }
 
-			final long end = System.nanoTime();
+            worst = max(worst, elapsed)
+            best = min(best, elapsed)
+            total += elapsed
+        }
 
-			final long elapsed = end - start;
-			worst = Math.max(worst, elapsed);
-			best = Math.min(best, elapsed);
-			total += elapsed;
-		}
-
-		double average = total / 1_000_000.0 / iterations;
-
-		System.out.printf(desc + " : Iterations : %s, Best : %.7f ms, Worst : %.7f ms, Average : %.7f ms, Total : %.7f ms%n", iterations, best / 1_000_000.0, worst / 1_000_000.0, average, total / 1_000_000.0);
-
-		return average;
-	}
+        val average = total / 1000000.0 / iterations
+        System.out.printf(
+            "$desc : Iterations : %s, Best : %.7f ms, Worst : %.7f ms, Average : %.7f ms, Total : %.7f ms%n",
+            iterations,
+            best / 1000000.0,
+            worst / 1000000.0,
+            average,
+            total / 1000000.0
+        )
+        return average
+    }
 }
