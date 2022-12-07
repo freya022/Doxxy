@@ -2,9 +2,6 @@ package com.freya02.bot.commands.text
 
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers
 import com.freya02.bot.docs.DocIndexMap
-import com.freya02.bot.docs.cached.CachedClass
-import com.freya02.bot.docs.cached.CachedField
-import com.freya02.bot.docs.cached.CachedMethod
 import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocSuggestion
 import com.freya02.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
@@ -41,6 +38,11 @@ class TextDocs(private val context: BContext, private val docIndexMap: DocIndexM
                 .let { suggestions -> getDocSuggestionMenu(docIndex, suggestions) }
                 .also { event.channel.sendMessage(MessageCreateData.fromEditData(it.get())).queue() }
         } else {
+            docIndex.getClassDoc(query)?.let {
+                event.channel.sendMessage(CommonDocsHandlers.getDocMessageData(event.member, false, it)).queue()
+                return
+            }
+
             docIndex.getClasses(query)
                 .map { DocSuggestion(it, it) }
                 .let { suggestions -> getDocSuggestionMenu(docIndex, suggestions) }
@@ -72,11 +74,8 @@ class TextDocs(private val context: BContext, private val docIndexMap: DocIndexM
                 }
 
                 when (doc) {
-                    is CachedClass -> CommonDocsHandlers.sendClass(buttonEvent, false, doc)
-                    is CachedMethod -> CommonDocsHandlers.sendClass(buttonEvent, false, doc)
-                    is CachedField -> CommonDocsHandlers.sendClass(buttonEvent, false, doc)
-                    else -> buttonEvent.reply_("This item is now invalid, try again", ephemeral = true)
-                        .queue()
+                    null -> buttonEvent.reply_("This item is now invalid, try again", ephemeral = true).queue()
+                    else -> CommonDocsHandlers.sendClass(buttonEvent, false, doc)
                 }
             }
             .build()
