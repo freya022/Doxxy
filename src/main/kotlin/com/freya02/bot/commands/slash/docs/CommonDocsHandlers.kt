@@ -217,11 +217,11 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
             return this
         }
 
-        private fun <T : MessageCreateRequest<*>> T.addDocsActionRows(
+        private fun MessageCreateRequest<*>.addDocsActionRows(
             ephemeral: Boolean,
             cachedDoc: CachedDoc,
             caller: UserSnowflake
-        ): T = this.apply {
+        ) {
             val list: List<ItemComponent> = buildList {
                 if (!ephemeral) add(DeleteButtonListener.getDeleteButton(caller))
                 cachedDoc.sourceLink?.let { sourceLink -> add(Button.link(sourceLink, "Source")) }
@@ -329,7 +329,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
 
         fun String.transformResolveChain() = this.replace('.', '#')
 
-        private fun <T : MessageCreateRequest<*>> T.addDocsSeeAlso(cachedDoc: CachedDoc): T = this.apply {
+        private fun MessageCreateRequest<*>.addDocsSeeAlso(cachedDoc: CachedDoc) {
             cachedDoc.seeAlsoReferences.let { referenceList ->
                 if (referenceList.any { it.targetType != TargetType.UNKNOWN }) {
                     val selectionMenuBuilder = Components.stringSelectionMenu(SEE_ALSO_SELECT_LISTENER_NAME)
