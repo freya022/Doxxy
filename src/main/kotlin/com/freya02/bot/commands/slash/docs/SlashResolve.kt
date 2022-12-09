@@ -2,18 +2,12 @@ package com.freya02.bot.commands.slash.docs
 
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers.Companion.transformResolveChain
 import com.freya02.bot.docs.DocIndexMap
-import com.freya02.bot.docs.cached.CachedClass
-import com.freya02.bot.docs.cached.CachedField
-import com.freya02.bot.docs.cached.CachedMethod
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.application.annotations.AppOption
 import com.freya02.botcommands.api.application.slash.GuildSlashEvent
 import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand
 import com.freya02.docs.DocSourceType
-
-private const val commandDescription = "Experimental - Resolves method/field calls into its final return type, and shows its documentation"
-private const val sourceTypeArgDescription = "The docs to search upon"
-private const val chainArgDescription = "Chain of method/field calls, can also just be a class name. Each component is separated with an #"
+import dev.minn.jda.ktx.messages.reply_
 
 @CommandMarker
 class SlashResolve(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
@@ -72,10 +66,18 @@ class SlashResolve(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
     ) {
         val docIndex = docIndexMap[sourceType]!!
 
-        when (val doc = docIndex.resolveDoc(chain.transformResolveChain())) {
-            is CachedClass -> CommonDocsHandlers.sendClass(event, false, doc)
-            is CachedMethod -> CommonDocsHandlers.sendClass(event, false, doc)
-            is CachedField -> CommonDocsHandlers.sendClass(event, false, doc)
+        val doc = docIndex.resolveDoc(chain.transformResolveChain()) ?: let {
+            event.reply_("Could not find documentation for `$chain`", ephemeral = true).queue()
+            return
         }
+        CommonDocsHandlers.sendClass(event, false, doc)
+    }
+
+    companion object {
+        private const val commandDescription =
+            "Experimental - Resolves method/field calls into its final return type, and shows its documentation"
+        private const val sourceTypeArgDescription = "The docs to search upon"
+        private const val chainArgDescription =
+            "Chain of method/field calls, can also just be a class name. Each component is separated with an #"
     }
 }
