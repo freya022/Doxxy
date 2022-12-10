@@ -74,7 +74,7 @@ class SlashJitpack : ApplicationCommand() {
         @AppOption(description = "Type of library") libraryType: LibraryType,
         @AppOption(
             description = "The number of the issue",
-            autocomplete = BRANCH_NUMBER_AUTOCOMPLETE_NAME
+            autocomplete = PR_NUMBER_AUTOCOMPLETE_NAME
         ) issueNumber: Int
     ) {
         onSlashJitpackPR(event, libraryType, BuildToolType.MAVEN, issueNumber)
@@ -91,7 +91,7 @@ class SlashJitpack : ApplicationCommand() {
         @AppOption(description = "Type of library") libraryType: LibraryType,
         @AppOption(
             description = "The number of the issue",
-            autocomplete = BRANCH_NUMBER_AUTOCOMPLETE_NAME
+            autocomplete = PR_NUMBER_AUTOCOMPLETE_NAME
         ) issueNumber: Int
     ) {
         onSlashJitpackPR(event, libraryType, BuildToolType.GRADLE, issueNumber)
@@ -108,7 +108,7 @@ class SlashJitpack : ApplicationCommand() {
         @AppOption(description = "Type of library") libraryType: LibraryType,
         @AppOption(
             description = "The number of the issue",
-            autocomplete = BRANCH_NUMBER_AUTOCOMPLETE_NAME
+            autocomplete = PR_NUMBER_AUTOCOMPLETE_NAME
         ) issueNumber: Int
     ) {
         onSlashJitpackPR(event, libraryType, BuildToolType.GRADLE_KTS, issueNumber)
@@ -228,8 +228,8 @@ class SlashJitpack : ApplicationCommand() {
     }
 
     @CacheAutocompletion
-    @AutocompletionHandler(name = BRANCH_NUMBER_AUTOCOMPLETE_NAME, showUserInput = false)
-    fun onBranchNumberAutocomplete(
+    @AutocompletionHandler(name = PR_NUMBER_AUTOCOMPLETE_NAME, showUserInput = false)
+    fun onPRNumberAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption libraryType: LibraryType?
     ): Collection<Command.Choice> {
@@ -329,7 +329,7 @@ class SlashJitpack : ApplicationCommand() {
         val updateCountdown = updateCountdownMap.getOrPut(branch.branchName) { UpdateCountdown(1.minutes) }
         if (updateCountdown.needsUpdate()) {
             checker.checkVersion()
-            event.context.invalidateAutocompletionCache(BRANCH_NUMBER_AUTOCOMPLETE_NAME)
+            event.context.invalidateAutocompletionCache(PR_NUMBER_AUTOCOMPLETE_NAME)
             checker.saveVersion()
         }
     }
@@ -375,7 +375,7 @@ class SlashJitpack : ApplicationCommand() {
     }
 
     companion object {
-        private const val BRANCH_NUMBER_AUTOCOMPLETE_NAME = "SlashJitpack: branchNumber"
+        private const val PR_NUMBER_AUTOCOMPLETE_NAME = "SlashJitpack: branchNumber"
         private const val BRANCH_NAME_AUTOCOMPLETE_NAME = "SlashJitpack: branchName"
 
         private fun fuzzyMatching(
