@@ -149,7 +149,7 @@ class SlashJitpack : ApplicationCommand() {
                 checkGithubBranchUpdates(event, branch, jdaVersionChecker)
                 val latestBotCommands = pullRequest.toJitpackArtifact()
                 val jdaVersionFromBotCommands = jdaVersionChecker.latest
-                DependencySupplier.formatBC(buildToolType, jdaVersionFromBotCommands, latestBotCommands)
+                DependencySupplier.formatBCJitpack(buildToolType, jdaVersionFromBotCommands, latestBotCommands)
             }
             LibraryType.JDA5, LibraryType.JDA_KTX -> DependencySupplier.formatJitpack(buildToolType, pullRequest.toJitpackArtifact())
             else -> throw IllegalArgumentException("Invalid library type: $libraryType")
@@ -294,7 +294,7 @@ class SlashJitpack : ApplicationCommand() {
                     }
                 }
                 checkGithubBranchUpdates(event, branch, jdaVersionChecker)
-                DependencySupplier.formatBC(
+                DependencySupplier.formatBCJitpack(
                     buildToolType,
                     jdaVersionChecker.latest,
                     branch.asJitpackArtifact

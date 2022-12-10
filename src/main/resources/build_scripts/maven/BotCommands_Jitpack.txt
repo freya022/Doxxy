@@ -1,3 +1,10 @@
+<repositories>
+    <repository>
+        <id>jitpack</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
+
 <dependencies>
     <dependency>
         <groupId>%s</groupId>

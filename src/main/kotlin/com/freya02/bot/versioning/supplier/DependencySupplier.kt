@@ -16,6 +16,16 @@ object DependencySupplier {
             latestBotCommands.groupId, latestBotCommands.artifactId, latestBotCommands.version
         )
 
+    fun formatBCJitpack(
+        buildToolType: BuildToolType,
+        jdaVersionFromBotCommands: ArtifactInfo,
+        latestBotCommands: ArtifactInfo
+    ): String = Utils.readResource("/build_scripts/${buildToolType.folderName}/BotCommands_Jitpack.txt")
+        .format(
+            jdaVersionFromBotCommands.groupId, jdaVersionFromBotCommands.artifactId, jdaVersionFromBotCommands.version,
+            latestBotCommands.groupId, latestBotCommands.artifactId, latestBotCommands.version
+        )
+
     fun formatJDA5(buildToolType: BuildToolType, version: ArtifactInfo): String =
         Utils.readResource("/build_scripts/${buildToolType.folderName}/JDA5.txt")
             .format(version.groupId, version.artifactId, version.version)
