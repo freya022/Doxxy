@@ -306,12 +306,12 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
             setTimeout(2, TimeUnit.MINUTES) { menu, _ ->
                 menu.cleanup(event.context)
                 event.hook
-                    .editOriginalComponents()
+                    .deleteOriginal()
                     .queue(null, ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE, ErrorResponse.UNKNOWN_WEBHOOK))
             }
 
             setCallback { buttonEvent, entry ->
-                event.hook.editOriginalComponents().queue()
+                event.hook.deleteOriginal().queue()
 
                 val identifier = entry.identifier
                 val doc = when {
@@ -322,7 +322,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
 
                 when (doc) {
                     null -> buttonEvent.reply_("This item is now invalid, try again", ephemeral = true).queue()
-                    else -> sendClass(buttonEvent, false, doc)
+                    else -> buttonEvent.deferEdit().flatMap { event.channel.sendMessage(getDocMessageData(buttonEvent.member!!, false, doc)) }.queue()
                 }
             }
         }
