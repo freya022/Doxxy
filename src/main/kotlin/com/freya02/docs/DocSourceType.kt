@@ -33,6 +33,8 @@ enum class DocSourceType(
         "java\\.nio\\.file",
         "java\\.sql.*",
         "java\\.time.*",
+        "java\\.text.*",
+        "java\\.security.*",
         "java\\.util",
         "java\\.util\\.concurrent.*",
         "java\\.util\\.function",
