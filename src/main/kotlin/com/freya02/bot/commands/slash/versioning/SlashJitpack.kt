@@ -15,6 +15,7 @@ import com.freya02.botcommands.api.application.CommandPath
 import com.freya02.botcommands.api.application.annotations.AppOption
 import com.freya02.botcommands.api.application.slash.GuildSlashEvent
 import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand
+import com.freya02.botcommands.api.application.slash.autocomplete.AutocompleteAlgorithms
 import com.freya02.botcommands.api.application.slash.autocomplete.annotations.AutocompletionHandler
 import com.freya02.botcommands.api.application.slash.autocomplete.annotations.CacheAutocompletion
 import com.freya02.botcommands.api.application.slash.autocomplete.annotations.CompositeKey
@@ -26,7 +27,7 @@ import me.xdrop.fuzzywuzzy.ToStringFunction
 import me.xdrop.fuzzywuzzy.model.BoundExtractedResult
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
-import net.dv8tion.jda.api.interactions.commands.Command
+import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import java.io.IOException
 import java.nio.file.Path
@@ -45,17 +46,17 @@ class SlashJitpack : ApplicationCommand() {
     private val updateMap: MutableMap<LibraryType, UpdateCountdown> = EnumMap(LibraryType::class.java)
     private val branchMap: MutableMap<LibraryType, GithubBranchMap> = EnumMap(LibraryType::class.java)
 
-    override fun getOptionChoices(guild: Guild?, commandPath: CommandPath, optionIndex: Int): List<Command.Choice> {
+    override fun getOptionChoices(guild: Guild?, commandPath: CommandPath, optionIndex: Int): List<Choice> {
         if (optionIndex == 0) {
             return when {
                 guild.isBCGuild() -> listOf(
-                    Command.Choice("BotCommands", LibraryType.BOT_COMMANDS.name),
-                    Command.Choice("JDA 5", LibraryType.JDA5.name),
-                    Command.Choice("JDA-KTX", LibraryType.JDA_KTX.name)
+                    Choice("BotCommands", LibraryType.BOT_COMMANDS.name),
+                    Choice("JDA 5", LibraryType.JDA5.name),
+                    Choice("JDA-KTX", LibraryType.JDA_KTX.name)
                 )
                 else -> listOf(
-                    Command.Choice("JDA 5", LibraryType.JDA5.name),
-                    Command.Choice("JDA-KTX", LibraryType.JDA_KTX.name)
+                    Choice("JDA 5", LibraryType.JDA5.name),
+                    Choice("JDA-KTX", LibraryType.JDA_KTX.name)
                 )
             }
         }
@@ -232,7 +233,7 @@ class SlashJitpack : ApplicationCommand() {
     fun onPRNumberAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption libraryType: LibraryType?
-    ): Collection<Command.Choice> {
+    ): Collection<Choice> {
         val pullRequests = when (libraryType) {
             LibraryType.BOT_COMMANDS -> bcPullRequestCache.pullRequests.values(arrayOfNulls(0))
             LibraryType.JDA5 -> jdaPullRequestCache.pullRequests.values(arrayOfNulls(0))
@@ -244,7 +245,7 @@ class SlashJitpack : ApplicationCommand() {
             { referent: PullRequest -> referent.asHumanDescription },
             event
         ).map { r: BoundExtractedResult<PullRequest> ->
-            Command.Choice(
+            Choice(
                 r.referent.asHumanDescription,
                 r.referent.number.toLong()
             )
@@ -252,12 +253,35 @@ class SlashJitpack : ApplicationCommand() {
     }
 
     @CacheAutocompletion
-    @AutocompletionHandler(name = BRANCH_NAME_AUTOCOMPLETE_NAME)
+    @AutocompletionHandler(name = BRANCH_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onBranchNameAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption libraryType: LibraryType
-    ): Collection<String> {
-        return getBranchMap(libraryType).branches.keys
+    ): Collection<Choice> {
+        val branchMap = getBranchMap(libraryType)
+        val defaultBranchName = branchMap.defaultBranch.branchName
+
+        return AutocompleteAlgorithms.fuzzyMatching(branchMap.branches.keys, { it }, event)
+            .take(OptionData.MAX_CHOICES)
+            .map { it.string }
+            .let { branchNames ->
+                return@let when {
+                    event.focusedOption.value.isNotBlank() -> branchNames //Don't hoist if user is searching
+                    else -> branchNames.toMutableList() // Hoist default branch to the top
+                        .apply {
+                            remove(defaultBranchName)
+                            add(0, defaultBranchName)
+                        }
+                }
+            }
+            .map { branchName ->
+                val choiceLabel = when (branchName) {
+                    defaultBranchName -> "$branchName (default)"
+                    else -> branchName
+                }
+
+                Choice(choiceLabel, branchName)
+            }
     }
 
     private fun onSlashJitpackBranch(
