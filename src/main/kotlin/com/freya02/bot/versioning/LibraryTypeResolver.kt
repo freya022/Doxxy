@@ -21,11 +21,13 @@ class LibraryTypeResolver : ParameterResolver(LibraryType::class.java), SlashPar
             guild.isBCGuild() -> listOf(
                 Command.Choice("BotCommands", LibraryType.BOT_COMMANDS.name),
                 Command.Choice("JDA 5", LibraryType.JDA5.name),
-                Command.Choice("JDA 4", LibraryType.JDA4.name)
+                Command.Choice("JDA 4", LibraryType.JDA4.name),
+                Command.Choice("JDA-KTX", LibraryType.JDA_KTX.name)
             )
             else -> listOf(
                 Command.Choice("JDA 5", LibraryType.JDA5.name),
-                Command.Choice("JDA 4", LibraryType.JDA4.name)
+                Command.Choice("JDA 4", LibraryType.JDA4.name),
+                Command.Choice("JDA-KTX", LibraryType.JDA_KTX.name)
             )
         }
     }
