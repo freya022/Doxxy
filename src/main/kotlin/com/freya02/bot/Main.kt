@@ -18,6 +18,7 @@ import com.freya02.docs.DocWebServer
 import dev.minn.jda.ktx.events.CoroutineEventManager
 import dev.minn.jda.ktx.events.getDefaultScope
 import dev.minn.jda.ktx.jdabuilder.light
+import dev.reformator.stacktracedecoroutinator.runtime.DecoroutinatorRuntime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
@@ -35,6 +36,8 @@ object Main {
     @JvmStatic
     fun main(args: Array<String>) {
         try {
+            DecoroutinatorRuntime.load()
+
             Data.init()
 
             System.setProperty(ContextInitializer.CONFIG_FILE_PROPERTY, Data.logbackConfigPath.absolutePathString())

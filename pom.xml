@@ -105,6 +105,11 @@
             <version>${kotlin.coroutine.version}</version>
         </dependency>
         <dependency>
+            <groupId>dev.reformator.stacktracedecoroutinator</groupId>
+            <artifactId>stacktrace-decoroutinator-jvm</artifactId>
+            <version>2.3.5</version>
+        </dependency>
+        <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
             <version>5.0.0-beta.2</version>
