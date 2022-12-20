@@ -18,7 +18,7 @@ class SlashMaven(private val versions: Versions, private val components: Compone
     @JDASlashCommand(name = "maven", description = "Shows the Maven dependencies for a library")
     fun onSlashMaven(
         event: GuildSlashEvent,
-        @AppOption(description = "Type of library") libraryType: LibraryType = LibraryType.getDefaultLibrary(event)
+        @AppOption(description = "Type of library") libraryType: LibraryType = LibraryType.getDefaultLibrary(event.guild)
     ) {
         val xml = when (libraryType) {
             LibraryType.BOT_COMMANDS -> DependencySupplier.formatBC(

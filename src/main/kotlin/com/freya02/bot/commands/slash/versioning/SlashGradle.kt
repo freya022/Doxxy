@@ -18,7 +18,7 @@ class SlashGradle(private val versions: Versions, private val components: Compon
     @JDASlashCommand(name = "gradle", description = "Shows the Gradle dependencies for a library")
     fun onSlashGradle(
         event: GuildSlashEvent,
-        @AppOption(description = "Type of library") libraryType: LibraryType = LibraryType.getDefaultLibrary(event)
+        @AppOption(description = "Type of library") libraryType: LibraryType = LibraryType.getDefaultLibrary(event.guild)
     ) {
         val script = when (libraryType) {
             LibraryType.BOT_COMMANDS -> DependencySupplier.formatBC(
