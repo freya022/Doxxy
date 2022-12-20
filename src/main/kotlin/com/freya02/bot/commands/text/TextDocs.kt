@@ -6,7 +6,6 @@ import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocSuggestion
 import com.freya02.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
 import com.freya02.bot.docs.index.DocType
-import com.freya02.botcommands.api.BContext
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.commands.prefixed.BaseCommandEvent
 import com.freya02.botcommands.api.commands.prefixed.TextCommand
@@ -22,7 +21,7 @@ import net.dv8tion.jda.api.utils.messages.MessageEditData
 import java.util.concurrent.TimeUnit
 
 @CommandMarker
-class TextDocs(private val context: BContext, private val docIndexMap: DocIndexMap, private val components: Components) : TextCommand() {
+class TextDocs(private val docIndexMap: DocIndexMap, private val components: Components) : TextCommand() {
     @JDATextCommand(name = "docs", description = "Shows the documentation for a class, a method or a field")
     fun onTextDocs(
         event: BaseCommandEvent,
