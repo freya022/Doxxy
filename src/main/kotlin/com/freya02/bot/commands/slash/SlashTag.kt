@@ -258,9 +258,8 @@ class SlashTag(database: Database, private val modals: Modals, private val compo
     @JDASlashCommand(scope = CommandScope.GLOBAL_NO_DM, name = "tags", subcommand = "list", description = "Creates a tag in this guild")
     fun listTags(
         event: GuildSlashEvent,
-        @AppOption(name = "sorting", description = "Type of tag sorting") criteria: TagCriteria? //TODO use default
+        @AppOption(name = "sorting", description = "Type of tag sorting") criteria: TagCriteria = TagCriteria.NAME
     ) {
-        val finalCriteria = criteria ?: TagCriteria.NAME
         val totalTags = tagDB.getTotalTags(event.guild.idLong)
         val paginator = PaginatorBuilder(components)
             .setConstraints(InteractionConstraints.ofUsers(event.user))
@@ -271,7 +270,7 @@ class SlashTag(database: Database, private val modals: Modals, private val compo
             }
             .setPaginatorSupplier { _, _, _, page: Int ->
                 try {
-                    val tagRange = tagDB.getTagRange(event.guild.idLong, finalCriteria, 10 * page, 20)
+                    val tagRange = tagDB.getTagRange(event.guild.idLong, criteria, 10 * page, 20)
 
                     val embed = Embed {
                         title = "All tags for " + event.guild.name

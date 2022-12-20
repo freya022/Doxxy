@@ -25,10 +25,10 @@ class TextDocs(private val docIndexMap: DocIndexMap, private val components: Com
     @JDATextCommand(name = "docs", description = "Shows the documentation for a class, a method or a field")
     fun onTextDocs(
         event: BaseCommandEvent,
-        @TextOption(name = "docs source", example = "JDA") docSourceType: DocSourceType?,
+        @TextOption(name = "docs source", example = "JDA") docSourceType: DocSourceType = DocSourceType.JDA,
         @TextOption(name = "query", example = "Guild#ban") query: String
     ) {
-        val docIndex = docIndexMap[docSourceType ?: DocSourceType.JDA]!!
+        val docIndex = docIndexMap[docSourceType]!!
 
         val suggestions = when {
             '#' in query || '.' in query -> { // Method or field

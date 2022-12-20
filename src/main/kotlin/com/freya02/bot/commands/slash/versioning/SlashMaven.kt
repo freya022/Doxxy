@@ -1,7 +1,6 @@
 package com.freya02.bot.commands.slash.versioning
 
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
-import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.bot.versioning.LibraryType
 import com.freya02.bot.versioning.Versions
 import com.freya02.bot.versioning.supplier.BuildToolType
@@ -19,12 +18,8 @@ class SlashMaven(private val versions: Versions, private val components: Compone
     @JDASlashCommand(name = "maven", description = "Shows the Maven dependencies for a library")
     fun onSlashMaven(
         event: GuildSlashEvent,
-        @AppOption(description = "Type of library") libraryType: LibraryType?
+        @AppOption(description = "Type of library") libraryType: LibraryType = LibraryType.getDefaultLibrary(event)
     ) {
-        val libraryType = libraryType ?: run {
-            if (event.guild.isBCGuild()) LibraryType.BOT_COMMANDS else LibraryType.JDA5
-        }
-
         val xml = when (libraryType) {
             LibraryType.BOT_COMMANDS -> DependencySupplier.formatBC(
                 BuildToolType.MAVEN,

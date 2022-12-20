@@ -28,7 +28,6 @@ import com.freya02.botcommands.api.utils.EmojiUtils
 import dev.minn.jda.ktx.interactions.components.link
 import dev.minn.jda.ktx.messages.Embed
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
-import net.dv8tion.jda.api.interactions.commands.Command
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import java.io.IOException
@@ -219,13 +218,13 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
 
             choices = when {
                 manager.guild.isBCGuild() -> listOf(
-                    Command.Choice("BotCommands", LibraryType.BOT_COMMANDS.name),
-                    Command.Choice("JDA 5", LibraryType.JDA5.name),
-                    Command.Choice("JDA-KTX", LibraryType.JDA_KTX.name)
+                    Choice("BotCommands", LibraryType.BOT_COMMANDS.name),
+                    Choice("JDA 5", LibraryType.JDA5.name),
+                    Choice("JDA-KTX", LibraryType.JDA_KTX.name)
                 )
                 else -> listOf(
-                    Command.Choice("JDA 5", LibraryType.JDA5.name),
-                    Command.Choice("JDA-KTX", LibraryType.JDA_KTX.name)
+                    Choice("JDA 5", LibraryType.JDA5.name),
+                    Choice("JDA-KTX", LibraryType.JDA_KTX.name)
                 )
             }
         }
