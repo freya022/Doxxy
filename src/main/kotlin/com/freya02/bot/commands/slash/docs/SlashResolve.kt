@@ -11,9 +11,6 @@ import com.freya02.botcommands.api.components.Components
 import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.messages.reply_
 
-private const val commandDescription = "Experimental - Resolves method/field calls into its final return type, and shows its documentation"
-private const val chainArgDescription = "Chain of method/field calls, can also just be a class name. Each component is separated with an #"
-
 @CommandMarker
 class SlashResolve(private val docIndexMap: DocIndexMap, private val components: Components) : ApplicationCommand() {
     @AppDeclaration
@@ -56,7 +53,6 @@ class SlashResolve(private val docIndexMap: DocIndexMap, private val components:
     companion object {
         private const val commandDescription =
             "Experimental - Resolves method/field calls into its final return type, and shows its documentation"
-        private const val sourceTypeArgDescription = "The docs to search upon"
         private const val chainArgDescription =
             "Chain of method/field calls, can also just be a class name. Each component is separated with an #"
     }
