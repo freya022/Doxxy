@@ -6,19 +6,25 @@
 
     <groupId>com.freya02</groupId>
     <artifactId>DocsBot</artifactId>
-    <version>1.6</version>
+    <version>1.8</version>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.test.skip>true</maven.test.skip>
-        <kotlin.version>1.7.10</kotlin.version>
+
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+
+        <kotlin.version>1.7.21</kotlin.version>
         <kotlin.coroutine.version>1.6.4</kotlin.coroutine.version>
+
         <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
+        <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
     </properties>
 
     <build>
+        <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
+        <testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
         <plugins>
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
@@ -29,7 +35,6 @@
                         <arg>-java-parameters</arg>
                         <arg>-opt-in=kotlin.RequiresOptIn</arg>
                         <arg>-opt-in=kotlin.ExperimentalStdlibApi</arg>
-                        <arg>-Xjvm-default=all</arg>
                         <arg>-Xcontext-receivers</arg>
                     </args>
                 </configuration>
@@ -39,60 +44,11 @@
                         <goals>
                             <goal>compile</goal>
                         </goals>
-                        <configuration>
-                            <sourceDirs>
-                                <sourceDir>${project.basedir}/src/main/kotlin</sourceDir>
-                                <sourceDir>${project.basedir}/src/main/java</sourceDir>
-                            </sourceDirs>
-                        </configuration>
                     </execution>
                     <execution>
                         <id>test-compile</id>
-                        <goals> <goal>test-compile</goal> </goals>
-                        <configuration>
-                            <sourceDirs>
-                                <sourceDir>${project.basedir}/src/test/kotlin</sourceDir>
-                                <sourceDir>${project.basedir}/src/test/java</sourceDir>
-                            </sourceDirs>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
-                <configuration>
-                    <source>17</source>
-                    <target>17</target>
-                    <compilerArgs>
-                        <compilerArg>-parameters</compilerArg>
-                        <compilerArg>--enable-preview</compilerArg>
-                    </compilerArgs>
-                </configuration>
-                <executions>
-                    <!-- Replacing default-compile as it is treated specially by maven -->
-                    <execution>
-                        <id>default-compile</id>
-                        <phase>none</phase>
-                    </execution>
-                    <!-- Replacing default-testCompile as it is treated specially by maven -->
-                    <execution>
-                        <id>default-testCompile</id>
-                        <phase>none</phase>
-                    </execution>
-                    <execution>
-                        <id>java-compile</id>
-                        <phase>compile</phase>
                         <goals>
-                            <goal>compile</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>java-test-compile</id>
-                        <phase>test-compile</phase>
-                        <goals>
-                            <goal>testCompile</goal>
+                            <goal>test-compile</goal>
                         </goals>
                     </execution>
                 </executions>
@@ -126,11 +82,6 @@
 
     <repositories>
         <repository>
-            <id>dv8tion</id>
-            <name>m2-dv8tion</name>
-            <url>https://m2.dv8tion.net/releases</url>
-        </repository>
-        <repository>
             <id>jitpack</id>
             <url>https://jitpack.io</url>
         </repository>
@@ -154,9 +105,14 @@
             <version>${kotlin.coroutine.version}</version>
         </dependency>
         <dependency>
+            <groupId>dev.reformator.stacktracedecoroutinator</groupId>
+            <artifactId>stacktrace-decoroutinator-jvm</artifactId>
+            <version>2.3.5</version>
+        </dependency>
+        <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>5.0.0-alpha.19</version>
+            <version>5.0.0-beta.2</version>
             <exclusions>
                 <exclusion>
                     <groupId>club.minnced</groupId>
@@ -172,9 +128,9 @@
             <version>3.0.0-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>com.github.minndevelopment</groupId>
+            <groupId>com.github.MinnDevelopment</groupId>
             <artifactId>jda-ktx</artifactId>
-            <version>081a177281</version>
+            <version>17eb77a138</version>
         </dependency>
         <dependency>
             <groupId>org.jetbrains</groupId>
@@ -188,9 +144,14 @@
             <version>1.2.11</version>
         </dependency>
         <dependency>
+            <groupId>io.github.microutils</groupId>
+            <artifactId>kotlin-logging-jvm</artifactId>
+            <version>2.1.23</version>
+        </dependency>
+        <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.5.0</version>
+            <version>42.5.1</version>
         </dependency>
         <dependency>
             <groupId>com.zaxxer</groupId>
@@ -206,17 +167,17 @@
         <dependency>
             <groupId>com.github.freya022</groupId>
             <artifactId>remark-java</artifactId>
-            <version>3c3c3ddc82</version>
+            <version>4a18f84801</version>
         </dependency>
         <dependency>
             <groupId>com.github.javaparser</groupId>
             <artifactId>javaparser-core</artifactId>
-            <version>3.24.4</version>
+            <version>3.24.8</version>
         </dependency>
         <dependency>
             <groupId>com.palantir.javaformat</groupId>
             <artifactId>palantir-java-format</artifactId>
-            <version>2.26.0</version>
+            <version>2.28.0</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

@@ -1,0 +1,8 @@
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation '%s:%s:%s'
+    implementation '%s:%s:%s'
+}

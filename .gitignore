@@ -1,7 +1,6 @@
 # Project exclude paths
 /target/
 .idea
-Config.json
 Test_Config.json
 /logs
 /BotCommands_docs

@@ -11,7 +11,6 @@ object CryptoUtils {
         return toHexString(SHA3_256.digest(content))
     }
 
-    @JvmStatic
     fun toHexString(bytes: ByteArray): String {
         val builder = StringBuilder(bytes.size * 2)
         for (b in bytes) {

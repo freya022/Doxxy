@@ -12,7 +12,6 @@ import java.util.concurrent.TimeUnit
 import kotlin.io.path.outputStream
 
 object HttpUtils {
-    @JvmField
     val CLIENT: OkHttpClient = OkHttpClient.Builder()
         .readTimeout(2, TimeUnit.MINUTES) //Jitpack builds have a blocking read
         .build()
@@ -22,7 +21,6 @@ object HttpUtils {
         return Jsoup.parse(downloadedBody, baseUri)
     }
 
-    @JvmStatic
     @Synchronized
     @Throws(IOException::class)
     fun getDocument(url: String): Document {

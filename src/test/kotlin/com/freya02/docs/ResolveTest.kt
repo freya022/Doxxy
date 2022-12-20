@@ -11,7 +11,7 @@ fun main() {
 //
 //    exitProcess(0)
 
-    val config = Config.getConfig()
+    val config = Config.config
     val database = Database(config)
 
     val jdaIndex = DocIndex(DocSourceType.JDA, database)

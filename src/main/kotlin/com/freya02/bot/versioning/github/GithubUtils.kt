@@ -1,9 +1,9 @@
 package com.freya02.bot.versioning.github
 
 import com.freya02.bot.utils.HttpUtils
-import com.freya02.botcommands.api.Logging
 import gnu.trove.map.TIntObjectMap
 import gnu.trove.map.hash.TIntObjectHashMap
+import mu.KotlinLogging
 import net.dv8tion.jda.api.utils.data.DataArray
 import net.dv8tion.jda.api.utils.data.DataObject
 import okhttp3.HttpUrl
@@ -15,7 +15,7 @@ private typealias URLBuilder = HttpUrl.Builder
 private typealias RequestBuilder = Request.Builder
 
 object GithubUtils {
-    private val LOGGER = Logging.getLogger()
+    private val logger = KotlinLogging.logger { }
 
     private fun newGithubRequest(url: HttpUrl): RequestBuilder {
         return RequestBuilder()
@@ -93,7 +93,7 @@ object GithubUtils {
         artifactId: String,
         baseBranchName: String?
     ): TIntObjectMap<PullRequest> {
-        LOGGER.debug("Retrieving pull requests of {}/{}", ownerName, artifactId)
+        logger.debug("Retrieving pull requests of {}/{}", ownerName, artifactId)
 
         val pullRequests: TIntObjectMap<PullRequest> = TIntObjectHashMap()
         val urlBuilder: URLBuilder = "https://api.github.com/repos/$ownerName/$artifactId/pulls".toHttpUrl()

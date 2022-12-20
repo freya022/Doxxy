@@ -1,12 +1,9 @@
 package com.freya02.docs.data
 
-import com.freya02.botcommands.api.Logging
 import com.freya02.docs.HTMLElement
+import mu.KotlinLogging
 import org.jsoup.nodes.Element
 import java.util.*
-
-private val LOGGER = Logging.getLogger()
-private val warned: MutableSet<String> = hashSetOf()
 
 class DetailToElementsMap private constructor(detailTarget: Element) {
     private val map: MutableMap<DocDetailType, MutableList<HTMLElement>> = EnumMap(DocDetailType::class.java)
@@ -20,7 +17,7 @@ class DetailToElementsMap private constructor(detailTarget: Element) {
             @Suppress("LiftReturnOrAssignment")
             if (type == null) {
                 if (warned.add(detailName))
-                    LOGGER.warn("Unknown method detail type: '{}' at {}", detailName, detailTarget.baseUri())
+                    logger.warn("Unknown method detail type: '{}' at {}", detailName, detailTarget.baseUri())
 
                 list = null
             } else {
@@ -56,6 +53,9 @@ class DetailToElementsMap private constructor(detailTarget: Element) {
     }
 
     companion object {
+        private val logger = KotlinLogging.logger { }
+        private val warned: MutableSet<String> = hashSetOf()
+
         fun parseDetails(detailTarget: Element): DetailToElementsMap {
             return DetailToElementsMap(detailTarget)
         }

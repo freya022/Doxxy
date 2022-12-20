@@ -1,6 +1,6 @@
 package com.freya02.bot.commands.slash.versioning
 
-import com.freya02.bot.Main.BRANCH_VERSIONS_FOLDER_PATH
+import com.freya02.bot.Data
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
 import com.freya02.bot.utils.CryptoUtils
 import com.freya02.bot.utils.Utils.isBCGuild
@@ -19,6 +19,7 @@ import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.AutocompleteAlgorithms
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.FuzzyResult
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.ToStringFunction
+import com.freya02.botcommands.api.application.slash.autocomplete.AutocompleteAlgorithms
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.CacheAutocomplete
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.CompositeKey
@@ -28,7 +29,7 @@ import com.freya02.botcommands.api.utils.EmojiUtils
 import dev.minn.jda.ktx.interactions.components.link
 import dev.minn.jda.ktx.messages.Embed
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
-import net.dv8tion.jda.api.interactions.commands.Command
+import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import java.io.IOException
 import java.nio.file.Path
@@ -78,9 +79,12 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
                 checkGithubBranchUpdates(event, branch, jdaVersionChecker)
                 val latestBotCommands = pullRequest.toJitpackArtifact()
                 val jdaVersionFromBotCommands = jdaVersionChecker.latest
-                DependencySupplier.formatBC(buildToolType, jdaVersionFromBotCommands, latestBotCommands)
+                DependencySupplier.formatBCJitpack(buildToolType, jdaVersionFromBotCommands, latestBotCommands)
             }
-            LibraryType.JDA5, LibraryType.JDA_KTX -> DependencySupplier.formatJitpack(buildToolType, pullRequest.toJitpackArtifact())
+            LibraryType.JDA5, LibraryType.JDA_KTX -> DependencySupplier.formatJitpack(
+                buildToolType,
+                pullRequest.toJitpackArtifact()
+            )
             else -> throw IllegalArgumentException("Invalid library type: $libraryType")
         }
 
@@ -100,7 +104,11 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
         event.replyEmbeds(embed)
             .addActionRow(
                 components.messageDeleteButton(event.user),
-                link("https://jda.wiki/using-jda/using-new-features/", "How ? (Wiki)", EmojiUtils.resolveJDAEmoji("face_with_monocle"))
+                link(
+                    "https://jda.wiki/using-jda/using-new-features/",
+                    "How ? (Wiki)",
+                    EmojiUtils.resolveJDAEmoji("face_with_monocle")
+                )
             )
             .queue()
     }
@@ -110,7 +118,7 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
     fun onPRNumberAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption libraryType: LibraryType?
-    ): Collection<Command.Choice> {
+    ): Collection<Choice> {
         val pullRequests = when (libraryType) {
             LibraryType.BOT_COMMANDS -> bcPullRequestCache.pullRequests.valueCollection()
             LibraryType.JDA5 -> jdaPullRequestCache.pullRequests.valueCollection()
@@ -123,7 +131,7 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
                 event.focusedOption.value
             )
             .map { r ->
-                Command.Choice(
+                Choice(
                     r.item.asHumanDescription,
                     r.item.number.toLong()
                 )
@@ -131,12 +139,35 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
     }
 
     @CacheAutocomplete
-    @AutocompleteHandler(name = BRANCH_NAME_AUTOCOMPLETE_NAME)
+    @AutocompleteHandler(name = BRANCH_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onBranchNameAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption libraryType: LibraryType
-    ): Collection<String> {
-        return getBranchMap(libraryType).branches.keys
+    ): Collection<Choice> {
+        val branchMap = getBranchMap(libraryType)
+        val defaultBranchName = branchMap.defaultBranch.branchName
+
+        return AutocompleteAlgorithms.fuzzyMatching(branchMap.branches.keys, { it }, event)
+            .take(OptionData.MAX_CHOICES)
+            .map { it.string }
+            .let { branchNames ->
+                return@let when {
+                    event.focusedOption.value.isNotBlank() -> branchNames //Don't hoist if user is searching
+                    else -> branchNames.toMutableList() // Hoist default branch to the top
+                        .apply {
+                            remove(defaultBranchName)
+                            add(0, defaultBranchName)
+                        }
+                }
+            }
+            .map { branchName ->
+                val choiceLabel = when (branchName) {
+                    defaultBranchName -> "$branchName (default)"
+                    else -> branchName
+                }
+
+                Choice(choiceLabel, branchName)
+            }
     }
 
     @AppDeclaration
@@ -225,7 +256,10 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
         val branchName = branch.branchName
 
         val dependencyStr = when (libraryType) {
-            LibraryType.JDA5, LibraryType.JDA_KTX -> DependencySupplier.formatJitpack(buildToolType, branch.asJitpackArtifact)
+            LibraryType.JDA5, LibraryType.JDA_KTX -> DependencySupplier.formatJitpack(
+                buildToolType,
+                branch.asJitpackArtifact
+            )
             LibraryType.BOT_COMMANDS -> {
                 val jdaVersionChecker = branchNameToJdaVersionChecker.getOrPut(branchName) {
                     try {
@@ -241,7 +275,7 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
                     }
                 }
                 checkGithubBranchUpdates(event, branch, jdaVersionChecker)
-                DependencySupplier.formatBC(
+                DependencySupplier.formatBCJitpack(
                     buildToolType,
                     jdaVersionChecker.latest,
                     branch.asJitpackArtifact
@@ -312,7 +346,7 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
     }
 
     private fun getBranchFileName(branch: GithubBranch): Path {
-        return BRANCH_VERSIONS_FOLDER_PATH.resolve(
+        return Data.branchVersionsFolderPath.resolve(
             "%s-%s-%s.txt".format(
                 branch.ownerName,
                 branch.repoName,

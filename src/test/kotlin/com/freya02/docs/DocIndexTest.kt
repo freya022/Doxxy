@@ -1,6 +1,6 @@
 package com.freya02.docs
 
-import com.freya02.bot.Config.Companion.getConfig
+import com.freya02.bot.Config
 import com.freya02.bot.db.Database
 import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.ReindexData
@@ -14,7 +14,7 @@ suspend fun main() {
     getDefaultScope().launch {
         startDocWebServer()
 
-        val config = getConfig()
+        val config = Config.config
         val database = Database(config)
 
         val bcIndex = DocIndex(DocSourceType.BOT_COMMANDS, database)

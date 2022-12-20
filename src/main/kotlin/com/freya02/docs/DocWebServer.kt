@@ -1,9 +1,9 @@
 package com.freya02.docs
 
-import com.freya02.bot.Main
-import com.freya02.botcommands.api.Logging
+import com.freya02.bot.Data
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpServer
+import mu.KotlinLogging
 import java.io.IOException
 import java.net.InetSocketAddress
 import java.nio.file.Files
@@ -11,24 +11,23 @@ import java.nio.file.attribute.BasicFileAttributes
 import kotlin.io.path.bufferedReader
 import kotlin.io.path.exists
 
-private val LOGGER = Logging.getLogger()
-
 object DocWebServer {
-    @JvmStatic
+    private val logger = KotlinLogging.logger { }
+
     @Throws(IOException::class)
     fun startDocWebServer() {
         val server = HttpServer.create(InetSocketAddress(25566), 0)
         server.createContext("/") { exchange: HttpExchange ->
             if (!exchange.remoteAddress.address.isLoopbackAddress) {
-                LOGGER.warn("A non-loopback address tried to connect: {}", exchange.remoteAddress)
+                logger.warn("A non-loopback address tried to connect: {}", exchange.remoteAddress)
                 return@createContext
             }
 
             val path = exchange.requestURI.path
-            val javadocsPath = Main.JAVADOCS_PATH
+            val javadocsPath = Data.javadocsPath
             val file = javadocsPath.resolve(path.substring(1))
             if (!file.startsWith(javadocsPath)) {
-                LOGGER.warn(
+                logger.warn(
                     "Tried to access a file outside of the target directory: '{}', from {}",
                     file,
                     exchange.remoteAddress

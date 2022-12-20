@@ -6,7 +6,6 @@ import com.freya02.bot.docs.cached.CachedClass
 import com.freya02.bot.docs.cached.CachedDoc
 import com.freya02.bot.docs.cached.CachedField
 import com.freya02.bot.docs.cached.CachedMethod
-import com.freya02.botcommands.api.Logging
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.DocsSession
 import com.freya02.docs.PageCache
@@ -15,15 +14,13 @@ import com.freya02.docs.data.TargetType
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.MessageEmbed
 import org.intellij.lang.annotations.Language
-import org.slf4j.Logger
-
-private val LOGGER: Logger = Logging.getLogger()
 
 //Initial construct just allows database access
 // Further updates must be invoked by external methods such as version checkers
-class DocIndex(private val sourceType: DocSourceType, private val database: Database) : IDocIndex {
+class DocIndex(val sourceType: DocSourceType, private val database: Database) : IDocIndex {
     private val mutex = Mutex()
 
     override fun getClassDoc(className: String): CachedClass? {
@@ -47,7 +44,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         return CachedField(embed, seeAlsoReferences, javadocLink, sourceLink)
     }
 
-    override fun findAnySignatures(docType: DocType, query: String?, limit: Int): List<DocSearchResult> = getAllSignatures(docType, query, limit)
+    override fun findAnySignatures(query: String?, limit: Int, vararg docTypes: DocType): List<DocSearchResult> = getAllSignatures(query, limit, *docTypes)
 
     override fun findSignaturesIn(className: String, query: String?, vararg docTypes: DocType, limit: Int): List<DocSearchResult> {
         val typeCheck = docTypes.joinToString(" or ") { "doc.type = ${it.id}" }
@@ -191,19 +188,19 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
 
     suspend fun reindex(reindexData: ReindexData): DocIndex {
         mutex.withLock {
-            LOGGER.info("Re-indexing docs for {}", sourceType.name)
+            logger.info("Re-indexing docs for {}", sourceType.name)
 
             if (sourceType != DocSourceType.JAVA) {
-                LOGGER.info("Clearing cache for {}", sourceType.name)
+                logger.info("Clearing cache for {}", sourceType.name)
                 PageCache[sourceType].clearCache()
-                LOGGER.info("Cleared cache of {}", sourceType.name)
+                logger.info("Cleared cache of {}", sourceType.name)
             }
 
             val docsSession = DocsSession()
 
             DocIndexWriter(database, docsSession, sourceType, reindexData).doReindex()
 
-            LOGGER.info("Re-indexed docs for {}", sourceType.name)
+            logger.info("Re-indexed docs for {}", sourceType.name)
         }
 
         System.gc() //Very effective
@@ -222,7 +219,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
             from doc
             where source_id = ?
               and type = ?
-              and classname = ?
+              and lower(classname) = lower(?)
               and quote_nullable(identifier) = quote_nullable(?)
             limit 1""".trimIndent(),
         "id", "embed"
@@ -254,7 +251,7 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         }
     }
 
-    private fun getAllSignatures(docType: DocType, query: String?, limit: Int): List<DocSearchResult> {
+    private fun getAllSignatures(query: String?, limit: Int, vararg docTypes: DocType): List<DocSearchResult> {
         @Language("PostgreSQL", prefix = "select * from doc ")
         val sort = when {
             query.isNullOrEmpty() -> "order by classname, identifier"
@@ -274,13 +271,13 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
                 select concat(classname, '#', identifier) as full_identifier, human_identifier, human_class_identifier
                 from doc
                 where source_id = ?
-                  and type = ?
+                  and type = any(?)
                 $sort
                 limit ?
                 """.trimIndent(),
             "classname"
         ).use { action ->
-            action.executeQuery(sourceType.id, docType.id, *sortArgs, limit)
+            action.executeQuery(sourceType.id, docTypes.map { it.id }.toTypedArray(), *sortArgs, limit)
                 .transformEach {
                     DocSearchResult(
                         it["full_identifier"],
@@ -318,5 +315,9 @@ class DocIndex(private val sourceType: DocSourceType, private val database: Data
         ).use { action ->
             action.executeQuery(sourceType.id, docType.id, *sortArgs).transformEach { it.getString("classname") }
         }
+    }
+
+    companion object {
+        private val logger = KotlinLogging.logger { }
     }
 }

@@ -2,15 +2,11 @@ package com.freya02.bot.commands.slash.docs
 
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
 import com.freya02.bot.docs.DocIndexMap
-import com.freya02.bot.docs.cached.CachedClass
 import com.freya02.bot.docs.cached.CachedDoc
-import com.freya02.bot.docs.cached.CachedField
-import com.freya02.bot.docs.cached.CachedMethod
 import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocResolveResult
 import com.freya02.bot.docs.index.DocSearchResult
 import com.freya02.bot.docs.index.DocSuggestion
-import com.freya02.botcommands.api.Logging
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.annotations.AppOption
 import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
@@ -19,33 +15,37 @@ import com.freya02.botcommands.api.commands.application.slash.autocomplete.annot
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.CompositeKey
 import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.components.annotations.JDASelectionMenuListener
-import com.freya02.botcommands.api.components.event.SelectionEvent
+import com.freya02.botcommands.api.components.event.StringSelectionEvent
 import com.freya02.botcommands.api.pagination.menu.ChoiceMenuBuilder
 import com.freya02.botcommands.api.utils.ButtonContent
 import com.freya02.botcommands.api.utils.EmojiUtils
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.data.TargetType
+import dev.minn.jda.ktx.messages.Embed
 import dev.minn.jda.ktx.messages.reply_
+import mu.KotlinLogging
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.ClientType
+import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.exceptions.ErrorHandler
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
+import net.dv8tion.jda.api.interactions.components.ItemComponent
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.requests.ErrorResponse
-import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
+import net.dv8tion.jda.api.utils.messages.MessageCreateRequest
 import java.util.concurrent.TimeUnit
-
-private val logger = Logging.getLogger()
 
 class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val components: Components) : ApplicationCommand() {
     @JDASelectionMenuListener(name = SEE_ALSO_SELECT_LISTENER_NAME)
-    fun onSeeAlsoSelect(event: SelectionEvent) {
+    fun onSeeAlsoSelect(event: StringSelectionEvent) {
         val option = event.selectedOptions[0] //Forced to use 1
         val values = option.value.split(":")
         val targetType = TargetType.valueOf(values[0])
@@ -58,12 +58,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
                 else -> throw IllegalArgumentException("Invalid target type: $targetType")
             }
             if (doc != null) {
-                when (targetType) {
-                    TargetType.CLASS -> sendClass(event, true, doc as CachedClass, components)
-                    TargetType.METHOD -> sendMethod(event, true, doc as CachedMethod, components)
-                    TargetType.FIELD -> sendField(event, true, doc as CachedField, components)
-                    else -> throw IllegalArgumentException("Invalid target type: $targetType")
-                }
+                sendClass(event, true, doc)
                 break
             }
         }
@@ -167,6 +162,8 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
         .map { Choice(it.name, it.value) }
 
     companion object {
+        private val logger = KotlinLogging.logger { }
+
         const val CLASS_NAME_AUTOCOMPLETE_NAME = "CommonDocsHandlers: className"
         const val CLASS_NAME_WITH_METHODS_AUTOCOMPLETE_NAME = "CommonDocsHandlers: classNameWithMethods"
         const val CLASS_NAME_WITH_FIELDS_AUTOCOMPLETE_NAME = "CommonDocsHandlers: classNameWithFields"
@@ -191,37 +188,27 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
             RESOLVE_AUTOCOMPLETE_NAME
         )
 
-        fun sendClass(event: IReplyCallback, ephemeral: Boolean, cachedClass: CachedClass, components: Components) {
-            event.replyEmbeds(cachedClass.embed.withLink(event, cachedClass))
-                .addSeeAlso(cachedClass, components)
-                .also { addActionRows(ephemeral, event, cachedClass, it, components) }
+        fun sendClass(event: IReplyCallback, ephemeral: Boolean, cachedDoc: CachedDoc) {
+            event.reply(getDocMessageData(event.member!!, ephemeral, cachedDoc))
                 .setEphemeral(ephemeral)
                 .queue()
         }
 
-        fun sendMethod(event: IReplyCallback, ephemeral: Boolean, cachedMethod: CachedMethod, components: Components) {
-            event.replyEmbeds(cachedMethod.embed.withLink(event, cachedMethod))
-                .addSeeAlso(cachedMethod, components)
-                .also { addActionRows(ephemeral, event, cachedMethod, it, components) }
-                .setEphemeral(ephemeral)
-                .queue()
+        fun getDocMessageData(caller: Member, ephemeral: Boolean, cachedDoc: CachedDoc): MessageCreateData {
+            return MessageCreateBuilder().apply {
+                addEmbeds(cachedDoc.embed.withLink(cachedDoc, caller))
+                addDocsSeeAlso(cachedDoc)
+                addDocsActionRows(ephemeral, cachedDoc, caller)
+            }.build()
         }
 
-        fun sendField(event: IReplyCallback, ephemeral: Boolean, cachedField: CachedField, components: Components) {
-            event.replyEmbeds(cachedField.embed.withLink(event, cachedField))
-                .addSeeAlso(cachedField, components)
-                .also { addActionRows(ephemeral, event, cachedField, it, components) }
-                .setEphemeral(ephemeral)
-                .queue()
-        }
+        private fun MessageEmbed.withLink(cachedDoc: CachedDoc, member: Member?): MessageEmbed {
+            if (member == null) {
+                logger.warn("Got a null member")
+                return this
+            }
 
-        private fun MessageEmbed.withLink(event: IReplyCallback, cachedDoc: CachedDoc): MessageEmbed {
             cachedDoc.javadocLink?.let { javadocLink ->
-                val member = event.member ?: run {
-                    logger.warn("Got a null member")
-                    return@let
-                }
-
                 if (member.getOnlineStatus(ClientType.MOBILE) != OnlineStatus.OFFLINE) {
                     return EmbedBuilder(this).addField("Link", javadocLink, false).build()
                 }
@@ -230,17 +217,20 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
             return this
         }
 
-        private fun addActionRows(
+        private fun MessageCreateRequest<*>.addDocsActionRows(
             ephemeral: Boolean,
-            event: IReplyCallback,
             cachedDoc: CachedDoc,
-            it: ReplyCallbackAction,
+            caller: UserSnowflake,
             components: Components
         ) {
-            it.addActionRow(buildList {
-                if (!ephemeral) add(components.messageDeleteButton(event.user))
+            val list: List<ItemComponent> = buildList {
+                if (!ephemeral) add(components.messageDeleteButton(caller))
                 cachedDoc.sourceLink?.let { sourceLink -> add(Button.link(sourceLink, "Source")) }
-            })
+            }
+
+            if (list.isNotEmpty()) {
+                addActionRow(list)
+            }
         }
 
         fun handleClass(event: GuildSlashEvent, className: String, docIndex: DocIndex, components: Components, block: () -> List<DocSuggestion>) {
@@ -268,7 +258,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
                 return
             }
 
-            sendMethod(event, false, cachedMethod, components)
+            sendClass(event, false, cachedMethod, components)
         }
 
         fun handleFieldDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex, components: Components, block: () -> List<DocSuggestion>) {
@@ -282,24 +272,48 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
                 return
             }
 
-            sendField(event, false, cachedField, components)
+            sendClass(event, false, cachedField, components)
         }
+
+        fun buildDocSuggestionsMenu(docIndex: DocIndex, suggestions: List<DocSuggestion>, block: ChoiceMenuBuilder<DocSuggestion>.() -> Unit) =
+            ChoiceMenuBuilder(suggestions)
+                .setButtonContentSupplier { _, index -> ButtonContent.withString((index + 1).toString()) }
+                .setTransformer { it.humanIdentifier }
+                .setMaxEntriesPerPage(10)
+                .setPaginatorSupplier { _, _, _, _ ->
+                    return@setPaginatorSupplier Embed {
+                        author {
+                            name = when (docIndex.sourceType) {
+                                DocSourceType.JAVA -> "Java Javadocs"
+                                DocSourceType.JDA -> "JDA Javadocs"
+                                DocSourceType.BOT_COMMANDS -> "BotCommands Javadocs"
+                            }
+                            iconUrl = when (docIndex.sourceType) {
+                                DocSourceType.JAVA -> "https://assets.stickpng.com/images/58480979cef1014c0b5e4901.png"
+                                DocSourceType.JDA -> "https://cdn.discordapp.com/icons/125227483518861312/8be466a3cdafc8591fcec4cdbb0eefc0.webp?size=128"
+                                else -> null
+                            }
+                        }
+                    }
+                }
+                .apply(block)
+                .build()
 
         private fun getDocSuggestionsMenu(
             event: GuildSlashEvent,
             docIndex: DocIndex,
             components: Components,
             block: () -> List<DocSuggestion>
-        ) = ChoiceMenuBuilder(block())
-            .setButtonContentSupplier { _, index -> ButtonContent.withString((index + 1).toString()) }
-            .setTransformer { it.humanIdentifier }
-            .setTimeout(2, TimeUnit.MINUTES) { _, _ ->
+        ) = buildDocSuggestionsMenu(docIndex, block()) {
+            setTimeout(2, TimeUnit.MINUTES) { menu, _ ->
+                menu.cleanup(event.context)
                 event.hook
-                    .editOriginalComponents()
+                    .deleteOriginal()
                     .queue(null, ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE, ErrorResponse.UNKNOWN_WEBHOOK))
             }
-            .setCallback { buttonEvent, entry ->
-                event.hook.editOriginalComponents().queue()
+
+            setCallback { buttonEvent, entry ->
+                event.hook.deleteOriginal().queue()
 
                 val identifier = entry.identifier
                 val doc = when {
@@ -309,20 +323,18 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
                 }
 
                 when (doc) {
-                    is CachedClass -> sendClass(buttonEvent, false, doc, components)
-                    is CachedMethod -> sendMethod(buttonEvent, false, doc, components)
-                    is CachedField -> sendField(buttonEvent, false, doc, components)
-                    else -> buttonEvent.reply_("This item is now invalid, try again", ephemeral = true).queue()
+                    null -> buttonEvent.reply_("This item is now invalid, try again", ephemeral = true).queue()
+                    else -> buttonEvent.deferEdit().flatMap { event.channel.sendMessage(getDocMessageData(buttonEvent.member!!, false, doc)) }.queue()
                 }
             }
-            .build()
+        }
 
         fun String.transformResolveChain() = this.replace('.', '#')
 
-        private fun ReplyCallbackAction.addSeeAlso(cachedDoc: CachedDoc, components: Components): ReplyCallbackAction {
+        private fun MessageCreateRequest<*>.addDocsSeeAlso(cachedDoc: CachedDoc, components: Components) {
             cachedDoc.seeAlsoReferences.let { referenceList ->
                 if (referenceList.any { it.targetType != TargetType.UNKNOWN }) {
-                    val selectionMenuBuilder = components.selectionMenu(SEE_ALSO_SELECT_LISTENER_NAME)
+                    val selectionMenuBuilder = components.stringSelectionMenu(SEE_ALSO_SELECT_LISTENER_NAME)
                         .timeout(15, TimeUnit.MINUTES)
                         .setPlaceholder("See also")
                     for (reference in referenceList) {
@@ -346,11 +358,9 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
                         }
                     }
 
-                    return addActionRow(selectionMenuBuilder.build())
+                    addActionRow(selectionMenuBuilder.build())
                 }
             }
-
-            return this
         }
     }
 }

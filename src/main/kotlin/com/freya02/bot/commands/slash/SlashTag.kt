@@ -3,7 +3,8 @@ package com.freya02.bot.commands.slash
 import com.freya02.bot.db.Database
 import com.freya02.bot.db.isUniqueViolation
 import com.freya02.bot.tag.*
-import com.freya02.botcommands.api.Logging
+import com.freya02.bot.utils.Utils.shortTextInput
+import com.freya02.bot.utils.paragraphTextInput
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.CommandScope
@@ -23,6 +24,8 @@ import com.freya02.botcommands.api.pagination.paginator.Paginator
 import com.freya02.botcommands.api.pagination.paginator.PaginatorBuilder
 import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.messages.Embed
+import me.xdrop.fuzzywuzzy.model.BoundExtractedResult
+import mu.KotlinLogging
 import net.dv8tion.jda.api.Permission.MANAGE_ROLES
 import net.dv8tion.jda.api.Permission.MANAGE_SERVER
 import net.dv8tion.jda.api.entities.Member
@@ -40,8 +43,6 @@ import java.util.concurrent.TimeUnit
 
 
 private typealias TagConsumer = suspend (Tag) -> Unit
-
-private val LOGGER = Logging.getLogger()
 
 private const val GUILD_TAGS_AUTOCOMPLETE = "guildTagsAutocomplete"
 private const val USER_TAGS_AUTOCOMPLETE = "userTagsAutocomplete"
@@ -109,10 +110,25 @@ class SlashTag(database: Database, private val modals: Modals, private val compo
 
     @JDASlashCommand(scope = CommandScope.GLOBAL_NO_DM, name = "tags", subcommand = "create", description = "Creates a tag in this guild")
     fun createTag(event: GuildSlashEvent) {
-        val modal = modals.create("Create a tag", TAGS_CREATE_MODAL_HANDLER)
-            .addActionRow(modals.createTextInput("tagName", "Tag name", TextInputStyle.SHORT).build())
-            .addActionRow(modals.createTextInput("tagDescription", "Tag description", TextInputStyle.SHORT).build())
-            .addActionRow(modals.createTextInput("tagContent", "Tag content", TextInputStyle.PARAGRAPH).build())
+        val tagNameInput = shortTextInput("tagName", "Tag name") {
+            minLength = TagDB.NAME_MIN_LENGTH
+            maxLength = TagDB.NAME_MAX_LENGTH
+        }
+
+        val tagDescriptionInput = shortTextInput("tagDescription", "Tag description") {
+            minLength = TagDB.DESCRIPTION_MIN_LENGTH
+            maxLength = TagDB.DESCRIPTION_MAX_LENGTH
+        }
+
+        val tagContentInput = paragraphTextInput("tagContent", "Tag content") {
+            minLength = TagDB.CONTENT_MIN_LENGTH
+            maxLength = TagDB.CONTENT_MAX_LENGTH
+        }
+
+        val modal = Modals.create("Create a tag", TAGS_CREATE_MODAL_HANDLER)
+            .addActionRow(tagNameInput)
+            .addActionRow(tagDescriptionInput)
+            .addActionRow(tagContentInput)
             .build()
 
         event.replyModal(modal).queue()
@@ -243,7 +259,7 @@ class SlashTag(database: Database, private val modals: Modals, private val compo
     @JDASlashCommand(scope = CommandScope.GLOBAL_NO_DM, name = "tags", subcommand = "list", description = "Creates a tag in this guild")
     fun listTags(
         event: GuildSlashEvent,
-        @AppOption(name = "sorting", description = "Type of tag sorting") criteria: TagCriteria?
+        @AppOption(name = "sorting", description = "Type of tag sorting") criteria: TagCriteria? //TODO use default
     ) {
         val finalCriteria = criteria ?: TagCriteria.NAME
         val totalTags = tagDB.getTotalTags(event.guild.idLong)
@@ -269,7 +285,7 @@ class SlashTag(database: Database, private val modals: Modals, private val compo
 
                     return@setPaginatorSupplier embed
                 } catch (e: SQLException) {
-                    LOGGER.error(
+                    logger.error(
                         "An exception occurred while paginating through tags in guild '{}' ({})",
                         event.guild.name,
                         event.guild.idLong,
@@ -353,5 +369,9 @@ class SlashTag(database: Database, private val modals: Modals, private val compo
             //TODO maybe improve
             else -> choiceName
         }
+    }
+
+    companion object {
+        private val logger = KotlinLogging.logger { }
     }
 }

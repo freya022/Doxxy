@@ -1,11 +1,12 @@
-package com.freya02.bot;
+package com.freya02.bot
 
-import org.jsoup.Jsoup;
-import org.jsoup.safety.Safelist;
+import org.jsoup.Jsoup
+import org.jsoup.safety.Safelist
 
-public class CleanTest {
-	public static void main(String[] args) {
-		String str = """
+object CleanTest {
+    @JvmStatic
+    fun main(args: Array<String>) {
+        val str = """
 				<div class="description">
 				<ul class="blockList">
 				<li class="blockList">
@@ -44,16 +45,15 @@ public class CleanTest {
 				 </code></pre></div>
 				</li>
 				</ul>
-				</div>""";
-
-		final String clean = Jsoup.clean(str,
-				"https://ci.dv8tion.net/job/JDA/javadoc/net/dv8tion/jda/api/JDABuilder.html",
-				Safelist.relaxed()
-						.removeAttributes("a", "title")
-		)
-				.replaceAll("<pre><code>(\\X*?)</code></pre>", "```java\n$1```")
-				;
-
-		System.out.println(clean);
-	}
+				</div>
+				""".trimIndent()
+        val clean = Jsoup.clean(
+            str,
+            "https://ci.dv8tion.net/job/JDA/javadoc/net/dv8tion/jda/api/JDABuilder.html",
+            Safelist.relaxed()
+                .removeAttributes("a", "title")
+        )
+            .replace("<pre><code>(\\X*?)</code></pre>".toRegex(), "```java\n$1```")
+        println(clean)
+    }
 }

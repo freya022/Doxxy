@@ -1,14 +1,12 @@
 package com.freya02.docs.data
 
 import com.freya02.bot.utils.HttpUtils
-import com.freya02.botcommands.api.Logging
 import com.freya02.docs.ClassDocs
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.DocUtils
 import com.freya02.docs.JavadocUrl
+import mu.KotlinLogging
 import org.jsoup.nodes.Element
-
-private val LOGGER = Logging.getLogger()
 
 class SeeAlso(type: DocSourceType, docDetail: DocDetail) {
     class SeeAlsoReference(
@@ -78,7 +76,7 @@ class SeeAlso(type: DocSourceType, docDetail: DocDetail) {
                     tryAddReference(SeeAlsoReference(seeAlsoClassElement.text(), href, TargetType.UNKNOWN, null))
                 }
             } catch (e: Exception) {
-                LOGGER.error("An exception occurred while retrieving a 'See also' detail", e)
+                logger.error("An exception occurred while retrieving a 'See also' detail", e)
             }
         }
     }
@@ -105,5 +103,9 @@ class SeeAlso(type: DocSourceType, docDetail: DocDetail) {
 
     fun getReferences(): List<SeeAlsoReference> {
         return references
+    }
+
+    companion object {
+        private val logger = KotlinLogging.logger { }
     }
 }
