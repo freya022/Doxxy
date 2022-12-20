@@ -9,7 +9,6 @@ import com.freya02.bot.utils.LogLevelResolver
 import com.freya02.bot.versioning.LibraryTypeResolver
 import com.freya02.bot.versioning.Versions
 import com.freya02.botcommands.api.CommandsBuilder
-import com.freya02.botcommands.api.Logging
 import com.freya02.botcommands.api.builder.ApplicationCommandsBuilder
 import com.freya02.botcommands.api.builder.ExtensionsBuilder
 import com.freya02.botcommands.api.components.DefaultComponentManager
@@ -22,6 +21,7 @@ import dev.reformator.stacktracedecoroutinator.runtime.DecoroutinatorRuntime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
+import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.events.session.ShutdownEvent
 import net.dv8tion.jda.api.requests.GatewayIntent
@@ -31,7 +31,7 @@ import kotlin.system.exitProcess
 import kotlin.time.Duration.Companion.minutes
 
 object Main {
-    private val logger by lazy { Logging.getLogger() } // Must not load before system property is set
+    private val logger by lazy { KotlinLogging.logger {} } // Must not load before system property is set
 
     @JvmStatic
     fun main(args: Array<String>) {

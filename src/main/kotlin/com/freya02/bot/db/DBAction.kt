@@ -1,8 +1,8 @@
 package com.freya02.bot.db
 
 import com.freya02.bot.utils.Utils.logQuery
-import com.freya02.botcommands.api.Logging
 import com.freya02.botcommands.internal.utils.ReflectionUtils
+import mu.KotlinLogging
 import org.intellij.lang.annotations.Language
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -20,7 +20,7 @@ class DBAction private constructor(
         }
 
         if (!shouldReturnData) {
-            LOGGER.warn(
+            logger.warn(
                 "Call at {} asks for data to be queried but no column names as been specified, this is just a performance issue",
                 ReflectionUtils.formatCallerMethod()
             )
@@ -49,7 +49,7 @@ class DBAction private constructor(
     }
 
     companion object {
-        private val LOGGER = Logging.getLogger()
+        private val logger = KotlinLogging.logger { }
 
         @Throws(SQLException::class)
         fun of(database: Database, @Language("PostgreSQL") statement: String): DBAction {

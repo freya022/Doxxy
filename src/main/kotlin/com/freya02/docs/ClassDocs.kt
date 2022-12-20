@@ -2,12 +2,10 @@ package com.freya02.docs
 
 import com.freya02.bot.utils.DecomposedName
 import com.freya02.bot.utils.HttpUtils
-import com.freya02.botcommands.api.Logging
 import com.freya02.docs.utils.DocsURL
+import mu.KotlinLogging
 import java.io.IOException
 import java.util.*
-
-private val LOGGER = Logging.getLogger()
 
 class ClassDocs private constructor(private val source: DocSourceType) {
     private val simpleNameToUrlMap: MutableMap<String, DocsURL> = HashMap()
@@ -31,7 +29,7 @@ class ClassDocs private constructor(private val source: DocSourceType) {
         val indexURL = source.allClassesIndexURL
         val constantValuesURL = source.constantValuesURL
 
-        LOGGER.info("Parsing ClassDocs URLs for: {}", source)
+        logger.info("Parsing ClassDocs URLs for: {}", source)
         val document = PageCache[source].getPage(indexURL)
         val constantsDocument = PageCache[source].getPage(constantValuesURL)
 
@@ -50,7 +48,7 @@ class ClassDocs private constructor(private val source: DocSourceType) {
 
             val oldUrl = simpleNameToUrlMap.put(decomposition.className, classUrl)
             when {
-                oldUrl != null -> LOGGER.warn(
+                oldUrl != null -> logger.warn(
                     "Detected a duplicate class name '{}' at '{}' and '{}'",
                     decomposition.className,
                     classUrl,
@@ -77,6 +75,8 @@ class ClassDocs private constructor(private val source: DocSourceType) {
     }
 
     companion object {
+        private val logger = KotlinLogging.logger { }
+
         private val sourceMap: MutableMap<DocSourceType, ClassDocs> = EnumMap(DocSourceType::class.java)
 
         @Synchronized

@@ -5,7 +5,6 @@ import com.freya02.bot.db.Database
 import com.freya02.bot.db.Transaction
 import com.freya02.bot.docs.DocEmbeds.toEmbed
 import com.freya02.bot.docs.metadata.SourceRootMetadata
-import com.freya02.botcommands.api.Logging
 import com.freya02.docs.ClassDocs
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.DocUtils.getReturnTypeNoAnnotations
@@ -14,9 +13,8 @@ import com.freya02.docs.data.BaseDoc
 import com.freya02.docs.data.ClassDetailType
 import com.freya02.docs.data.ClassDoc
 import com.google.gson.GsonBuilder
+import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.MessageEmbed
-
-private val LOGGER = Logging.getLogger()
 
 internal class DocIndexWriter(
     private val database_: Database,
@@ -51,7 +49,7 @@ internal class DocIndexWriter(
                 val classDoc = docsSession.retrieveDoc(classUrl)
 
                 if (classDoc == null) {
-                    LOGGER.warn("Unable to get docs of '${className}' at '${classUrl}', javadoc version or source type may be incorrect")
+                    logger.warn("Unable to get docs of '${className}' at '${classUrl}', javadoc version or source type may be incorrect")
                     continue
                 }
 
@@ -116,7 +114,7 @@ internal class DocIndexWriter(
 
                         if (range != null) return@let range
 
-                        LOGGER.warn("Method not found: ${methodDoc.methodSignature}")
+                        logger.warn("Method not found: ${methodDoc.methodSignature}")
 
                         null
                     }
@@ -155,7 +153,7 @@ internal class DocIndexWriter(
 
                         if (range != null) return@let range
 
-                        LOGGER.warn("Field not found: ${fieldDoc.classDocs.className}#${fieldDoc.simpleSignature}")
+                        logger.warn("Field not found: ${fieldDoc.classDocs.className}#${fieldDoc.simpleSignature}")
 
                         null
                     }
@@ -225,6 +223,8 @@ internal class DocIndexWriter(
     }
 
     companion object {
+        private val logger = KotlinLogging.logger { }
+
         internal val GSON = GsonBuilder()
             .registerTypeAdapter(MessageEmbed::class.java, MessageEmbedAdapter)
             .create()

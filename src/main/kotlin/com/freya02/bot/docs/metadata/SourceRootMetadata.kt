@@ -1,6 +1,5 @@
 package com.freya02.bot.docs.metadata
 
-import com.freya02.botcommands.api.Logging
 import com.github.javaparser.ParseResult
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.ImportDeclaration
@@ -12,11 +11,11 @@ import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName
 import com.github.javaparser.ast.type.ClassOrInterfaceType
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter
 import com.github.javaparser.utils.SourceRoot
+import mu.KotlinLogging
 import java.nio.file.Path
 import java.util.*
 
 class SourceRootMetadata(sourceRootPath: Path) {
-    private val logger = Logging.getLogger()
     private val sourceRoot: SourceRoot = SourceRoot(sourceRootPath)
 
     private val classMetadataMap: MutableMap<ClassName, ClassMetadata> = sortedMapOf()
@@ -327,5 +326,9 @@ class SourceRootMetadata(sourceRootPath: Path) {
         }
 
         return findAncestor(TypeDeclaration::class.java).get().findSimpleFullName() + "." + nameAsString
+    }
+
+    companion object {
+        private val logger = KotlinLogging.logger { }
     }
 }

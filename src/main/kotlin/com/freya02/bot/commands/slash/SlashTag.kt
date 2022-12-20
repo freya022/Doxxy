@@ -5,7 +5,6 @@ import com.freya02.bot.db.isUniqueViolation
 import com.freya02.bot.tag.*
 import com.freya02.bot.utils.Utils.shortTextInput
 import com.freya02.bot.utils.paragraphTextInput
-import com.freya02.botcommands.api.Logging
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.application.ApplicationCommand
 import com.freya02.botcommands.api.application.CommandScope
@@ -26,6 +25,7 @@ import com.freya02.botcommands.api.pagination.paginator.PaginatorBuilder
 import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.messages.Embed
 import me.xdrop.fuzzywuzzy.model.BoundExtractedResult
+import mu.KotlinLogging
 import net.dv8tion.jda.api.Permission.MANAGE_ROLES
 import net.dv8tion.jda.api.Permission.MANAGE_SERVER
 import net.dv8tion.jda.api.entities.Member
@@ -43,8 +43,6 @@ import java.util.concurrent.TimeUnit
 
 
 private typealias TagConsumer = suspend (Tag) -> Unit
-
-private val LOGGER = Logging.getLogger()
 
 private const val GUILD_TAGS_AUTOCOMPLETE = "guildTagsAutocomplete"
 private const val USER_TAGS_AUTOCOMPLETE = "userTagsAutocomplete"
@@ -287,7 +285,7 @@ class SlashTag(database: Database) : ApplicationCommand() {
 
                     return@setPaginatorSupplier embed
                 } catch (e: SQLException) {
-                    LOGGER.error(
+                    logger.error(
                         "An exception occurred while paginating through tags in guild '{}' ({})",
                         event.guild.name,
                         event.guild.idLong,
@@ -371,5 +369,9 @@ class SlashTag(database: Database) : ApplicationCommand() {
             //TODO maybe improve
             else -> choiceName
         }
+    }
+
+    companion object {
+        private val logger = KotlinLogging.logger { }
     }
 }

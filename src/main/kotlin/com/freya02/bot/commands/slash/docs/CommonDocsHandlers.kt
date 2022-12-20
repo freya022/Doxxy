@@ -7,7 +7,6 @@ import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocResolveResult
 import com.freya02.bot.docs.index.DocSearchResult
 import com.freya02.bot.docs.index.DocSuggestion
-import com.freya02.botcommands.api.Logging
 import com.freya02.botcommands.api.application.ApplicationCommand
 import com.freya02.botcommands.api.application.annotations.AppOption
 import com.freya02.botcommands.api.application.slash.GuildSlashEvent
@@ -24,6 +23,7 @@ import com.freya02.docs.DocSourceType
 import com.freya02.docs.data.TargetType
 import dev.minn.jda.ktx.messages.Embed
 import dev.minn.jda.ktx.messages.reply_
+import mu.KotlinLogging
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.ClientType
@@ -42,8 +42,6 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import net.dv8tion.jda.api.utils.messages.MessageCreateRequest
 import java.util.concurrent.TimeUnit
-
-private val logger = Logging.getLogger()
 
 class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationCommand() {
     @JDASelectionMenuListener(name = SEE_ALSO_SELECT_LISTENER_NAME)
@@ -164,6 +162,8 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
         .map { Choice(it.name, it.value) }
 
     companion object {
+        private val logger = KotlinLogging.logger { }
+
         const val CLASS_NAME_AUTOCOMPLETE_NAME = "CommonDocsHandlers: className"
         const val CLASS_NAME_WITH_METHODS_AUTOCOMPLETE_NAME = "CommonDocsHandlers: classNameWithMethods"
         const val CLASS_NAME_WITH_FIELDS_AUTOCOMPLETE_NAME = "CommonDocsHandlers: classNameWithFields"
