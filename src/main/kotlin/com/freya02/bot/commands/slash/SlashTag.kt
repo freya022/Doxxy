@@ -1,6 +1,5 @@
 package com.freya02.bot.commands.slash
 
-import com.freya02.bot.db.Database
 import com.freya02.bot.db.isUniqueViolation
 import com.freya02.bot.tag.*
 import com.freya02.botcommands.api.annotations.CommandMarker
@@ -51,9 +50,11 @@ private const val TAGS_CREATE_MODAL_HANDLER = "SlashTag: tagsCreate"
 private const val TAGS_EDIT_MODAL_HANDLER = "SlashTag: tagsEdit"
 
 @CommandMarker
-class SlashTag(database: Database, private val modals: Modals, private val components: Components) : ApplicationCommand() {
-    private val tagDB: TagDB = TagDB(database)
-
+class SlashTag(
+    private val tagDB: TagDB,
+    private val modals: Modals,
+    private val components: Components
+) : ApplicationCommand() {
     @Contract(value = "null -> fail", pure = true)
     private fun <T> checkGuild(obj: T?): T = requireNotNull(obj) { "Event did not happen in a guild" }
 

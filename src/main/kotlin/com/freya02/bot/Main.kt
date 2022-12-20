@@ -2,8 +2,6 @@ package com.freya02.bot
 
 import ch.qos.logback.classic.util.ContextInitializer
 import com.freya02.bot.db.Database
-import com.freya02.bot.docs.DocIndexMap
-import com.freya02.bot.versioning.Versions
 import com.freya02.botcommands.api.core.BBuilder
 import com.freya02.docs.DocWebServer
 import dev.minn.jda.ktx.events.CoroutineEventManager
@@ -47,10 +45,6 @@ object Main {
             DocWebServer.startDocWebServer()
             logger.info("Started docs web server")
 
-            val docIndexMap = DocIndexMap(database)
-
-            val versions = Versions(docIndexMap)
-
             BBuilder.newBuilder({
                 addOwners(222046562543468545L)
 
@@ -59,8 +53,6 @@ object Main {
                 serviceConfig.apply {
                     registerInstanceSupplier(Config::class.java) { config }
                     registerInstanceSupplier(Database::class.java) { database }
-                    registerInstanceSupplier(Versions::class.java) { versions }
-                    registerInstanceSupplier(DocIndexMap::class.java) { docIndexMap }
                 }
 
                 connectionProvider = Supplier { database.fetchConnection() }

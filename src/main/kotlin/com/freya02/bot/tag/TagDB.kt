@@ -2,12 +2,14 @@ package com.freya02.bot.tag
 
 import com.freya02.bot.db.DBAction
 import com.freya02.bot.db.Database
+import com.freya02.botcommands.api.core.annotations.BService
 import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import java.sql.ResultSet
 import java.sql.SQLException
 
+@BService
 class TagDB(private val database: Database) {
     private fun checkName(name: String) {
         if (name.length > NAME_MAX_LENGTH)

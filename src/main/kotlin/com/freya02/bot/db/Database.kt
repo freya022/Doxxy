@@ -1,6 +1,7 @@
 package com.freya02.bot.db
 
 import com.freya02.bot.Config
+import com.freya02.botcommands.api.core.annotations.BService
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.intellij.lang.annotations.Language
@@ -8,6 +9,7 @@ import java.sql.Connection
 import java.sql.SQLException
 import kotlin.time.Duration.Companion.seconds
 
+@BService
 class Database(config: Config) {
     private val source: HikariDataSource
 
