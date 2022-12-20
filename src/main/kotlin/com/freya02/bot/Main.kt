@@ -4,7 +4,6 @@ import ch.qos.logback.classic.util.ContextInitializer
 import com.freya02.bot.db.Database
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.versioning.Versions
-import com.freya02.botcommands.api.components.DefaultComponentManager
 import com.freya02.botcommands.api.core.BBuilder
 import com.freya02.docs.DocWebServer
 import dev.minn.jda.ktx.events.CoroutineEventManager
@@ -71,7 +70,7 @@ object Main {
                 }
 
                 components {
-                    componentManagerStrategy = DefaultComponentManager::class.java
+                    useComponents = true
                 }
 
                 settingsProvider = BotSettings

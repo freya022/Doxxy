@@ -19,7 +19,6 @@ import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.AutocompleteAlgorithms
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.FuzzyResult
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.ToStringFunction
-import com.freya02.botcommands.api.application.slash.autocomplete.AutocompleteAlgorithms
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.CacheAutocomplete
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.CompositeKey
@@ -29,6 +28,7 @@ import com.freya02.botcommands.api.utils.EmojiUtils
 import dev.minn.jda.ktx.interactions.components.link
 import dev.minn.jda.ktx.messages.Embed
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
+import net.dv8tion.jda.api.interactions.commands.Command
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import java.io.IOException
@@ -147,7 +147,7 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
         val branchMap = getBranchMap(libraryType)
         val defaultBranchName = branchMap.defaultBranch.branchName
 
-        return AutocompleteAlgorithms.fuzzyMatching(branchMap.branches.keys, { it }, event)
+        return AutocompleteAlgorithms.fuzzyMatching(branchMap.branches.keys, { it }, event.focusedOption.value)
             .take(OptionData.MAX_CHOICES)
             .map { it.string }
             .let { branchNames ->

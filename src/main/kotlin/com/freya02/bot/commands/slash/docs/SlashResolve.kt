@@ -50,7 +50,7 @@ class SlashResolve(private val docIndexMap: DocIndexMap, private val components:
             event.reply_("Could not find documentation for `$chain`", ephemeral = true).queue()
             return
         }
-        CommonDocsHandlers.sendClass(event, false, doc)
+        CommonDocsHandlers.sendClass(event, false, doc, components)
     }
 
     companion object {

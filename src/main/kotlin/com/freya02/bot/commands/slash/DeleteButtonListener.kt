@@ -1,13 +1,13 @@
 package com.freya02.bot.commands.slash
 
 import com.freya02.botcommands.api.components.Components
-import com.freya02.botcommands.api.components.InteractionConstraints
 import com.freya02.botcommands.api.components.annotations.JDAButtonListener
 import com.freya02.botcommands.api.components.event.ButtonEvent
 import com.freya02.botcommands.api.utils.EmojiUtils
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.interactions.components.buttons.Button
+import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 
 class DeleteButtonListener {
     @JDAButtonListener(name = DELETE_MESSAGE_BUTTON_LISTENER_NAME)
@@ -21,10 +21,13 @@ class DeleteButtonListener {
         private val WASTEBASKET = EmojiUtils.resolveJDAEmoji("wastebasket")
 
         fun Components.messageDeleteButton(allowedUser: UserSnowflake): Button {
-            return dangerButton(DELETE_MESSAGE_BUTTON_LISTENER_NAME)
-                .setConstraints(InteractionConstraints.ofUserIds(allowedUser.idLong).addPermissions(Permission.MESSAGE_MANAGE))
-                .oneUse()
-                .build(WASTEBASKET)
+            return persistentButton(ButtonStyle.DANGER, emoji = WASTEBASKET) {
+                oneUse = true
+                bindTo(DELETE_MESSAGE_BUTTON_LISTENER_NAME)
+
+                constraints += allowedUser
+                constraints += Permission.MESSAGE_MANAGE
+            }
         }
     }
 }

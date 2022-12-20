@@ -14,8 +14,8 @@ import com.freya02.botcommands.api.commands.application.slash.autocomplete.annot
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.CacheAutocomplete
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.CompositeKey
 import com.freya02.botcommands.api.components.Components
-import com.freya02.botcommands.api.components.annotations.JDASelectionMenuListener
-import com.freya02.botcommands.api.components.event.StringSelectionEvent
+import com.freya02.botcommands.api.components.annotations.JDASelectMenuListener
+import com.freya02.botcommands.api.components.event.StringSelectEvent
 import com.freya02.botcommands.api.pagination.menu.ChoiceMenuBuilder
 import com.freya02.botcommands.api.utils.ButtonContent
 import com.freya02.botcommands.api.utils.EmojiUtils
@@ -44,8 +44,8 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateRequest
 import java.util.concurrent.TimeUnit
 
 class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val components: Components) : ApplicationCommand() {
-    @JDASelectionMenuListener(name = SEE_ALSO_SELECT_LISTENER_NAME)
-    fun onSeeAlsoSelect(event: StringSelectionEvent) {
+    @JDASelectMenuListener(name = SEE_ALSO_SELECT_LISTENER_NAME)
+    fun onSeeAlsoSelect(event: StringSelectEvent) {
         val option = event.selectedOptions[0] //Forced to use 1
         val values = option.value.split(":")
         val targetType = TargetType.valueOf(values[0])
@@ -58,7 +58,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
                 else -> throw IllegalArgumentException("Invalid target type: $targetType")
             }
             if (doc != null) {
-                sendClass(event, true, doc)
+                sendClass(event, true, doc, components)
                 break
             }
         }
@@ -188,17 +188,17 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
             RESOLVE_AUTOCOMPLETE_NAME
         )
 
-        fun sendClass(event: IReplyCallback, ephemeral: Boolean, cachedDoc: CachedDoc) {
-            event.reply(getDocMessageData(event.member!!, ephemeral, cachedDoc))
+        fun sendClass(event: IReplyCallback, ephemeral: Boolean, cachedDoc: CachedDoc, components: Components) {
+            event.reply(getDocMessageData(event.member!!, ephemeral, cachedDoc, components))
                 .setEphemeral(ephemeral)
                 .queue()
         }
 
-        fun getDocMessageData(caller: Member, ephemeral: Boolean, cachedDoc: CachedDoc): MessageCreateData {
+        fun getDocMessageData(caller: Member, ephemeral: Boolean, cachedDoc: CachedDoc, components: Components): MessageCreateData {
             return MessageCreateBuilder().apply {
                 addEmbeds(cachedDoc.embed.withLink(cachedDoc, caller))
-                addDocsSeeAlso(cachedDoc)
-                addDocsActionRows(ephemeral, cachedDoc, caller)
+                addDocsSeeAlso(cachedDoc, components)
+                addDocsActionRows(ephemeral, cachedDoc, caller, components)
             }.build()
         }
 
@@ -275,8 +275,8 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
             sendClass(event, false, cachedField, components)
         }
 
-        fun buildDocSuggestionsMenu(docIndex: DocIndex, suggestions: List<DocSuggestion>, block: ChoiceMenuBuilder<DocSuggestion>.() -> Unit) =
-            ChoiceMenuBuilder(suggestions)
+        fun buildDocSuggestionsMenu(docIndex: DocIndex, suggestions: List<DocSuggestion>, components: Components, block: ChoiceMenuBuilder<DocSuggestion>.() -> Unit) =
+            ChoiceMenuBuilder(components, suggestions)
                 .setButtonContentSupplier { _, index -> ButtonContent.withString((index + 1).toString()) }
                 .setTransformer { it.humanIdentifier }
                 .setMaxEntriesPerPage(10)
@@ -304,9 +304,9 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
             docIndex: DocIndex,
             components: Components,
             block: () -> List<DocSuggestion>
-        ) = buildDocSuggestionsMenu(docIndex, block()) {
+        ) = buildDocSuggestionsMenu(docIndex, block(), components) {
             setTimeout(2, TimeUnit.MINUTES) { menu, _ ->
-                menu.cleanup(event.context)
+                menu.cleanup()
                 event.hook
                     .deleteOriginal()
                     .queue(null, ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE, ErrorResponse.UNKNOWN_WEBHOOK))
@@ -324,7 +324,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
 
                 when (doc) {
                     null -> buttonEvent.reply_("This item is now invalid, try again", ephemeral = true).queue()
-                    else -> buttonEvent.deferEdit().flatMap { event.channel.sendMessage(getDocMessageData(buttonEvent.member!!, false, doc)) }.queue()
+                    else -> buttonEvent.deferEdit().flatMap { event.channel.sendMessage(getDocMessageData(buttonEvent.member!!, false, doc, components)) }.queue()
                 }
             }
         }
@@ -334,31 +334,34 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
         private fun MessageCreateRequest<*>.addDocsSeeAlso(cachedDoc: CachedDoc, components: Components) {
             cachedDoc.seeAlsoReferences.let { referenceList ->
                 if (referenceList.any { it.targetType != TargetType.UNKNOWN }) {
-                    val selectionMenuBuilder = components.stringSelectionMenu(SEE_ALSO_SELECT_LISTENER_NAME)
-                        .timeout(15, TimeUnit.MINUTES)
-                        .setPlaceholder("See also")
-                    for (reference in referenceList) {
-                        if (reference.targetType != TargetType.UNKNOWN) {
-                            val optionValue = reference.targetType.name + ":" + reference.fullSignature
-                            if (optionValue.length > SelectMenu.ID_MAX_LENGTH) {
-                                logger.warn(
-                                    "Option value was too large ({}) for: '{}'",
-                                    optionValue.length,
-                                    optionValue
+                    val selectMenu = components.persistentStringSelectMenu {
+                        bindTo(SEE_ALSO_SELECT_LISTENER_NAME)
+                        timeout(15, TimeUnit.MINUTES)
+                        placeholder = "See also"
+
+                        for (reference in referenceList) {
+                            if (reference.targetType != TargetType.UNKNOWN) {
+                                val optionValue = reference.targetType.name + ":" + reference.fullSignature
+                                if (optionValue.length > SelectMenu.ID_MAX_LENGTH) {
+                                    logger.warn(
+                                        "Option value was too large ({}) for: '{}'",
+                                        optionValue.length,
+                                        optionValue
+                                    )
+
+                                    continue
+                                }
+
+                                addOption(
+                                    reference.text,
+                                    optionValue,
+                                    EmojiUtils.resolveJDAEmoji("clipboard")
                                 )
-
-                                continue
                             }
-
-                            selectionMenuBuilder.addOption(
-                                reference.text,
-                                optionValue,
-                                EmojiUtils.resolveJDAEmoji("clipboard")
-                            )
                         }
                     }
 
-                    addActionRow(selectionMenuBuilder.build())
+                    addActionRow(selectMenu)
                 }
             }
         }

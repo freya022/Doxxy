@@ -3,8 +3,6 @@ package com.freya02.bot.commands.slash
 import com.freya02.bot.db.Database
 import com.freya02.bot.db.isUniqueViolation
 import com.freya02.bot.tag.*
-import com.freya02.bot.utils.Utils.shortTextInput
-import com.freya02.bot.utils.paragraphTextInput
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.CommandScope
@@ -14,17 +12,19 @@ import com.freya02.botcommands.api.commands.application.slash.annotations.JDASla
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.AutocompleteAlgorithms
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
 import com.freya02.botcommands.api.components.Components
-import com.freya02.botcommands.api.components.InteractionConstraints
+import com.freya02.botcommands.api.components.data.InteractionConstraints
 import com.freya02.botcommands.api.components.event.ButtonEvent
 import com.freya02.botcommands.api.modals.Modals
 import com.freya02.botcommands.api.modals.annotations.ModalData
 import com.freya02.botcommands.api.modals.annotations.ModalHandler
 import com.freya02.botcommands.api.modals.annotations.ModalInput
+import com.freya02.botcommands.api.modals.create
+import com.freya02.botcommands.api.modals.paragraphTextInput
+import com.freya02.botcommands.api.modals.shortTextInput
 import com.freya02.botcommands.api.pagination.paginator.Paginator
 import com.freya02.botcommands.api.pagination.paginator.PaginatorBuilder
 import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.messages.Embed
-import me.xdrop.fuzzywuzzy.model.BoundExtractedResult
 import mu.KotlinLogging
 import net.dv8tion.jda.api.Permission.MANAGE_ROLES
 import net.dv8tion.jda.api.Permission.MANAGE_SERVER
@@ -34,12 +34,13 @@ import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInterac
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 import net.dv8tion.jda.api.interactions.commands.Command
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
+import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import org.jetbrains.annotations.Contract
 import java.sql.SQLException
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.minutes
 
 
 private typealias TagConsumer = suspend (Tag) -> Unit
@@ -110,26 +111,24 @@ class SlashTag(database: Database, private val modals: Modals, private val compo
 
     @JDASlashCommand(scope = CommandScope.GLOBAL_NO_DM, name = "tags", subcommand = "create", description = "Creates a tag in this guild")
     fun createTag(event: GuildSlashEvent) {
-        val tagNameInput = shortTextInput("tagName", "Tag name") {
-            minLength = TagDB.NAME_MIN_LENGTH
-            maxLength = TagDB.NAME_MAX_LENGTH
-        }
+        val modal = modals.create("Create a tag") {
+            shortTextInput("tagName", "Tag name") {
+                minLength = TagDB.NAME_MIN_LENGTH
+                maxLength = TagDB.NAME_MAX_LENGTH
+            }
 
-        val tagDescriptionInput = shortTextInput("tagDescription", "Tag description") {
-            minLength = TagDB.DESCRIPTION_MIN_LENGTH
-            maxLength = TagDB.DESCRIPTION_MAX_LENGTH
-        }
+            shortTextInput("tagDescription", "Tag description") {
+                minLength = TagDB.DESCRIPTION_MIN_LENGTH
+                maxLength = TagDB.DESCRIPTION_MAX_LENGTH
+            }
 
-        val tagContentInput = paragraphTextInput("tagContent", "Tag content") {
-            minLength = TagDB.CONTENT_MIN_LENGTH
-            maxLength = TagDB.CONTENT_MAX_LENGTH
-        }
+            paragraphTextInput("tagContent", "Tag content") {
+                minLength = TagDB.CONTENT_MIN_LENGTH
+                maxLength = TagDB.CONTENT_MAX_LENGTH
+            }
 
-        val modal = Modals.create("Create a tag", TAGS_CREATE_MODAL_HANDLER)
-            .addActionRow(tagNameInput)
-            .addActionRow(tagDescriptionInput)
-            .addActionRow(tagContentInput)
-            .build()
+            bindTo(TAGS_CREATE_MODAL_HANDLER)
+        }
 
         event.replyModal(modal).queue()
     }
@@ -161,23 +160,21 @@ class SlashTag(database: Database, private val modals: Modals, private val compo
         @AppOption(description = "Name of the tag", autocomplete = USER_TAGS_AUTOCOMPLETE) name: String
     ) {
         withOwnedTag(event, name) { tag: Tag ->
-            val modal = modals.create("Edit a tag", TAGS_EDIT_MODAL_HANDLER, name)
-                .addActionRow(
-                    modals.createTextInput("tagName", "Tag name", TextInputStyle.SHORT)
-                        .setValue(tag.name)
-                        .build()
-                )
-                .addActionRow(
-                    modals.createTextInput("tagDescription", "Tag description", TextInputStyle.SHORT)
-                        .setValue(tag.description)
-                        .build()
-                )
-                .addActionRow(
-                    modals.createTextInput("tagContent", "Tag content", TextInputStyle.PARAGRAPH)
-                        .setValue(tag.content)
-                        .build()
-                )
-                .build()
+            val modal = modals.create("Edit a tag") {
+                shortTextInput("tagName", "Tag name") {
+                    value = tag.name
+                }
+
+                shortTextInput("tagDescription", "Tag description") {
+                    value = tag.description
+                }
+
+                paragraphTextInput("tagContent", "Tag content") {
+                    value = tag.content
+                }
+
+                bindTo(TAGS_EDIT_MODAL_HANDLER, name)
+            }
 
             event.replyModal(modal).queue()
         }
@@ -236,16 +233,18 @@ class SlashTag(database: Database, private val modals: Modals, private val compo
         @AppOption(description = "Name of the tag", autocomplete = USER_TAGS_AUTOCOMPLETE) name: String
     ) {
         withOwnedTag(event, name) { tag: Tag ->
+            val deleteButton = components.ephemeralButton(ButtonStyle.DANGER, "Delete") {
+                bindTo { doDeleteTag(event, name, it) }
+            }
+            val noButton = components.ephemeralButton(ButtonStyle.PRIMARY, "No") {
+                bindTo { it.editMessage("Cancelled").setComponents().queue() }
+            }
+            components.newEphemeralGroup(deleteButton, noButton) {
+                timeout(2.minutes)
+            }
+
             event.reply("Are you sure you want to delete the tag '${tag.name}' ?")
-                .addActionRow(
-                    *components.group(
-                        components.dangerButton { btnEvt: ButtonEvent -> doDeleteTag(event, name, btnEvt) }
-                            .build("Delete"),
-                        components.primaryButton { btnEvt: ButtonEvent ->
-                            btnEvt.editMessage("Cancelled").setComponents().queue()
-                        }.build("No")
-                    )
-                )
+                .addActionRow(deleteButton, noButton)
                 .setEphemeral(true)
                 .queue()
         }
@@ -263,11 +262,11 @@ class SlashTag(database: Database, private val modals: Modals, private val compo
     ) {
         val finalCriteria = criteria ?: TagCriteria.NAME
         val totalTags = tagDB.getTotalTags(event.guild.idLong)
-        val paginator = PaginatorBuilder()
+        val paginator = PaginatorBuilder(components)
             .setConstraints(InteractionConstraints.ofUsers(event.user))
             .setMaxPages(totalTags / 10)
             .setTimeout(5, TimeUnit.MINUTES) { p: Paginator, _ ->
-                p.cleanup(event.context)
+                p.cleanup()
                 event.hook.editOriginalComponents().queue()
             }
             .setPaginatorSupplier { _, _, _, page: Int ->

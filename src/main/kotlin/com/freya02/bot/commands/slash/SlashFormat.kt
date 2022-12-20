@@ -9,10 +9,11 @@ import com.freya02.botcommands.api.commands.application.slash.annotations.JDASla
 import com.freya02.botcommands.api.modals.Modals
 import com.freya02.botcommands.api.modals.annotations.ModalHandler
 import com.freya02.botcommands.api.modals.annotations.ModalInput
+import com.freya02.botcommands.api.modals.create
+import com.freya02.botcommands.api.modals.paragraphTextInput
 import dev.minn.jda.ktx.messages.reply_
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
-import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 
 private const val FORMAT_MODAL_HANDLER_NAME = "SlashFormat: formatModal"
 private const val FORMAT_MODAL_CODE_INPUT_NAME = "SlashFormat: formatModalCodeInput"
@@ -25,9 +26,11 @@ class SlashFormat : ApplicationCommand() {
         description = "Formats your code and sends it back to you as a copy-paste-able block"
     )
     fun onSlashFormat(event: GlobalSlashEvent, modals: Modals) {
-        val modal = modals.create("Format code", FORMAT_MODAL_HANDLER_NAME)
-            .addActionRow(modals.createTextInput(FORMAT_MODAL_CODE_INPUT_NAME, "Code to format", TextInputStyle.PARAGRAPH).build())
-            .build()
+        val modal = modals.create("Format code") {
+            paragraphTextInput(FORMAT_MODAL_CODE_INPUT_NAME, "Code to format")
+
+            bindTo(FORMAT_MODAL_HANDLER_NAME)
+        }
 
         event.replyModal(modal).queue()
     }

@@ -8,10 +8,11 @@ import com.freya02.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
 import com.freya02.bot.docs.index.DocType
 import com.freya02.botcommands.api.BContext
 import com.freya02.botcommands.api.annotations.CommandMarker
-import com.freya02.botcommands.api.prefixed.BaseCommandEvent
-import com.freya02.botcommands.api.prefixed.TextCommand
-import com.freya02.botcommands.api.prefixed.annotations.JDATextCommand
-import com.freya02.botcommands.api.prefixed.annotations.TextOption
+import com.freya02.botcommands.api.commands.prefixed.BaseCommandEvent
+import com.freya02.botcommands.api.commands.prefixed.TextCommand
+import com.freya02.botcommands.api.commands.prefixed.annotations.JDATextCommand
+import com.freya02.botcommands.api.commands.prefixed.annotations.TextOption
+import com.freya02.botcommands.api.components.Components
 import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.messages.reply_
 import net.dv8tion.jda.api.exceptions.ErrorHandler
@@ -21,7 +22,7 @@ import net.dv8tion.jda.api.utils.messages.MessageEditData
 import java.util.concurrent.TimeUnit
 
 @CommandMarker
-class TextDocs(private val context: BContext, private val docIndexMap: DocIndexMap) : TextCommand() {
+class TextDocs(private val context: BContext, private val docIndexMap: DocIndexMap, private val components: Components) : TextCommand() {
     @JDATextCommand(name = "docs", description = "Shows the documentation for a class, a method or a field")
     fun onTextDocs(
         event: BaseCommandEvent,
@@ -36,7 +37,7 @@ class TextDocs(private val context: BContext, private val docIndexMap: DocIndexM
             }
             else -> {
                 docIndex.getClassDoc(query)?.let {
-                    event.channel.sendMessage(CommonDocsHandlers.getDocMessageData(event.member, false, it)).queue()
+                    event.channel.sendMessage(CommonDocsHandlers.getDocMessageData(event.member, false, it, components)).queue()
                     return
                 }
 
@@ -50,11 +51,11 @@ class TextDocs(private val context: BContext, private val docIndexMap: DocIndexM
     }
 
     private fun getDocSuggestionMenu(docIndex: DocIndex, suggestions: List<DocSuggestion>) =
-        CommonDocsHandlers.buildDocSuggestionsMenu(docIndex, suggestions) {
+        CommonDocsHandlers.buildDocSuggestionsMenu(docIndex, suggestions, components) {
             useDeleteButton(true)
 
             setTimeout(2, TimeUnit.MINUTES) { menu, message ->
-                menu.cleanup(context)
+                menu.cleanup()
                 message!!
                     .editMessageComponents()
                     .queue(
@@ -74,7 +75,7 @@ class TextDocs(private val context: BContext, private val docIndexMap: DocIndexM
                 when (doc) {
                     null -> buttonEvent.reply_("This item is now invalid, try again", ephemeral = true).queue()
                     else -> buttonEvent.editMessage(MessageEditData.fromCreateData(
-                        CommonDocsHandlers.getDocMessageData(buttonEvent.member!!, false, doc)
+                        CommonDocsHandlers.getDocMessageData(buttonEvent.member!!, false, doc, components)
                     )).queue()
                 }
             }

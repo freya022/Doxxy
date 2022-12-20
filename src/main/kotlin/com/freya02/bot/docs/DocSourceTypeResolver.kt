@@ -46,7 +46,7 @@ class DocSourceTypeResolver : ParameterResolver<DocSourceTypeResolver, DocSource
         event: MessageReceivedEvent,
         args: Array<String?>
     ): DocSourceType? {
-        val typeStr = args.first().lowercase()
+        val typeStr = args.first()?.lowercase() ?: return null
         return when {
             typeStr.contentEquals("java", true) -> DocSourceType.JAVA
             typeStr.contentEquals("jda", true) -> DocSourceType.JDA
