@@ -7,18 +7,19 @@ import com.freya02.bot.versioning.supplier.BuildToolType
 import com.freya02.bot.versioning.supplier.DependencySupplier
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
-import com.freya02.botcommands.api.commands.application.annotations.AppOption
+import com.freya02.botcommands.api.commands.application.CommandScope
+import com.freya02.botcommands.api.commands.application.GuildApplicationCommandManager
+import com.freya02.botcommands.api.commands.application.annotations.AppDeclaration
 import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
-import com.freya02.botcommands.api.commands.application.slash.annotations.JDASlashCommand
 import com.freya02.botcommands.api.components.Components
 import dev.minn.jda.ktx.messages.Embed
 
 @CommandMarker
 class SlashGradle(private val versions: Versions, private val components: Components) : ApplicationCommand() {
-    @JDASlashCommand(name = "gradle", description = "Shows the Gradle dependencies for a library")
+    @CommandMarker
     fun onSlashGradle(
         event: GuildSlashEvent,
-        @AppOption(description = "Type of library") libraryType: LibraryType = LibraryType.getDefaultLibrary(event.guild)
+        libraryType: LibraryType = LibraryType.getDefaultLibrary(event.guild)
     ) {
         val script = when (libraryType) {
             LibraryType.BOT_COMMANDS -> DependencySupplier.formatBC(
@@ -40,5 +41,18 @@ class SlashGradle(private val versions: Versions, private val components: Compon
         event.replyEmbeds(embed)
             .addActionRow(components.messageDeleteButton(event.user))
             .queue()
+    }
+
+    @AppDeclaration
+    fun declare(manager: GuildApplicationCommandManager) {
+        manager.slashCommand("gradle", CommandScope.GUILD) {
+            description = "Shows the Gradle dependencies for a library (default: ${LibraryType.getDefaultLibrary(manager.guild).displayString})"
+
+            option("libraryType") {
+                description = "Type of library"
+            }
+
+            function = ::onSlashGradle
+        }
     }
 }
