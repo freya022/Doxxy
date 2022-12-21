@@ -40,6 +40,14 @@ class JitpackBranchService(private val context: BContext) {
         }
     }
 
+    fun getBranch(libraryType: LibraryType, branchName: String?): GithubBranch? {
+        val githubBranchMap = getBranchMap(libraryType)
+        return when (branchName) {
+            null -> githubBranchMap.defaultBranch
+            else -> githubBranchMap.branches[branchName]
+        }
+    }
+
     fun getUsedJDAVersionFromBranch(branch: GithubBranch): ArtifactInfo {
         val jdaVersionChecker = branchNameToJdaVersionChecker.getOrPut(branch.branchName) {
             try {
@@ -93,13 +101,5 @@ class JitpackBranchService(private val context: BContext) {
         val defaultBranchName = GithubUtils.getDefaultBranchName(ownerName, repoName)
         val defaultBranch = map[defaultBranchName]!!
         return GithubBranchMap(defaultBranch, map)
-    }
-
-    fun getBranch(libraryType: LibraryType, branchName: String?): GithubBranch? {
-        val githubBranchMap = getBranchMap(libraryType)
-        return when (branchName) {
-            null -> githubBranchMap.defaultBranch
-            else -> githubBranchMap.branches[branchName]
-        }
     }
 }
