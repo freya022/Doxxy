@@ -219,12 +219,12 @@ class SlashJitpack(
         val dependencyStr = when (libraryType) {
             LibraryType.JDA5, LibraryType.JDA_KTX -> DependencySupplier.formatJitpack(
                 buildToolType,
-                branch.asJitpackArtifact
+                branch.toJitpackArtifact()
             )
             LibraryType.BOT_COMMANDS -> DependencySupplier.formatBCJitpack(
                 buildToolType,
                 jitpackBranchService.getUsedJDAVersionFromBranch(branch),
-                branch.asJitpackArtifact
+                branch.toJitpackArtifact()
             )
             else -> throw IllegalArgumentException("Invalid lib type: $libraryType")
         }
@@ -232,9 +232,9 @@ class SlashJitpack(
         val embed = Embed {
             title =
                 buildToolType.humanName + " dependencies for " + libraryType.displayString + " @ branch '" + branchName + "'"
-            url = branch.asURL
+            url = branch.toURL()
 
-            field("Branch Link", branch.asURL, false)
+            field("Branch Link", branch.toURL(), false)
 
             description = when (buildToolType) {
                 BuildToolType.MAVEN -> "```xml\n$dependencyStr```"
