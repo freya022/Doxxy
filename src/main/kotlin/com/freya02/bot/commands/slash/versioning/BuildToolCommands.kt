@@ -6,6 +6,7 @@ import com.freya02.bot.versioning.ScriptType
 import com.freya02.bot.versioning.Versions
 import com.freya02.bot.versioning.supplier.BuildToolType
 import com.freya02.bot.versioning.supplier.DependencySupplier
+import com.freya02.bot.versioning.supplier.UnsupportedDependencyException
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.commands.application.CommandScope
 import com.freya02.botcommands.api.commands.application.GuildApplicationCommandManager
@@ -13,9 +14,13 @@ import com.freya02.botcommands.api.commands.application.annotations.AppDeclarati
 import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
 import com.freya02.botcommands.api.components.Components
 import dev.minn.jda.ktx.messages.Embed
+import dev.minn.jda.ktx.messages.reply_
+import mu.KotlinLogging
 
 @CommandMarker
 class BuildToolCommands(private val versions: Versions, private val components: Components) {
+    private val logger = KotlinLogging.logger { }
+
     @CommandMarker
     fun onSlashBuildTool(
         event: GuildSlashEvent,
@@ -23,27 +28,35 @@ class BuildToolCommands(private val versions: Versions, private val components: 
         buildToolType: BuildToolType,
         libraryType: LibraryType = LibraryType.getDefaultLibrary(event.guild)
     ) {
-        val script = when (libraryType) {
-            LibraryType.BOT_COMMANDS -> DependencySupplier.formatBC(
-                scriptType,
-                buildToolType,
-                versions.jdaVersionFromBotCommands,
-                versions.latestBotCommandsVersion
-            )
-            LibraryType.JDA5 -> DependencySupplier.formatJDA5(scriptType, buildToolType, versions.latestJDA5Version)
-            LibraryType.JDA4 -> DependencySupplier.formatJDA4(scriptType, buildToolType, versions.latestJDA4Version)
-            LibraryType.JDA_KTX -> DependencySupplier.formatJitpack(scriptType, buildToolType, versions.latestJDAKtxVersion)
+        try {
+            val script = when (libraryType) {
+                LibraryType.BOT_COMMANDS -> DependencySupplier.formatBC(
+                    scriptType,
+                    buildToolType,
+                    versions.jdaVersionFromBotCommands,
+                    versions.latestBotCommandsVersion
+                )
+                LibraryType.JDA5 -> DependencySupplier.formatJDA5(scriptType, buildToolType, versions.latestJDA5Version)
+                LibraryType.JDA4 -> DependencySupplier.formatJDA4(scriptType, buildToolType, versions.latestJDA4Version)
+                LibraryType.JDA_KTX -> DependencySupplier.formatJitpack(scriptType, buildToolType, versions.latestJDAKtxVersion)
+            }
+
+            val embed = Embed {
+                title = "${buildToolType.humanName} dependencies for ${libraryType.displayString}"
+
+                description = "```${buildToolType.blockLang}\n$script```"
+            }
+
+            event.replyEmbeds(embed)
+                .addActionRow(components.messageDeleteButton(event.user))
+                .queue()
+        } catch (e: UnsupportedDependencyException) {
+            logger.debug { e.message }
+            event.reply_(
+                "The ${libraryType.displayString} ${buildToolType.humanName} ${scriptType.humanName.lowercase()} script isn't available yet.",
+                ephemeral = true
+            ).queue()
         }
-
-        val embed = Embed {
-            title = "${buildToolType.humanName} dependencies for ${libraryType.displayString}"
-
-            description = "```${buildToolType.blockLang}\n$script```"
-        }
-
-        event.replyEmbeds(embed)
-            .addActionRow(components.messageDeleteButton(event.user))
-            .queue()
     }
 
     @AppDeclaration
