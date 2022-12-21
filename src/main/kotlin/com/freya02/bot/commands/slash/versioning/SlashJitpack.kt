@@ -3,6 +3,7 @@ package com.freya02.bot.commands.slash.versioning
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
 import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.bot.versioning.LibraryType
+import com.freya02.bot.versioning.ScriptType
 import com.freya02.bot.versioning.github.GithubBranch
 import com.freya02.bot.versioning.github.PullRequest
 import com.freya02.bot.versioning.jitpack.JitpackBranchService
@@ -46,11 +47,13 @@ class SlashJitpack(
 
         val dependencyStr: String = when (libraryType) {
             LibraryType.BOT_COMMANDS -> DependencySupplier.formatBCJitpack(
+                ScriptType.DEPENDENCIES,
                 buildToolType,
                 jitpackBranchService.getUsedJDAVersionFromBranch(pullRequest.branch),
                 pullRequest.toJitpackArtifact()
             )
             LibraryType.JDA5, LibraryType.JDA_KTX -> DependencySupplier.formatJitpack(
+                ScriptType.DEPENDENCIES,
                 buildToolType,
                 pullRequest.toJitpackArtifact()
             )
@@ -218,10 +221,12 @@ class SlashJitpack(
 
         val dependencyStr = when (libraryType) {
             LibraryType.JDA5, LibraryType.JDA_KTX -> DependencySupplier.formatJitpack(
+                ScriptType.DEPENDENCIES,
                 buildToolType,
                 branch.toJitpackArtifact()
             )
             LibraryType.BOT_COMMANDS -> DependencySupplier.formatBCJitpack(
+                ScriptType.DEPENDENCIES,
                 buildToolType,
                 jitpackBranchService.getUsedJDAVersionFromBranch(branch),
                 branch.toJitpackArtifact()
