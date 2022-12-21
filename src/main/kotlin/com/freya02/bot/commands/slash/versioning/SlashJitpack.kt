@@ -5,7 +5,11 @@ import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDele
 import com.freya02.bot.utils.CryptoUtils
 import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.bot.versioning.LibraryType
-import com.freya02.bot.versioning.github.*
+import com.freya02.bot.versioning.github.GithubBranch
+import com.freya02.bot.versioning.github.PullRequest
+import com.freya02.bot.versioning.github.UpdateCountdown
+import com.freya02.bot.versioning.jitpack.JitpackBranchService
+import com.freya02.bot.versioning.jitpack.JitpackPrService
 import com.freya02.bot.versioning.maven.MavenBranchProjectDependencyVersionChecker
 import com.freya02.bot.versioning.supplier.BuildToolType
 import com.freya02.bot.versioning.supplier.DependencySupplier
@@ -37,24 +41,18 @@ import kotlin.time.Duration.Companion.minutes
 
 //TODO refactor
 @CommandMarker
-class SlashJitpack(private val components: Components) : ApplicationCommand() {
-    private val bcPullRequestCache = PullRequestCache("freya022", "BotCommands", null)
-    private val jdaPullRequestCache = PullRequestCache("DV8FromTheWorld", "JDA", "master")
-    private val jdaKtxPullRequestCache = PullRequestCache("MinnDevelopment", "jda-ktx", "master")
+class SlashJitpack(
+    private val components: Components,
+    private val jitpackPrService: JitpackPrService,
+    private val jitpackBranchService: JitpackBranchService
+) : ApplicationCommand() {
     private val branchNameToJdaVersionChecker: MutableMap<String, MavenBranchProjectDependencyVersionChecker> =
         Collections.synchronizedMap(hashMapOf())
     private val updateCountdownMap: MutableMap<String, UpdateCountdown> = HashMap()
-    private val updateMap: MutableMap<LibraryType, UpdateCountdown> = EnumMap(LibraryType::class.java)
-    private val branchMap: MutableMap<LibraryType, GithubBranchMap> = EnumMap(LibraryType::class.java)
 
     @CommandMarker
     fun onSlashJitpackPR(event: GuildSlashEvent, libraryType: LibraryType, buildToolType: BuildToolType, pullNumber: Int) {
-        val pullRequest = when (libraryType) {
-            LibraryType.BOT_COMMANDS -> bcPullRequestCache.pullRequests[pullNumber]
-            LibraryType.JDA5 -> jdaPullRequestCache.pullRequests[pullNumber]
-            LibraryType.JDA_KTX -> jdaKtxPullRequestCache.pullRequests[pullNumber]
-            else -> throw IllegalArgumentException()
-        } ?: run {
+        val pullRequest = jitpackPrService.getPullRequest(libraryType, pullNumber) ?: run {
             event.reply("Unknown Pull Request").setEphemeral(true).queue()
             return
         }
@@ -116,14 +114,10 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
     @AutocompleteHandler(name = PR_NUMBER_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onPRNumberAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
-        @CompositeKey @AppOption libraryType: LibraryType?
+        @CompositeKey @AppOption libraryType: LibraryType
     ): Collection<Choice> {
-        val pullRequests = when (libraryType) {
-            LibraryType.BOT_COMMANDS -> bcPullRequestCache.pullRequests.valueCollection()
-            LibraryType.JDA5 -> jdaPullRequestCache.pullRequests.valueCollection()
-            LibraryType.JDA_KTX -> jdaKtxPullRequestCache.pullRequests.valueCollection()
-            else -> throw IllegalArgumentException()
-        }
+        val pullRequests = jitpackPrService.getPullRequests(libraryType)
+
         return pullRequests
             .fuzzyMatching(
                 { referent: PullRequest -> referent.title + referent.branch.authorName }, //Don't autocomplete based on the branch number
@@ -143,7 +137,7 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption libraryType: LibraryType
     ): Collection<Choice> {
-        val branchMap = getBranchMap(libraryType)
+        val branchMap = jitpackBranchService.getBranchMap(libraryType)
         val defaultBranchName = branchMap.defaultBranch.branchName
 
         return AutocompleteAlgorithms.fuzzyMatching(branchMap.branches.keys, { it }, event.focusedOption.value)
@@ -234,13 +228,9 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
 
     @CommandMarker
     fun onSlashJitpackBranch(event: GuildSlashEvent, libraryType: LibraryType, buildToolType: BuildToolType, branchName: String?) {
-        val githubBranchMap = getBranchMap(libraryType)
-        val branch = when (branchName) {
-            null -> githubBranchMap.defaultBranch
-            else -> githubBranchMap.branches[branchName] ?: run {
-                event.reply("Unknown branch '$branchName'").setEphemeral(true).queue()
-                return
-            }
+        val branch = jitpackBranchService.getBranch(libraryType, branchName) ?: run {
+            event.reply("Unknown branch '$branchName'").setEphemeral(true).queue()
+            return
         }
 
         onSlashJitpackBranchImpl(event, libraryType, buildToolType, branch)
@@ -312,36 +302,6 @@ class SlashJitpack(private val components: Components) : ApplicationCommand() {
             event.context.invalidateAutocompleteCache(PR_NUMBER_AUTOCOMPLETE_NAME)
             checker.saveVersion()
         }
-    }
-
-    private fun getBranchMap(libraryType: LibraryType): GithubBranchMap {
-        val updateCountdown =
-            updateMap.computeIfAbsent(libraryType) { UpdateCountdown(1.minutes) }
-
-        synchronized(branchMap) {
-            branchMap[libraryType].let { githubBranchMap: GithubBranchMap? ->
-                if (githubBranchMap == null || updateCountdown.needsUpdate()) {
-                    return retrieveBranchList(libraryType)
-                        .also { updatedMap -> branchMap[libraryType] = updatedMap }
-                }
-
-                return githubBranchMap
-            }
-        }
-    }
-
-    private fun retrieveBranchList(libraryType: LibraryType): GithubBranchMap {
-        val (ownerName: String, repoName: String) = when (libraryType) {
-            LibraryType.JDA5 -> arrayOf("DV8FromTheWorld", "JDA")
-            LibraryType.BOT_COMMANDS -> arrayOf("freya022", "BotCommands")
-            LibraryType.JDA_KTX -> arrayOf("MinnDevelopment", "jda-ktx")
-            else -> throw IllegalArgumentException("No branches for $libraryType")
-        }
-
-        val map: Map<String, GithubBranch> = GithubUtils.getBranches(ownerName, repoName).associateBy { it.branchName }
-        val defaultBranchName = GithubUtils.getDefaultBranchName(ownerName, repoName)
-        val defaultBranch = map[defaultBranchName]!!
-        return GithubBranchMap(defaultBranch, map)
     }
 
     private fun getBranchFileName(branch: GithubBranch): Path {
