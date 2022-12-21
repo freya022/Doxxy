@@ -1,16 +1,12 @@
 package com.freya02.bot.commands.slash.versioning
 
-import com.freya02.bot.Data
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
-import com.freya02.bot.utils.CryptoUtils
 import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.bot.versioning.LibraryType
 import com.freya02.bot.versioning.github.GithubBranch
 import com.freya02.bot.versioning.github.PullRequest
-import com.freya02.bot.versioning.github.UpdateCountdown
 import com.freya02.bot.versioning.jitpack.JitpackBranchService
 import com.freya02.bot.versioning.jitpack.JitpackPrService
-import com.freya02.bot.versioning.maven.MavenBranchProjectDependencyVersionChecker
 import com.freya02.bot.versioning.supplier.BuildToolType
 import com.freya02.bot.versioning.supplier.DependencySupplier
 import com.freya02.botcommands.api.annotations.CommandMarker
@@ -34,22 +30,13 @@ import dev.minn.jda.ktx.messages.Embed
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-import java.io.IOException
-import java.nio.file.Path
-import java.util.*
-import kotlin.time.Duration.Companion.minutes
 
-//TODO refactor
 @CommandMarker
 class SlashJitpack(
     private val components: Components,
     private val jitpackPrService: JitpackPrService,
     private val jitpackBranchService: JitpackBranchService
 ) : ApplicationCommand() {
-    private val branchNameToJdaVersionChecker: MutableMap<String, MavenBranchProjectDependencyVersionChecker> =
-        Collections.synchronizedMap(hashMapOf())
-    private val updateCountdownMap: MutableMap<String, UpdateCountdown> = HashMap()
-
     @CommandMarker
     fun onSlashJitpackPR(event: GuildSlashEvent, libraryType: LibraryType, buildToolType: BuildToolType, pullNumber: Int) {
         val pullRequest = jitpackPrService.getPullRequest(libraryType, pullNumber) ?: run {
@@ -58,26 +45,11 @@ class SlashJitpack(
         }
 
         val dependencyStr: String = when (libraryType) {
-            LibraryType.BOT_COMMANDS -> {
-                val branch = pullRequest.branch
-                val jdaVersionChecker = branchNameToJdaVersionChecker.getOrPut(branch.branchName) {
-                    try {
-                        return@getOrPut MavenBranchProjectDependencyVersionChecker(
-                            getBranchFileName(branch),
-                            branch.ownerName,
-                            branch.repoName,
-                            "JDA",
-                            branch.branchName
-                        )
-                    } catch (e: IOException) {
-                        throw RuntimeException("Unable to create branch specific JDA version checker", e)
-                    }
-                }
-                checkGithubBranchUpdates(event, branch, jdaVersionChecker)
-                val latestBotCommands = pullRequest.toJitpackArtifact()
-                val jdaVersionFromBotCommands = jdaVersionChecker.latest
-                DependencySupplier.formatBCJitpack(buildToolType, jdaVersionFromBotCommands, latestBotCommands)
-            }
+            LibraryType.BOT_COMMANDS -> DependencySupplier.formatBCJitpack(
+                buildToolType,
+                jitpackBranchService.getUsedJDAVersionFromBranch(pullRequest.branch),
+                pullRequest.toJitpackArtifact()
+            )
             LibraryType.JDA5, LibraryType.JDA_KTX -> DependencySupplier.formatJitpack(
                 buildToolType,
                 pullRequest.toJitpackArtifact()
@@ -249,27 +221,11 @@ class SlashJitpack(
                 buildToolType,
                 branch.asJitpackArtifact
             )
-            LibraryType.BOT_COMMANDS -> {
-                val jdaVersionChecker = branchNameToJdaVersionChecker.getOrPut(branchName) {
-                    try {
-                        return@getOrPut MavenBranchProjectDependencyVersionChecker(
-                            getBranchFileName(branch),
-                            branch.ownerName,
-                            branch.repoName,
-                            "JDA",
-                            branch.branchName
-                        )
-                    } catch (e: IOException) {
-                        throw RuntimeException("Unable to create branch specific JDA version checker", e)
-                    }
-                }
-                checkGithubBranchUpdates(event, branch, jdaVersionChecker)
-                DependencySupplier.formatBCJitpack(
-                    buildToolType,
-                    jdaVersionChecker.latest,
-                    branch.asJitpackArtifact
-                )
-            }
+            LibraryType.BOT_COMMANDS -> DependencySupplier.formatBCJitpack(
+                buildToolType,
+                jitpackBranchService.getUsedJDAVersionFromBranch(branch),
+                branch.asJitpackArtifact
+            )
             else -> throw IllegalArgumentException("Invalid lib type: $libraryType")
         }
 
@@ -291,31 +247,8 @@ class SlashJitpack(
             .queue()
     }
 
-    private fun checkGithubBranchUpdates(
-        event: GuildSlashEvent,
-        branch: GithubBranch,
-        checker: MavenBranchProjectDependencyVersionChecker
-    ) {
-        val updateCountdown = updateCountdownMap.getOrPut(branch.branchName) { UpdateCountdown(1.minutes) }
-        if (updateCountdown.needsUpdate()) {
-            checker.checkVersion()
-            event.context.invalidateAutocompleteCache(PR_NUMBER_AUTOCOMPLETE_NAME)
-            checker.saveVersion()
-        }
-    }
-
-    private fun getBranchFileName(branch: GithubBranch): Path {
-        return Data.branchVersionsFolderPath.resolve(
-            "%s-%s-%s.txt".format(
-                branch.ownerName,
-                branch.repoName,
-                CryptoUtils.hash(branch.branchName)
-            )
-        )
-    }
-
     companion object {
-        private const val PR_NUMBER_AUTOCOMPLETE_NAME = "SlashJitpack: prNumber"
+        const val PR_NUMBER_AUTOCOMPLETE_NAME = "SlashJitpack: prNumber"
         private const val BRANCH_NAME_AUTOCOMPLETE_NAME = "SlashJitpack: branchName"
 
         private fun Collection<PullRequest>.fuzzyMatching(

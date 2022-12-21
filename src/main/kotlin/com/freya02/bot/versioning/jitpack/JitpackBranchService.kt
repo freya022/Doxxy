@@ -1,16 +1,28 @@
 package com.freya02.bot.versioning.jitpack
 
+import com.freya02.bot.Data
+import com.freya02.bot.commands.slash.versioning.SlashJitpack
+import com.freya02.bot.utils.CryptoUtils
+import com.freya02.bot.versioning.ArtifactInfo
 import com.freya02.bot.versioning.LibraryType
 import com.freya02.bot.versioning.github.GithubBranch
 import com.freya02.bot.versioning.github.GithubBranchMap
 import com.freya02.bot.versioning.github.GithubUtils
 import com.freya02.bot.versioning.github.UpdateCountdown
+import com.freya02.bot.versioning.maven.MavenBranchProjectDependencyVersionChecker
+import com.freya02.botcommands.api.BContext
+import java.io.IOException
+import java.nio.file.Path
 import java.util.*
 import kotlin.time.Duration.Companion.minutes
 
-class JitpackBranchService {
+class JitpackBranchService(private val context: BContext) {
     private val updateMap: MutableMap<LibraryType, UpdateCountdown> = EnumMap(LibraryType::class.java)
     private val branchMap: MutableMap<LibraryType, GithubBranchMap> = EnumMap(LibraryType::class.java)
+
+    private val branchNameToJdaVersionChecker: MutableMap<String, MavenBranchProjectDependencyVersionChecker> =
+        Collections.synchronizedMap(hashMapOf())
+    private val updateCountdownMap: MutableMap<String, UpdateCountdown> = HashMap()
 
     fun getBranchMap(libraryType: LibraryType): GithubBranchMap {
         val updateCountdown =
@@ -26,6 +38,47 @@ class JitpackBranchService {
                 return githubBranchMap
             }
         }
+    }
+
+    fun getUsedJDAVersionFromBranch(branch: GithubBranch): ArtifactInfo {
+        val jdaVersionChecker = branchNameToJdaVersionChecker.getOrPut(branch.branchName) {
+            try {
+                return@getOrPut MavenBranchProjectDependencyVersionChecker(
+                    getBranchFileName(branch),
+                    branch.ownerName,
+                    branch.repoName,
+                    "JDA",
+                    branch.branchName
+                )
+            } catch (e: IOException) {
+                throw RuntimeException("Unable to create branch specific JDA version checker", e)
+            }
+        }
+        checkGithubBranchUpdates(branch, jdaVersionChecker)
+
+        return jdaVersionChecker.latest
+    }
+
+    private fun checkGithubBranchUpdates(
+        branch: GithubBranch,
+        checker: MavenBranchProjectDependencyVersionChecker
+    ) {
+        val updateCountdown = updateCountdownMap.getOrPut(branch.branchName) { UpdateCountdown(1.minutes) }
+        if (updateCountdown.needsUpdate()) {
+            checker.checkVersion()
+            context.invalidateAutocompleteCache(SlashJitpack.PR_NUMBER_AUTOCOMPLETE_NAME)
+            checker.saveVersion()
+        }
+    }
+
+    private fun getBranchFileName(branch: GithubBranch): Path {
+        return Data.branchVersionsFolderPath.resolve(
+            "%s-%s-%s.txt".format(
+                branch.ownerName,
+                branch.repoName,
+                CryptoUtils.hash(branch.branchName)
+            )
+        )
     }
 
     private fun retrieveBranchList(libraryType: LibraryType): GithubBranchMap {
