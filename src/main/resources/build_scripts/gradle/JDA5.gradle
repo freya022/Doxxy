@@ -1,0 +1,31 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+}
+
+application.mainClass = 'io.github.name.bot.Main'   //TODO change here
+group = 'io.github.name'                            //TODO change here
+version = '1.0-SNAPSHOT'
+
+shadowJar {
+    archiveFileName = 'your-project-name.jar'       //TODO change here
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    //Logging
+    implementation 'ch.qos.logback:logback-classic:1.2.11'
+
+    //JDA
+    implementation '%s:%s:%s'
+}
+
+compileJava {
+    options.encoding = 'UTF-8'
+    options.incremental = true
+}
