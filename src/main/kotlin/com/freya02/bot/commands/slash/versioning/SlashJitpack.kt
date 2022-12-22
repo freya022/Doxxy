@@ -233,8 +233,7 @@ class SlashJitpack(
         }
 
         val embed = Embed {
-            title =
-                buildToolType.humanName + " dependencies for " + libraryType.displayString + " @ branch '" + branchName + "'"
+            title = "${buildToolType.humanName} dependencies for ${libraryType.displayString} @ branch '$branchName'"
             url = branch.toURL()
 
             field("Branch Link", branch.toURL(), false)
