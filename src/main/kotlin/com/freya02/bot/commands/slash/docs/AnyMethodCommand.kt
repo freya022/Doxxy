@@ -1,6 +1,7 @@
 package com.freya02.bot.commands.slash.docs
 
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers.Companion.ANY_METHOD_NAME_AUTOCOMPLETE_NAME
+import com.freya02.bot.commands.slash.docs.controllers.SlashDocsController
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
 import com.freya02.botcommands.api.annotations.CommandMarker
@@ -8,12 +9,11 @@ import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.GlobalApplicationCommandManager
 import com.freya02.botcommands.api.commands.application.annotations.AppDeclaration
 import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
-import com.freya02.botcommands.api.components.Components
 import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.messages.reply_
 
 @CommandMarker
-class AnyMethodCommand(private val docIndexMap: DocIndexMap, private val components: Components) : ApplicationCommand() {
+class AnyMethodCommand(private val docIndexMap: DocIndexMap, private val slashDocsController: SlashDocsController) : ApplicationCommand() {
     @AppDeclaration
     fun declare(manager: GlobalApplicationCommandManager) {
         manager.slashCommand("anymethod") {
@@ -48,7 +48,7 @@ class AnyMethodCommand(private val docIndexMap: DocIndexMap, private val compone
         }
 
         val docIndex = docIndexMap[sourceType]!!
-        CommonDocsHandlers.handleMethodDocs(event, split[0], split[1], docIndex, components) {
+        slashDocsController.handleMethodDocs(event, split[0], split[1], docIndex) {
             return@handleMethodDocs anyMethodNameAutocomplete(docIndex, fullSignature, 100).mapToSuggestions()
         }
     }

@@ -2,6 +2,7 @@ package com.freya02.bot.commands.slash.docs
 
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers.Companion.CLASS_NAME_AUTOCOMPLETE_NAME
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers.Companion.METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME
+import com.freya02.bot.commands.slash.docs.controllers.SlashDocsController
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.index.DocSuggestion
 import com.freya02.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
@@ -10,11 +11,10 @@ import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.GlobalApplicationCommandManager
 import com.freya02.botcommands.api.commands.application.annotations.AppDeclaration
 import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
-import com.freya02.botcommands.api.components.Components
 import com.freya02.docs.DocSourceType
 
 @CommandMarker
-class DocsCommand(private val docIndexMap: DocIndexMap, private val components: Components) : ApplicationCommand() {
+class DocsCommand(private val docIndexMap: DocIndexMap, private val slashDocsController: SlashDocsController) : ApplicationCommand() {
     @AppDeclaration
     fun declare(manager: GlobalApplicationCommandManager) {
         manager.slashCommand("docs") {
@@ -51,16 +51,16 @@ class DocsCommand(private val docIndexMap: DocIndexMap, private val components: 
     ) {
         val docIndex = docIndexMap[sourceType]!!
         if (identifier == null) {
-            CommonDocsHandlers.handleClass(event, className, docIndex, components) {
+            slashDocsController.handleClass(event, className, docIndex) {
                 return@handleClass classNameAutocomplete(docIndex, className, 100)
                     .map { DocSuggestion(it, it) }
             }
         } else if (identifier.contains("(")) { //prob a method
-            CommonDocsHandlers.handleMethodDocs(event, className, identifier, docIndex, components) {
+            slashDocsController.handleMethodDocs(event, className, identifier, docIndex) {
                 return@handleMethodDocs methodOrFieldByClassAutocomplete(docIndex, className, identifier, 100).mapToSuggestions(className)
             }
         } else {
-            CommonDocsHandlers.handleFieldDocs(event, className, identifier, docIndex, components) {
+            slashDocsController.handleFieldDocs(event, className, identifier, docIndex) {
                 return@handleFieldDocs methodOrFieldByClassAutocomplete(docIndex, className, identifier, 100).mapToSuggestions(className)
             }
         }
