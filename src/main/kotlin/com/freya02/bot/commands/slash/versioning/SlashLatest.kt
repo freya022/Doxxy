@@ -25,22 +25,16 @@ class SlashLatest(private val versions: Versions, private val components: Compon
                 builder.addBCVersion()
                 builder.addBlankField(true)
                 builder.addJDA5Version()
-                builder.addJDA4Version()
                 builder.addJDAKtxVersion()
             }
             LibraryType.BOT_COMMANDS -> builder.addBCVersion()
             LibraryType.JDA5 -> builder.addJDA5Version()
-            LibraryType.JDA4 -> builder.addJDA4Version()
             LibraryType.JDA_KTX -> builder.addJDAKtxVersion()
         }
 
         event.replyEmbeds(builder.build())
             .addActionRow(components.messageDeleteButton(event.user))
             .queue()
-    }
-
-    private fun EmbedBuilder.addJDA4Version() {
-        addField("JDA 4", "`" + versions.latestJDA4Version.version + "`", true)
     }
 
     private fun EmbedBuilder.addJDA5Version() {

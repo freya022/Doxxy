@@ -38,7 +38,6 @@ class BuildToolCommands(private val versions: Versions, private val components: 
                     versions.latestBotCommandsVersion
                 )
                 LibraryType.JDA5 -> DependencySupplier.formatJDA5(scriptType, buildToolType, versions.latestJDA5Version)
-                LibraryType.JDA4 -> DependencySupplier.formatJDA4(scriptType, buildToolType, versions.latestJDA4Version)
                 LibraryType.JDA_KTX -> DependencySupplier.formatJitpack(scriptType, buildToolType, versions.latestJDAKtxVersion)
             }
 

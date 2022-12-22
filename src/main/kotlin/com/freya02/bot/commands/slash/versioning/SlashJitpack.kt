@@ -57,7 +57,6 @@ class SlashJitpack(
                 buildToolType,
                 pullRequest.toJitpackArtifact()
             )
-            else -> throw IllegalArgumentException("Invalid library type: $libraryType")
         }
 
         val embed = Embed {
@@ -231,7 +230,6 @@ class SlashJitpack(
                 jitpackBranchService.getUsedJDAVersionFromBranch(branch),
                 branch.toJitpackArtifact()
             )
-            else -> throw IllegalArgumentException("Invalid lib type: $libraryType")
         }
 
         val embed = Embed {

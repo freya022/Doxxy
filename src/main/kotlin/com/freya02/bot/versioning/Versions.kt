@@ -25,7 +25,6 @@ import java.util.concurrent.TimeUnit
 
 private val lastKnownBotCommandsPath: Path = Data.lastKnownVersionsFolderPath.resolve("BC.txt")
 private val lastKnownJDAFromBCPath: Path = Data.lastKnownVersionsFolderPath.resolve("JDA_from_BC.txt")
-private val lastKnownJDA4Path: Path = Data.lastKnownVersionsFolderPath.resolve("JDA4.txt")
 private val lastKnownJDA5Path: Path = Data.lastKnownVersionsFolderPath.resolve("JDA5.txt")
 private val lastKnownJDAKtxPath: Path = Data.lastKnownVersionsFolderPath.resolve("JDA-KTX.txt")
 private val JDA_DOCS_FOLDER: Path = Data.javadocsPath.resolve("JDA")
@@ -37,8 +36,6 @@ class Versions(private val docIndexMap: DocIndexMap) {
         MavenVersionChecker(lastKnownBotCommandsPath, RepoType.MAVEN, "io.github.freya022", "BotCommands")
     private val jdaVersionFromBCChecker: MavenBranchProjectDependencyVersionChecker =
         MavenBranchProjectDependencyVersionChecker(lastKnownJDAFromBCPath, "freya022", "BotCommands", "JDA", "master")
-    private val jda4Checker: MavenVersionChecker =
-        MavenVersionChecker(lastKnownJDA4Path, RepoType.M2, "net.dv8tion", "JDA")
     private val jda5Checker: MavenVersionChecker =
         MavenVersionChecker(lastKnownJDA5Path, RepoType.MAVEN, "net.dv8tion", "JDA")
     private val jdaKtxChecker: JitpackVersionChecker =
@@ -50,7 +47,6 @@ class Versions(private val docIndexMap: DocIndexMap) {
 
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestBCVersion(context) }, 0, 30, TimeUnit.MINUTES)
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDAVersionFromBC() }, 0, 30, TimeUnit.MINUTES)
-        scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDA4Version() }, 0, 30, TimeUnit.MINUTES)
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDA5Version(context) }, 0, 30, TimeUnit.MINUTES)
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDAKtxVersion() }, 0, 30, TimeUnit.MINUTES)
 
@@ -103,19 +99,6 @@ class Versions(private val docIndexMap: DocIndexMap) {
         }
 
         return false
-    }
-
-    private fun checkLatestJDA4Version() {
-        try {
-            val changed = jda4Checker.checkVersion()
-            if (changed) {
-                logger.info("JDA 4 version changed")
-                jda4Checker.saveVersion()
-                logger.info("JDA 4 version updated to {}", jda4Checker.latest.version)
-            }
-        } catch (e: Exception) {
-            logger.error("An exception occurred while retrieving versions", e)
-        }
     }
 
     private fun checkLatestJDAKtxVersion() {
@@ -184,8 +167,6 @@ class Versions(private val docIndexMap: DocIndexMap) {
         get() = bcChecker.latest
     val jdaVersionFromBotCommands: ArtifactInfo
         get() = jdaVersionFromBCChecker.latest
-    val latestJDA4Version: ArtifactInfo
-        get() = jda4Checker.latest
     val latestJDA5Version: ArtifactInfo
         get() = jda5Checker.latest
     val latestJDAKtxVersion: ArtifactInfo
