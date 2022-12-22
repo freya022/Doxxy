@@ -1,4 +1,4 @@
-package com.freya02.bot.commands.text
+package com.freya02.bot.commands.text.docs
 
 import com.freya02.bot.commands.controllers.CommonDocsController
 import com.freya02.bot.commands.text.docs.controllers.TextDocsController
