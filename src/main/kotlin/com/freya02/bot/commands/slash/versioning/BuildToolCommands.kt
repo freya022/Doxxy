@@ -13,9 +13,10 @@ import com.freya02.botcommands.api.commands.application.GuildApplicationCommandM
 import com.freya02.botcommands.api.commands.application.annotations.AppDeclaration
 import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
 import com.freya02.botcommands.api.components.Components
-import dev.minn.jda.ktx.messages.Embed
+import dev.minn.jda.ktx.messages.MessageCreate
 import dev.minn.jda.ktx.messages.reply_
 import mu.KotlinLogging
+import net.dv8tion.jda.api.utils.FileUpload
 
 @CommandMarker
 class BuildToolCommands(private val versions: Versions, private val components: Components) {
@@ -41,15 +42,28 @@ class BuildToolCommands(private val versions: Versions, private val components: 
                 LibraryType.JDA_KTX -> DependencySupplier.formatJitpack(scriptType, buildToolType, versions.latestJDAKtxVersion)
             }
 
-            val embed = Embed {
-                title = "${buildToolType.humanName} dependencies for ${libraryType.displayString}"
+            val messageData = MessageCreate {
+                when (scriptType) {
+                    ScriptType.DEPENDENCIES -> {
+                        embed {
+                            title = "${buildToolType.humanName} dependencies for ${libraryType.displayString}"
 
-                description = "```${buildToolType.blockLang}\n$script```"
+                            description = "```${buildToolType.blockLang}\n$script```"
+                        }
+                    }
+                    ScriptType.FULL -> {
+                        if (buildToolType != BuildToolType.MAVEN) {
+                            content = "```${buildToolType.blockLang}\n$script```"
+                        } else {
+                            files += FileUpload.fromData(script.encodeToByteArray(), "${buildToolType.fileName}.${buildToolType.fileExtension}")
+                        }
+                    }
+                }
+
+                actionRow(this@BuildToolCommands.components.messageDeleteButton(event.user))
             }
 
-            event.replyEmbeds(embed)
-                .addActionRow(components.messageDeleteButton(event.user))
-                .queue()
+            event.reply(messageData).queue()
         } catch (e: UnsupportedDependencyException) {
             logger.debug { e.message }
             event.reply_(
