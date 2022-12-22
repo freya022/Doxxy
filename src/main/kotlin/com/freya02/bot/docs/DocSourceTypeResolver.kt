@@ -2,13 +2,16 @@ package com.freya02.bot.docs
 
 import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.botcommands.api.BContext
+import com.freya02.botcommands.api.parameters.ComponentParameterResolver
 import com.freya02.botcommands.api.parameters.ParameterResolver
 import com.freya02.botcommands.api.parameters.RegexParameterResolver
 import com.freya02.botcommands.api.parameters.SlashParameterResolver
 import com.freya02.botcommands.internal.commands.application.slash.SlashCommandInfo
 import com.freya02.botcommands.internal.commands.prefixed.TextCommandVariation
+import com.freya02.botcommands.internal.components.ComponentDescriptor
 import com.freya02.docs.DocSourceType
 import net.dv8tion.jda.api.entities.Guild
+import net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.Command
 import net.dv8tion.jda.api.interactions.commands.CommandInteractionPayload
@@ -16,7 +19,10 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import java.util.regex.Pattern
 
-class DocSourceTypeResolver : ParameterResolver<DocSourceTypeResolver, DocSourceType>(DocSourceType::class), SlashParameterResolver<DocSourceTypeResolver, DocSourceType>, RegexParameterResolver<DocSourceTypeResolver, DocSourceType> {
+class DocSourceTypeResolver : ParameterResolver<DocSourceTypeResolver, DocSourceType>(DocSourceType::class),
+    SlashParameterResolver<DocSourceTypeResolver, DocSourceType>,
+    RegexParameterResolver<DocSourceTypeResolver, DocSourceType>,
+    ComponentParameterResolver<DocSourceTypeResolver, DocSourceType> {
     override val optionType: OptionType = OptionType.STRING
 
     override fun resolve(
@@ -59,4 +65,13 @@ class DocSourceTypeResolver : ParameterResolver<DocSourceTypeResolver, DocSource
     override val pattern: Pattern = Pattern.compile("(?i)(JDA|java|BotCommands|BC)(?-i)")
 
     override val testExample: String = "jda"
+
+    override fun resolve(
+        context: BContext,
+        descriptor: ComponentDescriptor,
+        event: GenericComponentInteractionCreateEvent,
+        arg: String
+    ): DocSourceType? {
+        return DocSourceType.fromId(arg.toInt())
+    }
 }

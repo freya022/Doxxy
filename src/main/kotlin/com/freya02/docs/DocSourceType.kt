@@ -77,6 +77,10 @@ enum class DocSourceType(
     }
 
     companion object {
+        fun fromId(id: Int): DocSourceType? {
+            return values().find { it.id == id }
+        }
+
         fun fromUrl(url: String): DocSourceType? {
             return values().find { source -> url.startsWith(source.sourceUrl) || source.onlineURL != null && url.startsWith(source.onlineURL) }
         }

@@ -45,22 +45,22 @@ import java.util.concurrent.TimeUnit
 
 class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val components: Components) : ApplicationCommand() {
     @JDASelectMenuListener(name = SEE_ALSO_SELECT_LISTENER_NAME)
-    fun onSeeAlsoSelect(event: StringSelectEvent) {
-        val option = event.selectedOptions[0] //Forced to use 1
-        val values = option.value.split(":")
+    fun onSeeAlsoSelect(event: StringSelectEvent, docSourceType: DocSourceType) {
+        val values = event.selectedOptions.single().value.split(":")
         val targetType = TargetType.valueOf(values[0])
         val fullSignature = values[1]
-        for (index in docIndexMap.values) {
-            val doc = when (targetType) {
+        val doc = docIndexMap[docSourceType]?.let { index ->
+            when (targetType) {
                 TargetType.CLASS -> index.getClassDoc(fullSignature)
                 TargetType.METHOD -> index.getMethodDoc(fullSignature)
                 TargetType.FIELD -> index.getFieldDoc(fullSignature)
                 else -> throw IllegalArgumentException("Invalid target type: $targetType")
             }
-            if (doc != null) {
-                sendClass(event, true, doc, components)
-                break
-            }
+        }
+
+        when (doc) {
+            null -> event.reply_("This reference is not available anymore", ephemeral = true).queue()
+            else -> sendClass(event, true, doc, components)
         }
     }
 
@@ -335,7 +335,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap, private val compo
             cachedDoc.seeAlsoReferences.let { referenceList ->
                 if (referenceList.any { it.targetType != TargetType.UNKNOWN }) {
                     val selectMenu = components.persistentStringSelectMenu {
-                        bindTo(SEE_ALSO_SELECT_LISTENER_NAME)
+                        bindTo(SEE_ALSO_SELECT_LISTENER_NAME, cachedDoc.source.id)
                         timeout(15, TimeUnit.MINUTES)
                         placeholder = "See also"
 

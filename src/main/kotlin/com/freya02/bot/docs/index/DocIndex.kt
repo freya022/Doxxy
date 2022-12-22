@@ -27,21 +27,21 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         val (docId, embed, javadocLink, sourceLink) = findDoc(DocType.CLASS, className) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
 
-        return CachedClass(embed, seeAlsoReferences, javadocLink, sourceLink)
+        return CachedClass(sourceType, embed, seeAlsoReferences, javadocLink, sourceLink)
     }
 
     override fun getMethodDoc(className: String, identifier: String): CachedMethod? {
         val (docId, embed, javadocLink, sourceLink) = findDoc(DocType.METHOD, className, identifier) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
 
-        return CachedMethod(embed, seeAlsoReferences, javadocLink, sourceLink)
+        return CachedMethod(sourceType, embed, seeAlsoReferences, javadocLink, sourceLink)
     }
 
     override fun getFieldDoc(className: String, fieldName: String): CachedField? {
         val (docId, embed, javadocLink, sourceLink) = findDoc(DocType.FIELD, className, fieldName) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
 
-        return CachedField(embed, seeAlsoReferences, javadocLink, sourceLink)
+        return CachedField(sourceType, embed, seeAlsoReferences, javadocLink, sourceLink)
     }
 
     override fun findAnySignatures(query: String?, limit: Int, vararg docTypes: DocType): List<DocSearchResult> = getAllSignatures(query, limit, *docTypes)
