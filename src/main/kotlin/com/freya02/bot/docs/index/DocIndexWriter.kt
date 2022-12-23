@@ -17,27 +17,17 @@ import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.MessageEmbed
 
 internal class DocIndexWriter(
-    private val database_: Database,
+    private val database: Database,
     private val docsSession: DocsSession,
     private val sourceType: DocSourceType,
     private val reindexData: ReindexData
 ) {
-    private val sourceRootMetadata: SourceRootMetadata?
     private val annotationRegex: Regex = "@\\w+ ".toRegex()
-
-    init {
-        val docsFolderName = when (sourceType) { //TODO move to reindexData prob
-            DocSourceType.JDA -> "JDA"
-            else -> null
-        }
-
-        sourceRootMetadata = when {
-            docsFolderName != null -> SourceRootMetadata(Data.javadocsPath.resolve(docsFolderName))
-            else -> null
-        }
+    private val sourceRootMetadata: SourceRootMetadata? = sourceType.sourceFolderName?.let { docsFolderName ->
+        SourceRootMetadata(Data.javadocsPath.resolve(docsFolderName))
     }
 
-    suspend fun doReindex() = database_.transactional {
+    suspend fun doReindex() = database.transactional {
         val updatedSource = ClassDocs.getUpdatedSource(sourceType)
 
         preparedStatement("delete from doc where source_id = ?") {
