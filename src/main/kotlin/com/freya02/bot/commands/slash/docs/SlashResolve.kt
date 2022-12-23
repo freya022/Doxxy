@@ -4,7 +4,6 @@ import com.freya02.bot.commands.slash.docs.CommonDocsHandlers.Companion.transfor
 import com.freya02.bot.commands.slash.docs.controllers.SlashDocsController
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.botcommands.api.annotations.CommandMarker
-import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.GlobalApplicationCommandManager
 import com.freya02.botcommands.api.commands.application.annotations.AppDeclaration
 import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
@@ -12,7 +11,7 @@ import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.messages.reply_
 
 @CommandMarker
-class SlashResolve(private val docIndexMap: DocIndexMap, private val slashDocsController: SlashDocsController) : ApplicationCommand() {
+class SlashResolve(private val docIndexMap: DocIndexMap, private val slashDocsController: SlashDocsController){
     @AppDeclaration
     fun declare(manager: GlobalApplicationCommandManager) {
         manager.slashCommand("resolve") {
