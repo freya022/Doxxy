@@ -17,7 +17,7 @@ class PageCache(val type: DocSourceType) {
     private val globalLock = ReentrantLock()
     private val pathMutexMap: MutableMap<Path, ReentrantLock> = ConcurrentHashMap()
 
-    private val baseFolder: Path = Data.pageCacheFolderPath.resolve(type.name)
+    private val baseFolder = Data.getCacheFolder(type)
 
     private fun <R> withLockedPath(url: String, block: (Path) -> R): R {
         val cachedFilePath = url.toHttpUrl().let { httpUrl ->

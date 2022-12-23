@@ -19,19 +19,18 @@ import com.freya02.botcommands.api.core.events.FirstReadyEvent
 import com.freya02.docs.DocSourceType
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
-import java.nio.file.Path
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-private val lastKnownBotCommandsPath: Path = Data.lastKnownVersionsFolderPath.resolve("BC.txt")
-private val lastKnownJDAFromBCPath: Path = Data.lastKnownVersionsFolderPath.resolve("JDA_from_BC.txt")
-private val lastKnownJDA5Path: Path = Data.lastKnownVersionsFolderPath.resolve("JDA5.txt")
-private val lastKnownJDAKtxPath: Path = Data.lastKnownVersionsFolderPath.resolve("JDA-KTX.txt")
-private val JDA_DOCS_FOLDER: Path = Data.javadocsPath.resolve("JDA")
-private val BC_DOCS_FOLDER: Path = Data.javadocsPath.resolve("BotCommands")
-
 @BService
 class Versions(private val docIndexMap: DocIndexMap) {
+    private val lastKnownBotCommandsPath = Data.getVersionPath(VersionType.BotCommands)
+    private val lastKnownJDAFromBCPath = Data.getVersionPath(VersionType.JDAOfBotCommands)
+    private val lastKnownJDA5Path = Data.getVersionPath(VersionType.JDA5)
+    private val lastKnownJDAKtxPath = Data.getVersionPath(VersionType.JDAKTX)
+    private val jdaDocsFolder = Data.jdaDocsFolder
+    private val bcDocsFolder = Data.bcDocsFolder
+
     private val bcChecker =
         MavenVersionChecker(lastKnownBotCommandsPath, RepoType.MAVEN, "io.github.freya022", "BotCommands")
     private val jdaVersionFromBCChecker: MavenBranchProjectDependencyVersionChecker =
@@ -71,12 +70,12 @@ class Versions(private val docIndexMap: DocIndexMap) {
                 logger.trace("Downloading JDA 5 javadocs")
                 jda5Checker.latest.downloadMavenJavadoc().withTemporaryFile { tempZip ->
                     logger.trace("Extracting JDA 5 javadocs")
-                    VersionsUtils.replaceWithZipContent(tempZip, JDA_DOCS_FOLDER, "html")
+                    VersionsUtils.replaceWithZipContent(tempZip, jdaDocsFolder, "html")
                 }
 
                 jda5Checker.latest.downloadMavenSources().withTemporaryFile { tempZip ->
                     logger.trace("Extracting JDA 5 sources")
-                    VersionsUtils.extractZip(tempZip, JDA_DOCS_FOLDER, "java")
+                    VersionsUtils.extractZip(tempZip, jdaDocsFolder, "java")
                 }
 
                 val sourceUrl = GithubUtils.getLatestReleaseHash("DV8FromTheWorld", "JDA")
@@ -136,12 +135,12 @@ class Versions(private val docIndexMap: DocIndexMap) {
 
                 bcChecker.latest.downloadMavenJavadoc().withTemporaryFile { javadocPath ->
                     logger.trace("Extracting BC javadocs")
-                    VersionsUtils.replaceWithZipContent(javadocPath, BC_DOCS_FOLDER, "html")
+                    VersionsUtils.replaceWithZipContent(javadocPath, bcDocsFolder, "html")
                 }
 
                 bcChecker.latest.downloadMavenSources().withTemporaryFile { javadocPath ->
                     logger.trace("Extracting BC sources")
-                    VersionsUtils.extractZip(javadocPath, BC_DOCS_FOLDER, "java")
+                    VersionsUtils.extractZip(javadocPath, bcDocsFolder, "java")
                 }
 
                 logger.trace("Invalidating BotCommands index")

@@ -2,7 +2,6 @@ package com.freya02.bot.versioning.jitpack
 
 import com.freya02.bot.Data
 import com.freya02.bot.commands.slash.versioning.SlashJitpack
-import com.freya02.bot.utils.CryptoUtils
 import com.freya02.bot.versioning.ArtifactInfo
 import com.freya02.bot.versioning.LibraryType
 import com.freya02.bot.versioning.github.GithubBranch
@@ -12,7 +11,6 @@ import com.freya02.bot.versioning.github.UpdateCountdown
 import com.freya02.bot.versioning.maven.MavenBranchProjectDependencyVersionChecker
 import com.freya02.botcommands.api.BContext
 import java.io.IOException
-import java.nio.file.Path
 import java.util.*
 import kotlin.time.Duration.Companion.minutes
 
@@ -52,7 +50,7 @@ class JitpackBranchService(private val context: BContext) {
         val jdaVersionChecker = branchNameToJdaVersionChecker.getOrPut(branch.branchName) {
             try {
                 return@getOrPut MavenBranchProjectDependencyVersionChecker(
-                    getBranchFileName(branch),
+                    Data.getBranchFileName(branch),
                     branch.ownerName,
                     branch.repoName,
                     "JDA",
@@ -79,22 +77,11 @@ class JitpackBranchService(private val context: BContext) {
         }
     }
 
-    private fun getBranchFileName(branch: GithubBranch): Path {
-        return Data.branchVersionsFolderPath.resolve(
-            "%s-%s-%s.txt".format(
-                branch.ownerName,
-                branch.repoName,
-                CryptoUtils.hash(branch.branchName)
-            )
-        )
-    }
-
     private fun retrieveBranchList(libraryType: LibraryType): GithubBranchMap {
         val (ownerName: String, repoName: String) = when (libraryType) {
             LibraryType.JDA5 -> arrayOf("DV8FromTheWorld", "JDA")
             LibraryType.BOT_COMMANDS -> arrayOf("freya022", "BotCommands")
             LibraryType.JDA_KTX -> arrayOf("MinnDevelopment", "jda-ktx")
-            else -> throw IllegalArgumentException("No branches for $libraryType")
         }
 
         val map: Map<String, GithubBranch> = GithubUtils.getBranches(ownerName, repoName).associateBy { it.branchName }
