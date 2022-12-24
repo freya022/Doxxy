@@ -29,4 +29,6 @@ dependencies {
 compileJava {
     options.encoding = 'UTF-8'
     options.incremental = true
+
+    options.release.set(17)
 }
