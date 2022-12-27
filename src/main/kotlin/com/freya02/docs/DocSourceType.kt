@@ -81,7 +81,11 @@ enum class DocSourceType(
     }
 
     companion object {
-        fun fromId(id: Int): DocSourceType? {
+        fun fromId(id: Int): DocSourceType {
+            return values().find { it.id == id } ?: throw IllegalArgumentException("Unknown source ID $id")
+        }
+
+        fun fromIdOrNull(id: Int): DocSourceType? {
             return values().find { it.id == id }
         }
 

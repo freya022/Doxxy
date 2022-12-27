@@ -72,6 +72,6 @@ class DocSourceTypeResolver : ParameterResolver<DocSourceTypeResolver, DocSource
         event: GenericComponentInteractionCreateEvent,
         arg: String
     ): DocSourceType? {
-        return DocSourceType.fromId(arg.toInt())
+        return DocSourceType.fromIdOrNull(arg.toInt())
     }
 }
