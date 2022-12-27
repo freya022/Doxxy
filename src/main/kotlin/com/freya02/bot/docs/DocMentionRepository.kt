@@ -1,8 +1,8 @@
 package com.freya02.bot.docs
 
-import com.freya02.bot.db.Database
 import com.freya02.botcommands.api.core.ServiceStart
 import com.freya02.botcommands.api.core.annotations.BService
+import com.freya02.botcommands.api.core.db.Database
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -17,7 +17,7 @@ class DocMentionRepository(private val database: Database) {
     }
 
     suspend fun hasBeenUsed(messageId: Long, userId: Long): Boolean = lock.withLock {
-        database.preparedStatement("select * from doc_mention where message_id = ? and user_id = ? limit 1") {
+        database.preparedStatement("select * from doc_mention where message_id = ? and user_id = ? limit 1", readOnly = true) {
             return@preparedStatement executeQuery(messageId, userId).readOnce() != null
         }
     }

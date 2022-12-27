@@ -1,9 +1,10 @@
 package com.freya02.bot.docs
 
-import com.freya02.bot.db.Database
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.core.annotations.BEventListener
 import com.freya02.botcommands.api.core.annotations.BService
+import com.freya02.botcommands.api.core.db.Database
+import com.freya02.botcommands.api.core.db.KConnection
 import com.freya02.botcommands.api.utils.EmojiUtils
 import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.events.getDefaultScope
@@ -31,7 +32,7 @@ class DocMentionListener(private val database: Database) {
 
     private val questionEmoji = EmojiUtils.resolveJDAEmoji("question")
 
-    private val timeoutScope = getDefaultScope(pool = Executors.newSingleThreadScheduledExecutor() { Thread(it).also { t -> t.name = "DocMentionListener timeout thread" } })
+    private val timeoutScope = getDefaultScope(pool = Executors.newSingleThreadScheduledExecutor { Thread(it).also { t -> t.name = "DocMentionListener timeout thread" } })
 
     init {
         runBlocking {
@@ -103,7 +104,7 @@ class DocMentionListener(private val database: Database) {
         }
     }
 
-    private suspend fun processMentions(contentRaw: String): DocMatches {
+    private suspend fun processMentions(contentRaw: String): DocMatches = database.withConnection(readOnly = true) {
         val cleanedContent = codeBlockRegex.replace(contentRaw, "")
 
         val mentionedClasses = getMentionedClasses(cleanedContent)
@@ -112,7 +113,7 @@ class DocMentionListener(private val database: Database) {
             identifierRegex.findAll(cleanedContent)
                 .toList()
                 .flatMap { result ->
-                    database.preparedStatement(
+                    preparedStatement(
                         """
                             select d.source_id,
                                    d.human_class_identifier,
@@ -142,9 +143,10 @@ class DocMentionListener(private val database: Database) {
         return DocMatches(mentionedClasses, similarIdentifiers)
     }
 
+    context(KConnection)
     private suspend fun getMentionedClasses(content: String): List<ClassMention> {
         return spaceRegex.split(content).let {
-            database.preparedStatement(
+            preparedStatement(
                 """
                     select d.source_id, d.classname
                     from doc d

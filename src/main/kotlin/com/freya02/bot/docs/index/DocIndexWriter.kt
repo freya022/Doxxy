@@ -1,10 +1,10 @@
 package com.freya02.bot.docs.index
 
 import com.freya02.bot.Data
-import com.freya02.bot.db.Database
-import com.freya02.bot.db.Transaction
 import com.freya02.bot.docs.DocEmbeds.toEmbed
 import com.freya02.bot.docs.metadata.SourceRootMetadata
+import com.freya02.botcommands.api.core.db.Database
+import com.freya02.botcommands.api.core.db.Transaction
 import com.freya02.docs.ClassDocs
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.DocUtils.getReturnTypeNoAnnotations
@@ -181,7 +181,7 @@ internal class DocIndexWriter(
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             returning id""".trimIndent()
         ) {
-            executeReturningInsert(
+            executeQuery(
                 sourceType.id,
                 docType.id,
                 className,

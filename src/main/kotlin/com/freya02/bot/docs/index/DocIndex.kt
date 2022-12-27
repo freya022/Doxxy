@@ -1,11 +1,10 @@
 package com.freya02.bot.docs.index
 
-import com.freya02.bot.db.DBAction
-import com.freya02.bot.db.Database
 import com.freya02.bot.docs.cached.CachedClass
 import com.freya02.bot.docs.cached.CachedDoc
 import com.freya02.bot.docs.cached.CachedField
 import com.freya02.bot.docs.cached.CachedMethod
+import com.freya02.botcommands.api.core.db.Database
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.DocsSession
 import com.freya02.docs.PageCache
@@ -46,7 +45,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
 
     override fun findAnySignatures(query: String?, limit: Int, vararg docTypes: DocType): List<DocSearchResult> = getAllSignatures(query, limit, *docTypes)
 
-    override fun findSignaturesIn(className: String, query: String?, vararg docTypes: DocType, limit: Int): List<DocSearchResult> {
+    override fun findSignaturesIn(className: String, query: String?, vararg docTypes: DocType, limit: Int): List<DocSearchResult> = runBlocking {
         val typeCheck = docTypes.joinToString(" or ") { "doc.type = ${it.id}" }
 
         @Language("PostgreSQL", prefix = "select * from doc ")
@@ -60,9 +59,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             else -> arrayOf(query)
         }
 
-        return DBAction.of(
-            database,
-            """
+        database.preparedStatement("""
                 select identifier, human_identifier, human_class_identifier
                 from doc
                 where source_id = ?
@@ -70,10 +67,9 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                   and classname = ?
                 $sort
                 limit ?
-                """.trimIndent(),
-            "identifier"
-        ).use { action ->
-            action.executeQuery(sourceType.id, className, *sortArgs, limit)
+                """.trimIndent()
+        ) {
+            executeQuery(sourceType.id, className, *sortArgs, limit)
                 .transformEach {
                     DocSearchResult(
                         it["identifier"],
@@ -212,46 +208,47 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         docType: DocType,
         className: String,
         identifier: String? = null
-    ): DocFindData? = DBAction.of(
-        database,
-        """
-            select id, embed, javadoc_link, source_link
-            from doc
-            where source_id = ?
-              and type = ?
-              and lower(classname) = lower(?)
-              and quote_nullable(identifier) = quote_nullable(?)
-            limit 1""".trimIndent(),
-        "id", "embed"
-    ).use {
-        val result = it.executeQuery(sourceType.id, docType.id, className, identifier).readOnce() ?: return null
-        return@use DocFindData(
-            result["id"],
-            DocIndexWriter.GSON.fromJson(result.getString("embed"), MessageEmbed::class.java),
-            result["javadoc_link"],
-            result["source_link"]
-        )
-    }
-
-    private fun findSeeAlsoReferences(docId: Int): List<SeeAlsoReference> = DBAction.of(
-        database,
-        """
-            select text, link, target_type, full_signature
-            from docseealsoreference
-            where doc_id = ?""".trimIndent(),
-        "text", "link", "target_type", "full_signature"
-    ).use { action ->
-        action.executeQuery(docId).transformEach {
-            SeeAlsoReference(
-                it.getString("text"),
-                it.getString("link"),
-                TargetType.fromId(it.getInt("target_type")),
-                it.getString("full_signature")
+    ): DocFindData? = runBlocking {
+        database.preparedStatement(
+            """
+                select id, embed, javadoc_link, source_link
+                from doc
+                where source_id = ?
+                  and type = ?
+                  and lower(classname) = lower(?)
+                  and quote_nullable(identifier) = quote_nullable(?)
+                limit 1
+            """.trimIndent()) {
+            val result = executeQuery(sourceType.id, docType.id, className, identifier).readOnce() ?: return@runBlocking null
+            DocFindData(
+                result["id"],
+                DocIndexWriter.GSON.fromJson(result.getString("embed"), MessageEmbed::class.java),
+                result["javadoc_link"],
+                result["source_link"]
             )
         }
     }
 
-    private fun getAllSignatures(query: String?, limit: Int, vararg docTypes: DocType): List<DocSearchResult> {
+    //TODO pass coroutine context from commands up to here
+    private fun findSeeAlsoReferences(docId: Int): List<SeeAlsoReference> = runBlocking {
+        database.preparedStatement(
+            """
+                select text, link, target_type, full_signature
+                from docseealsoreference
+                where doc_id = ?
+            """.trimIndent()) {
+            executeQuery(docId).map {
+                SeeAlsoReference(
+                    it.getString("text"),
+                    it.getString("link"),
+                    TargetType.fromId(it.getInt("target_type")),
+                    it.getString("full_signature")
+                )
+            }
+        }
+    }
+
+    private fun getAllSignatures(query: String?, limit: Int, vararg docTypes: DocType): List<DocSearchResult> = runBlocking {
         @Language("PostgreSQL", prefix = "select * from doc ")
         val sort = when {
             query.isNullOrEmpty() -> "order by classname, identifier"
@@ -265,8 +262,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             else -> arrayOf(query)
         }
 
-        return DBAction.of(
-            database,
+        database.preparedStatement(
             """
                 select concat(classname, '#', identifier) as full_identifier, human_identifier, human_class_identifier
                 from doc
@@ -274,11 +270,9 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                   and type = any(?)
                 $sort
                 limit ?
-                """.trimIndent(),
-            "classname"
-        ).use { action ->
-            action.executeQuery(sourceType.id, docTypes.map { it.id }.toTypedArray(), *sortArgs, limit)
-                .transformEach {
+            """.trimIndent()) {
+            executeQuery(sourceType.id, docTypes.map { it.id }.toTypedArray(), *sortArgs, limit)
+                .map {
                     DocSearchResult(
                         it["full_identifier"],
                         it["human_identifier"],
@@ -288,7 +282,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         }
     }
 
-    private fun getClassNamesWithChildren(docType: DocType, query: String?): List<String> {
+    private fun getClassNamesWithChildren(docType: DocType, query: String?): List<String> = runBlocking {
         @Language("PostgreSQL", prefix = "select * from doc ")
         val sort = when {
             query.isNullOrEmpty() -> "order by classname"
@@ -300,8 +294,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             else -> arrayOf(query)
         }
 
-        return DBAction.of(
-            database,
+        database.preparedStatement(
             """
                 select classname
                 from doc
@@ -310,10 +303,8 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                 group by classname
                 $sort
                 limit 25
-                """.trimIndent(),
-            "classname"
-        ).use { action ->
-            action.executeQuery(sourceType.id, docType.id, *sortArgs).transformEach { it.getString("classname") }
+            """.trimIndent()) {
+            executeQuery(sourceType.id, docType.id, *sortArgs).map { it.getString("classname") }
         }
     }
 
