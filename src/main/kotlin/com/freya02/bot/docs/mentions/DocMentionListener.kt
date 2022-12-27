@@ -19,7 +19,6 @@ import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent
 import net.dv8tion.jda.api.exceptions.ErrorHandler
 import net.dv8tion.jda.api.requests.ErrorResponse
 import net.dv8tion.jda.api.utils.TimeUtil
-import java.util.*
 import java.util.concurrent.Executors
 import kotlin.properties.Delegates
 import kotlin.time.Duration.Companion.hours
@@ -27,10 +26,10 @@ import kotlin.time.Duration.Companion.minutes
 
 @CommandMarker
 class DocMentionListener(
-    private val docMentionController: DocMentionController
+    private val docMentionController: DocMentionController,
+    private val docMentionRepository: DocMentionRepository
 ) {
     private val questionEmoji = EmojiUtils.resolveJDAEmoji("question")
-    private val activeMessageIds: MutableSet<Long> = Collections.synchronizedSet(hashSetOf())
 
     private val timeoutScope = getDefaultScope(pool = Executors.newSingleThreadScheduledExecutor { Thread(it).also { t -> t.name = "DocMentionListener timeout thread" } })
 
@@ -85,16 +84,16 @@ class DocMentionListener(
         val twoHoursAgoSnowflake = TimeUtil.getDiscordTimestamp(System.currentTimeMillis() - 2.hours.inWholeMilliseconds)
         if (reactedMessageId < twoHoursAgoSnowflake) return //Message is too old
 
-        if (activeMessageIds.add(reactedMessageId)) { //If a menu isn't already active, whoever invoked it
+        docMentionRepository.ifNotUsed(event.messageIdLong, event.userIdLong) {
             val message = event.retrieveMessage().await()
 
             //Check difference of at most 12 messages
             (event.channel as? ThreadChannel)?.let { threadChannel ->
-                if (threadChannel.totalMessageCount - message.approximatePosition > 12) return
+                if (threadChannel.totalMessageCount - message.approximatePosition > 12) return@ifNotUsed
             }
 
             val docMatches = docMentionController.processMentions(message.contentRaw)
-            if (!docMatches.isSufficient()) return
+            if (!docMatches.isSufficient()) return@ifNotUsed
 
             //Setting the message ID after sending it definitely hurts
             val jda = event.jda
