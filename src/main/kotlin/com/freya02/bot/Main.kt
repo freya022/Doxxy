@@ -14,6 +14,7 @@ import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.events.session.ShutdownEvent
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.utils.cache.CacheFlag
+import java.lang.management.ManagementFactory
 import java.util.function.Supplier
 import kotlin.io.path.absolutePathString
 import kotlin.system.exitProcess
@@ -25,11 +26,16 @@ object Main {
     @JvmStatic
     fun main(args: Array<String>) {
         try {
-            DecoroutinatorRuntime.load()
-
             Data.init()
 
             System.setProperty(ContextInitializer.CONFIG_FILE_PROPERTY, Data.logbackConfigPath.absolutePathString())
+
+            //stacktrace-decoroutinator seems to have issues when reloading with hotswap agent
+            if ("-XX:HotswapAgent=fatjar" !in ManagementFactory.getRuntimeMXBean().inputArguments) {
+                DecoroutinatorRuntime.load()
+            } else {
+                logger.info("Skipping stacktrace-decoroutinator as HotswapAgent is active")
+            }
 
             val scope = getDefaultScope()
             val manager = CoroutineEventManager(scope, 1.minutes)
