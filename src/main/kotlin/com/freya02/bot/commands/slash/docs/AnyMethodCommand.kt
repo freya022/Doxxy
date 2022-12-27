@@ -36,7 +36,7 @@ class AnyMethodCommand(private val docIndexMap: DocIndexMap, private val slashDo
     }
 
     @CommandMarker
-    fun onSlashAnyMethod(event: GuildSlashEvent, sourceType: DocSourceType, fullSignature: String) {
+    suspend fun onSlashAnyMethod(event: GuildSlashEvent, sourceType: DocSourceType, fullSignature: String) {
         val split = fullSignature.split("#".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
         if (split.size != 2) {
             event.reply_(

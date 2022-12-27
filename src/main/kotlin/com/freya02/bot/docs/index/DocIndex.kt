@@ -10,7 +10,6 @@ import com.freya02.docs.DocsSession
 import com.freya02.docs.PageCache
 import com.freya02.docs.data.SeeAlso.SeeAlsoReference
 import com.freya02.docs.data.TargetType
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import mu.KotlinLogging
@@ -22,30 +21,30 @@ import org.intellij.lang.annotations.Language
 class DocIndex(val sourceType: DocSourceType, private val database: Database) : IDocIndex {
     private val mutex = Mutex()
 
-    override fun getClassDoc(className: String): CachedClass? {
+    override suspend fun getClassDoc(className: String): CachedClass? {
         val (docId, embed, javadocLink, sourceLink) = findDoc(DocType.CLASS, className) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
 
         return CachedClass(sourceType, embed, seeAlsoReferences, javadocLink, sourceLink)
     }
 
-    override fun getMethodDoc(className: String, identifier: String): CachedMethod? {
+    override suspend fun getMethodDoc(className: String, identifier: String): CachedMethod? {
         val (docId, embed, javadocLink, sourceLink) = findDoc(DocType.METHOD, className, identifier) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
 
         return CachedMethod(sourceType, embed, seeAlsoReferences, javadocLink, sourceLink)
     }
 
-    override fun getFieldDoc(className: String, fieldName: String): CachedField? {
+    override suspend fun getFieldDoc(className: String, fieldName: String): CachedField? {
         val (docId, embed, javadocLink, sourceLink) = findDoc(DocType.FIELD, className, fieldName) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
 
         return CachedField(sourceType, embed, seeAlsoReferences, javadocLink, sourceLink)
     }
 
-    override fun findAnySignatures(query: String?, limit: Int, vararg docTypes: DocType): List<DocSearchResult> = getAllSignatures(query, limit, *docTypes)
+    override suspend fun findAnySignatures(query: String?, limit: Int, vararg docTypes: DocType): List<DocSearchResult> = getAllSignatures(query, limit, *docTypes)
 
-    override fun findSignaturesIn(className: String, query: String?, vararg docTypes: DocType, limit: Int): List<DocSearchResult> = runBlocking {
+    override suspend fun findSignaturesIn(className: String, query: String?, vararg docTypes: DocType, limit: Int): List<DocSearchResult> {
         val typeCheck = docTypes.joinToString(" or ") { "doc.type = ${it.id}" }
 
         @Language("PostgreSQL", prefix = "select * from doc ")
@@ -69,7 +68,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                 limit ?
                 """.trimIndent()
         ) {
-            executeQuery(sourceType.id, className, *sortArgs, limit)
+            return executeQuery(sourceType.id, className, *sortArgs, limit)
                 .transformEach {
                     DocSearchResult(
                         it["identifier"],
@@ -80,7 +79,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         }
     }
 
-    override fun getClasses(query: String?, limit: Int): List<String> = runBlocking {
+    override suspend fun getClasses(query: String?, limit: Int): List<String> {
         @Language("PostgreSQL", prefix = "select * from doc ")
         val limitingSort = when {
             query.isNullOrEmpty() -> "order by classname limit ?"
@@ -92,7 +91,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             else -> arrayOf(query, limit)
         }
 
-        database.preparedStatement(
+        return database.preparedStatement(
             """
             select classname
             from doc
@@ -105,13 +104,13 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         }
     }
 
-    override fun getClassesWithMethods(query: String?): List<String> =
+    override suspend fun getClassesWithMethods(query: String?): List<String> =
         getClassNamesWithChildren(DocType.METHOD, query)
 
-    override fun getClassesWithFields(query: String?): List<String> =
+    override suspend fun getClassesWithFields(query: String?): List<String> =
         getClassNamesWithChildren(DocType.FIELD, query)
 
-    override fun resolveDoc(query: String): CachedDoc? = runBlocking {
+    override suspend fun resolveDoc(query: String): CachedDoc? {
         // TextChannel#getIterableHistory()
         val tokens = query.split('#').toMutableList()
         var currentClass: String = tokens.removeFirst()
@@ -127,7 +126,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                 }
 
                 preparedStatement("select return_type from doc where source_id = ? and lower(classname) = lower(?) and lower(identifier) = lower(?)") {
-                    val result = executeQuery(sourceType.id, currentClass, it).readOnce() ?: return@runBlocking null
+                    val result = executeQuery(sourceType.id, currentClass, it).readOnce() ?: return null
 
                     docsOf = "$currentClass#$it"
                     currentClass = result["return_type"]
@@ -135,7 +134,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             }
         }
 
-        return@runBlocking docsOf?.let { docsOf ->
+        return docsOf?.let { docsOf ->
             when {
                 '(' in docsOf -> getMethodDoc(docsOf)
                 '#' in docsOf -> getFieldDoc(docsOf)
@@ -145,7 +144,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
     }
 
     //TODO make it resolve incrementally with each token, so that it picks the #1 result of the previous chain before resolving the next token
-    override fun resolveDocAutocomplete(query: String): List<DocResolveResult> = runBlocking {
+    override suspend fun resolveDocAutocomplete(query: String): List<DocResolveResult> {
         // TextChannel#getIter ==> TextChannel#getIterableHistory()
         // TextChannel#getIterableHistory()#forEachAsy ==> MessagePaginationAction#forEachAsync()
         val tokens = query.split('#').toMutableList()
@@ -156,7 +155,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         database.transactional {
             tokens.dropLast(1).forEach {
                 preparedStatement("select return_type from doc where source_id = ? and classname = ? and identifier = ?") {
-                    val result = executeQuery(sourceType.id, currentClass, it).readOnce() ?: return@runBlocking emptyList()
+                    val result = executeQuery(sourceType.id, currentClass, it).readOnce() ?: return emptyList()
 
                     currentClass = result["return_type"]
                 }
@@ -165,11 +164,11 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
 
         //This happens with "TextChannel#getIterableHistory()#", this gets the docs of the return type of getIterableHistory
         if (lastToken?.isEmpty() == true) {
-            return@runBlocking listOf(DocResolveResult(currentClass, currentClass))
+            return listOf(DocResolveResult(currentClass, currentClass))
         }
 
         //Do a classic search on the latest return type + optionally last token (might be a method or a field)
-        return@runBlocking when {
+        return when {
             lastToken != null -> {
                 findSignaturesIn(currentClass, lastToken, DocType.METHOD, DocType.FIELD)
                     //Current class is added because findSignaturesIn doesn't return "identifier", not "full_signature"
@@ -204,11 +203,11 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         return this
     }
 
-    private fun findDoc(
+    private suspend fun findDoc(
         docType: DocType,
         className: String,
         identifier: String? = null
-    ): DocFindData? = runBlocking {
+    ): DocFindData? {
         database.preparedStatement(
             """
                 select id, embed, javadoc_link, source_link
@@ -219,8 +218,8 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                   and quote_nullable(identifier) = quote_nullable(?)
                 limit 1
             """.trimIndent()) {
-            val result = executeQuery(sourceType.id, docType.id, className, identifier).readOnce() ?: return@runBlocking null
-            DocFindData(
+            val result = executeQuery(sourceType.id, docType.id, className, identifier).readOnce() ?: return null
+            return DocFindData(
                 result["id"],
                 DocIndexWriter.GSON.fromJson(result.getString("embed"), MessageEmbed::class.java),
                 result["javadoc_link"],
@@ -230,14 +229,14 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
     }
 
     //TODO pass coroutine context from commands up to here
-    private fun findSeeAlsoReferences(docId: Int): List<SeeAlsoReference> = runBlocking {
+    private suspend fun findSeeAlsoReferences(docId: Int): List<SeeAlsoReference> {
         database.preparedStatement(
             """
                 select text, link, target_type, full_signature
                 from docseealsoreference
                 where doc_id = ?
             """.trimIndent()) {
-            executeQuery(docId).map {
+            return executeQuery(docId).map {
                 SeeAlsoReference(
                     it.getString("text"),
                     it.getString("link"),
@@ -248,7 +247,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         }
     }
 
-    private fun getAllSignatures(query: String?, limit: Int, vararg docTypes: DocType): List<DocSearchResult> = runBlocking {
+    private suspend fun getAllSignatures(query: String?, limit: Int, vararg docTypes: DocType): List<DocSearchResult> {
         @Language("PostgreSQL", prefix = "select * from doc ")
         val sort = when {
             query.isNullOrEmpty() -> "order by classname, identifier"
@@ -271,7 +270,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                 $sort
                 limit ?
             """.trimIndent()) {
-            executeQuery(sourceType.id, docTypes.map { it.id }.toTypedArray(), *sortArgs, limit)
+            return executeQuery(sourceType.id, docTypes.map { it.id }.toTypedArray(), *sortArgs, limit)
                 .map {
                     DocSearchResult(
                         it["full_identifier"],
@@ -282,7 +281,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         }
     }
 
-    private fun getClassNamesWithChildren(docType: DocType, query: String?): List<String> = runBlocking {
+    private suspend fun getClassNamesWithChildren(docType: DocType, query: String?): List<String> {
         @Language("PostgreSQL", prefix = "select * from doc ")
         val sort = when {
             query.isNullOrEmpty() -> "order by classname"
@@ -304,7 +303,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                 $sort
                 limit 25
             """.trimIndent()) {
-            executeQuery(sourceType.id, docType.id, *sortArgs).map { it.getString("classname") }
+            return executeQuery(sourceType.id, docType.id, *sortArgs).map { it.getString("classname") }
         }
     }
 

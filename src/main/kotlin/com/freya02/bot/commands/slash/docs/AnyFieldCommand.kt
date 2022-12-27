@@ -36,7 +36,7 @@ class AnyFieldCommand(private val docIndexMap: DocIndexMap, private val slashDoc
     }
 
     @CommandMarker
-    fun onSlashAnyField(event: GuildSlashEvent, sourceType: DocSourceType, fullSignature: String) {
+    suspend fun onSlashAnyField(event: GuildSlashEvent, sourceType: DocSourceType, fullSignature: String) {
         val split = fullSignature.split("#")
         if (split.size != 2) {
             event.reply_(

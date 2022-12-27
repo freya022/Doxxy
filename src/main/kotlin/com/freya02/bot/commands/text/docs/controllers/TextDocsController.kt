@@ -5,6 +5,7 @@ import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocSuggestion
 import com.freya02.botcommands.api.core.annotations.BService
 import dev.minn.jda.ktx.messages.reply_
+import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.exceptions.ErrorHandler
 import net.dv8tion.jda.api.requests.ErrorResponse
 import net.dv8tion.jda.api.utils.messages.MessageEditData
@@ -12,7 +13,7 @@ import java.util.concurrent.TimeUnit
 
 @BService
 class TextDocsController(private val commonDocsController: CommonDocsController) {
-    fun getDocSuggestionMenu(docIndex: DocIndex, suggestions: List<DocSuggestion>) =
+    suspend fun getDocSuggestionMenu(docIndex: DocIndex, suggestions: List<DocSuggestion>) =
         commonDocsController.buildDocSuggestionsMenu(docIndex, suggestions) {
             useDeleteButton(true)
 
@@ -28,10 +29,12 @@ class TextDocsController(private val commonDocsController: CommonDocsController)
 
             setCallback { buttonEvent, entry ->
                 val identifier = entry.identifier
-                val doc = when {
-                    '(' in identifier -> docIndex.getMethodDoc(identifier)
-                    '#' in identifier -> docIndex.getFieldDoc(identifier)
-                    else -> docIndex.getClassDoc(identifier)
+                val doc = runBlocking {
+                    when {
+                        '(' in identifier -> docIndex.getMethodDoc(identifier)
+                        '#' in identifier -> docIndex.getFieldDoc(identifier)
+                        else -> docIndex.getClassDoc(identifier)
+                    }
                 }
 
                 when (doc) {

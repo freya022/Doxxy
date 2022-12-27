@@ -35,7 +35,7 @@ class SlashResolve(private val docIndexMap: DocIndexMap, private val slashDocsCo
     }
 
     @CommandMarker
-    fun onSlashResolve(
+    suspend fun onSlashResolve(
         event: GuildSlashEvent,
         sourceType: DocSourceType,
         chain: String

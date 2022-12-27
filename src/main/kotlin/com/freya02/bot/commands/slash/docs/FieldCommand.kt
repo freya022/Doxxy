@@ -39,7 +39,7 @@ class FieldCommand(private val docIndexMap: DocIndexMap, private val slashDocsCo
     }
 
     @CommandMarker
-    fun onSlashField(
+    suspend fun onSlashField(
         event: GuildSlashEvent,
         sourceType: DocSourceType,
         className: String,
