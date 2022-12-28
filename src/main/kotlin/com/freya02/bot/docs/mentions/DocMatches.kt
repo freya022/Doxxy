@@ -8,8 +8,13 @@ data class ClassMention(val sourceType: DocSourceType, val identifier: String)
 data class SimilarIdentifier(val sourceType: DocSourceType, val identifier: String, val similarity: Float) : Comparable<SimilarIdentifier> {
     fun isSimilarEnough() = similarity > 0.25
 
-    //Reverse order
-    override fun compareTo(other: SimilarIdentifier): Int = -similarity.compareTo(other.similarity)
+    private val comparator = Comparator.comparing(SimilarIdentifier::similarity)
+        .reversed() //Reverse similarity order
+        .thenComparing(SimilarIdentifier::identifier)
+
+    override fun compareTo(other: SimilarIdentifier): Int {
+        return comparator.compare(this, other)
+    }
 }
 
 data class DocMatches(val classMentions: List<ClassMention>, val similarIdentifiers: SortedSet<SimilarIdentifier>) {
