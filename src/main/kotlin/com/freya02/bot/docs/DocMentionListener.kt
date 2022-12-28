@@ -93,6 +93,7 @@ class DocMentionListener(
     //          is an extension of the rule above but for exact matches (similarity = 1))
     @BEventListener
     suspend fun onMessageReceived(event: MessageReceivedEvent) {
+        if (!event.isFromGuild) return
         if (event.isWebhookMessage || event.author.isBot) return
 
         //Only analyse messages in help channel of the JDA guild
@@ -118,6 +119,7 @@ class DocMentionListener(
 
     @BEventListener
     suspend fun onMessageReactionAdd(event: MessageReactionAddEvent) {
+        if (!event.isFromGuild) return
         if (event.userIdLong == event.jda.selfUser.idLong) return
         if (event.emoji != questionEmoji) return
         if (!checkChannel(event.guild, event.channel)) return
