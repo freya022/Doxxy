@@ -21,7 +21,7 @@ class TextDocs(
     private val textDocsController: TextDocsController
 ) : TextCommand() {
     @JDATextCommand(name = "docs", description = "Shows the documentation for a class, a method or a field")
-    fun onTextDocs(
+    suspend fun onTextDocs(
         event: BaseCommandEvent,
         @TextOption(name = "docs source", example = "JDA") docSourceType: DocSourceType = DocSourceType.JDA,
         @TextOption(name = "query", example = "Guild#ban") query: String

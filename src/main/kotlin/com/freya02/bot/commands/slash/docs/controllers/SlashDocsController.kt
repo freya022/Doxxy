@@ -7,6 +7,7 @@ import com.freya02.bot.docs.index.DocSuggestion
 import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
 import com.freya02.botcommands.api.core.annotations.BService
 import dev.minn.jda.ktx.messages.reply_
+import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.exceptions.ErrorHandler
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 import net.dv8tion.jda.api.requests.ErrorResponse
@@ -21,7 +22,7 @@ class SlashDocsController(private val commonDocsController: CommonDocsController
             .queue()
     }
 
-    fun handleClass(event: GuildSlashEvent, className: String, docIndex: DocIndex, block: () -> List<DocSuggestion>) {
+    suspend fun handleClass(event: GuildSlashEvent, className: String, docIndex: DocIndex, block: suspend () -> List<DocSuggestion>) {
         val cachedClass = docIndex.getClassDoc(className) ?: run {
             val menu = getDocSuggestionsMenu(event, docIndex, block)
 
@@ -35,7 +36,7 @@ class SlashDocsController(private val commonDocsController: CommonDocsController
         sendClass(event, false, cachedClass)
     }
 
-    fun handleMethodDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex, block: () -> List<DocSuggestion>) {
+    suspend fun handleMethodDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex, block: suspend () -> List<DocSuggestion>) {
         val cachedMethod = docIndex.getMethodDoc(className, identifier) ?: run {
             val menu = getDocSuggestionsMenu(event, docIndex, block)
 
@@ -49,7 +50,7 @@ class SlashDocsController(private val commonDocsController: CommonDocsController
         sendClass(event, false, cachedMethod)
     }
 
-    fun handleFieldDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex, block: () -> List<DocSuggestion>) {
+    suspend fun handleFieldDocs(event: GuildSlashEvent, className: String, identifier: String, docIndex: DocIndex, block: suspend () -> List<DocSuggestion>) {
         val cachedField = docIndex.getFieldDoc(className, identifier) ?: run {
             val menu = getDocSuggestionsMenu(event, docIndex, block)
 
@@ -63,10 +64,10 @@ class SlashDocsController(private val commonDocsController: CommonDocsController
         sendClass(event, false, cachedField)
     }
 
-    private fun getDocSuggestionsMenu(
+    private suspend fun getDocSuggestionsMenu(
         event: GuildSlashEvent,
         docIndex: DocIndex,
-        block: () -> List<DocSuggestion>
+        block: suspend () -> List<DocSuggestion>
     ) = commonDocsController.buildDocSuggestionsMenu(docIndex, block()) {
         setTimeout(2, TimeUnit.MINUTES) { menu, _ ->
             menu.cleanup()
@@ -79,10 +80,12 @@ class SlashDocsController(private val commonDocsController: CommonDocsController
             event.hook.deleteOriginal().queue()
 
             val identifier = entry.identifier
-            val doc = when {
-                '(' in identifier -> docIndex.getMethodDoc(identifier)
-                '#' in identifier -> docIndex.getFieldDoc(identifier)
-                else -> docIndex.getClassDoc(identifier)
+            val doc = runBlocking {
+                when {
+                    '(' in identifier -> docIndex.getMethodDoc(identifier)
+                    '#' in identifier -> docIndex.getFieldDoc(identifier)
+                    else -> docIndex.getClassDoc(identifier)
+                }
             }
 
             when (doc) {

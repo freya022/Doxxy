@@ -1,7 +1,7 @@
 package com.freya02.bot
 
 import ch.qos.logback.classic.util.ContextInitializer
-import com.freya02.bot.db.Database
+import com.freya02.bot.db.DatabaseSource
 import com.freya02.botcommands.api.core.BBuilder
 import com.freya02.docs.DocWebServer
 import dev.minn.jda.ktx.events.CoroutineEventManager
@@ -43,9 +43,10 @@ object Main {
                 scope.cancel()
             }
 
+            //TODO v3: This should be avoided, the framework should be able to construct a config (via a function that returns the config)
             val config = Config.config
 
-            val database = Database(config)
+            val database = DatabaseSource(config)
 
             logger.info("Starting docs web server")
             DocWebServer.startDocWebServer()
@@ -58,7 +59,6 @@ object Main {
 
                 serviceConfig.apply {
                     registerInstanceSupplier(Config::class.java) { config }
-                    registerInstanceSupplier(Database::class.java) { database }
                 }
 
                 connectionProvider = Supplier { database.fetchConnection() }

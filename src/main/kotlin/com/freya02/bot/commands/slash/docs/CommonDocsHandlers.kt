@@ -24,7 +24,7 @@ class CommonDocsHandlers(
     private val slashDocsController: SlashDocsController
 ) : ApplicationCommand() {
     @JDASelectMenuListener(name = SEE_ALSO_SELECT_LISTENER_NAME)
-    fun onSeeAlsoSelect(event: StringSelectEvent, docSourceType: DocSourceType) {
+    suspend fun onSeeAlsoSelect(event: StringSelectEvent, docSourceType: DocSourceType) {
         val values = event.selectedOptions.single().value.split(":")
         val targetType = TargetType.valueOf(values[0])
         val fullSignature = values[1]
@@ -45,89 +45,89 @@ class CommonDocsHandlers(
 
     @CacheAutocomplete
     @AutocompleteHandler(name = CLASS_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
-    fun onClassNameAutocomplete(
+    suspend fun onClassNameAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
-    ): Collection<Choice> = withDocIndex(sourceType) {
+    ): List<Choice> = withDocIndex(sourceType) {
         classNameAutocomplete(this, event.focusedOption.value).toChoices()
     }
 
     @CacheAutocomplete
     @AutocompleteHandler(name = CLASS_NAME_WITH_METHODS_AUTOCOMPLETE_NAME, showUserInput = false)
-    fun onClassNameWithMethodsAutocomplete(
+    suspend fun onClassNameWithMethodsAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
-    ): Collection<Choice> = withDocIndex(sourceType) {
+    ): List<Choice> = withDocIndex(sourceType) {
         classNameWithMethodsAutocomplete(this, event.focusedOption.value).toChoices()
     }
 
     @CacheAutocomplete
     @AutocompleteHandler(name = CLASS_NAME_WITH_FIELDS_AUTOCOMPLETE_NAME, showUserInput = false)
-    fun onClassNameWithFieldsAutocomplete(
+    suspend fun onClassNameWithFieldsAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
-    ): Collection<Choice> = withDocIndex(sourceType) {
+    ): List<Choice> = withDocIndex(sourceType) {
         classNameWithFieldsAutocomplete(this, event.focusedOption.value).toChoices()
     }
 
     @CacheAutocomplete
     @AutocompleteHandler(name = METHOD_NAME_BY_CLASS_AUTOCOMPLETE_NAME, showUserInput = false)
-    fun onMethodNameByClassAutocomplete(
+    suspend fun onMethodNameByClassAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
-    ): Collection<Choice> = withDocIndex(sourceType) {
+    ): List<Choice> = withDocIndex(sourceType) {
         methodNameByClassAutocomplete(this, className, event.focusedOption.value).searchResultToChoices { it.humanIdentifier }
     }
 
     @CacheAutocomplete
     @AutocompleteHandler(name = ANY_METHOD_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
-    fun onAnyMethodNameAutocomplete(
+    suspend fun onAnyMethodNameAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
-    ): Collection<Choice> = withDocIndex(sourceType) {
+    ): List<Choice> = withDocIndex(sourceType) {
         anyMethodNameAutocomplete(this, event.focusedOption.value).searchResultToChoices { it.humanClassIdentifier }
     }
 
     @CacheAutocomplete
     @AutocompleteHandler(name = FIELD_NAME_BY_CLASS_AUTOCOMPLETE_NAME, showUserInput = false)
-    fun onFieldNameByClassAutocomplete(
+    suspend fun onFieldNameByClassAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
-    ): Collection<Choice> = withDocIndex(sourceType) {
+    ): List<Choice> = withDocIndex(sourceType) {
         fieldNameByClassAutocomplete(this, className, event.focusedOption.value).searchResultToChoices { it.humanIdentifier }
     }
 
     @CacheAutocomplete
     @AutocompleteHandler(name = ANY_FIELD_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
-    fun onAnyFieldNameAutocomplete(
+    suspend fun onAnyFieldNameAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
-    ): Collection<Choice> = withDocIndex(sourceType) {
-        anyFieldNameAutocomplete(this, event.focusedOption.value).searchResultToChoices { it.humanClassIdentifier }
+    ): List<Choice> = withDocIndex(sourceType) {
+        anyFieldNameAutocomplete(this@withDocIndex, event.focusedOption.value).searchResultToChoices { it.humanClassIdentifier }
     }
 
     @CacheAutocomplete
     @AutocompleteHandler(name = METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME, showUserInput = false)
-    fun onMethodOrFieldByClassAutocomplete(
+    suspend fun onMethodOrFieldByClassAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
-    ): Collection<Choice> = withDocIndex(sourceType) {
+    ): List<Choice> = withDocIndex(sourceType) {
         methodOrFieldByClassAutocomplete(this, className, event.focusedOption.value).searchResultToChoices { it.humanIdentifier }
     }
 
     @CacheAutocomplete
     @AutocompleteHandler(name = RESOLVE_AUTOCOMPLETE_NAME, showUserInput = false)
-    fun onResolveAutocomplete(
+    suspend fun onResolveAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
-    ): Collection<Choice> = withDocIndex(sourceType) {
+    ): List<Choice> = withDocIndex(sourceType) {
         resolveDocAutocomplete(event.focusedOption.value.transformResolveChain()).resolveResultToChoices()
     }
 
-    private fun withDocIndex(sourceType: DocSourceType, block: DocIndex.() -> List<Choice>): List<Choice> {
+    private inline fun withDocIndex(sourceType: DocSourceType, block: DocIndex.() -> List<Choice>): List<Choice> {
         val map = docIndexMap[sourceType] ?: return emptyList()
         return block(map)
     }

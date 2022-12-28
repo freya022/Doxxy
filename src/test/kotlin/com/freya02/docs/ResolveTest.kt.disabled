@@ -1,7 +1,7 @@
 package com.freya02.docs
 
 import com.freya02.bot.Config
-import com.freya02.bot.db.Database
+import com.freya02.bot.db.DatabaseSource
 import com.freya02.bot.docs.index.DocIndex
 
 fun main() {
@@ -12,7 +12,7 @@ fun main() {
 //    exitProcess(0)
 
     val config = Config.config
-    val database = Database(config)
+    val database = DatabaseSource(config)
 
     val jdaIndex = DocIndex(DocSourceType.JDA, database)
 

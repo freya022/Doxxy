@@ -42,7 +42,7 @@ class DocsCommand(private val docIndexMap: DocIndexMap, private val slashDocsCon
     }
 
     @CommandMarker
-    fun onSlashDocs(
+    suspend fun onSlashDocs(
         event: GuildSlashEvent,
         sourceType: DocSourceType,
         className: String,

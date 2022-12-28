@@ -1,6 +1,5 @@
 package com.freya02.bot.commands.slash
 
-import com.freya02.bot.db.isUniqueViolation
 import com.freya02.bot.tag.*
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
@@ -13,6 +12,7 @@ import com.freya02.botcommands.api.commands.application.slash.autocomplete.annot
 import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.components.data.InteractionConstraints
 import com.freya02.botcommands.api.components.event.ButtonEvent
+import com.freya02.botcommands.api.core.db.isUniqueViolation
 import com.freya02.botcommands.api.modals.Modals
 import com.freya02.botcommands.api.modals.annotations.ModalData
 import com.freya02.botcommands.api.modals.annotations.ModalHandler
@@ -62,7 +62,7 @@ class SlashTag(
         val guild = checkGuild(event.guild)
         val member = checkGuild(event.member)
 
-        val tag = tagDB[guild.idLong, name] ?: run {
+        val tag = tagDB.get(guild.idLong, name) ?: run {
             event.reply("Tag '$name' was not found").setEphemeral(true).queue()
             return
         }
@@ -78,7 +78,7 @@ class SlashTag(
     }
 
     private suspend fun withTag(event: GuildSlashEvent, name: String, consumer: TagConsumer) {
-        val tag = tagDB[event.guild.idLong, name] ?: run {
+        val tag = tagDB.get(event.guild.idLong, name) ?: run {
             event.reply("Tag '$name' was not found").setEphemeral(true).queue()
             return
         }
@@ -135,7 +135,7 @@ class SlashTag(
     }
 
     @ModalHandler(name = TAGS_CREATE_MODAL_HANDLER)
-    fun createTag(
+    suspend fun createTag(
         event: ModalInteractionEvent,
         @ModalInput(name = "tagName") name: String,
         @ModalInput(name = "tagDescription") description: String,
@@ -251,13 +251,13 @@ class SlashTag(
         }
     }
 
-    private fun doDeleteTag(event: GuildSlashEvent, name: String, btnEvt: ButtonEvent) {
+    private suspend fun doDeleteTag(event: GuildSlashEvent, name: String, btnEvt: ButtonEvent) {
         tagDB.delete(event.guild.idLong, event.user.idLong, name)
         btnEvt.editMessageFormat("Tag '%s' deleted successfully", name).setComponents().queue()
     }
 
     @JDASlashCommand(scope = CommandScope.GLOBAL_NO_DM, name = "tags", subcommand = "list", description = "Creates a tag in this guild")
-    fun listTags(
+    suspend fun listTags(
         event: GuildSlashEvent,
         @AppOption(name = "sorting", description = "Type of tag sorting") criteria: TagCriteria = TagCriteria.NAME
     ) {
