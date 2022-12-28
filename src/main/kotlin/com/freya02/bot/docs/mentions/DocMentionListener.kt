@@ -13,7 +13,6 @@ import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.events.getDefaultScope
 import dev.minn.jda.ktx.generics.getChannel
-import dev.minn.jda.ktx.interactions.components.asDisabled
 import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.MessageCreate
 import dev.minn.jda.ktx.messages.reply_
@@ -103,9 +102,7 @@ class DocMentionListener(
 
                     timeout(5.minutes) {
                         val channel = jda.getChannel<GuildMessageChannel>(channelId) ?: return@timeout
-                        channel.retrieveMessageById(messageId)
-                            .flatMap { message.editMessageComponents(message.components.asDisabled()) }
-                            .queue()
+                        channel.deleteMessageById(messageId).queue(null, ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE))
                     }
 
                     bindTo { selectEvent -> onSelectedDoc(selectEvent) }
