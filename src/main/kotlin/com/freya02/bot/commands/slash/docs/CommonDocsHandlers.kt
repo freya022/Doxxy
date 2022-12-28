@@ -48,7 +48,7 @@ class CommonDocsHandlers(
     suspend fun onClassNameAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
-    ): Collection<Choice> = withDocIndex(sourceType) {
+    ): List<Choice> = withDocIndex(sourceType) {
         classNameAutocomplete(this, event.focusedOption.value).toChoices()
     }
 
@@ -57,7 +57,7 @@ class CommonDocsHandlers(
     suspend fun onClassNameWithMethodsAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
-    ): Collection<Choice> = withDocIndex(sourceType) {
+    ): List<Choice> = withDocIndex(sourceType) {
         classNameWithMethodsAutocomplete(this, event.focusedOption.value).toChoices()
     }
 
@@ -66,7 +66,7 @@ class CommonDocsHandlers(
     suspend fun onClassNameWithFieldsAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
-    ): Collection<Choice> = withDocIndex(sourceType) {
+    ): List<Choice> = withDocIndex(sourceType) {
         classNameWithFieldsAutocomplete(this, event.focusedOption.value).toChoices()
     }
 
@@ -76,7 +76,7 @@ class CommonDocsHandlers(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
-    ): Collection<Choice> = withDocIndex(sourceType) {
+    ): List<Choice> = withDocIndex(sourceType) {
         methodNameByClassAutocomplete(this, className, event.focusedOption.value).searchResultToChoices { it.humanIdentifier }
     }
 
@@ -85,7 +85,7 @@ class CommonDocsHandlers(
     suspend fun onAnyMethodNameAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
-    ): Collection<Choice> = withDocIndex(sourceType) {
+    ): List<Choice> = withDocIndex(sourceType) {
         anyMethodNameAutocomplete(this, event.focusedOption.value).searchResultToChoices { it.humanClassIdentifier }
     }
 
@@ -95,7 +95,7 @@ class CommonDocsHandlers(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
-    ): Collection<Choice> = withDocIndex(sourceType) {
+    ): List<Choice> = withDocIndex(sourceType) {
         fieldNameByClassAutocomplete(this, className, event.focusedOption.value).searchResultToChoices { it.humanIdentifier }
     }
 
@@ -104,8 +104,8 @@ class CommonDocsHandlers(
     suspend fun onAnyFieldNameAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
-    ): Collection<Choice> = withDocIndex(sourceType) {
-        anyFieldNameAutocomplete(this, event.focusedOption.value).searchResultToChoices { it.humanClassIdentifier }
+    ): List<Choice> = withDocIndex(sourceType) {
+        anyFieldNameAutocomplete(this@withDocIndex, event.focusedOption.value).searchResultToChoices { it.humanClassIdentifier }
     }
 
     @CacheAutocomplete
@@ -114,7 +114,7 @@ class CommonDocsHandlers(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
-    ): Collection<Choice> = withDocIndex(sourceType) {
+    ): List<Choice> = withDocIndex(sourceType) {
         methodOrFieldByClassAutocomplete(this, className, event.focusedOption.value).searchResultToChoices { it.humanIdentifier }
     }
 
@@ -123,7 +123,7 @@ class CommonDocsHandlers(
     suspend fun onResolveAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType
-    ): Collection<Choice> = withDocIndex(sourceType) {
+    ): List<Choice> = withDocIndex(sourceType) {
         resolveDocAutocomplete(event.focusedOption.value.transformResolveChain()).resolveResultToChoices()
     }
 
