@@ -1,4 +1,4 @@
-package com.freya02.bot.docs
+package com.freya02.bot.docs.mentions
 
 import com.freya02.docs.DocSourceType
 import java.util.*

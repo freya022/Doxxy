@@ -1,7 +1,8 @@
-package com.freya02.bot.docs
+package com.freya02.bot.docs.mentions
 
 import com.freya02.bot.commands.controllers.CommonDocsController
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
+import com.freya02.bot.docs.DocIndexMap
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.components.builder.select.ephemeral.EphemeralStringSelectBuilder
