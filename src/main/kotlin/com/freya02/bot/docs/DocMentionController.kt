@@ -3,6 +3,7 @@ package com.freya02.bot.docs
 import com.freya02.botcommands.api.core.db.Database
 import com.freya02.botcommands.api.core.db.KConnection
 import com.freya02.docs.DocSourceType
+import java.util.*
 
 class DocMentionController(private val database: Database) {
     private val spaceRegex = Regex("""\s+""")
@@ -14,10 +15,9 @@ class DocMentionController(private val database: Database) {
 
         val mentionedClasses = getMentionedClasses(cleanedContent)
 
-        val similarIdentifiers: List<SimilarIdentifier> =
+        val similarIdentifiers: SortedSet<SimilarIdentifier> =
             identifierRegex.findAll(cleanedContent)
-                .toList()
-                .flatMap { result ->
+                .flatMapTo(sortedSetOf()) { result ->
                     preparedStatement(
                         """
                             select d.source_id,

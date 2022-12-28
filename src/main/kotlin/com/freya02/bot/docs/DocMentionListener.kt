@@ -88,7 +88,7 @@ class DocMentionListener(
 
         val contentRaw = event.message.contentRaw
         val docMatches = docMentionController.processMentions(contentRaw)
-        if (docMatches.isEmpty()) return
+        if (!docMatches.isSufficient()) return
 
         event.message.addReaction(questionEmoji).queue {
             val jda = event.jda
