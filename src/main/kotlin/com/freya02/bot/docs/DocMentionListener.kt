@@ -164,13 +164,4 @@ class DocMentionListener(private val database: Database) {
             }
         }
     }
-
-    private data class ClassMention(val sourceType: DocSourceType, val identifier: String)
-    private data class SimilarIdentifier(val sourceType: DocSourceType, val identifier: String, val similarity: Float)
-    private data class DocMatches(val classMentions: List<ClassMention>, val similarIdentifiers: List<SimilarIdentifier>) {
-        val identicalIdentifiers: List<SimilarIdentifier>
-            get() = similarIdentifiers.filter { it.similarity == 1.0f }
-
-        fun isEmpty() = classMentions.isEmpty() && similarIdentifiers.isEmpty()
-    }
 }
