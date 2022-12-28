@@ -39,6 +39,12 @@ class DocMentionController(private val database: Database) {
                                     it["overall_similarity"]
                                 )
                             }
+                            .let { similarIdentifiers -> // If the token has been fully matched then only keep it and it's overloads
+                                when (similarIdentifiers.first().similarity) {
+                                    1.0f -> similarIdentifiers.filter { it.similarity == 1.0f }
+                                    else -> similarIdentifiers
+                                }
+                            }
                     }
                 }
 
