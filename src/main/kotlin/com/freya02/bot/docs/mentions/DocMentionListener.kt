@@ -8,7 +8,6 @@ import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.components.builder.select.ephemeral.EphemeralStringSelectBuilder
 import com.freya02.botcommands.api.components.event.StringSelectEvent
 import com.freya02.botcommands.api.core.annotations.BEventListener
-import com.freya02.botcommands.api.core.annotations.BService
 import com.freya02.botcommands.api.utils.EmojiUtils
 import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.coroutines.await
@@ -20,8 +19,6 @@ import dev.minn.jda.ktx.messages.MessageCreate
 import dev.minn.jda.ktx.messages.reply_
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.entities.channel.ChannelType
@@ -35,7 +32,6 @@ import java.util.concurrent.Executors
 import kotlin.properties.Delegates
 import kotlin.time.Duration.Companion.minutes
 
-@BService //TODO remove
 @CommandMarker
 class DocMentionListener(
     private val componentsService: Components,
@@ -44,45 +40,9 @@ class DocMentionListener(
     private val docIndexMap: DocIndexMap,
     private val commonDocsController: CommonDocsController
 ) {
-    private val logger = KotlinLogging.logger { }
-
     private val questionEmoji = EmojiUtils.resolveJDAEmoji("question")
 
     private val timeoutScope = getDefaultScope(pool = Executors.newSingleThreadScheduledExecutor { Thread(it).also { t -> t.name = "DocMentionListener timeout thread" } })
-
-    init {
-        runBlocking {
-            listOf(
-                "Guild#auditlogs",
-                "Guild",
-                "Guild#retrieveAuditLogs",
-                "Guild#retrieveAuditLog",
-                "thread.sleep is never a solution",
-                "use JDA#awaitReady",
-                """Solved it
-
-                ```java
-                for(MessageEmbed emb : e.getMessage().getEmbeds()){
-                    System.out.println(emb.getAuthor().getName());
-                    System.out.println(emb.getTitle());
-                    System.out.println(emb.getDescription());
-                    for(MessageEmbed.Field field : emb.getFields()){
-                        System.out.println(field.getName() + " : " + field.getValue());
-                    }
-                }
-                System.out.println("------------------------------------");
-                ```"""
-            ).forEach {
-                logger.debug(it)
-                val (classMentions, similarIdentifiers) = docMentionController.processMentions(it)
-                logger.debug { "Classes: $classMentions" }
-                logger.debug { "similarities = $similarIdentifiers" }
-                println()
-            }
-
-//            exitProcess(0)
-        }
-    }
 
     //  Reaction added when a class/identifier is detected
     //      The reaction should be usable once per user

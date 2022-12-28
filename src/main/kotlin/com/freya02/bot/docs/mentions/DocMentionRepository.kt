@@ -1,13 +1,10 @@
 package com.freya02.bot.docs.mentions
 
-import com.freya02.botcommands.api.core.ServiceStart
-import com.freya02.botcommands.api.core.annotations.BService
 import com.freya02.botcommands.api.core.db.Database
 import com.freya02.botcommands.api.core.db.KConnection
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-@BService(start = ServiceStart.LAZY)
 class DocMentionRepository(private val database: Database) {
     private val lock = Mutex()
 
