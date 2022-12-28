@@ -121,10 +121,8 @@
             </exclusions>
         </dependency>
         <dependency>
-<!--            <groupId>com.github.freya022</groupId>-->
             <groupId>io.github.freya022</groupId>
             <artifactId>BotCommands</artifactId>
-<!--            <version>53df90c</version>-->
             <version>3.0.0-alpha.2-SNAPSHOT</version>
         </dependency>
         <dependency>
