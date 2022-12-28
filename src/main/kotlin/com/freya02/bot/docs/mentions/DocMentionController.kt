@@ -21,6 +21,7 @@ class DocMentionController(private val database: Database) {
                     preparedStatement(
                         """
                             select d.source_id,
+                                   d.classname || '#' || d.identifier as fullIdentifier,
                                    d.human_class_identifier,
                                    similarity(d.classname, ?) * similarity(d.identifier_no_args, ?) as overall_similarity
                             from doc d
@@ -30,11 +31,17 @@ class DocMentionController(private val database: Database) {
                         """.trimIndent()
                     ) {
                         executeQuery(result.groupValues[1], result.groupValues[2])
-                            .map {
+                            .mapNotNull {
                                 val sourceId: Int = it["source_id"]
+
+                                //Can't use that in a select menu :/
+                                if (it.getString("fullIdentifier").length >= 95) {
+                                    return@mapNotNull null
+                                }
 
                                 SimilarIdentifier(
                                     DocSourceType.fromId(sourceId),
+                                    it["fullIdentifier"],
                                     it["human_class_identifier"],
                                     it["overall_similarity"]
                                 )

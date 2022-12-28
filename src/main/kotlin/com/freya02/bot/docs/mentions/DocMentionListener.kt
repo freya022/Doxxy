@@ -133,7 +133,7 @@ class DocMentionListener(
         }
 
         docMatches.similarIdentifiers.forEach {
-            addOption(it.identifier, "${it.sourceType.id}:${it.identifier}")
+            addOption(it.fullHumanIdentifier, "${it.sourceType.id}:${it.fullIdentifier}")
         }
     }
 
