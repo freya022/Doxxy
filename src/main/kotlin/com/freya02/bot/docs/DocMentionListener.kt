@@ -1,30 +1,45 @@
 package com.freya02.bot.docs
 
+import com.freya02.bot.commands.controllers.CommonDocsController
+import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
 import com.freya02.botcommands.api.annotations.CommandMarker
+import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.core.annotations.BEventListener
 import com.freya02.botcommands.api.core.annotations.BService
-import com.freya02.botcommands.api.core.db.Database
 import com.freya02.botcommands.api.utils.EmojiUtils
+import com.freya02.docs.DocSourceType
+import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.events.getDefaultScope
 import dev.minn.jda.ktx.generics.getChannel
+import dev.minn.jda.ktx.interactions.components.asDisabled
+import dev.minn.jda.ktx.interactions.components.row
+import dev.minn.jda.ktx.messages.MessageCreate
+import dev.minn.jda.ktx.messages.reply_
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
+import net.dv8tion.jda.api.entities.Guild
+import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.entities.channel.ChannelType
 import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel
+import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent
 import net.dv8tion.jda.api.exceptions.ErrorHandler
 import net.dv8tion.jda.api.requests.ErrorResponse
 import java.util.concurrent.Executors
+import kotlin.properties.Delegates
 import kotlin.time.Duration.Companion.minutes
 
 @BService //TODO remove
 @CommandMarker
 class DocMentionListener(
-    private val database: Database,
+    private val componentsService: Components,
     private val docMentionController: DocMentionController,
-    private val docMentionRepository: DocMentionRepository
+    private val docMentionRepository: DocMentionRepository,
+    private val docIndexMap: DocIndexMap,
+    private val commonDocsController: CommonDocsController
 ) {
     private val logger = KotlinLogging.logger { }
 
@@ -81,10 +96,7 @@ class DocMentionListener(
         if (event.isWebhookMessage || event.author.isBot) return
 
         //Only analyse messages in help channel of the JDA guild
-        if (event.guild.idLong == 125227483518861312) {
-            if (!event.channelType.isThread) return
-            if (event.channel.asThreadChannel().parentChannel.type != ChannelType.FORUM) return
-        }
+        if (!checkChannel(event.guild, event.channel)) return
 
         val contentRaw = event.message.contentRaw
         val docMatches = docMentionController.processMentions(contentRaw)
@@ -102,5 +114,79 @@ class DocMentionListener(
                 channel.removeReactionById(messageId, questionEmoji).queue(null, ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE))
             }
         }
+    }
+
+    @BEventListener
+    suspend fun onMessageReactionAdd(event: MessageReactionAddEvent) {
+        if (event.userIdLong == event.jda.selfUser.idLong) return
+        if (event.emoji != questionEmoji) return
+        if (!checkChannel(event.guild, event.channel)) return
+
+        docMentionRepository.ifNotUsed(event.messageIdLong, event.userIdLong) {
+            val message = event.retrieveMessage().await()
+
+            val docMatches = docMentionController.processMentions(message.contentRaw)
+            if (!docMatches.isSufficient()) return@ifNotUsed
+
+            //Setting the message ID after sending it definitely hurts
+            val jda = event.jda
+            val channelId = event.channel.idLong
+            var messageId: Long by Delegates.notNull()
+            MessageCreate {
+                val docsMenu = componentsService.ephemeralStringSelectMenu {
+                    docMatches.classMentions.forEach {
+                        addOption(it.identifier, "${it.sourceType.id}:${it.identifier}")
+                    }
+
+                    docMatches.similarIdentifiers.forEach {
+                        addOption(it.identifier, "${it.sourceType.id}:${it.identifier}")
+                    }
+
+                    timeout(5.minutes) {
+                        val channel = jda.getChannel<GuildMessageChannel>(channelId) ?: return@timeout
+                        channel.retrieveMessageById(messageId)
+                            .flatMap { message.editMessageComponents(message.components.asDisabled()) }
+                            .queue()
+                    }
+
+                    bindTo { selectEvent ->
+                        val (sourceTypeId, identifier) = selectEvent.values.single().split(':')
+
+                        val doc = sourceTypeId.toIntOrNull()
+                            ?.let { DocSourceType.fromIdOrNull(it) }
+                            ?.let { docIndexMap[it] }
+                            ?.let { docIndex ->
+                                when {
+                                    '(' in identifier -> docIndex.getMethodDoc(identifier)
+                                    '#' in identifier -> docIndex.getFieldDoc(identifier)
+                                    else -> docIndex.getClassDoc(identifier)
+                                }
+                            }
+
+                        if (doc == null) {
+                            selectEvent.reply_("This doc is not available anymore", ephemeral = true).queue()
+                            return@bindTo
+                        }
+
+                        selectEvent.reply(commonDocsController.getDocMessageData(selectEvent.member!!, true, doc))
+                            .setEphemeral(true)
+                            .queue()
+                    }
+                }
+
+                val deleteButton = componentsService.messageDeleteButton(UserSnowflake.fromId(event.userIdLong))
+                components += row(docsMenu)
+                components += row(deleteButton)
+            }.let { messageId = event.channel.sendMessage(it).await().idLong }
+        }
+    }
+
+    private fun checkChannel(guild: Guild, channel: MessageChannelUnion): Boolean {
+        if (guild.idLong == 125227483518861312) {
+            if (!channel.type.isThread) return false
+            if (channel.asThreadChannel().parentChannel.type != ChannelType.FORUM) return false
+        }
+
+        return true
     }
 }
