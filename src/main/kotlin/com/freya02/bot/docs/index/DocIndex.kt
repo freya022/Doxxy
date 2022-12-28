@@ -228,7 +228,6 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         }
     }
 
-    //TODO pass coroutine context from commands up to here
     private suspend fun findSeeAlsoReferences(docId: Int): List<SeeAlsoReference> {
         database.preparedStatement(
             """
