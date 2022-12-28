@@ -4,9 +4,7 @@ import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.core.annotations.BEventListener
 import com.freya02.botcommands.api.core.annotations.BService
 import com.freya02.botcommands.api.core.db.Database
-import com.freya02.botcommands.api.core.db.KConnection
 import com.freya02.botcommands.api.utils.EmojiUtils
-import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.events.getDefaultScope
 import dev.minn.jda.ktx.generics.getChannel
 import kotlinx.coroutines.delay
@@ -23,12 +21,12 @@ import kotlin.time.Duration.Companion.minutes
 
 @BService //TODO remove
 @CommandMarker
-class DocMentionListener(private val database: Database) {
+class DocMentionListener(
+    private val database: Database,
+    private val docMentionController: DocMentionController,
+    private val docMentionRepository: DocMentionRepository
+) {
     private val logger = KotlinLogging.logger { }
-
-    private val spaceRegex = Regex("""\s+""")
-    private val codeBlockRegex = Regex("""```.*\n(\X*?)```""")
-    private val identifierRegex = Regex("""(\w+)[#.](\w+)(?:\((.+?)\))?""")
 
     private val questionEmoji = EmojiUtils.resolveJDAEmoji("question")
 
@@ -58,7 +56,9 @@ class DocMentionListener(private val database: Database) {
                 ```"""
             ).forEach {
                 logger.debug(it)
-                processMentions(it)
+                val (classMentions, similarIdentifiers) = docMentionController.processMentions(it)
+                logger.debug { "Classes: $classMentions" }
+                logger.debug { "similarities = $similarIdentifiers" }
                 println()
             }
 
@@ -87,7 +87,7 @@ class DocMentionListener(private val database: Database) {
         }
 
         val contentRaw = event.message.contentRaw
-        val docMatches = processMentions(contentRaw)
+        val docMatches = docMentionController.processMentions(contentRaw)
         if (docMatches.isEmpty()) return
 
         event.message.addReaction(questionEmoji).queue {
@@ -100,67 +100,6 @@ class DocMentionListener(private val database: Database) {
 
                 val channel = jda.getChannel<GuildMessageChannel>(channelId) ?: return@launch
                 channel.removeReactionById(messageId, questionEmoji).queue(null, ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE))
-            }
-        }
-    }
-
-    private suspend fun processMentions(contentRaw: String): DocMatches = database.withConnection(readOnly = true) {
-        val cleanedContent = codeBlockRegex.replace(contentRaw, "")
-
-        val mentionedClasses = getMentionedClasses(cleanedContent)
-
-        val similarIdentifiers: List<SimilarIdentifier> =
-            identifierRegex.findAll(cleanedContent)
-                .toList()
-                .flatMap { result ->
-                    preparedStatement(
-                        """
-                            select d.source_id,
-                                   d.human_class_identifier,
-                                   similarity(d.classname, ?) * similarity(d.identifier_no_args, ?) as overall_similarity
-                            from doc d
-                            where d.type != 1
-                            order by overall_similarity desc
-                            limit 25;
-                        """.trimIndent()
-                    ) {
-                        executeQuery(result.groupValues[1], result.groupValues[2])
-                            .map {
-                                val sourceId: Int = it["source_id"]
-
-                                SimilarIdentifier(
-                                    DocSourceType.fromId(sourceId),
-                                    it["human_class_identifier"],
-                                    it["overall_similarity"]
-                                )
-                            }
-                    }
-                }
-
-        logger.debug { "Classes: $mentionedClasses" }
-        logger.debug { "similarities = $similarIdentifiers" }
-
-        return DocMatches(mentionedClasses, similarIdentifiers)
-    }
-
-    context(KConnection)
-    private suspend fun getMentionedClasses(content: String): List<ClassMention> {
-        return spaceRegex.split(content).let {
-            preparedStatement(
-                """
-                    select d.source_id, d.classname
-                    from doc d
-                    where d.type = 1
-                      and classname = any (?);
-                """.trimIndent()
-            ) {
-                executeQuery(it.toTypedArray()).map {
-                    val sourceId: Int = it["source_id"]
-                    ClassMention(
-                        DocSourceType.fromId(sourceId),
-                        it["classname"]
-                    )
-                }
             }
         }
     }
