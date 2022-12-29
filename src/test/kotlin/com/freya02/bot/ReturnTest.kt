@@ -44,6 +44,18 @@ object ReturnTest {
 
         throw AssertionError("Unreachable")
     }
+
+    fun Any?.doReturn(): Nothing {
+        throw AssertionError("Unreachable")
+    }
+
+    fun testForceReturn() {
+        dummy().doReturn()
+
+        throw AssertionError("Unreachable")
+    }
+
+    private fun dummy() {}
 }
 
 // https://stackoverflow.com/questions/28149625/replacing-a-java-method-invocation-from-a-field-with-a-method-call
@@ -53,12 +65,16 @@ fun main() {
     val ctClass = pool["com.freya02.bot.ReturnTest"]
 //    overrideReturnTest(ctClass)
 
-    earlyReturnTest(ctClass)
+//    earlyReturnTest(ctClass)
+
+    forceReturnTest(ctClass)
 
     //Apparently this does rewrite the class
     ctClass.toClass(MethodHandles.lookup())
 
-    ReturnTest.testEarlyReturn()
+//    ReturnTest.testEarlyReturn()
+
+    ReturnTest.testForceReturn()
 }
 
 private fun overrideReturnTest(ctClass: CtClass) {
@@ -85,6 +101,18 @@ private fun earlyReturnTest(ctClass: CtClass) {
 
                 //Change this string for java methods
                 m.replace("{ $underlyingMethodName($$); \$_ = kotlin.Unit.INSTANCE; return; }")
+            }
+        }
+    })
+}
+
+private fun forceReturnTest(ctClass: CtClass) {
+    val testMethod = ctClass.getDeclaredMethod("testForceReturn")
+    testMethod.instrument(object : ExprEditor() {
+        override fun edit(m: MethodCall) {
+            if (m.enclosingClass == ctClass && m.methodName == "return") {
+                //Change this string for java methods
+                m.replace("{ \$_ = kotlin.Unit.INSTANCE; return; }")
             }
         }
     })
