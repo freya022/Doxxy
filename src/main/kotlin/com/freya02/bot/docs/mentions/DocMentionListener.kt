@@ -18,6 +18,7 @@ import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent
 import net.dv8tion.jda.api.exceptions.ErrorHandler
 import net.dv8tion.jda.api.requests.ErrorResponse
 import net.dv8tion.jda.api.utils.TimeUtil
+import java.util.*
 import java.util.concurrent.Executors
 import kotlin.properties.Delegates
 import kotlin.time.Duration.Companion.hours
@@ -25,10 +26,10 @@ import kotlin.time.Duration.Companion.minutes
 
 @CommandMarker
 class DocMentionListener(
-    private val docMentionController: DocMentionController,
-    private val docMentionRepository: DocMentionRepository
+    private val docMentionController: DocMentionController
 ) {
     private val questionEmoji = EmojiUtils.resolveJDAEmoji("question")
+    private val activeMessageIds: MutableSet<Long> = Collections.synchronizedSet(hashSetOf())
 
     private val timeoutScope = getDefaultScope(pool = Executors.newSingleThreadScheduledExecutor { Thread(it).also { t -> t.name = "DocMentionListener timeout thread" } })
 
@@ -71,7 +72,7 @@ class DocMentionListener(
     //  At most one select menu can be active per message
     //  Can be created if relative position < 12 and created < 2 hours
     //  That select menu can be used by anyone and will auto delete after 5 minutes
-    //  Will have to put a small embed to know who used the feature as discord does not show who used the select menu
+    //  Will have to put a small embed to know who used the feature as discord does not show who made the select menu
     @BEventListener
     suspend fun onMessageReactionAdd(event: MessageReactionAddEvent) {
         if (!event.isFromGuild) return
@@ -79,25 +80,28 @@ class DocMentionListener(
         if (event.emoji != questionEmoji) return
         if (!checkChannel(event.guild, event.channel)) return
 
+        val reactedMessageId = event.messageIdLong
         val twoHoursAgoSnowflake = TimeUtil.getDiscordTimestamp(System.currentTimeMillis() - 2.hours.inWholeMilliseconds)
-        if (event.messageIdLong < twoHoursAgoSnowflake) return //Message is too old
+        if (reactedMessageId < twoHoursAgoSnowflake) return //Message is too old
 
-        docMentionRepository.ifNotUsed(event.messageIdLong, event.userIdLong) {
+        if (activeMessageIds.add(reactedMessageId)) { //If a menu isn't already active, whoever invoked it
             val message = event.retrieveMessage().await()
 
             //Check difference of at most 12 messages
             (event.channel as? ThreadChannel)?.let { threadChannel ->
-                if (threadChannel.totalMessageCount - message.approximatePosition > 12) return@ifNotUsed
+                if (threadChannel.totalMessageCount - message.approximatePosition > 12) return
             }
 
             val docMatches = docMentionController.processMentions(message.contentRaw)
-            if (!docMatches.isSufficient()) return@ifNotUsed
+            if (!docMatches.isSufficient()) return
 
             //Setting the message ID after sending it definitely hurts
             val jda = event.jda
             val channelId = event.channel.idLong
             var messageId: Long by Delegates.notNull()
-            docMentionController.createDocsMenuMessage(docMatches, event.userIdLong) {
+            docMentionController.createDocsMenuMessage(docMatches, event.userIdLong, useDeleteButton = false) {
+                activeMessageIds.remove(reactedMessageId)
+
                 val channel = jda.getChannel<GuildMessageChannel>(channelId) ?: return@createDocsMenuMessage
                 channel.deleteMessageById(messageId).queue(null, ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE))
             }.let { messageId = event.channel.sendMessage(it).await().idLong }

@@ -12,6 +12,7 @@ import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.MessageCreate
 import dev.minn.jda.ktx.messages.reply_
+import net.dv8tion.jda.api.entities.Message.MentionType
 import net.dv8tion.jda.api.entities.UserSnowflake
 import java.util.*
 import kotlin.time.Duration.Companion.minutes
@@ -77,6 +78,7 @@ class DocMentionController(
     suspend fun createDocsMenuMessage(
         docMatches: DocMatches,
         callerId: Long,
+        useDeleteButton: Boolean,
         timeoutCallback: suspend () -> Unit
     ) = MessageCreate {
         val docsMenu = componentsService.ephemeralStringSelectMenu {
@@ -87,9 +89,14 @@ class DocMentionController(
             bindTo { selectEvent -> onSelectedDoc(selectEvent) }
         }
 
-        val deleteButton = componentsService.messageDeleteButton(UserSnowflake.fromId(callerId))
         components += row(docsMenu)
-        components += row(deleteButton)
+        if (useDeleteButton) {
+            val deleteButton = componentsService.messageDeleteButton(UserSnowflake.fromId(callerId))
+            components += row(deleteButton)
+        }
+
+        content = "<@$callerId> This message will be deleted in 5 minutes"
+        allowedMentionTypes = EnumSet.noneOf(MentionType::class.java) //No mentions
     }
 
     context(KConnection)
