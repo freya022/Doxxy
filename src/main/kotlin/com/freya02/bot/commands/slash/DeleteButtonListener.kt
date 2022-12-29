@@ -11,9 +11,10 @@ import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 
 class DeleteButtonListener {
     @JDAButtonListener(name = DELETE_MESSAGE_BUTTON_LISTENER_NAME)
-    fun onDeleteMessageClick(event: ButtonEvent) {
+    suspend fun onDeleteMessageClick(event: ButtonEvent, components: Components) {
         event.deferEdit().queue()
         event.message.delete().queue()
+        components.deleteComponentsById(event.message.components.flatMap { it.actionComponents }.mapNotNull { it.id?.toIntOrNull() })
     }
 
     companion object {
