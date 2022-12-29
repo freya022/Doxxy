@@ -1,11 +1,27 @@
 package com.freya02.bot.docs.mentions
 
+import com.freya02.bot.commands.controllers.CommonDocsController
+import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
+import com.freya02.bot.docs.DocIndexMap
+import com.freya02.botcommands.api.components.Components
+import com.freya02.botcommands.api.components.builder.select.ephemeral.EphemeralStringSelectBuilder
+import com.freya02.botcommands.api.components.event.StringSelectEvent
 import com.freya02.botcommands.api.core.db.Database
 import com.freya02.botcommands.api.core.db.KConnection
 import com.freya02.docs.DocSourceType
+import dev.minn.jda.ktx.interactions.components.row
+import dev.minn.jda.ktx.messages.MessageCreate
+import dev.minn.jda.ktx.messages.reply_
+import net.dv8tion.jda.api.entities.UserSnowflake
 import java.util.*
+import kotlin.time.Duration.Companion.minutes
 
-class DocMentionController(private val database: Database) {
+class DocMentionController(
+    private val database: Database,
+    private val componentsService: Components,
+    private val docIndexMap: DocIndexMap,
+    private val commonDocsController: CommonDocsController
+) {
     private val spaceRegex = Regex("""\s+""")
     private val codeBlockRegex = Regex("""```.*\n(\X*?)```""")
     private val identifierRegex = Regex("""(\w+)[#.](\w+)(?:\((.+?)\))?""")
@@ -58,6 +74,24 @@ class DocMentionController(private val database: Database) {
         return DocMatches(mentionedClasses, similarIdentifiers)
     }
 
+    suspend fun createDocsMenuMessage(
+        docMatches: DocMatches,
+        callerId: Long,
+        timeoutCallback: suspend () -> Unit
+    ) = MessageCreate {
+        val docsMenu = componentsService.ephemeralStringSelectMenu {
+            addMatchOptions(docMatches)
+
+            timeout(5.minutes, timeoutCallback)
+
+            bindTo { selectEvent -> onSelectedDoc(selectEvent) }
+        }
+
+        val deleteButton = componentsService.messageDeleteButton(UserSnowflake.fromId(callerId))
+        components += row(docsMenu)
+        components += row(deleteButton)
+    }
+
     context(KConnection)
     private suspend fun getMentionedClasses(content: String): List<ClassMention> {
         return spaceRegex.split(content).let {
@@ -78,5 +112,39 @@ class DocMentionController(private val database: Database) {
                 }
             }
         }
+    }
+
+    private fun EphemeralStringSelectBuilder.addMatchOptions(docMatches: DocMatches) {
+        docMatches.classMentions.forEach {
+            addOption(it.identifier, "${it.sourceType.id}:${it.identifier}")
+        }
+
+        docMatches.similarIdentifiers.forEach {
+            addOption(it.fullHumanIdentifier, "${it.sourceType.id}:${it.fullIdentifier}")
+        }
+    }
+
+    private suspend fun onSelectedDoc(selectEvent: StringSelectEvent) {
+        val (sourceTypeId, identifier) = selectEvent.values.single().split(':')
+
+        val doc = sourceTypeId.toIntOrNull()
+            ?.let { DocSourceType.fromIdOrNull(it) }
+            ?.let { docIndexMap[it] }
+            ?.let { docIndex ->
+                when {
+                    '(' in identifier -> docIndex.getMethodDoc(identifier)
+                    '#' in identifier -> docIndex.getFieldDoc(identifier)
+                    else -> docIndex.getClassDoc(identifier)
+                }
+            }
+
+        if (doc == null) {
+            selectEvent.reply_("This doc is not available anymore", ephemeral = true).queue()
+            return
+        }
+
+        selectEvent.reply(commonDocsController.getDocMessageData(selectEvent.member!!, true, doc))
+            .setEphemeral(true)
+            .queue()
     }
 }

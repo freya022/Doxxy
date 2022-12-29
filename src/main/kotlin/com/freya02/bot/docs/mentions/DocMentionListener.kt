@@ -1,25 +1,14 @@
 package com.freya02.bot.docs.mentions
 
-import com.freya02.bot.commands.controllers.CommonDocsController
-import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
-import com.freya02.bot.docs.DocIndexMap
 import com.freya02.botcommands.api.annotations.CommandMarker
-import com.freya02.botcommands.api.components.Components
-import com.freya02.botcommands.api.components.builder.select.ephemeral.EphemeralStringSelectBuilder
-import com.freya02.botcommands.api.components.event.StringSelectEvent
 import com.freya02.botcommands.api.core.annotations.BEventListener
 import com.freya02.botcommands.api.utils.EmojiUtils
-import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.events.getDefaultScope
 import dev.minn.jda.ktx.generics.getChannel
-import dev.minn.jda.ktx.interactions.components.row
-import dev.minn.jda.ktx.messages.MessageCreate
-import dev.minn.jda.ktx.messages.reply_
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.entities.Guild
-import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.entities.channel.ChannelType
 import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion
@@ -33,11 +22,8 @@ import kotlin.time.Duration.Companion.minutes
 
 @CommandMarker
 class DocMentionListener(
-    private val componentsService: Components,
     private val docMentionController: DocMentionController,
-    private val docMentionRepository: DocMentionRepository,
-    private val docIndexMap: DocIndexMap,
-    private val commonDocsController: CommonDocsController
+    private val docMentionRepository: DocMentionRepository
 ) {
     private val questionEmoji = EmojiUtils.resolveJDAEmoji("question")
 
@@ -96,21 +82,9 @@ class DocMentionListener(
             val jda = event.jda
             val channelId = event.channel.idLong
             var messageId: Long by Delegates.notNull()
-            MessageCreate {
-                val docsMenu = componentsService.ephemeralStringSelectMenu {
-                    addMatchOptions(docMatches)
-
-                    timeout(5.minutes) {
-                        val channel = jda.getChannel<GuildMessageChannel>(channelId) ?: return@timeout
-                        channel.deleteMessageById(messageId).queue(null, ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE))
-                    }
-
-                    bindTo { selectEvent -> onSelectedDoc(selectEvent) }
-                }
-
-                val deleteButton = componentsService.messageDeleteButton(UserSnowflake.fromId(event.userIdLong))
-                components += row(docsMenu)
-                components += row(deleteButton)
+            docMentionController.createDocsMenuMessage(docMatches, event.userIdLong) {
+                val channel = jda.getChannel<GuildMessageChannel>(channelId) ?: return@createDocsMenuMessage
+                channel.deleteMessageById(messageId).queue(null, ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE))
             }.let { messageId = event.channel.sendMessage(it).await().idLong }
         }
     }
@@ -122,39 +96,5 @@ class DocMentionListener(
         }
 
         return true
-    }
-
-    private fun EphemeralStringSelectBuilder.addMatchOptions(docMatches: DocMatches) {
-        docMatches.classMentions.forEach {
-            addOption(it.identifier, "${it.sourceType.id}:${it.identifier}")
-        }
-
-        docMatches.similarIdentifiers.forEach {
-            addOption(it.fullHumanIdentifier, "${it.sourceType.id}:${it.fullIdentifier}")
-        }
-    }
-
-    private suspend fun onSelectedDoc(selectEvent: StringSelectEvent) {
-        val (sourceTypeId, identifier) = selectEvent.values.single().split(':')
-
-        val doc = sourceTypeId.toIntOrNull()
-            ?.let { DocSourceType.fromIdOrNull(it) }
-            ?.let { docIndexMap[it] }
-            ?.let { docIndex ->
-                when {
-                    '(' in identifier -> docIndex.getMethodDoc(identifier)
-                    '#' in identifier -> docIndex.getFieldDoc(identifier)
-                    else -> docIndex.getClassDoc(identifier)
-                }
-            }
-
-        if (doc == null) {
-            selectEvent.reply_("This doc is not available anymore", ephemeral = true).queue()
-            return
-        }
-
-        selectEvent.reply(commonDocsController.getDocMessageData(selectEvent.member!!, true, doc))
-            .setEphemeral(true)
-            .queue()
     }
 }
