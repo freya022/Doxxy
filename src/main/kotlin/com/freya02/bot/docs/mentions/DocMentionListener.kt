@@ -100,6 +100,8 @@ class DocMentionListener(
             val channelId = event.channel.idLong
             var messageId: Long by Delegates.notNull()
             docMentionController.createDocsMenuMessage(docMatches, event.userIdLong, useDeleteButton = false) {
+                //This is required to run even if the delete button is pressed,
+                // the delete button is disabled so this is fine
                 activeMessageIds.remove(reactedMessageId)
 
                 val channel = jda.getChannel<GuildMessageChannel>(channelId) ?: return@createDocsMenuMessage
