@@ -104,7 +104,13 @@ class DocMentionListener(
 
                 val channel = jda.getChannel<GuildMessageChannel>(channelId) ?: return@createDocsMenuMessage
                 channel.deleteMessageById(messageId).queue(null, ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE))
-            }.let { messageId = event.channel.sendMessage(it).await().idLong }
+            }.let {
+                messageId = event.channel.sendMessage(it)
+                    .setMessageReference(event.messageIdLong)
+                    .mentionRepliedUser(false)
+                    .await()
+                    .idLong
+            }
         }
     }
 
