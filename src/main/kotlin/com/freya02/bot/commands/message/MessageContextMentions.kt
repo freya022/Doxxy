@@ -6,6 +6,8 @@ import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.context.annotations.JDAMessageCommand
 import com.freya02.botcommands.api.commands.application.context.message.GuildMessageEvent
 import dev.minn.jda.ktx.messages.reply_
+import net.dv8tion.jda.api.exceptions.ErrorHandler
+import net.dv8tion.jda.api.requests.ErrorResponse
 
 @CommandMarker
 class MessageContextMentions(private val docMentionController: DocMentionController) : ApplicationCommand() {
@@ -19,7 +21,7 @@ class MessageContextMentions(private val docMentionController: DocMentionControl
 
         val hook = event.hook
         docMentionController.createDocsMenuMessage(docMatches, event.user.idLong, useDeleteButton = true) {
-            hook.deleteOriginal().queue()
+            hook.deleteOriginal().queue(null, ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE))
         }.let { event.reply(it).queue() }
     }
 }
