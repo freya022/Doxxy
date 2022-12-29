@@ -1,5 +1,6 @@
 package com.freya02.bot
 
+import com.freya02.botcommands.api.commands.application.context.message.GuildMessageEvent
 import javassist.ClassPool
 import javassist.CtClass
 import javassist.expr.ExprEditor
@@ -56,6 +57,21 @@ object ReturnTest {
     }
 
     private fun dummy() {}
+
+    fun useCase(event: GuildMessageEvent, inputStr: String) {
+        val number = inputStr.toIntOrNull() ?: let {
+            event.reply("Invalid number").queue()
+            return
+        }
+
+        println(number)
+    }
+
+    fun useCase2(event: GuildMessageEvent, inputStr: String) {
+        val number = inputStr.toIntOrNull() ?: event.reply("Invalid number").queue().doReturn()
+
+        println(number)
+    }
 }
 
 // https://stackoverflow.com/questions/28149625/replacing-a-java-method-invocation-from-a-field-with-a-method-call
