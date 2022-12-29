@@ -10,14 +10,17 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.channel.ChannelType
+import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel
 import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent
 import net.dv8tion.jda.api.exceptions.ErrorHandler
 import net.dv8tion.jda.api.requests.ErrorResponse
+import net.dv8tion.jda.api.utils.TimeUtil
 import java.util.concurrent.Executors
 import kotlin.properties.Delegates
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 
 @CommandMarker
@@ -31,7 +34,7 @@ class DocMentionListener(
 
     //  Reaction added when a class/identifier is detected
     //      The reaction should be usable once per user
-    //      The reaction expires after 5 minutes (removed, but can still be invoked)
+    //      The reaction expires after 5 minutes (removed, but can still be invoked **only if the message is recent enough**, see conditions below)
     //
     //  Supported hints:
     //      Guild (exact casing)
@@ -65,6 +68,10 @@ class DocMentionListener(
         }
     }
 
+    //  At most one select menu can be active per message
+    //  Can be created if relative position < 12 and created < 2 hours
+    //  That select menu can be used by anyone and will auto delete after 5 minutes
+    //  Will have to put a small embed to know who used the feature as discord does not show who used the select menu
     @BEventListener
     suspend fun onMessageReactionAdd(event: MessageReactionAddEvent) {
         if (!event.isFromGuild) return
@@ -72,8 +79,16 @@ class DocMentionListener(
         if (event.emoji != questionEmoji) return
         if (!checkChannel(event.guild, event.channel)) return
 
+        val twoHoursAgoSnowflake = TimeUtil.getDiscordTimestamp(System.currentTimeMillis() - 2.hours.inWholeMilliseconds)
+        if (event.messageIdLong < twoHoursAgoSnowflake) return //Message is too old
+
         docMentionRepository.ifNotUsed(event.messageIdLong, event.userIdLong) {
             val message = event.retrieveMessage().await()
+
+            //Check difference of at most 12 messages
+            (event.channel as? ThreadChannel)?.let { threadChannel ->
+                if (threadChannel.totalMessageCount - message.approximatePosition > 12) return@ifNotUsed
+            }
 
             val docMatches = docMentionController.processMentions(message.contentRaw)
             if (!docMatches.isSufficient()) return@ifNotUsed
