@@ -34,7 +34,11 @@ class TextDocs(
             }
             else -> {
                 docIndex.getClassDoc(query)?.let {
-                    event.channel.sendMessage(commonDocsController.getDocMessageData(event.member, false, it)).queue()
+                    event.channel.sendMessage(commonDocsController.getDocMessageData(event.member,
+                        ephemeral = false,
+                        showCaller = false,
+                        cachedDoc = it
+                    )).queue()
                     return
                 }
 

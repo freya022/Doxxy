@@ -56,9 +56,17 @@ class CommonDocsController(private val componentsService: Components) {
             .apply(block)
             .build()
 
-    fun getDocMessageData(caller: Member, ephemeral: Boolean, cachedDoc: CachedDoc): MessageCreateData {
+    fun getDocMessageData(caller: Member, ephemeral: Boolean, showCaller: Boolean, cachedDoc: CachedDoc): MessageCreateData {
         return MessageCreateBuilder().apply {
-            addEmbeds(cachedDoc.embed.withLink(cachedDoc, caller))
+            addEmbeds(cachedDoc.embed.withLink(cachedDoc, caller).let {
+                when {
+                    showCaller -> Embed {
+                        builder.copyFrom(it)
+                        author(caller.effectiveName, iconUrl = caller.effectiveAvatarUrl)
+                    }
+                    else -> it
+                }
+            })
             addDocsSeeAlso(cachedDoc)
             addDocsActionRows(ephemeral, cachedDoc, caller)
         }.build()

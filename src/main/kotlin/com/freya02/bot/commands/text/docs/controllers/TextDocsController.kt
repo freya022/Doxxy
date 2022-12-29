@@ -41,7 +41,11 @@ class TextDocsController(private val commonDocsController: CommonDocsController)
                     null -> buttonEvent.reply_("This item is now invalid, try again", ephemeral = true).queue()
                     else -> buttonEvent.editMessage(
                         MessageEditData.fromCreateData(
-                        commonDocsController.getDocMessageData(buttonEvent.member!!, false, doc)
+                        commonDocsController.getDocMessageData(buttonEvent.member!!,
+                            ephemeral = false,
+                            showCaller = false,
+                            cachedDoc = doc
+                        )
                     )).queue()
                 }
             }

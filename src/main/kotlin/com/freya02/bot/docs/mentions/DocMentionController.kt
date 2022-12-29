@@ -143,8 +143,10 @@ class DocMentionController(
             return
         }
 
-        selectEvent.reply(commonDocsController.getDocMessageData(selectEvent.member!!, true, doc))
-            .setEphemeral(true)
-            .queue()
+        selectEvent.reply(commonDocsController.getDocMessageData(selectEvent.member!!,
+            ephemeral = false,
+            showCaller = true,
+            cachedDoc = doc
+        )).setEphemeral(false).queue()
     }
 }

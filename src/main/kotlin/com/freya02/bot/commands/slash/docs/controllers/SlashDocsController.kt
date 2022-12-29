@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit
 @BService
 class SlashDocsController(private val commonDocsController: CommonDocsController) {
     fun sendClass(event: IReplyCallback, ephemeral: Boolean, cachedDoc: CachedDoc) {
-        event.reply(commonDocsController.getDocMessageData(event.member!!, ephemeral, cachedDoc))
+        event.reply(commonDocsController.getDocMessageData(event.member!!, ephemeral, false, cachedDoc))
             .setEphemeral(ephemeral)
             .queue()
     }
@@ -94,8 +94,9 @@ class SlashDocsController(private val commonDocsController: CommonDocsController
                     event.channel.sendMessage(
                         commonDocsController.getDocMessageData(
                             buttonEvent.member!!,
-                            false,
-                            doc
+                            ephemeral = false,
+                            showCaller = false,
+                            cachedDoc = doc
                         )
                     )
                 }.queue()
