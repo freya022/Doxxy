@@ -82,6 +82,7 @@ class DocMentionController(
         timeoutCallback: suspend () -> Unit
     ) = MessageCreate {
         val docsMenu = componentsService.ephemeralStringSelectMenu {
+            placeholder = "Select a doc"
             addMatchOptions(docMatches)
 
             timeout(5.minutes, timeoutCallback)
