@@ -99,14 +99,14 @@ class DocMentionListener(
             val jda = event.jda
             val channelId = event.channel.idLong
             var messageId: Long by Delegates.notNull()
-            docMentionController.createDocsMenuMessage(docMatches, event.userIdLong, useDeleteButton = false) {
+            docMentionController.createDocsMenuMessage(docMatches, event.userIdLong, useDeleteButton = false, timeoutCallback = {
                 //This is required to run even if the delete button is pressed,
                 // the delete button is disabled so this is fine
                 activeMessageIds.remove(reactedMessageId)
 
                 val channel = jda.getChannel<GuildMessageChannel>(channelId) ?: return@createDocsMenuMessage
                 channel.deleteMessageById(messageId).queue(null, ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE))
-            }.let {
+            }).let {
                 messageId = event.channel.sendMessage(it)
                     .setMessageReference(event.messageIdLong)
                     .mentionRepliedUser(false)
