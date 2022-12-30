@@ -129,7 +129,7 @@ class DocMentionController(
         }
 
         docMatches.similarIdentifiers
-            .take(SelectMenu.OPTIONS_MAX_AMOUNT - docMatches.classMentions.size)
+            .take(SelectMenu.OPTIONS_MAX_AMOUNT - options.size)
             .filter { it.similarity > 0.05 }
             .forEach {
                 addOption(it.fullHumanIdentifier, "${it.sourceType.id}:${it.fullIdentifier}")
