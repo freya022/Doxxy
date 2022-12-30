@@ -14,6 +14,7 @@ import dev.minn.jda.ktx.messages.MessageCreate
 import dev.minn.jda.ktx.messages.reply_
 import net.dv8tion.jda.api.entities.Message.MentionType
 import net.dv8tion.jda.api.entities.UserSnowflake
+import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import java.util.*
 import kotlin.time.Duration.Companion.minutes
 
@@ -123,13 +124,16 @@ class DocMentionController(
     }
 
     private fun EphemeralStringSelectBuilder.addMatchOptions(docMatches: DocMatches) {
-        docMatches.classMentions.forEach {
+        docMatches.classMentions.take(SelectMenu.OPTIONS_MAX_AMOUNT).forEach {
             addOption(it.identifier, "${it.sourceType.id}:${it.identifier}")
         }
 
-        docMatches.similarIdentifiers.forEach {
-            addOption(it.fullHumanIdentifier, "${it.sourceType.id}:${it.fullIdentifier}")
-        }
+        docMatches.similarIdentifiers
+            .take(SelectMenu.OPTIONS_MAX_AMOUNT - docMatches.classMentions.size)
+            .filter { it.similarity > 0.05 }
+            .forEach {
+                addOption(it.fullHumanIdentifier, "${it.sourceType.id}:${it.fullIdentifier}")
+            }
     }
 
     private suspend fun onSelectedDoc(selectEvent: StringSelectEvent) {
