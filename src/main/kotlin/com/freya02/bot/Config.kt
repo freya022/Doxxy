@@ -17,7 +17,8 @@ data class Config(val token: String, val dbConfig: DBConfig) {
     companion object {
         private val logger = KotlinLogging.logger { }
 
-        val config: Config by lazy {
+        @InstanceSupplier
+        fun supply(): Config {
             val configPath = when {
                 Data.testConfigPath.exists() -> {
                     logger.info("Loading test config")
@@ -27,10 +28,7 @@ data class Config(val token: String, val dbConfig: DBConfig) {
                 else -> Data.configPath
             }
 
-            Gson().fromJson(configPath.readText(), Config::class.java)
+            return Gson().fromJson(configPath.readText(), Config::class.java)
         }
-
-        @InstanceSupplier
-        fun supply(): Config = config
     }
 }

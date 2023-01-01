@@ -5,14 +5,10 @@ import com.freya02.botcommands.api.core.BBuilder
 import com.freya02.docs.DocWebServer
 import dev.minn.jda.ktx.events.CoroutineEventManager
 import dev.minn.jda.ktx.events.getDefaultScope
-import dev.minn.jda.ktx.jdabuilder.light
 import dev.reformator.stacktracedecoroutinator.runtime.DecoroutinatorRuntime
 import kotlinx.coroutines.cancel
 import mu.KotlinLogging
-import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.events.session.ShutdownEvent
-import net.dv8tion.jda.api.requests.GatewayIntent
-import net.dv8tion.jda.api.utils.cache.CacheFlag
 import java.lang.management.ManagementFactory
 import kotlin.io.path.absolutePathString
 import kotlin.system.exitProcess
@@ -41,8 +37,6 @@ object Main {
                 scope.cancel()
             }
 
-            val config = Config.config
-
             logger.info("Starting docs web server")
             DocWebServer.startDocWebServer()
             logger.info("Started docs web server")
@@ -64,17 +58,6 @@ object Main {
             }, manager)
 
             logger.info("Loaded commands")
-
-            light(config.token, enableCoroutines = false) {
-                enableCache(CacheFlag.CLIENT_STATUS)
-                enableIntents(GatewayIntent.GUILD_PRESENCES, GatewayIntent.MESSAGE_CONTENT)
-
-                setMaxReconnectDelay(128)
-                setActivity(Activity.watching("the docs"))
-                setEventManager(manager)
-            }.awaitReady()
-
-            logger.info("Loaded JDA")
         } catch (e: Exception) {
             logger.error("Unable to start the bot", e)
             exitProcess(-1)
