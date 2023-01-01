@@ -36,7 +36,9 @@
                         <arg>-opt-in=kotlin.RequiresOptIn</arg>
                         <arg>-opt-in=kotlin.ExperimentalStdlibApi</arg>
                         <arg>-Xcontext-receivers</arg>
-                        <arg>-Xlambdas=indy</arg>
+<!--                        <arg>-Xlambdas=indy</arg>--> <!-- Caused issues with things like ModalBuilder unfortunately
+ java.lang.invoke.LambdaConversionException: Type mismatch for lambda argument 0: interface com.freya02.botcommands.api.modals.Modals is not convertible to class com.freya02.botcommands.api.modals.ModalBuilder
+ -->
                     </args>
                 </configuration>
                 <executions>
