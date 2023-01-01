@@ -14,7 +14,7 @@ class DeleteButtonListener {
     suspend fun onDeleteMessageClick(event: ButtonEvent, components: Components) {
         event.deferEdit().queue()
         event.message.delete().queue()
-        components.deleteComponentsById(event.message.components.flatMap { it.actionComponents }.mapNotNull { it.id?.toIntOrNull() })
+        components.deleteComponentsById(event.message.components.flatMap { it.actionComponents }.mapNotNull { it.id })
     }
 
     companion object {

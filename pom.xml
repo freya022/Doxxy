@@ -15,7 +15,7 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
 
-        <kotlin.version>1.7.21</kotlin.version>
+        <kotlin.version>1.8.0</kotlin.version>
         <kotlin.coroutine.version>1.6.4</kotlin.coroutine.version>
 
         <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
@@ -36,6 +36,7 @@
                         <arg>-opt-in=kotlin.RequiresOptIn</arg>
                         <arg>-opt-in=kotlin.ExperimentalStdlibApi</arg>
                         <arg>-Xcontext-receivers</arg>
+                        <arg>-Xlambdas=indy</arg>
                     </args>
                 </configuration>
                 <executions>
@@ -123,7 +124,7 @@
         <dependency>
             <groupId>io.github.freya022</groupId>
             <artifactId>BotCommands</artifactId>
-            <version>3.0.0-alpha.2-SNAPSHOT</version>
+            <version>3.0.0-alpha.3-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.github.MinnDevelopment</groupId>
@@ -170,7 +171,7 @@
         <dependency>
             <groupId>com.github.javaparser</groupId>
             <artifactId>javaparser-core</artifactId>
-            <version>3.24.8</version>
+            <version>3.24.9</version>
         </dependency>
         <dependency>
             <groupId>com.palantir.javaformat</groupId>

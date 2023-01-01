@@ -1,7 +1,6 @@
 package com.freya02.bot
 
 import ch.qos.logback.classic.util.ContextInitializer
-import com.freya02.bot.db.DatabaseSource
 import com.freya02.botcommands.api.core.BBuilder
 import com.freya02.docs.DocWebServer
 import dev.minn.jda.ktx.events.CoroutineEventManager
@@ -15,7 +14,6 @@ import net.dv8tion.jda.api.events.session.ShutdownEvent
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.utils.cache.CacheFlag
 import java.lang.management.ManagementFactory
-import java.util.function.Supplier
 import kotlin.io.path.absolutePathString
 import kotlin.system.exitProcess
 import kotlin.time.Duration.Companion.minutes
@@ -43,10 +41,7 @@ object Main {
                 scope.cancel()
             }
 
-            //TODO v3: This should be avoided, the framework should be able to construct a config (via a function that returns the config)
             val config = Config.config
-
-            val database = DatabaseSource(config)
 
             logger.info("Starting docs web server")
             DocWebServer.startDocWebServer()
@@ -56,12 +51,6 @@ object Main {
                 addOwners(222046562543468545L)
 
                 addSearchPath("com.freya02.bot")
-
-                serviceConfig.apply {
-                    registerInstanceSupplier(Config::class.java) { config }
-                }
-
-                connectionProvider = Supplier { database.fetchConnection() }
 
                 applicationCommands {
                     testGuildIds += 722891685755093072

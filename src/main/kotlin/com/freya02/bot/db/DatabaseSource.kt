@@ -1,15 +1,18 @@
 package com.freya02.bot.db
 
 import com.freya02.bot.Config
+import com.freya02.botcommands.api.core.ServiceStart
 import com.freya02.botcommands.api.core.annotations.BService
+import com.freya02.botcommands.api.core.annotations.ServiceType
+import com.freya02.botcommands.api.core.db.ConnectionSupplier
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import java.sql.Connection
-import java.sql.SQLException
 import kotlin.time.Duration.Companion.seconds
 
-@BService
-class DatabaseSource(config: Config) {
+@BService(ServiceStart.PRE_LOAD)
+@ServiceType(type = ConnectionSupplier::class)
+class DatabaseSource(config: Config) : ConnectionSupplier {
     private val source: HikariDataSource
 
     init {
@@ -29,9 +32,5 @@ class DatabaseSource(config: Config) {
         source.connection.close() //Test connection
     }
 
-    fun fetchConnection(): Connection = try {
-        source.connection
-    } catch (e: SQLException) {
-        throw RuntimeException("Unable to get a SQL connection", e)
-    }
+    override fun getConnection(): Connection = source.connection
 }

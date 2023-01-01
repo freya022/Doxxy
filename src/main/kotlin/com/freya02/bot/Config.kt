@@ -1,6 +1,7 @@
 package com.freya02.bot
 
 import com.freya02.botcommands.api.core.annotations.BService
+import com.freya02.botcommands.api.core.suppliers.annotations.InstanceSupplier
 import com.google.gson.Gson
 import mu.KotlinLogging
 import kotlin.io.path.exists
@@ -28,5 +29,8 @@ data class Config(val token: String, val dbConfig: DBConfig) {
 
             Gson().fromJson(configPath.readText(), Config::class.java)
         }
+
+        @InstanceSupplier
+        fun supply(): Config = config
     }
 }
