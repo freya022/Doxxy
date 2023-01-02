@@ -1,5 +1,8 @@
 package com.freya02.docs
 
+import com.freya02.bot.utils.Utils.isBCGuild
+import net.dv8tion.jda.api.entities.Guild
+
 enum class DocSourceType(
     val id: Int,
     val cmdName: String,
@@ -87,6 +90,13 @@ enum class DocSourceType(
 
         fun fromIdOrNull(id: Int): DocSourceType? {
             return values().find { it.id == id }
+        }
+
+        fun fromGuild(guild: Guild): DocSourceType {
+            return when {
+                guild.isBCGuild() -> BOT_COMMANDS
+                else -> JDA
+            }
         }
 
         fun fromUrl(url: String): DocSourceType? {

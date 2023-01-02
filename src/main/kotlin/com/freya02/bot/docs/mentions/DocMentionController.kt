@@ -6,6 +6,7 @@ import com.freya02.bot.docs.DocIndexMap
 import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.components.builder.select.ephemeral.EphemeralStringSelectBuilder
 import com.freya02.botcommands.api.components.event.StringSelectEvent
+import com.freya02.botcommands.api.core.db.DBResult
 import com.freya02.botcommands.api.core.db.Database
 import com.freya02.botcommands.api.core.db.KConnection
 import com.freya02.docs.DocSourceType
@@ -28,10 +29,31 @@ class DocMentionController(
     private val codeBlockRegex = Regex("""```.*\n(\X*?)```""")
     private val identifierRegex = Regex("""(\w+)[#.](\w+)(?:\((.+?)\))?""")
 
-    suspend fun processMentions(contentRaw: String): DocMatches = database.withConnection(readOnly = true) {
+    suspend fun processMentions(contentRaw: String, exactMatchTarget: DocSourceType): DocMatches = database.withConnection(readOnly = true) {
         val cleanedContent = codeBlockRegex.replace(contentRaw, "")
 
         val mentionedClasses = getMentionedClasses(cleanedContent)
+
+        val exactIdentifiers: Set<SimilarIdentifier> =
+            spaceRegex.split(cleanedContent)
+                .flatMapTo(hashSetOf()) { word ->
+                    preparedStatement(
+                        """
+                            select d.source_id,
+                                   d.classname || '#' || d.identifier as fullIdentifier,
+                                   d.human_class_identifier,
+                                   1.0:: float4                       as overall_similarity
+                            from doc d
+                            where d.type != 1
+                              and d.source_id = ?
+                              and d.identifier_no_args = ?
+                            order by overall_similarity desc
+                            limit 25;
+                        """.trimIndent()
+                    ) { //TODO this could use some optimization, do a large query rather than a bunch of small ones.
+                        executeQuery(exactMatchTarget.id, word).mapToSimilarIdentifiers()
+                    }
+                }
 
         val similarIdentifiers: SortedSet<SimilarIdentifier> =
             identifierRegex.findAll(cleanedContent)
@@ -49,21 +71,7 @@ class DocMentionController(
                         """.trimIndent()
                     ) {
                         executeQuery(result.groupValues[1], result.groupValues[2])
-                            .mapNotNull {
-                                val sourceId: Int = it["source_id"]
-
-                                //Can't use that in a select menu :/
-                                if (it.getString("fullIdentifier").length >= 95) {
-                                    return@mapNotNull null
-                                }
-
-                                SimilarIdentifier(
-                                    DocSourceType.fromId(sourceId),
-                                    it["fullIdentifier"],
-                                    it["human_class_identifier"],
-                                    it["overall_similarity"]
-                                )
-                            }
+                            .mapToSimilarIdentifiers()
                             .let { similarIdentifiers -> // If the token has been fully matched then only keep it and it's overloads
                                 when (similarIdentifiers.first().similarity) {
                                     1.0f -> similarIdentifiers.filter { it.similarity == 1.0f }
@@ -72,8 +80,9 @@ class DocMentionController(
                             }
                     }
                 }
+                .also { it.removeAll(exactIdentifiers) }
 
-        return DocMatches(mentionedClasses, similarIdentifiers)
+        return DocMatches(mentionedClasses, similarIdentifiers, exactIdentifiers)
     }
 
     suspend fun createDocsMenuMessage(
@@ -123,10 +132,33 @@ class DocMentionController(
         }
     }
 
+    private fun DBResult.mapToSimilarIdentifiers(): List<SimilarIdentifier> =
+        this.mapNotNull {
+            val sourceId: Int = it["source_id"]
+
+            //Can't use that in a select menu :/
+            if (it.getString("fullIdentifier").length >= 95) {
+                return@mapNotNull null
+            }
+
+            SimilarIdentifier(
+                DocSourceType.fromId(sourceId),
+                it["fullIdentifier"],
+                it["human_class_identifier"],
+                it["overall_similarity"]
+            )
+        }
+
     private fun EphemeralStringSelectBuilder.addMatchOptions(docMatches: DocMatches) {
         docMatches.classMentions.take(SelectMenu.OPTIONS_MAX_AMOUNT).forEach {
             addOption(it.identifier, "${it.sourceType.id}:${it.identifier}")
         }
+
+        docMatches.exactIdentifiers
+            .take(SelectMenu.OPTIONS_MAX_AMOUNT - options.size)
+            .forEach {
+                addOption(it.fullHumanIdentifier, "${it.sourceType.id}:${it.fullIdentifier}")
+            }
 
         docMatches.similarIdentifiers
             .take(SelectMenu.OPTIONS_MAX_AMOUNT - options.size)

@@ -3,6 +3,7 @@ package com.freya02.bot.docs.mentions
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.core.annotations.BEventListener
 import com.freya02.botcommands.api.utils.EmojiUtils
+import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.events.getDefaultScope
 import dev.minn.jda.ktx.generics.getChannel
@@ -52,7 +53,7 @@ class DocMentionListener(
         if (!checkChannel(event.guild, event.channel)) return
 
         val contentRaw = event.message.contentRaw
-        val docMatches = docMentionController.processMentions(contentRaw)
+        val docMatches = docMentionController.processMentions(contentRaw, DocSourceType.fromGuild(event.guild))
         if (!docMatches.isSufficient()) return
 
         event.message.addReaction(questionEmoji).queue {
@@ -92,7 +93,7 @@ class DocMentionListener(
                 if (threadChannel.totalMessageCount - message.approximatePosition > 12) return
             }
 
-            val docMatches = docMentionController.processMentions(message.contentRaw)
+            val docMatches = docMentionController.processMentions(message.contentRaw, DocSourceType.fromGuild(event.guild))
             if (!docMatches.isSufficient()) return
 
             //Setting the message ID after sending it definitely hurts

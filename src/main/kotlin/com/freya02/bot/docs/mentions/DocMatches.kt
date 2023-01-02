@@ -17,6 +17,6 @@ data class SimilarIdentifier(val sourceType: DocSourceType, val fullIdentifier: 
     }
 }
 
-data class DocMatches(val classMentions: List<ClassMention>, val similarIdentifiers: SortedSet<SimilarIdentifier>) {
+data class DocMatches(val classMentions: List<ClassMention>, val similarIdentifiers: SortedSet<SimilarIdentifier>, val exactIdentifiers: Set<SimilarIdentifier>) {
     fun isSufficient() = classMentions.isNotEmpty() || similarIdentifiers.any(SimilarIdentifier::isSimilarEnough)
 }

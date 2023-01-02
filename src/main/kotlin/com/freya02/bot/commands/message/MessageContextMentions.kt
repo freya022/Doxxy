@@ -5,6 +5,7 @@ import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.context.annotations.JDAMessageCommand
 import com.freya02.botcommands.api.commands.application.context.message.GuildMessageEvent
+import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.messages.reply_
 import net.dv8tion.jda.api.exceptions.ErrorHandler
 import net.dv8tion.jda.api.requests.ErrorResponse
@@ -13,8 +14,8 @@ import net.dv8tion.jda.api.requests.ErrorResponse
 class MessageContextMentions(private val docMentionController: DocMentionController) : ApplicationCommand() {
     @JDAMessageCommand(name = "Find docs")
     suspend fun onMessageContextFindDocs(event: GuildMessageEvent) {
-        val docMatches = docMentionController.processMentions(event.target.contentRaw)
-        if (!docMatches.isSufficient()) {
+        val docMatches = docMentionController.processMentions(event.target.contentRaw, DocSourceType.fromGuild(event.guild))
+        if (!docMatches.isSufficient() && docMatches.exactIdentifiers.isEmpty()) {
             event.reply_("Could not match any docs", ephemeral = true).queue()
             return
         }
