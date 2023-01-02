@@ -11,6 +11,7 @@ import mu.KotlinLogging
 import net.dv8tion.jda.api.events.session.ShutdownEvent
 import java.lang.management.ManagementFactory
 import kotlin.io.path.absolutePathString
+import kotlin.io.path.exists
 import kotlin.system.exitProcess
 import kotlin.time.Duration.Companion.minutes
 
@@ -42,6 +43,8 @@ object Main {
             logger.info("Started docs web server")
 
             BBuilder.newBuilder({
+                devMode = Data.testConfigPath.exists()
+
                 addOwners(222046562543468545L)
 
                 addSearchPath("com.freya02.bot")
