@@ -14,6 +14,8 @@ class SlashLogback : ApplicationCommand() {
         ```xml
         %s```
         Your `logback.xml` should go in the `src/main/resources` folder of your project.
+        
+        More info: %s
     """.trimIndent()
 
     // BC/JDA wiki link depending on the guild
@@ -28,7 +30,13 @@ class SlashLogback : ApplicationCommand() {
                 else -> throw IllegalArgumentException("Unexpected LibraryType: $libraryType")
             }
 
-            content = contentTemplate.format(logbackXml)
+            val wikiLink = when (libraryType) {
+                LibraryType.JDA5 -> "https://jda.wiki/setup/logging/"
+                LibraryType.BOT_COMMANDS -> "https://freya022.github.io/BotCommands-Wiki/Logging/"
+                else -> throw IllegalArgumentException("Unexpected LibraryType: $libraryType")
+            }
+
+            content = contentTemplate.format(logbackXml, wikiLink)
         }
 
         event.reply(message).setEphemeral(true).queue()
