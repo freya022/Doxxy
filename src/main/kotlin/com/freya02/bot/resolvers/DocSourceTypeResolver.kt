@@ -1,4 +1,4 @@
-package com.freya02.bot.docs
+package com.freya02.bot.resolvers
 
 import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.botcommands.api.BContext

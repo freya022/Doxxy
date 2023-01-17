@@ -1,5 +1,6 @@
-package com.freya02.bot.tag
+package com.freya02.bot.resolvers
 
+import com.freya02.bot.tag.TagCriteria
 import com.freya02.botcommands.api.BContext
 import com.freya02.botcommands.api.parameters.ParameterResolver
 import com.freya02.botcommands.api.parameters.SlashParameterResolver

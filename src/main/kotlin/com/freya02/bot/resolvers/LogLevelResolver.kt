@@ -1,4 +1,4 @@
-package com.freya02.bot.utils
+package com.freya02.bot.resolvers
 
 import ch.qos.logback.classic.Level
 import com.freya02.botcommands.api.BContext
