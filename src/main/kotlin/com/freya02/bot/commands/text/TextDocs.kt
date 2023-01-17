@@ -14,6 +14,7 @@ import com.freya02.botcommands.api.prefixed.annotations.JDATextCommand
 import com.freya02.botcommands.api.prefixed.annotations.TextOption
 import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.messages.reply_
+import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.exceptions.ErrorHandler
 import net.dv8tion.jda.api.requests.ErrorResponse
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
@@ -44,13 +45,13 @@ class TextDocs(private val context: BContext, private val docIndexMap: DocIndexM
             }
         }
 
-        getDocSuggestionMenu(docIndex, suggestions)
+        getDocSuggestionMenu(docIndex, suggestions, event.author)
             .let { MessageCreateData.fromEditData(it.get()) }
             .also { event.channel.sendMessage(it).queue() }
     }
 
-    private fun getDocSuggestionMenu(docIndex: DocIndex, suggestions: List<DocSuggestion>) =
-        CommonDocsHandlers.buildDocSuggestionsMenu(docIndex, suggestions) {
+    private fun getDocSuggestionMenu(docIndex: DocIndex, suggestions: List<DocSuggestion>, user: UserSnowflake) =
+        CommonDocsHandlers.buildDocSuggestionsMenu(docIndex, suggestions, user) {
             useDeleteButton(true)
 
             setTimeout(2, TimeUnit.MINUTES) { menu, message ->

@@ -14,6 +14,7 @@ import com.freya02.botcommands.api.application.slash.autocomplete.annotations.Au
 import com.freya02.botcommands.api.application.slash.autocomplete.annotations.CacheAutocompletion
 import com.freya02.botcommands.api.application.slash.autocomplete.annotations.CompositeKey
 import com.freya02.botcommands.api.components.Components
+import com.freya02.botcommands.api.components.InteractionConstraints
 import com.freya02.botcommands.api.components.annotations.JDASelectionMenuListener
 import com.freya02.botcommands.api.components.event.StringSelectionEvent
 import com.freya02.botcommands.api.pagination.menu.ChoiceMenuBuilder
@@ -274,8 +275,9 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
             sendClass(event, false, cachedField)
         }
 
-        fun buildDocSuggestionsMenu(docIndex: DocIndex, suggestions: List<DocSuggestion>, block: ChoiceMenuBuilder<DocSuggestion>.() -> Unit) =
+        fun buildDocSuggestionsMenu(docIndex: DocIndex, suggestions: List<DocSuggestion>, user: UserSnowflake, block: ChoiceMenuBuilder<DocSuggestion>.() -> Unit) =
             ChoiceMenuBuilder(suggestions)
+                .setConstraints(InteractionConstraints.ofUserIds(user.idLong))
                 .setButtonContentSupplier { _, index -> ButtonContent.withString((index + 1).toString()) }
                 .setTransformer { it.humanIdentifier }
                 .setMaxEntriesPerPage(10)
@@ -302,7 +304,7 @@ class CommonDocsHandlers(private val docIndexMap: DocIndexMap) : ApplicationComm
             event: GuildSlashEvent,
             docIndex: DocIndex,
             block: () -> List<DocSuggestion>
-        ) = buildDocSuggestionsMenu(docIndex, block()) {
+        ) = buildDocSuggestionsMenu(docIndex, block(), event.user) {
             setTimeout(2, TimeUnit.MINUTES) { menu, _ ->
                 menu.cleanup(event.context)
                 event.hook
