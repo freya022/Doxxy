@@ -46,7 +46,7 @@ class TextDocs(
             }
         }
 
-        textDocsController.getDocSuggestionMenu(docIndex, suggestions)
+        textDocsController.getDocSuggestionMenu(docIndex, suggestions, event.author)
             .let { MessageCreateData.fromEditData(it.get()) }
             .also { event.channel.sendMessage(it).queue() }
     }

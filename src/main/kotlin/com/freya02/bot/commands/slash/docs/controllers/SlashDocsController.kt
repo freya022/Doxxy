@@ -68,7 +68,7 @@ class SlashDocsController(private val commonDocsController: CommonDocsController
         event: GuildSlashEvent,
         docIndex: DocIndex,
         block: suspend () -> List<DocSuggestion>
-    ) = commonDocsController.buildDocSuggestionsMenu(docIndex, block()) {
+    ) = commonDocsController.buildDocSuggestionsMenu(docIndex, block(), event.user) {
         setTimeout(2, TimeUnit.MINUTES) { menu, _ ->
             menu.cleanup()
             event.hook

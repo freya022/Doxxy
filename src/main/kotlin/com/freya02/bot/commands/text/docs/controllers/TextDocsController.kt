@@ -6,6 +6,7 @@ import com.freya02.bot.docs.index.DocSuggestion
 import com.freya02.botcommands.api.core.annotations.BService
 import dev.minn.jda.ktx.messages.reply_
 import kotlinx.coroutines.runBlocking
+import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.exceptions.ErrorHandler
 import net.dv8tion.jda.api.requests.ErrorResponse
 import net.dv8tion.jda.api.utils.messages.MessageEditData
@@ -13,8 +14,8 @@ import java.util.concurrent.TimeUnit
 
 @BService
 class TextDocsController(private val commonDocsController: CommonDocsController) {
-    suspend fun getDocSuggestionMenu(docIndex: DocIndex, suggestions: List<DocSuggestion>) =
-        commonDocsController.buildDocSuggestionsMenu(docIndex, suggestions) {
+    suspend fun getDocSuggestionMenu(docIndex: DocIndex, suggestions: List<DocSuggestion>, user: UserSnowflake) =
+        commonDocsController.buildDocSuggestionsMenu(docIndex, suggestions, user) {
             useDeleteButton(true)
 
             setTimeout(2, TimeUnit.MINUTES) { menu, message ->

@@ -6,6 +6,7 @@ import com.freya02.bot.docs.cached.CachedDoc
 import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocSuggestion
 import com.freya02.botcommands.api.components.Components
+import com.freya02.botcommands.api.components.data.InteractionConstraints
 import com.freya02.botcommands.api.core.annotations.BService
 import com.freya02.botcommands.api.pagination.menu.ChoiceMenuBuilder
 import com.freya02.botcommands.api.utils.ButtonContent
@@ -32,8 +33,9 @@ import java.util.concurrent.TimeUnit
 class CommonDocsController(private val componentsService: Components) {
     private val logger = KotlinLogging.logger { }
 
-    fun buildDocSuggestionsMenu(docIndex: DocIndex, suggestions: List<DocSuggestion>, block: ChoiceMenuBuilder<DocSuggestion>.() -> Unit) =
+    fun buildDocSuggestionsMenu(docIndex: DocIndex, suggestions: List<DocSuggestion>, user: UserSnowflake, block: ChoiceMenuBuilder<DocSuggestion>.() -> Unit) =
         ChoiceMenuBuilder(componentsService, suggestions)
+            .setConstraints(InteractionConstraints.ofUsers(user))
             .setButtonContentSupplier { _, index -> ButtonContent.withString((index + 1).toString()) }
             .setTransformer { it.humanIdentifier }
             .setMaxEntriesPerPage(10)
