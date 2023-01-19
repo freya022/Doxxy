@@ -1,13 +1,13 @@
 package com.freya02.bot.tag
 
-import com.freya02.bot.db.DBAction
-import com.freya02.bot.db.Database
+import com.freya02.botcommands.api.core.annotations.BService
+import com.freya02.botcommands.api.core.db.Database
 import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-import java.sql.ResultSet
 import java.sql.SQLException
 
+@BService
 class TagDB(private val database: Database) {
     private fun checkName(name: String) {
         if (name.length > NAME_MAX_LENGTH)
@@ -31,141 +31,104 @@ class TagDB(private val database: Database) {
     }
 
     @Throws(SQLException::class)
-    fun create(guildId: Long, ownerId: Long, name: String, description: String, content: String) {
-        DBAction.of(
-            database,
-            "insert into Tag (guildid, ownerid, name, description, content) values (?, ?, ?, ?, ?)"
-        ).use { action ->
+    suspend fun create(guildId: Long, ownerId: Long, name: String, description: String, content: String) {
+        database.preparedStatement("insert into Tag (guildid, ownerid, name, description, content) values (?, ?, ?, ?, ?)") {
             checkName(name)
             checkDescription(description)
             checkContent(content)
-            action.executeUpdate(guildId, ownerId, name, description, content)
+            executeUpdate(guildId, ownerId, name, description, content)
         }
     }
 
     @Throws(SQLException::class)
-    fun edit(
+    suspend fun edit(
         guildId: Long,
         ownerId: Long,
         name: String,
         newName: String,
         newDescription: String,
         newContent: String
-    ) = runBlocking {
+    ) {
         checkName(newName)
         checkDescription(newDescription)
         checkContent(newContent)
 
-        database.transactional {
-            preparedStatement(
-                """
-                    update Tag
-                    set name        = coalesce(?, name),
-                        description = coalesce(?, description),
-                        content     = coalesce(?, content)
-                    where guildid = ?
-                      and ownerid = ?
-                      and name = ?""".trimIndent()
-            ) {
-                executeUpdate(newName, newDescription, newContent, guildId, ownerId, name)
-            }
+        database.preparedStatement(
+            """
+                update Tag
+                set name        = coalesce(?, name),
+                    description = coalesce(?, description),
+                    content     = coalesce(?, content)
+                where guildid = ?
+                  and ownerid = ?
+                  and name = ?""".trimIndent()
+        ) {
+            executeUpdate(newName, newDescription, newContent, guildId, ownerId, name)
         }
     }
 
     @Throws(SQLException::class)
-    fun transfer(guildId: Long, ownerId: Long, name: String, newOwnerId: Long) {
-        DBAction.of(
-            database,
-            "update Tag set ownerId = ? where guildid = ? and ownerid = ? and name = ?"
-        ).use { action -> action.executeUpdate(newOwnerId, guildId, ownerId, name) }
-    }
-
-    @Throws(SQLException::class)
-    fun delete(guildId: Long, ownerId: Long, name: String) {
-        DBAction.of(
-            database,
-            "delete from Tag where guildid = ? and ownerid = ? and name = ?"
-        ).use { action -> action.executeUpdate(guildId, ownerId, name) }
-    }
-
-    @Throws(SQLException::class)
-    operator fun get(guildId: Long, name: String): Tag? {
-        DBAction.of(
-            database,
-            "select * from Tag where guildid = ? and name = ?",
-            *Tag.COLUMN_NAMES
-        ).use { action ->
-            val result = action.executeQuery(guildId, name)
-            return result.readOnce { set: ResultSet -> Tag.fromResult(set) }
+    suspend fun transfer(guildId: Long, ownerId: Long, name: String, newOwnerId: Long) {
+        database.preparedStatement("update Tag set ownerId = ? where guildid = ? and ownerid = ? and name = ?") {
+            executeUpdate(newOwnerId, guildId, ownerId, name)
         }
     }
 
     @Throws(SQLException::class)
-    fun incrementTag(guildId: Long, name: String) {
-        DBAction.of(
-            database,
-            "update Tag set uses = uses + 1 where guildid = ? and name = ?"
-        ).use { action -> action.executeUpdate(guildId, name) }
+    suspend fun delete(guildId: Long, ownerId: Long, name: String) {
+        database.preparedStatement("delete from Tag where guildid = ? and ownerid = ? and name = ?") {
+            executeUpdate(guildId, ownerId, name)
+        }
     }
 
     @Throws(SQLException::class)
-    fun getTotalTags(guildId: Long): Int {
-        DBAction.of(
-            database,
-            "select count(*) as totalTags from Tag where guildid = ?",
-            "totalTags"
-        ).use { action ->  //Can't use column index on autogenerated values
-            val result = action.executeQuery(guildId)
-            val set = result.readOnce() ?: throw IllegalStateException()
+    suspend fun get(guildId: Long, name: String): Tag? {
+        database.preparedStatement("select * from Tag where guildid = ? and name = ?", readOnly = true) {
+            val result = executeQuery(guildId, name)
+            return result.readOnce()?.let { Tag.fromResult(it) }
+        }
+    }
+
+    @Throws(SQLException::class)
+    suspend fun incrementTag(guildId: Long, name: String) {
+        database.preparedStatement("update Tag set uses = uses + 1 where guildid = ? and name = ?") {
+            executeUpdate(guildId, name)
+        }
+    }
+
+    @Throws(SQLException::class)
+    suspend fun getTotalTags(guildId: Long): Int {
+        database.preparedStatement("select count(*) as totalTags from Tag where guildid = ?", readOnly = true) {
+            val set = executeQuery(guildId).readOnce() ?: throw IllegalStateException()
             return set.getInt("totalTags")
         }
     }
 
     @Throws(SQLException::class)
-    fun getTagRange(guildId: Long, criteria: TagCriteria, offset: Int, amount: Int): List<Tag> {
-        DBAction.of(
-            database,
-            "select * from Tag where guildid = ? order by ${criteria.key} offset ? limit ?",
-            *Tag.COLUMN_NAMES
-        ).use { action ->
-            val result = action.executeQuery(guildId, offset, amount)
-            return result.transformEach { set: ResultSet -> Tag.fromResult(set) }
+    fun getTagRange(guildId: Long, criteria: TagCriteria, offset: Int, amount: Int): List<Tag> = runBlocking {
+        database.preparedStatement("select * from Tag where guildid = ? order by ${criteria.key} offset ? limit ?", readOnly = true) {
+            executeQuery(guildId, offset, amount).map(Tag.Companion::fromResult)
         }
     }
 
     @Throws(SQLException::class)
-    fun getShortTagsSorted(guildId: Long, criteria: TagCriteria): List<ShortTag> {
-        DBAction.of(
-            database,
-            "select name, description from Tag where guildid = ? order by ${criteria.key}",
-            *ShortTag.COLUMN_NAMES
-        ).use { action ->
-            val result = action.executeQuery(guildId)
-            return result.transformEach { set: ResultSet -> ShortTag.fromResult(set) }
+    fun getShortTagsSorted(guildId: Long, criteria: TagCriteria): List<ShortTag> = runBlocking {
+        database.preparedStatement("select name, description from Tag where guildid = ? order by ${criteria.key}", readOnly = true) {
+            executeQuery(guildId).map(ShortTag.Companion::fromResult)
         }
     }
 
     @Throws(SQLException::class)
-    fun getShortTagsSorted(guildId: Long, ownerId: Long, criteria: TagCriteria): List<ShortTag> {
-        DBAction.of(
-            database,
-            "select name, description from Tag where guildid = ? and ownerid = ? order by ${criteria.key}",
-            *ShortTag.COLUMN_NAMES
-        ).use { action ->
-            val result = action.executeQuery(guildId, ownerId)
-            return result.transformEach { set: ResultSet -> ShortTag.fromResult(set) }
+    fun getShortTagsSorted(guildId: Long, ownerId: Long, criteria: TagCriteria): List<ShortTag> = runBlocking {
+        database.preparedStatement("select name, description from Tag where guildid = ? and ownerid = ? order by ${criteria.key}", readOnly = true) {
+            executeQuery(guildId, ownerId).map(ShortTag.Companion::fromResult)
         }
     }
 
     @Throws(SQLException::class)
-    fun getRank(guildId: Long, name: String?): Long {
-        DBAction.of(
-            database,
-            "select rank from (select name, dense_rank() over (order by uses desc) as rank from Tag where guildid = ?) as ranks where name = ?",
-            "rank"
-        ).use { action ->  //Can't use column index on autogenerated values
-            val result = action.executeQuery(guildId, name)
-            val set = result.readOnce() ?: throw IllegalStateException()
+    suspend fun getRank(guildId: Long, name: String?): Long {
+        database.preparedStatement("select rank from (select name, dense_rank() over (order by uses desc) as rank from Tag where guildid = ?) as ranks where name = ?", readOnly = true) {
+            val set = executeQuery(guildId, name).readOnce() ?: throw IllegalStateException()
             return set.getLong(1)
         }
     }

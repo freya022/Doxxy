@@ -1,61 +1,42 @@
 package com.freya02.bot.commands.slash.docs
 
+import com.freya02.bot.commands.slash.docs.CommonDocsHandlers.Companion.ANY_METHOD_NAME_AUTOCOMPLETE_NAME
+import com.freya02.bot.commands.slash.docs.controllers.SlashDocsController
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
 import com.freya02.botcommands.api.annotations.CommandMarker
-import com.freya02.botcommands.api.application.annotations.AppOption
-import com.freya02.botcommands.api.application.slash.GuildSlashEvent
-import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand
+import com.freya02.botcommands.api.commands.application.GlobalApplicationCommandManager
+import com.freya02.botcommands.api.commands.application.annotations.AppDeclaration
+import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
 import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.messages.reply_
 
 @CommandMarker
-class AnyMethodCommand(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
-    @JDASlashCommand(
-        name = "anymethod",
-        subcommand = "botcommands",
-        description = "Shows the documentation for any method"
-    )
-    fun onSlashAnyMethodBC(
-        event: GuildSlashEvent,
-        @AppOption(description = "The docs to search upon") sourceType: DocSourceType,
-        @AppOption(
-            description = "Full signature of the class + method",
-            autocomplete = CommonDocsHandlers.ANY_METHOD_NAME_AUTOCOMPLETE_NAME
-        ) fullSignature: String
-    ) {
-        onSlashAnyMethod(event, sourceType, fullSignature)
+class AnyMethodCommand(private val docIndexMap: DocIndexMap, private val slashDocsController: SlashDocsController) {
+    @AppDeclaration
+    fun declare(manager: GlobalApplicationCommandManager) {
+        manager.slashCommand("anymethod") {
+            description = "Shows the documentation for any method"
+
+            DocSourceType.values().forEach { sourceType ->
+                subcommand(sourceType.cmdName) {
+                    description = "Shows the documentation for any method"
+
+                    generatedOption("sourceType") { sourceType }
+
+                    option("fullSignature") {
+                        description = "Full signature of the class + method"
+                        autocompleteReference(ANY_METHOD_NAME_AUTOCOMPLETE_NAME)
+                    }
+
+                    function = ::onSlashAnyMethod
+                }
+            }
+        }
     }
 
-    @JDASlashCommand(name = "anymethod", subcommand = "jda", description = "Shows the documentation for any method")
-    fun onSlashAnyMethodJDA(
-        event: GuildSlashEvent,
-        @AppOption(description = "The docs to search upon") sourceType: DocSourceType,
-        @AppOption(
-            description = "Full signature of the class + method",
-            autocomplete = CommonDocsHandlers.ANY_METHOD_NAME_AUTOCOMPLETE_NAME
-        ) fullSignature: String
-    ) {
-        onSlashAnyMethod(event, sourceType, fullSignature)
-    }
-
-    @JDASlashCommand(name = "anymethod", subcommand = "java", description = "Shows the documentation for any method")
-    fun onSlashAnyMethodJava(
-        event: GuildSlashEvent,
-        @AppOption(description = "The docs to search upon") sourceType: DocSourceType,
-        @AppOption(
-            description = "Full signature of the class + method",
-            autocomplete = CommonDocsHandlers.ANY_METHOD_NAME_AUTOCOMPLETE_NAME
-        ) fullSignature: String
-    ) {
-        onSlashAnyMethod(event, sourceType, fullSignature)
-    }
-
-    private fun onSlashAnyMethod(
-        event: GuildSlashEvent,
-        sourceType: DocSourceType,
-        fullSignature: String
-    ) {
+    @CommandMarker
+    suspend fun onSlashAnyMethod(event: GuildSlashEvent, sourceType: DocSourceType, fullSignature: String) {
         val split = fullSignature.split("#".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
         if (split.size != 2) {
             event.reply_(
@@ -66,7 +47,7 @@ class AnyMethodCommand(private val docIndexMap: DocIndexMap) : BaseDocCommand() 
         }
 
         val docIndex = docIndexMap[sourceType]!!
-        CommonDocsHandlers.handleMethodDocs(event, split[0], split[1], docIndex) {
+        slashDocsController.handleMethodDocs(event, split[0], split[1], docIndex) {
             return@handleMethodDocs anyMethodNameAutocomplete(docIndex, fullSignature, 100).mapToSuggestions()
         }
     }

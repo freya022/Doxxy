@@ -1,30 +1,29 @@
 package com.freya02.bot.commands.slash
 
-import com.freya02.bot.db.Database
-import com.freya02.bot.db.isUniqueViolation
 import com.freya02.bot.tag.*
-import com.freya02.bot.utils.Utils.shortTextInput
-import com.freya02.bot.utils.paragraphTextInput
 import com.freya02.botcommands.api.annotations.CommandMarker
-import com.freya02.botcommands.api.application.ApplicationCommand
-import com.freya02.botcommands.api.application.CommandScope
-import com.freya02.botcommands.api.application.annotations.AppOption
-import com.freya02.botcommands.api.application.slash.GuildSlashEvent
-import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand
-import com.freya02.botcommands.api.application.slash.autocomplete.AutocompleteAlgorithms
-import com.freya02.botcommands.api.application.slash.autocomplete.annotations.AutocompletionHandler
+import com.freya02.botcommands.api.commands.application.ApplicationCommand
+import com.freya02.botcommands.api.commands.application.CommandScope
+import com.freya02.botcommands.api.commands.application.annotations.AppOption
+import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
+import com.freya02.botcommands.api.commands.application.slash.annotations.JDASlashCommand
+import com.freya02.botcommands.api.commands.application.slash.autocomplete.AutocompleteAlgorithms
+import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
 import com.freya02.botcommands.api.components.Components
-import com.freya02.botcommands.api.components.InteractionConstraints
+import com.freya02.botcommands.api.components.data.InteractionConstraints
 import com.freya02.botcommands.api.components.event.ButtonEvent
+import com.freya02.botcommands.api.core.db.isUniqueViolation
 import com.freya02.botcommands.api.modals.Modals
 import com.freya02.botcommands.api.modals.annotations.ModalData
 import com.freya02.botcommands.api.modals.annotations.ModalHandler
 import com.freya02.botcommands.api.modals.annotations.ModalInput
+import com.freya02.botcommands.api.modals.create
+import com.freya02.botcommands.api.modals.paragraphTextInput
+import com.freya02.botcommands.api.modals.shortTextInput
 import com.freya02.botcommands.api.pagination.paginator.Paginator
 import com.freya02.botcommands.api.pagination.paginator.PaginatorBuilder
 import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.messages.Embed
-import me.xdrop.fuzzywuzzy.model.BoundExtractedResult
 import mu.KotlinLogging
 import net.dv8tion.jda.api.Permission.MANAGE_ROLES
 import net.dv8tion.jda.api.Permission.MANAGE_SERVER
@@ -34,12 +33,13 @@ import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInterac
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 import net.dv8tion.jda.api.interactions.commands.Command
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
+import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import org.jetbrains.annotations.Contract
 import java.sql.SQLException
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.minutes
 
 
 private typealias TagConsumer = suspend (Tag) -> Unit
@@ -50,9 +50,11 @@ private const val TAGS_CREATE_MODAL_HANDLER = "SlashTag: tagsCreate"
 private const val TAGS_EDIT_MODAL_HANDLER = "SlashTag: tagsEdit"
 
 @CommandMarker
-class SlashTag(database: Database) : ApplicationCommand() {
-    private val tagDB: TagDB = TagDB(database)
-
+class SlashTag(
+    private val tagDB: TagDB,
+    private val modals: Modals,
+    private val components: Components
+) : ApplicationCommand() {
     @Contract(value = "null -> fail", pure = true)
     private fun <T> checkGuild(obj: T?): T = requireNotNull(obj) { "Event did not happen in a guild" }
 
@@ -60,7 +62,7 @@ class SlashTag(database: Database) : ApplicationCommand() {
         val guild = checkGuild(event.guild)
         val member = checkGuild(event.member)
 
-        val tag = tagDB[guild.idLong, name] ?: run {
+        val tag = tagDB.get(guild.idLong, name) ?: run {
             event.reply("Tag '$name' was not found").setEphemeral(true).queue()
             return
         }
@@ -76,7 +78,7 @@ class SlashTag(database: Database) : ApplicationCommand() {
     }
 
     private suspend fun withTag(event: GuildSlashEvent, name: String, consumer: TagConsumer) {
-        val tag = tagDB[event.guild.idLong, name] ?: run {
+        val tag = tagDB.get(event.guild.idLong, name) ?: run {
             event.reply("Tag '$name' was not found").setEphemeral(true).queue()
             return
         }
@@ -110,32 +112,30 @@ class SlashTag(database: Database) : ApplicationCommand() {
 
     @JDASlashCommand(scope = CommandScope.GLOBAL_NO_DM, name = "tags", subcommand = "create", description = "Creates a tag in this guild")
     fun createTag(event: GuildSlashEvent) {
-        val tagNameInput = shortTextInput("tagName", "Tag name") {
-            minLength = TagDB.NAME_MIN_LENGTH
-            maxLength = TagDB.NAME_MAX_LENGTH
-        }
+        val modal = modals.create("Create a tag") {
+            shortTextInput("tagName", "Tag name") {
+                minLength = TagDB.NAME_MIN_LENGTH
+                maxLength = TagDB.NAME_MAX_LENGTH
+            }
 
-        val tagDescriptionInput = shortTextInput("tagDescription", "Tag description") {
-            minLength = TagDB.DESCRIPTION_MIN_LENGTH
-            maxLength = TagDB.DESCRIPTION_MAX_LENGTH
-        }
+            shortTextInput("tagDescription", "Tag description") {
+                minLength = TagDB.DESCRIPTION_MIN_LENGTH
+                maxLength = TagDB.DESCRIPTION_MAX_LENGTH
+            }
 
-        val tagContentInput = paragraphTextInput("tagContent", "Tag content") {
-            minLength = TagDB.CONTENT_MIN_LENGTH
-            maxLength = TagDB.CONTENT_MAX_LENGTH
-        }
+            paragraphTextInput("tagContent", "Tag content") {
+                minLength = TagDB.CONTENT_MIN_LENGTH
+                maxLength = TagDB.CONTENT_MAX_LENGTH
+            }
 
-        val modal = Modals.create("Create a tag", TAGS_CREATE_MODAL_HANDLER)
-            .addActionRow(tagNameInput)
-            .addActionRow(tagDescriptionInput)
-            .addActionRow(tagContentInput)
-            .build()
+            bindTo(TAGS_CREATE_MODAL_HANDLER)
+        }
 
         event.replyModal(modal).queue()
     }
 
     @ModalHandler(name = TAGS_CREATE_MODAL_HANDLER)
-    fun createTag(
+    suspend fun createTag(
         event: ModalInteractionEvent,
         @ModalInput(name = "tagName") name: String,
         @ModalInput(name = "tagDescription") description: String,
@@ -161,23 +161,21 @@ class SlashTag(database: Database) : ApplicationCommand() {
         @AppOption(description = "Name of the tag", autocomplete = USER_TAGS_AUTOCOMPLETE) name: String
     ) {
         withOwnedTag(event, name) { tag: Tag ->
-            val modal = Modals.create("Edit a tag", TAGS_EDIT_MODAL_HANDLER, name)
-                .addActionRow(
-                    Modals.createTextInput("tagName", "Tag name", TextInputStyle.SHORT)
-                        .setValue(tag.name)
-                        .build()
-                )
-                .addActionRow(
-                    Modals.createTextInput("tagDescription", "Tag description", TextInputStyle.SHORT)
-                        .setValue(tag.description)
-                        .build()
-                )
-                .addActionRow(
-                    Modals.createTextInput("tagContent", "Tag content", TextInputStyle.PARAGRAPH)
-                        .setValue(tag.content)
-                        .build()
-                )
-                .build()
+            val modal = modals.create("Edit a tag") {
+                shortTextInput("tagName", "Tag name") {
+                    value = tag.name
+                }
+
+                shortTextInput("tagDescription", "Tag description") {
+                    value = tag.description
+                }
+
+                paragraphTextInput("tagContent", "Tag content") {
+                    value = tag.content
+                }
+
+                bindTo(TAGS_EDIT_MODAL_HANDLER, name)
+            }
 
             event.replyModal(modal).queue()
         }
@@ -236,43 +234,44 @@ class SlashTag(database: Database) : ApplicationCommand() {
         @AppOption(description = "Name of the tag", autocomplete = USER_TAGS_AUTOCOMPLETE) name: String
     ) {
         withOwnedTag(event, name) { tag: Tag ->
+            val deleteButton = components.ephemeralButton(ButtonStyle.DANGER, "Delete") {
+                bindTo { doDeleteTag(event, name, it) }
+            }
+            val noButton = components.ephemeralButton(ButtonStyle.PRIMARY, "No") {
+                bindTo { it.editMessage("Cancelled").setComponents().queue() }
+            }
+            components.newEphemeralGroup(deleteButton, noButton) {
+                timeout(2.minutes)
+            }
+
             event.reply("Are you sure you want to delete the tag '${tag.name}' ?")
-                .addActionRow(
-                    *Components.group(
-                        Components.dangerButton { btnEvt: ButtonEvent -> doDeleteTag(event, name, btnEvt) }
-                            .build("Delete"),
-                        Components.primaryButton { btnEvt: ButtonEvent ->
-                            btnEvt.editMessage("Cancelled").setComponents().queue()
-                        }.build("No")
-                    )
-                )
+                .addActionRow(deleteButton, noButton)
                 .setEphemeral(true)
                 .queue()
         }
     }
 
-    private fun doDeleteTag(event: GuildSlashEvent, name: String, btnEvt: ButtonEvent) {
+    private suspend fun doDeleteTag(event: GuildSlashEvent, name: String, btnEvt: ButtonEvent) {
         tagDB.delete(event.guild.idLong, event.user.idLong, name)
         btnEvt.editMessageFormat("Tag '%s' deleted successfully", name).setComponents().queue()
     }
 
     @JDASlashCommand(scope = CommandScope.GLOBAL_NO_DM, name = "tags", subcommand = "list", description = "Creates a tag in this guild")
-    fun listTags(
+    suspend fun listTags(
         event: GuildSlashEvent,
-        @AppOption(name = "sorting", description = "Type of tag sorting") criteria: TagCriteria? //TODO use default
+        @AppOption(name = "sorting", description = "Type of tag sorting") criteria: TagCriteria = TagCriteria.NAME
     ) {
-        val finalCriteria = criteria ?: TagCriteria.NAME
         val totalTags = tagDB.getTotalTags(event.guild.idLong)
-        val paginator = PaginatorBuilder()
+        val paginator = PaginatorBuilder(components)
             .setConstraints(InteractionConstraints.ofUsers(event.user))
             .setMaxPages(totalTags / 10)
             .setTimeout(5, TimeUnit.MINUTES) { p: Paginator, _ ->
-                p.cleanup(event.context)
+                p.cleanup()
                 event.hook.editOriginalComponents().queue()
             }
             .setPaginatorSupplier { _, _, _, page: Int ->
                 try {
-                    val tagRange = tagDB.getTagRange(event.guild.idLong, finalCriteria, 10 * page, 20)
+                    val tagRange = tagDB.getTagRange(event.guild.idLong, criteria, 10 * page, 20)
 
                     val embed = Embed {
                         title = "All tags for " + event.guild.name
@@ -339,27 +338,27 @@ class SlashTag(database: Database) : ApplicationCommand() {
         }
     }
 
-    @AutocompletionHandler(name = GUILD_TAGS_AUTOCOMPLETE, showUserInput = false)
+    @AutocompleteHandler(name = GUILD_TAGS_AUTOCOMPLETE, showUserInput = false)
     fun guildTagsAutocomplete(event: CommandAutoCompleteInteractionEvent): List<Command.Choice> {
         val guild = checkGuild(event.guild)
         return AutocompleteAlgorithms
             .fuzzyMatching(
                 tagDB.getShortTagsSorted(guild.idLong, TagCriteria.USES), { obj: ShortTag -> obj.name },
-                event
+                event.focusedOption.value
             )
-            .map { r: BoundExtractedResult<ShortTag> -> Command.Choice(r.referent.asChoiceName(), r.string) }
+            .map { r -> Command.Choice(r.item.asChoiceName(), r.string) }
     }
 
-    @AutocompletionHandler(name = USER_TAGS_AUTOCOMPLETE, showUserInput = false)
+    @AutocompleteHandler(name = USER_TAGS_AUTOCOMPLETE, showUserInput = false)
     fun userTagsAutocomplete(event: CommandAutoCompleteInteractionEvent): List<Command.Choice> {
         val guild = checkGuild(event.guild)
         return AutocompleteAlgorithms
             .fuzzyMatching(
                 tagDB.getShortTagsSorted(guild.idLong, event.user.idLong, TagCriteria.NAME),
                 { obj: ShortTag -> obj.name },
-                event
+                event.focusedOption.value
             )
-            .map { r: BoundExtractedResult<ShortTag> -> Command.Choice(r.referent.asChoiceName(), r.string) }
+            .map { r -> Command.Choice(r.item.asChoiceName(), r.string) }
     }
 
     private fun ShortTag.asChoiceName(): String {

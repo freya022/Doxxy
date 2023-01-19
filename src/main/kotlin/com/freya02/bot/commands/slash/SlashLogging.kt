@@ -3,13 +3,13 @@ package com.freya02.bot.commands.slash
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.LoggerContext
 import com.freya02.botcommands.api.annotations.CommandMarker
-import com.freya02.botcommands.api.application.ApplicationCommand
-import com.freya02.botcommands.api.application.CommandScope
-import com.freya02.botcommands.api.application.annotations.AppOption
-import com.freya02.botcommands.api.application.annotations.Test
-import com.freya02.botcommands.api.application.slash.GuildSlashEvent
-import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand
-import com.freya02.botcommands.api.application.slash.autocomplete.annotations.AutocompletionHandler
+import com.freya02.botcommands.api.commands.application.ApplicationCommand
+import com.freya02.botcommands.api.commands.application.CommandScope
+import com.freya02.botcommands.api.commands.application.annotations.AppOption
+import com.freya02.botcommands.api.commands.application.annotations.Test
+import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
+import com.freya02.botcommands.api.commands.application.slash.annotations.JDASlashCommand
+import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
 import dev.minn.jda.ktx.messages.reply_
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import org.slf4j.LoggerFactory
@@ -39,7 +39,7 @@ class SlashLogging : ApplicationCommand() {
         }
     }
 
-    @AutocompletionHandler(name = LOGGER_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
+    @AutocompleteHandler(name = LOGGER_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onLoggerNameAutocomplete(event: CommandAutoCompleteInteractionEvent): List<String> {
         return loggerContext.loggerList.map { it.name }
     }

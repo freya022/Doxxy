@@ -1,77 +1,48 @@
 package com.freya02.bot.commands.slash.docs
 
+import com.freya02.bot.commands.slash.docs.CommonDocsHandlers.Companion.CLASS_NAME_AUTOCOMPLETE_NAME
+import com.freya02.bot.commands.slash.docs.CommonDocsHandlers.Companion.METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME
+import com.freya02.bot.commands.slash.docs.controllers.SlashDocsController
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.index.DocSuggestion
 import com.freya02.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
 import com.freya02.botcommands.api.annotations.CommandMarker
-import com.freya02.botcommands.api.application.annotations.AppOption
-import com.freya02.botcommands.api.application.slash.GuildSlashEvent
-import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand
+import com.freya02.botcommands.api.commands.application.GlobalApplicationCommandManager
+import com.freya02.botcommands.api.commands.application.annotations.AppDeclaration
+import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
 import com.freya02.docs.DocSourceType
 
 @CommandMarker
-class DocsCommand(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
-    @JDASlashCommand(
-        name = "docs",
-        subcommand = "botcommands",
-        description = "Shows the documentation for a class, a method or a field"
-    )
-    fun onSlashDocsBC(
-        event: GuildSlashEvent,
-        @AppOption(description = "The docs to search upon") sourceType: DocSourceType,
-        @AppOption(
-            description = "Name of the Java class",
-            autocomplete = CommonDocsHandlers.CLASS_NAME_AUTOCOMPLETE_NAME
-        ) className: String,
-        @AppOption(
-            description = "Signature of the method / field name",
-            autocomplete = CommonDocsHandlers.METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME
-        ) identifier: String?
-    ) {
-        onSlashDocs(event, sourceType, className, identifier)
+class DocsCommand(private val docIndexMap: DocIndexMap, private val slashDocsController: SlashDocsController) {
+    @AppDeclaration
+    fun declare(manager: GlobalApplicationCommandManager) {
+        manager.slashCommand("docs") {
+            description = "Shows the documentation for a class, a method or a field"
+
+            DocSourceType.values().forEach { sourceType ->
+                subcommand(sourceType.cmdName) {
+                    description = "Shows the documentation for a class, a method or a field"
+
+                    generatedOption("sourceType") { sourceType }
+
+                    option("className") {
+                        description = "Name of the Java class"
+                        autocompleteReference(CLASS_NAME_AUTOCOMPLETE_NAME)
+                    }
+
+                    option("identifier") {
+                        description = "Signature of the method / field name"
+                        autocompleteReference(METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME)
+                    }
+
+                    function = ::onSlashDocs
+                }
+            }
+        }
     }
 
-    @JDASlashCommand(
-        name = "docs",
-        subcommand = "jda",
-        description = "Shows the documentation for a class, a method or a field"
-    )
-    fun onSlashDocsJDA(
-        event: GuildSlashEvent,
-        @AppOption(description = "The docs to search upon") sourceType: DocSourceType,
-        @AppOption(
-            description = "Name of the Java class",
-            autocomplete = CommonDocsHandlers.CLASS_NAME_AUTOCOMPLETE_NAME
-        ) className: String,
-        @AppOption(
-            description = "Signature of the method / field name",
-            autocomplete = CommonDocsHandlers.METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME
-        ) identifier: String?
-    ) {
-        onSlashDocs(event, sourceType, className, identifier)
-    }
-
-    @JDASlashCommand(
-        name = "docs",
-        subcommand = "java",
-        description = "Shows the documentation for a class, a method or a field"
-    )
-    fun onSlashDocsJava(
-        event: GuildSlashEvent,
-        @AppOption(description = "The docs to search upon") sourceType: DocSourceType,
-        @AppOption(
-            description = "Name of the Java class",
-            autocomplete = CommonDocsHandlers.CLASS_NAME_AUTOCOMPLETE_NAME
-        ) className: String,
-        @AppOption(
-            description = "Signature of the method / field name",
-            autocomplete = CommonDocsHandlers.METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME
-        ) identifier: String?
-    ) {
-        onSlashDocs(event, sourceType, className, identifier)
-    }
-
-    private fun onSlashDocs(
+    @CommandMarker
+    suspend fun onSlashDocs(
         event: GuildSlashEvent,
         sourceType: DocSourceType,
         className: String,
@@ -79,16 +50,16 @@ class DocsCommand(private val docIndexMap: DocIndexMap) : BaseDocCommand() {
     ) {
         val docIndex = docIndexMap[sourceType]!!
         if (identifier == null) {
-            CommonDocsHandlers.handleClass(event, className, docIndex) {
+            slashDocsController.handleClass(event, className, docIndex) {
                 return@handleClass classNameAutocomplete(docIndex, className, 100)
                     .map { DocSuggestion(it, it) }
             }
         } else if (identifier.contains("(")) { //prob a method
-            CommonDocsHandlers.handleMethodDocs(event, className, identifier, docIndex) {
+            slashDocsController.handleMethodDocs(event, className, identifier, docIndex) {
                 return@handleMethodDocs methodOrFieldByClassAutocomplete(docIndex, className, identifier, 100).mapToSuggestions(className)
             }
         } else {
-            CommonDocsHandlers.handleFieldDocs(event, className, identifier, docIndex) {
+            slashDocsController.handleFieldDocs(event, className, identifier, docIndex) {
                 return@handleFieldDocs methodOrFieldByClassAutocomplete(docIndex, className, identifier, 100).mapToSuggestions(className)
             }
         }

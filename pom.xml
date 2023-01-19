@@ -6,7 +6,7 @@
 
     <groupId>com.freya02</groupId>
     <artifactId>DocsBot</artifactId>
-    <version>1.8</version>
+    <version>2.0</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -15,7 +15,7 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
 
-        <kotlin.version>1.7.21</kotlin.version>
+        <kotlin.version>1.8.0</kotlin.version>
         <kotlin.coroutine.version>1.6.4</kotlin.coroutine.version>
 
         <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
@@ -36,6 +36,9 @@
                         <arg>-opt-in=kotlin.RequiresOptIn</arg>
                         <arg>-opt-in=kotlin.ExperimentalStdlibApi</arg>
                         <arg>-Xcontext-receivers</arg>
+<!--                        <arg>-Xlambdas=indy</arg>--> <!-- Caused issues with things like ModalBuilder unfortunately
+ java.lang.invoke.LambdaConversionException: Type mismatch for lambda argument 0: interface com.freya02.botcommands.api.modals.Modals is not convertible to class com.freya02.botcommands.api.modals.ModalBuilder
+ -->
                     </args>
                 </configuration>
                 <executions>
@@ -112,7 +115,7 @@
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>5.0.0-beta.2</version>
+            <version>5.0.0-beta.2_DEV</version>
             <exclusions>
                 <exclusion>
                     <groupId>club.minnced</groupId>
@@ -121,11 +124,9 @@
             </exclusions>
         </dependency>
         <dependency>
-<!--            <groupId>com.github.freya022</groupId>-->
             <groupId>io.github.freya022</groupId>
             <artifactId>BotCommands</artifactId>
-<!--            <version>53df90c</version>-->
-            <version>2.8.2</version>
+            <version>3.0.0-alpha.3-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.github.MinnDevelopment</groupId>
@@ -172,7 +173,7 @@
         <dependency>
             <groupId>com.github.javaparser</groupId>
             <artifactId>javaparser-core</artifactId>
-            <version>3.24.8</version>
+            <version>3.24.9</version>
         </dependency>
         <dependency>
             <groupId>com.palantir.javaformat</groupId>
@@ -180,15 +181,15 @@
             <version>2.28.0</version>
         </dependency>
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>5.9.0</version>
+            <groupId>org.javassist</groupId>
+            <artifactId>javassist</artifactId>
+            <version>3.29.2-GA</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>info.debatty</groupId>
-            <artifactId>java-string-similarity</artifactId>
-            <version>2.0.0</version>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.9.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

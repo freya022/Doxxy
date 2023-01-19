@@ -2,25 +2,33 @@ package com.freya02.docs
 
 enum class DocSourceType(
     val id: Int,
+    val cmdName: String,
     val sourceUrl: String,
+    val sourceFolderName: String?,
     private val onlineURL: String?,
     vararg validPackagePatterns: String
 ) {
     JDA(
         1,
+        "jda",
         "http://localhost:25566/JDA",
+        "JDA",
         "https://ci.dv8tion.net/job/JDA5/javadoc",
         "net\\.dv8tion\\.jda.*"
     ),
     BOT_COMMANDS(
         2,
+        "botcommands",
         "http://localhost:25566/BotCommands",
+        null,
         null,
         "com\\.freya02\\.botcommands\\.api.*"
     ),
     JAVA(
         3,
+        "java",
         "https://docs.oracle.com/en/java/javase/17/docs/api",
+        null,
         "https://docs.oracle.com/en/java/javase/17/docs/api",
         "java\\.io.*",
         "java\\.lang",
@@ -73,6 +81,14 @@ enum class DocSourceType(
     }
 
     companion object {
+        fun fromId(id: Int): DocSourceType {
+            return values().find { it.id == id } ?: throw IllegalArgumentException("Unknown source ID $id")
+        }
+
+        fun fromIdOrNull(id: Int): DocSourceType? {
+            return values().find { it.id == id }
+        }
+
         fun fromUrl(url: String): DocSourceType? {
             return values().find { source -> url.startsWith(source.sourceUrl) || source.onlineURL != null && url.startsWith(source.onlineURL) }
         }

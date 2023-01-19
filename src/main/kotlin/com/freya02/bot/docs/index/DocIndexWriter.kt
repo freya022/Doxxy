@@ -1,10 +1,10 @@
 package com.freya02.bot.docs.index
 
 import com.freya02.bot.Data
-import com.freya02.bot.db.Database
-import com.freya02.bot.db.Transaction
 import com.freya02.bot.docs.DocEmbeds.toEmbed
 import com.freya02.bot.docs.metadata.SourceRootMetadata
+import com.freya02.botcommands.api.core.db.Database
+import com.freya02.botcommands.api.core.db.Transaction
 import com.freya02.docs.ClassDocs
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.DocUtils.getReturnTypeNoAnnotations
@@ -17,27 +17,17 @@ import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.MessageEmbed
 
 internal class DocIndexWriter(
-    private val database_: Database,
+    private val database: Database,
     private val docsSession: DocsSession,
     private val sourceType: DocSourceType,
     private val reindexData: ReindexData
 ) {
-    private val sourceRootMetadata: SourceRootMetadata?
     private val annotationRegex: Regex = "@\\w+ ".toRegex()
-
-    init {
-        val docsFolderName = when (sourceType) { //TODO move to reindexData prob
-            DocSourceType.JDA -> "JDA"
-            else -> null
-        }
-
-        sourceRootMetadata = when {
-            docsFolderName != null -> SourceRootMetadata(Data.javadocsPath.resolve(docsFolderName))
-            else -> null
-        }
+    private val sourceRootMetadata: SourceRootMetadata? = sourceType.sourceFolderName?.let { docsFolderName ->
+        SourceRootMetadata(Data.javadocsPath.resolve(docsFolderName))
     }
 
-    suspend fun doReindex() = database_.transactional {
+    suspend fun doReindex() = database.transactional {
         val updatedSource = ClassDocs.getUpdatedSource(sourceType)
 
         preparedStatement("delete from doc where source_id = ?") {
@@ -191,7 +181,7 @@ internal class DocIndexWriter(
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             returning id""".trimIndent()
         ) {
-            executeReturningInsert(
+            executeQuery(
                 sourceType.id,
                 docType.id,
                 className,

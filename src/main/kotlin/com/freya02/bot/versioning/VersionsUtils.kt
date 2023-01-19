@@ -46,11 +46,11 @@ object VersionsUtils {
     }
 
     fun ArtifactInfo.downloadMavenSources(): Path {
-        return downloadJavadoc(this.toMavenUrl(FileType.SOURCES))
+        return downloadSources(this.toMavenUrl(FileType.SOURCES))
     }
 
     fun ArtifactInfo.downloadJitpackSources(): Path {
-        return downloadJavadoc(this.toJitpackUrl(FileType.SOURCES))
+        return downloadSources(this.toJitpackUrl(FileType.SOURCES))
     }
 
     private fun ArtifactInfo.downloadJavadoc(url: String): Path {

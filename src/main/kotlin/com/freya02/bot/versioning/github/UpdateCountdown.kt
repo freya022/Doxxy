@@ -17,14 +17,14 @@ open class UpdateCountdown(duration: Duration) {
     }
 }
 
-class UpdateCountdownDelegate<T>(duration: Duration, private val updater: () -> T): UpdateCountdown(duration), ReadOnlyProperty<Any, T> {
-    private var value: T? = null
+class UpdateCountdownDelegate<T : Any>(duration: Duration, private val updater: () -> T): UpdateCountdown(duration), ReadOnlyProperty<Any, T> {
+    private lateinit var value: T
 
     override fun getValue(thisRef: Any, property: KProperty<*>): T {
         if (needsUpdate()) {
             value = updater()
         }
 
-        return value!!
+        return value
     }
 }

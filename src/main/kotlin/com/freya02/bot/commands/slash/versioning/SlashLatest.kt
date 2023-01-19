@@ -1,17 +1,18 @@
 package com.freya02.bot.commands.slash.versioning
 
-import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.getDeleteButton
+import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
 import com.freya02.bot.versioning.LibraryType
 import com.freya02.bot.versioning.Versions
 import com.freya02.botcommands.api.annotations.CommandMarker
-import com.freya02.botcommands.api.application.ApplicationCommand
-import com.freya02.botcommands.api.application.annotations.AppOption
-import com.freya02.botcommands.api.application.slash.GuildSlashEvent
-import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand
+import com.freya02.botcommands.api.commands.application.ApplicationCommand
+import com.freya02.botcommands.api.commands.application.annotations.AppOption
+import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
+import com.freya02.botcommands.api.commands.application.slash.annotations.JDASlashCommand
+import com.freya02.botcommands.api.components.Components
 import net.dv8tion.jda.api.EmbedBuilder
 
 @CommandMarker
-class SlashLatest(private val versions: Versions) : ApplicationCommand() {
+class SlashLatest(private val versions: Versions, private val components: Components) : ApplicationCommand() {
     @JDASlashCommand(name = "latest", description = "Shows the latest version of the library")
     fun onSlashLatest(
         event: GuildSlashEvent,
@@ -24,22 +25,16 @@ class SlashLatest(private val versions: Versions) : ApplicationCommand() {
                 builder.addBCVersion()
                 builder.addBlankField(true)
                 builder.addJDA5Version()
-                builder.addJDA4Version()
                 builder.addJDAKtxVersion()
             }
             LibraryType.BOT_COMMANDS -> builder.addBCVersion()
             LibraryType.JDA5 -> builder.addJDA5Version()
-            LibraryType.JDA4 -> builder.addJDA4Version()
             LibraryType.JDA_KTX -> builder.addJDAKtxVersion()
         }
 
         event.replyEmbeds(builder.build())
-            .addActionRow(getDeleteButton(event.user))
+            .addActionRow(components.messageDeleteButton(event.user))
             .queue()
-    }
-
-    private fun EmbedBuilder.addJDA4Version() {
-        addField("JDA 4", "`" + versions.latestJDA4Version.version + "`", true)
     }
 
     private fun EmbedBuilder.addJDA5Version() {

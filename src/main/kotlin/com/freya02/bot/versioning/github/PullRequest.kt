@@ -12,7 +12,7 @@ data class PullRequest(
     val pullUrl: String
 ) {
     fun toJitpackArtifact(): ArtifactInfo {
-        return branch.asJitpackArtifact
+        return branch.toJitpackArtifact()
     }
 
     val asHumanDescription: String

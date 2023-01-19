@@ -2,11 +2,11 @@ package com.freya02.bot.commands.slash
 
 import com.freya02.bot.utils.exceptions.DebugException
 import com.freya02.botcommands.api.annotations.CommandMarker
-import com.freya02.botcommands.api.application.ApplicationCommand
-import com.freya02.botcommands.api.application.CommandScope
-import com.freya02.botcommands.api.application.annotations.Test
-import com.freya02.botcommands.api.application.slash.GuildSlashEvent
-import com.freya02.botcommands.api.application.slash.annotations.JDASlashCommand
+import com.freya02.botcommands.api.commands.application.ApplicationCommand
+import com.freya02.botcommands.api.commands.application.CommandScope
+import com.freya02.botcommands.api.commands.application.annotations.Test
+import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
+import com.freya02.botcommands.api.commands.application.slash.annotations.JDASlashCommand
 import dev.minn.jda.ktx.messages.reply_
 
 @CommandMarker
