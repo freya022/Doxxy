@@ -4,7 +4,8 @@ import com.freya02.bot.commands.slash.docs.controllers.SlashDocsController
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
 import com.freya02.botcommands.api.annotations.CommandMarker
-import com.freya02.botcommands.api.commands.application.GlobalApplicationCommandManager
+import com.freya02.botcommands.api.commands.application.CommandScope
+import com.freya02.botcommands.api.commands.application.GuildApplicationCommandManager
 import com.freya02.botcommands.api.commands.application.annotations.AppDeclaration
 import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
 import com.freya02.docs.DocSourceType
@@ -12,11 +13,11 @@ import com.freya02.docs.DocSourceType
 @CommandMarker
 class FieldCommand(private val docIndexMap: DocIndexMap, private val slashDocsController: SlashDocsController) {
     @AppDeclaration
-    fun declare(manager: GlobalApplicationCommandManager) {
-        manager.slashCommand("field") {
+    fun declare(manager: GuildApplicationCommandManager) {
+        manager.slashCommand("field", CommandScope.GUILD) {
             description = "Shows the documentation for a field of a class"
 
-            DocSourceType.values().forEach { sourceType ->
+            DocSourceType.typesForGuild(manager.guild).forEach { sourceType ->
                 subcommand(sourceType.cmdName) {
                     description = "Shows the documentation for a field of a class"
 
