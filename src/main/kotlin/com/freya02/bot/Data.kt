@@ -15,7 +15,7 @@ import kotlin.io.path.notExists
 // If not then fallback to the config path, which must be validated
 // Other configs such as logback are set in the bot folder
 object Data {
-    private val botFolder: Path = Path(System.getProperty("user.home"), "Bots", "Doxxy")
+    private val botFolder: Path = validatedPath("Bot folder", Path(System.getProperty("user.home"), "Bots", "Doxxy"))
     private val configFolder: Path = botFolder.resolve("config")
 
     //Fine if not used, might just be using the test config
