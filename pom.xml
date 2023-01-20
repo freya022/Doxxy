@@ -113,9 +113,9 @@
             <version>2.3.5</version>
         </dependency>
         <dependency>
-            <groupId>net.dv8tion</groupId>
+            <groupId>com.github.freya022</groupId>
             <artifactId>JDA</artifactId>
-            <version>5.0.0-beta.2_DEV</version>
+            <version>232ab9e219</version>
             <exclusions>
                 <exclusion>
                     <groupId>club.minnced</groupId>
@@ -126,7 +126,7 @@
         <dependency>
             <groupId>io.github.freya022</groupId>
             <artifactId>BotCommands</artifactId>
-            <version>3.0.0-alpha.3-SNAPSHOT</version>
+            <version>3.0.0-alpha.4-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.github.MinnDevelopment</groupId>
