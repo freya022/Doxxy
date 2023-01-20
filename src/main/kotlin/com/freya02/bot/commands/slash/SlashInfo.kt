@@ -44,8 +44,8 @@ class SlashInfo : ApplicationCommand() {
 
                     @Suppress("SENSELESS_COMPARISON") //Might be null depending on version used
                     value = when {
-                        JDAInfo.COMMIT_HASH != null -> "[${JDAInfo.VERSION}](https://github.com/DV8FromTheWorld/JDA/commit/${JDAInfo.COMMIT_HASH})"
-                        else -> "[${JDAInfo.VERSION}](https://github.com/DV8FromTheWorld/JDA)"
+                        JDAInfo.COMMIT_HASH == null || JDAInfo.COMMIT_HASH.endsWith("DEV") -> "[${JDAInfo.VERSION}](https://github.com/DV8FromTheWorld/JDA)"
+                        else -> "[${JDAInfo.VERSION}](https://github.com/DV8FromTheWorld/JDA/commit/${JDAInfo.COMMIT_HASH})"
                     }
 
                     inline = true
