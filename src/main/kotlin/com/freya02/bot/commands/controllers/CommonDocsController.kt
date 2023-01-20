@@ -81,7 +81,8 @@ class CommonDocsController(private val componentsService: Components) {
         }
 
         cachedDoc.javadocLink?.let { javadocLink ->
-            if (member.getOnlineStatus(ClientType.MOBILE) != OnlineStatus.OFFLINE) {
+            val mobileStatus = member.getOnlineStatus(ClientType.MOBILE)
+            if (mobileStatus == OnlineStatus.ONLINE || mobileStatus == OnlineStatus.DO_NOT_DISTURB) {
                 return EmbedBuilder(this).addField("Link", javadocLink, false).build()
             }
         }
