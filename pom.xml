@@ -113,9 +113,9 @@
             <version>2.3.5</version>
         </dependency>
         <dependency>
-            <groupId>com.github.freya022</groupId>
+            <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>232ab9e219</version>
+            <version>5.0.0-beta.2_DEV</version> <!-- Special version with workaround for https://github.com/javaparser/javaparser/issues/3866 -->
             <exclusions>
                 <exclusion>
                     <groupId>club.minnced</groupId>
@@ -172,8 +172,8 @@
         </dependency>
         <dependency>
             <groupId>com.github.javaparser</groupId>
-            <artifactId>javaparser-core</artifactId>
-            <version>3.24.9</version>
+            <artifactId>javaparser-symbol-solver-core</artifactId>
+            <version>3.24.10</version>
         </dependency>
         <dependency>
             <groupId>com.palantir.javaformat</groupId>
