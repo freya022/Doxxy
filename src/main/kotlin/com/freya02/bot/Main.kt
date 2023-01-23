@@ -11,6 +11,7 @@ import mu.KotlinLogging
 import net.dv8tion.jda.api.events.session.ShutdownEvent
 import java.lang.management.ManagementFactory
 import kotlin.io.path.absolutePathString
+import kotlin.io.path.exists
 import kotlin.system.exitProcess
 import kotlin.time.Duration.Companion.minutes
 
@@ -22,7 +23,12 @@ object Main {
         try {
             Data.init()
 
-            System.setProperty(ContextInitializer.CONFIG_FILE_PROPERTY, Data.logbackConfigPath.absolutePathString())
+            if (Data.logbackConfigPath.exists()) {
+                System.setProperty(ContextInitializer.CONFIG_FILE_PROPERTY, Data.logbackConfigPath.absolutePathString())
+                logger.info( "Loading production logback config")
+            } else {
+                logger.info( "Loading test logback config")
+            }
 
             //stacktrace-decoroutinator seems to have issues when reloading with hotswap agent
             if ("-XX:HotswapAgent=fatjar" !in ManagementFactory.getRuntimeMXBean().inputArguments) {

@@ -19,7 +19,7 @@ object Data {
     private val configPath: Path = configFolder.resolve("Config.json")
     private val testConfigPath: Path = Path("Test_Config.json")
 
-    val logbackConfigPath: Path = validatedPath("Logback config", configFolder.resolve("logback.xml"))
+    val logbackConfigPath: Path = configFolder.resolve("logback.xml")
 
     val javadocsPath: Path = botFolder.resolve("javadocs")
     private val lastKnownVersionsFolderPath: Path = botFolder.resolve("last_versions")
