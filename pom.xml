@@ -124,9 +124,9 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>io.github.freya022</groupId>
+            <groupId>com.github.freya022</groupId>
             <artifactId>BotCommands</artifactId>
-            <version>3.0.0-alpha.4-SNAPSHOT</version>
+            <version>1e6477b829</version>
         </dependency>
         <dependency>
             <groupId>com.github.MinnDevelopment</groupId>
