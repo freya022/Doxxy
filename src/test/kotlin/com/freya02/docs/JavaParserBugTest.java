@@ -15,16 +15,21 @@ public class JavaParserBugTest {
         @Language("Java")
         final String code = """
             public interface MyActivity {
-                class MyTimestamps {}
-               
-                MyTimestamps getTimestamps();
             }
             
-            public interface MyRichPresence extends MyActivity { }
+            public interface MyRichPresence extends MyActivity {
+                class MyTimestamps {}
+                
+                MyTimestamps getTimestamps();
+            }
            
             class MyActivityImpl implements MyActivity {
+                
+            }
+           
+            class MyRichPresenceImpl extends MyActivityImpl implements MyRichPresence {
                 @Override
-                public MyActivityImpl.MyTimestamps getTimestamps() {
+                public MyRichPresenceImpl.MyTimestamps getTimestamps() {
                     return timestamps;
                 }
             }
