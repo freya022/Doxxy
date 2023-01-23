@@ -6,10 +6,7 @@ import com.freya02.bot.versioning.github.GithubBranch
 import com.freya02.docs.DocSourceType
 import java.io.FileNotFoundException
 import java.nio.file.Path
-import kotlin.io.path.Path
-import kotlin.io.path.absolutePathString
-import kotlin.io.path.createDirectories
-import kotlin.io.path.notExists
+import kotlin.io.path.*
 
 // If test configs exists then they should be loaded
 // If not then fallback to the config path, which must be validated
@@ -19,8 +16,8 @@ object Data {
     private val configFolder: Path = botFolder.resolve("config")
 
     //Fine if not used, might just be using the test config
-    val configPath: Path by lazy { validatedPath("Bot config", configFolder.resolve("Config.json")) }
-    val testConfigPath: Path = Path("Test_Config.json")
+    private val configPath: Path = configFolder.resolve("Config.json")
+    private val testConfigPath: Path = Path("Test_Config.json")
 
     val logbackConfigPath: Path = validatedPath("Logback config", configFolder.resolve("logback.xml"))
 
@@ -37,6 +34,14 @@ object Data {
 
     val jdaDocsFolder: Path = javadocsPath.resolve("JDA")
     val bcDocsFolder: Path = javadocsPath.resolve("BotCommands")
+
+    val isDevEnvironment = testConfigPath.exists()
+
+    fun getEffectiveConfigPath(): Path = when {
+        isDevEnvironment -> testConfigPath
+        configPath.exists() -> configPath
+        else -> throw FileNotFoundException("Bot config at ${configPath.absolutePathString()} does not exist and test config at ${testConfigPath.absolutePathString()} was not found either.")
+    }
 
     fun getCacheFolder(docSourceType: DocSourceType): Path = pageCacheFolderPath.resolve(docSourceType.name)
 
