@@ -69,9 +69,9 @@ class DocMentionListener(
         }
     }
 
-    //  At most one select menu can be active per message
+    //  A select menu can be created once per message per user
     //  Can be created if relative position < 12 and created < 2 hours
-    //  That select menu can be used by anyone and will auto delete after 1 minutes
+    //  That select menu can be used by the caller and will auto delete after 1 minute
     //  Will have to put a small embed to know who used the feature as discord does not show who made the select menu
     @BEventListener
     suspend fun onMessageReactionAdd(event: MessageReactionAddEvent) {
