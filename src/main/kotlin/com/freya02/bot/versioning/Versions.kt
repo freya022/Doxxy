@@ -40,7 +40,7 @@ class Versions(private val docIndexMap: DocIndexMap) {
     private val jdaKtxChecker: JitpackVersionChecker =
         JitpackVersionChecker(lastKnownJDAKtxPath, "MinnDevelopment", "com.github.MinnDevelopment", "jda-ktx")
 
-    @BEventListener
+    @BEventListener(async = true, timeout = -1)
     suspend fun initUpdateLoop(event: FirstReadyEvent, context: BContext) {
         val scheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 
