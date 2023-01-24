@@ -81,7 +81,7 @@ class DocMentionController(
 
     suspend fun createDocsMenuMessage(
         docMatches: DocMatches,
-        callerId: Long,
+        caller: UserSnowflake,
         timeoutCallback: suspend () -> Unit
     ): MessageCreateData {
         return MessageCreate {
@@ -89,17 +89,17 @@ class DocMentionController(
                 placeholder = "Select a doc"
                 addMatchOptions(docMatches)
 
-                constraints.addUserIds(callerId)
+                constraints += caller
                 timeout(1.minutes, timeoutCallback)
                 bindTo { selectEvent -> onSelectedDoc(selectEvent) }
             }
 
-            val deleteButton = componentsService.messageDeleteButton(UserSnowflake.fromId(callerId))
+            val deleteButton = componentsService.messageDeleteButton(caller)
 
             components += row(docsMenu)
             components += row(deleteButton)
 
-            content = "<@$callerId> This message will be deleted in a minute"
+            content = "${caller.asMention} This message will be deleted in a minute"
             allowedMentionTypes = EnumSet.noneOf(MentionType::class.java) //No mentions
         }
     }

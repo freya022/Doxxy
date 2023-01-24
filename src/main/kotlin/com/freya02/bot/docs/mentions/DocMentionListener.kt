@@ -9,6 +9,7 @@ import dev.minn.jda.ktx.generics.getChannel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.entities.Guild
+import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.entities.channel.ChannelType
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel
 import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel
@@ -101,7 +102,7 @@ class DocMentionListener(
             var messageId: Long by Delegates.notNull()
             docMentionController.createDocsMenuMessage(
                 docMatches,
-                event.userIdLong,
+                UserSnowflake.fromId(event.userIdLong),
                 timeoutCallback = {
                     val channel = jda.getChannel<GuildMessageChannel>(channelId) ?: return@createDocsMenuMessage
                     channel.deleteMessageById(messageId).queue(null, ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE))
