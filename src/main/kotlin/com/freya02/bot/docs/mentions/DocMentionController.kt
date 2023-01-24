@@ -15,6 +15,7 @@ import dev.minn.jda.ktx.messages.reply_
 import net.dv8tion.jda.api.entities.Message.MentionType
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
+import net.dv8tion.jda.api.utils.messages.MessageEditData
 import java.util.*
 import kotlin.time.Duration.Companion.minutes
 
@@ -155,10 +156,15 @@ class DocMentionController(
             return
         }
 
-        selectEvent.reply(commonDocsController.getDocMessageData(selectEvent.member!!,
-            ephemeral = false,
-            showCaller = true,
-            cachedDoc = doc
-        )).setEphemeral(false).queue()
+        commonDocsController.getDocMessageData(selectEvent.member!!, ephemeral = false, showCaller = true, cachedDoc = doc)
+            .let { MessageEditData.fromCreateData(it) }
+            .also { selectEvent.editMessage(it).setReplace(true).queue() }
+            .also {
+                //Delete the components of the current message,
+                // we don't want the timeout to execute
+                selectEvent.message.components.flatMap { it.actionComponents }
+                    .mapNotNull { it.id }
+                    .also { componentsService.deleteComponentsById(it) }
+            }
     }
 }
