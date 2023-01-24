@@ -36,6 +36,9 @@ object Utils {
         }
     }
 
+    @Contract("null -> false")
+    fun Guild?.isJDAGuild(): Boolean = this?.idLong == 125227483518861312L || this?.idLong == 556235279371993089L
+
     fun Path.deleteRecursively() {
         if (this.notExists()) return
 
