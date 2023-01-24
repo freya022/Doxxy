@@ -23,7 +23,6 @@ class MessageContextMentions(private val docMentionController: DocMentionControl
         val message = docMentionController.createDocsMenuMessage(
             docMatches,
             event.user.idLong,
-            useDeleteButton = true,
             timeoutCallback = {
                 hook.deleteOriginal().queue(null, ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE))
             })
