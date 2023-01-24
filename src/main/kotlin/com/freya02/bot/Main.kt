@@ -59,6 +59,10 @@ object Main {
 
                 addSearchPath("com.freya02.bot")
 
+                textCommands {
+                    prefixes += ";"
+                }
+
                 applicationCommands {
                     testGuildIds += 722891685755093072
                 }
