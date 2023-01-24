@@ -86,7 +86,7 @@ class DocMentionController(
             placeholder = "Select a doc"
             addMatchOptions(docMatches)
 
-            timeout(5.minutes, timeoutCallback)
+            timeout(1.minutes, timeoutCallback)
 
             bindTo { selectEvent -> onSelectedDoc(selectEvent) }
         }
@@ -97,7 +97,7 @@ class DocMentionController(
             components += row(deleteButton)
         }
 
-        content = "<@$callerId> This message will be deleted in 5 minutes"
+        content = "<@$callerId> This message will be deleted in a minute"
         allowedMentionTypes = EnumSet.noneOf(MentionType::class.java) //No mentions
     }
 
