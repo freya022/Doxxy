@@ -1,6 +1,8 @@
 package com.freya02.bot.commands.slash.versioning
 
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
+import com.freya02.bot.utils.Utils.isBCGuild
+import com.freya02.bot.utils.Utils.isJDAGuild
 import com.freya02.bot.versioning.LibraryType
 import com.freya02.bot.versioning.Versions
 import com.freya02.botcommands.api.annotations.CommandMarker
@@ -22,11 +24,16 @@ class SlashLatest(private val versions: Versions, private val components: Compon
 
         when (libraryType) {
             null -> {
-                builder.addBCVersion()
-                builder.addBlankField(true)
+                if (event.guild.isBCGuild()) {
+                    builder.addBCVersion()
+                    builder.addBlankField(true)
+                }
                 builder.addJDA5Version()
                 builder.addJDAKtxVersion()
-                builder.addLavaPlayerVersion()
+                when {
+                    event.guild.isJDAGuild() -> builder.addLavaPlayerVersion()
+                    else -> builder.addBlankField(true)
+                }
             }
             LibraryType.BOT_COMMANDS -> builder.addBCVersion()
             LibraryType.JDA5 -> builder.addJDA5Version()
