@@ -1,5 +1,6 @@
 package com.freya02.bot.docs.mentions
 
+import com.freya02.bot.utils.Utils
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.core.annotations.BEventListener
 import com.freya02.botcommands.api.utils.EmojiUtils
@@ -117,7 +118,7 @@ class DocMentionListener(
     }
 
     private fun checkChannel(guild: Guild, channel: MessageChannelUnion): Boolean {
-        if (guild.idLong == 125227483518861312) {
+        if (guild.idLong == Utils.jdaGuildId) {
             if (!channel.type.isThread) return false
             if (channel.asThreadChannel().parentChannel.type != ChannelType.FORUM) return false
         }
