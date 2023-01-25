@@ -52,19 +52,20 @@ object Main {
             DocWebServer.startDocWebServer()
             logger.info("Started docs web server")
 
+            val config = Config.config
             BBuilder.newBuilder({
                 devMode = Data.isDevEnvironment
 
-                addOwners(222046562543468545L)
+                addOwners(*config.ownerIds.toLongArray())
 
                 addSearchPath("com.freya02.bot")
 
                 textCommands {
-                    prefixes += ";"
+                    prefixes += config.prefixes
                 }
 
                 applicationCommands {
-                    testGuildIds += 722891685755093072
+                    testGuildIds += config.testGuildIds
                 }
 
                 components {

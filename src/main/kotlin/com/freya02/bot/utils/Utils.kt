@@ -1,5 +1,6 @@
 package com.freya02.bot.utils
 
+import com.freya02.bot.Config
 import com.freya02.botcommands.api.Logging
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.internal.utils.JDALogger
@@ -31,13 +32,13 @@ object Utils {
     @Contract("null -> false")
     fun Guild?.isBCGuild(): Boolean {
         return when {
-            this != null -> idLong == 848502702731165738L || idLong == 722891685755093072L
+            this != null -> idLong == 848502702731165738L || idLong == Config.config.fakeBCGuildId
             else -> false
         }
     }
 
     @Contract("null -> false")
-    fun Guild?.isJDAGuild(): Boolean = this?.idLong == 125227483518861312L || this?.idLong == 556235279371993089L
+    fun Guild?.isJDAGuild(): Boolean = this?.idLong == 125227483518861312L || this?.idLong == Config.config.fakeJDAGuildId
 
     fun Path.deleteRecursively() {
         if (this.notExists()) return
