@@ -1,5 +1,6 @@
 package com.freya02.bot.utils
 
+import com.freya02.bot.Config
 import com.freya02.botcommands.api.Logging
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.internal.utils.JDALogger
@@ -13,6 +14,9 @@ import kotlin.io.path.notExists
 import kotlin.streams.asSequence
 
 object Utils {
+    const val bcGuildId: Long = 848502702731165738
+    const val jdaGuildId: Long = 125227483518861312
+
     val walker: StackWalker = StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
 
     fun readResource(url: String): String {
@@ -29,15 +33,10 @@ object Utils {
     }
 
     @Contract("null -> false")
-    fun Guild?.isBCGuild(): Boolean {
-        return when {
-            this != null -> idLong == 848502702731165738L || idLong == 722891685755093072L
-            else -> false
-        }
-    }
+    fun Guild?.isBCGuild(): Boolean = this?.idLong == bcGuildId || this?.idLong == Config.config.fakeBCGuildId
 
     @Contract("null -> false")
-    fun Guild?.isJDAGuild(): Boolean = this?.idLong == 125227483518861312L || this?.idLong == 556235279371993089L
+    fun Guild?.isJDAGuild(): Boolean = this?.idLong == jdaGuildId || this?.idLong == Config.config.fakeJDAGuildId
 
     fun Path.deleteRecursively() {
         if (this.notExists()) return
