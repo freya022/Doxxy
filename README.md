@@ -40,4 +40,5 @@ If you change something to the database, please write a migration script in the 
   * This means that, in theory, applying the very first creation script + all the migration scripts should give the same tables.
 
 ### Updating the database
-If the bot says the database is outdated, you can find the migration scripts in the [sql folder](sql)
+If the bot says the database is outdated, you can find the migration scripts in the [sql folder](sql), 
+only execute the ones that are higher than the current database version. 
