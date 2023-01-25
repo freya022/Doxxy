@@ -61,7 +61,7 @@ object Main {
                 addSearchPath("com.freya02.bot")
 
                 textCommands {
-                    prefixes += config.prefixes
+                    usePingAsPrefix = true
                 }
 
                 applicationCommands {
