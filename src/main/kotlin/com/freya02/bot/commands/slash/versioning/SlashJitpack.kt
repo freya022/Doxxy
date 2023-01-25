@@ -52,7 +52,7 @@ class SlashJitpack(
                 jitpackBranchService.getUsedJDAVersionFromBranch(pullRequest.branch),
                 pullRequest.toJitpackArtifact()
             )
-            LibraryType.JDA5, LibraryType.JDA_KTX -> DependencySupplier.formatJitpack(
+            LibraryType.JDA5, LibraryType.JDA_KTX, LibraryType.LAVA_PLAYER -> DependencySupplier.formatJitpack(
                 ScriptType.DEPENDENCIES,
                 buildToolType,
                 pullRequest.toJitpackArtifact()
@@ -192,7 +192,8 @@ class SlashJitpack(
                 )
                 else -> listOf(
                     Choice("JDA 5", LibraryType.JDA5.name),
-                    Choice("JDA-KTX", LibraryType.JDA_KTX.name)
+                    Choice("JDA-KTX", LibraryType.JDA_KTX.name),
+                    Choice("LavaPlayer", LibraryType.LAVA_PLAYER.name)
                 )
             }
         }
@@ -219,7 +220,7 @@ class SlashJitpack(
         val branchName = branch.branchName
 
         val dependencyStr = when (libraryType) {
-            LibraryType.JDA5, LibraryType.JDA_KTX -> DependencySupplier.formatJitpack(
+            LibraryType.JDA5, LibraryType.JDA_KTX, LibraryType.LAVA_PLAYER -> DependencySupplier.formatJitpack(
                 ScriptType.DEPENDENCIES,
                 buildToolType,
                 branch.toJitpackArtifact()

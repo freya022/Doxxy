@@ -82,6 +82,7 @@ class JitpackBranchService(private val context: BContext) {
             LibraryType.JDA5 -> arrayOf("DV8FromTheWorld", "JDA")
             LibraryType.BOT_COMMANDS -> arrayOf("freya022", "BotCommands")
             LibraryType.JDA_KTX -> arrayOf("MinnDevelopment", "jda-ktx")
+            LibraryType.LAVA_PLAYER -> arrayOf("Walkyst", "lavaplayer-fork")
         }
 
         val map: Map<String, GithubBranch> = GithubUtils.getBranches(ownerName, repoName).associateBy { it.branchName }
