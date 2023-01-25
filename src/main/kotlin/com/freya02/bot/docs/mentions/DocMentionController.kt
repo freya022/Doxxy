@@ -18,7 +18,6 @@ import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import net.dv8tion.jda.api.utils.messages.MessageEditData
 import java.util.*
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
 class DocMentionController(
@@ -168,9 +167,5 @@ class DocMentionController(
                     .mapNotNull { it.id }
                     .also { componentsService.deleteComponentsById(it) }
             }
-    }
-
-    companion object {
-        val docsMentionMenuTimeout: Duration = 1.minutes
     }
 }

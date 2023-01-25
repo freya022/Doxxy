@@ -1,3 +1,3 @@
-update version set version = 'major.minor' where onerow = true;
+update doxxy_version set version = 'major.minor' where one_row = true;
 
 -- Migration script
