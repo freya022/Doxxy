@@ -33,7 +33,7 @@ Contributions are welcome, here are the prerequisites in order to run the bot, s
 ### Database changes
 If you change something to the database, please write a migration script in the [sql folder](sql).
 * You must first bump the version of the bot in the [`pom.xml`](pom.xml), just change the minor version. 
-* You can then copy the `pom.xml`'s version into [`CreateDatabase.sql`](sql/CreateDatabase.sql)
+* You can then copy the `pom.xml`'s version into `DatabaseSource.kt` and [`CreateDatabase.sql`](sql/CreateDatabase.sql)
 * The name of the migration script must be: `vMajor.Minor__Short_Description.sql`
   * For example, `v2.0__Doc_Mentions.sql`
 * Make the modifications to the [`CreateDatabase.sql`](sql/CreateDatabase.sql) script as well

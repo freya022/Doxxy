@@ -13,6 +13,7 @@ import kotlin.time.Duration.Companion.seconds
 @BService(ServiceStart.PRE_LOAD)
 @ServiceType(type = ConnectionSupplier::class)
 class DatabaseSource(config: Config) : ConnectionSupplier {
+    private val version = "2.0"
     private val source: HikariDataSource
 
     init {
@@ -29,7 +30,22 @@ class DatabaseSource(config: Config) : ConnectionSupplier {
 
         source = HikariDataSource(hikariConfig)
 
-        source.connection.close() //Test connection
+        checkVersion()
+    }
+
+    private fun checkVersion() {
+        source.connection.use { connection ->
+            connection.prepareStatement("select version from doxxy_version").use { statement ->
+                statement.executeQuery().use { rs ->
+                    if (!rs.next()) throw IllegalStateException("Found no version in database")
+
+                    val dbVersion = rs.getString("version")
+                    if (dbVersion != version) {
+                        throw IllegalStateException("Database version mismatch, expected $version, database version is $dbVersion")
+                    }
+                }
+            }
+        }
     }
 
     override fun getConnection(): Connection = source.connection

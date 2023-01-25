@@ -1,6 +1,15 @@
-drop table if exists tag, doc, docseealsoreference, doc_mention;
+drop table if exists doxxy_version, tag, doc, docseealsoreference, doc_mention;
 
 create extension if not exists pg_trgm;
+
+create table doxxy_version
+(
+    one_row bool primary key default true check (one_row),
+    version text not null
+);
+
+insert into doxxy_version
+values (true, '2.0'); -- Change in DatabaseSource.kt too
 
 create table Tag
 (
