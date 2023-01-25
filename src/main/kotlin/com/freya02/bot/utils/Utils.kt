@@ -33,12 +33,7 @@ object Utils {
     }
 
     @Contract("null -> false")
-    fun Guild?.isBCGuild(): Boolean {
-        return when {
-            this != null -> idLong == bcGuildId || idLong == Config.config.fakeBCGuildId
-            else -> false
-        }
-    }
+    fun Guild?.isBCGuild(): Boolean = this?.idLong == bcGuildId || this?.idLong == Config.config.fakeBCGuildId
 
     @Contract("null -> false")
     fun Guild?.isJDAGuild(): Boolean = this?.idLong == jdaGuildId || this?.idLong == Config.config.fakeJDAGuildId
