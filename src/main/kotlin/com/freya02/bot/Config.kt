@@ -15,15 +15,16 @@ data class DBConfig(val serverName: String, val portNumber: Int, val user: Strin
 data class Config(val token: String, val dbConfig: DBConfig) {
     companion object {
         private val logger = KotlinLogging.logger { }
-
-        @InstanceSupplier
-        fun supply(): Config {
+        val config: Config by lazy {
             val configPath = Data.getEffectiveConfigPath()
             if (Data.isDevEnvironment) {
                 logger.info("Loading test config")
             }
 
-            return Gson().fromJson(configPath.readText(), Config::class.java)
+            return@lazy Gson().fromJson(configPath.readText(), Config::class.java)
         }
+
+        @InstanceSupplier
+        fun supply(): Config = config
     }
 }
