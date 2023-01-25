@@ -15,7 +15,10 @@ import dev.minn.jda.ktx.messages.reply_
 import net.dv8tion.jda.api.entities.Message.MentionType
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
+import net.dv8tion.jda.api.utils.messages.MessageCreateData
+import net.dv8tion.jda.api.utils.messages.MessageEditData
 import java.util.*
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
 class DocMentionController(
@@ -78,27 +81,27 @@ class DocMentionController(
 
     suspend fun createDocsMenuMessage(
         docMatches: DocMatches,
-        callerId: Long,
-        useDeleteButton: Boolean,
+        caller: UserSnowflake,
         timeoutCallback: suspend () -> Unit
-    ) = MessageCreate {
-        val docsMenu = componentsService.ephemeralStringSelectMenu {
-            placeholder = "Select a doc"
-            addMatchOptions(docMatches)
+    ): MessageCreateData {
+        return MessageCreate {
+            val docsMenu = componentsService.ephemeralStringSelectMenu {
+                placeholder = "Select a doc"
+                addMatchOptions(docMatches)
 
-            timeout(5.minutes, timeoutCallback)
+                constraints += caller
+                timeout(1.minutes, timeoutCallback)
+                bindTo { selectEvent -> onSelectedDoc(selectEvent) }
+            }
 
-            bindTo { selectEvent -> onSelectedDoc(selectEvent) }
-        }
+            val deleteButton = componentsService.messageDeleteButton(caller)
 
-        components += row(docsMenu)
-        if (useDeleteButton) {
-            val deleteButton = componentsService.messageDeleteButton(UserSnowflake.fromId(callerId))
+            components += row(docsMenu)
             components += row(deleteButton)
-        }
 
-        content = "<@$callerId> This message will be deleted in 5 minutes"
-        allowedMentionTypes = EnumSet.noneOf(MentionType::class.java) //No mentions
+            content = "${caller.asMention} This message will be deleted in a minute"
+            allowedMentionTypes = EnumSet.noneOf(MentionType::class.java) //No mentions
+        }
     }
 
     context(KConnection)
@@ -155,10 +158,19 @@ class DocMentionController(
             return
         }
 
-        selectEvent.reply(commonDocsController.getDocMessageData(selectEvent.member!!,
-            ephemeral = false,
-            showCaller = true,
-            cachedDoc = doc
-        )).setEphemeral(false).queue()
+        commonDocsController.getDocMessageData(selectEvent.member!!, ephemeral = false, showCaller = true, cachedDoc = doc)
+            .let { MessageEditData.fromCreateData(it) }
+            .also { selectEvent.editMessage(it).setReplace(true).queue() }
+            .also {
+                //Delete the components of the current message,
+                // we don't want the timeout to execute
+                selectEvent.message.components.flatMap { it.actionComponents }
+                    .mapNotNull { it.id }
+                    .also { componentsService.deleteComponentsById(it) }
+            }
+    }
+
+    companion object {
+        val docsMentionMenuTimeout: Duration = 1.minutes
     }
 }

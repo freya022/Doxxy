@@ -9,6 +9,7 @@ import dev.minn.jda.ktx.generics.getChannel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.entities.Guild
+import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.entities.channel.ChannelType
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel
 import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel
@@ -18,7 +19,6 @@ import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent
 import net.dv8tion.jda.api.exceptions.ErrorHandler
 import net.dv8tion.jda.api.requests.ErrorResponse
 import net.dv8tion.jda.api.utils.TimeUtil
-import java.util.*
 import java.util.concurrent.Executors
 import kotlin.properties.Delegates
 import kotlin.time.Duration.Companion.hours
@@ -26,10 +26,10 @@ import kotlin.time.Duration.Companion.minutes
 
 @CommandMarker
 class DocMentionListener(
-    private val docMentionController: DocMentionController
+    private val docMentionController: DocMentionController,
+    private val docMentionRepository: DocMentionRepository
 ) {
     private val questionEmoji = EmojiUtils.resolveJDAEmoji("question")
-    private val activeMessageIds: MutableSet<Long> = Collections.synchronizedSet(hashSetOf())
 
     private val timeoutScope = getDefaultScope(pool = Executors.newSingleThreadScheduledExecutor { Thread(it).also { t -> t.name = "DocMentionListener timeout thread" } })
 
@@ -69,9 +69,9 @@ class DocMentionListener(
         }
     }
 
-    //  At most one select menu can be active per message
+    //  A select menu can be created once per message per user
     //  Can be created if relative position < 12 and created < 2 hours
-    //  That select menu can be used by anyone and will auto delete after 5 minutes
+    //  That select menu can be used by the caller and will auto delete after 1 minute
     //  Will have to put a small embed to know who used the feature as discord does not show who made the select menu
     @BEventListener
     suspend fun onMessageReactionAdd(event: MessageReactionAddEvent) {
@@ -84,29 +84,29 @@ class DocMentionListener(
         val twoHoursAgoSnowflake = TimeUtil.getDiscordTimestamp(System.currentTimeMillis() - 2.hours.inWholeMilliseconds)
         if (reactedMessageId < twoHoursAgoSnowflake) return //Message is too old
 
-        if (activeMessageIds.add(reactedMessageId)) { //If a menu isn't already active, whoever invoked it
+        docMentionRepository.ifNotUsed(event.messageIdLong, event.userIdLong) {
             val message = event.retrieveMessage().await()
 
             //Check difference of at most 12 messages
             (event.channel as? ThreadChannel)?.let { threadChannel ->
-                if (threadChannel.totalMessageCount - message.approximatePosition > 12) return
+                if (threadChannel.totalMessageCount - message.approximatePosition > 12) return@ifNotUsed
             }
 
             val docMatches = docMentionController.processMentions(message.contentRaw)
-            if (!docMatches.isSufficient()) return
+            if (!docMatches.isSufficient()) return@ifNotUsed
 
             //Setting the message ID after sending it definitely hurts
             val jda = event.jda
             val channelId = event.channel.idLong
             var messageId: Long by Delegates.notNull()
-            docMentionController.createDocsMenuMessage(docMatches, event.userIdLong, useDeleteButton = false, timeoutCallback = {
-                //This is required to run even if the delete button is pressed,
-                // the delete button is disabled so this is fine
-                activeMessageIds.remove(reactedMessageId)
-
-                val channel = jda.getChannel<GuildMessageChannel>(channelId) ?: return@createDocsMenuMessage
-                channel.deleteMessageById(messageId).queue(null, ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE))
-            }).let {
+            docMentionController.createDocsMenuMessage(
+                docMatches,
+                UserSnowflake.fromId(event.userIdLong),
+                timeoutCallback = {
+                    val channel = jda.getChannel<GuildMessageChannel>(channelId) ?: return@createDocsMenuMessage
+                    channel.deleteMessageById(messageId).queue(null, ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE))
+                }
+            ).also {
                 messageId = event.channel.sendMessage(it)
                     .setMessageReference(event.messageIdLong)
                     .mentionRepliedUser(false)

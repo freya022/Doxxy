@@ -1,4 +1,4 @@
-drop table if exists tag, doc, docseealsoreference;
+drop table if exists tag, doc, docseealsoreference, doc_mention;
 
 create extension if not exists pg_trgm;
 
@@ -48,3 +48,11 @@ create table DocSeeAlsoReference
 );
 
 create index see_also_doc_id_index on docseealsoreference (doc_id);
+
+create table doc_mention
+(
+    message_id bigint not null,
+    user_id    bigint not null,
+
+    primary key (message_id, user_id)
+);

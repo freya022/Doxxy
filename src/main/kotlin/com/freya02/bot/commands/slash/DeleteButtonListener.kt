@@ -13,7 +13,7 @@ class DeleteButtonListener {
     @JDAButtonListener(name = DELETE_MESSAGE_BUTTON_LISTENER_NAME)
     suspend fun onDeleteMessageClick(event: ButtonEvent, components: Components) {
         event.deferEdit().queue()
-        event.message.delete().queue()
+        event.hook.deleteOriginal().queue()
         components.deleteComponentsById(event.message.components.flatMap { it.actionComponents }.mapNotNull { it.id })
     }
 

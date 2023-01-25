@@ -43,7 +43,7 @@ class Versions(private val docIndexMap: DocIndexMap) {
     private val lavaPlayerChecker: JitpackVersionChecker =
         JitpackVersionChecker(lastKnownLavaPlayerPath, "Walkyst", "com.github.Walkyst", "lavaplayer-fork")
 
-    @BEventListener
+    @BEventListener(async = true, timeout = -1)
     suspend fun initUpdateLoop(event: FirstReadyEvent, context: BContext) {
         val scheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 
