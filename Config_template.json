@@ -1,5 +1,16 @@
 {
   "token": "",
+  "ownerIds": [
+    9876
+  ],
+  "prefixes": [
+    "prefix"
+  ],
+  "testGuildIds": [
+    1234
+  ],
+  "fakeJDAGuildId": 4321,
+  "fakeBCGuildId": 1234,
   "dbConfig": {
     "serverName": "",
     "portNumber": 0,
