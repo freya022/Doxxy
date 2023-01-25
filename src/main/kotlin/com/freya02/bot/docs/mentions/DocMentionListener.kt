@@ -1,5 +1,6 @@
 package com.freya02.bot.docs.mentions
 
+import com.freya02.bot.Config
 import com.freya02.bot.utils.Utils
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.core.annotations.BEventListener
@@ -28,7 +29,8 @@ import kotlin.time.Duration.Companion.minutes
 @CommandMarker
 class DocMentionListener(
     private val docMentionController: DocMentionController,
-    private val docMentionRepository: DocMentionRepository
+    private val docMentionRepository: DocMentionRepository,
+    private val config: Config
 ) {
     private val questionEmoji = EmojiUtils.resolveJDAEmoji("question")
 
@@ -53,6 +55,8 @@ class DocMentionListener(
         if (!checkChannel(event.guild, event.channel)) return
 
         val contentRaw = event.message.contentRaw
+        if (config.prefixes.any { contentRaw.startsWith(it) }) return //Ignore text commands
+
         val docMatches = docMentionController.processMentions(contentRaw)
         if (!docMatches.isSufficient()) return
 
