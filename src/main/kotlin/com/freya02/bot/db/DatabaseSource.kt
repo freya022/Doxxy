@@ -7,6 +7,7 @@ import com.freya02.botcommands.api.core.annotations.ServiceType
 import com.freya02.botcommands.api.core.db.ConnectionSupplier
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import java.nio.file.Path
 import java.sql.Connection
 import kotlin.io.path.*
 import kotlin.time.Duration.Companion.seconds
@@ -48,24 +49,7 @@ class DatabaseSource(config: Config) : ConnectionSupplier {
                     if (dbVersion != version) {
                         val sqlFolderPath = Path("sql")
                         val suffix = when {
-                            sqlFolderPath.exists() -> {
-                                val hintFiles = sqlFolderPath.walk()
-                                    .filter { it.extension == "sql" }
-                                    .filter {
-                                        val (_, major, minor) = migrationNameRegex.matchEntire(it.name)?.groupValues ?: return@filter false
-                                        val (_, dbMajor, dbMinor) = dbVersionRegex.matchEntire(dbVersion)?.groupValues ?: return@filter false
-
-                                        //Keep if db version is lower than file
-                                        if (dbMajor.toInt() < major.toInt()) return@filter true
-                                        if (dbMinor.toInt() < minor.toInt()) return@filter true
-
-                                        return@filter false
-                                    }
-                                    .joinToString { it.name }
-                                buildString {
-                                    append("\nHint: You should run the following migration scripts: $hintFiles")
-                                }
-                            }
+                            sqlFolderPath.exists() -> buildHintSuffix(sqlFolderPath, dbVersion)
                             else -> ""
                         }
 
@@ -73,6 +57,26 @@ class DatabaseSource(config: Config) : ConnectionSupplier {
                     }
                 }
             }
+        }
+    }
+
+    @OptIn(ExperimentalPathApi::class)
+    private fun buildHintSuffix(sqlFolderPath: Path, dbVersion: String): String {
+        val hintFiles = sqlFolderPath.walk()
+            .filter { it.extension == "sql" }
+            .filter {
+                val (_, major, minor) = migrationNameRegex.matchEntire(it.name)?.groupValues ?: return@filter false
+                val (_, dbMajor, dbMinor) = dbVersionRegex.matchEntire(dbVersion)?.groupValues ?: return@filter false
+
+                //Keep if db version is lower than file
+                if (dbMajor.toInt() < major.toInt()) return@filter true
+                if (dbMinor.toInt() < minor.toInt()) return@filter true
+
+                return@filter false
+            }
+            .joinToString { it.name }
+        return buildString {
+            append("\nHint: You should run the following migration scripts: $hintFiles")
         }
     }
 
