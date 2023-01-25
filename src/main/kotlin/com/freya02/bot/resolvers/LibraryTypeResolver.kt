@@ -20,11 +20,13 @@ class LibraryTypeResolver : ParameterResolver<LibraryTypeResolver, LibraryType>(
             guild.isBCGuild() -> listOf(
                 Command.Choice("BotCommands", LibraryType.BOT_COMMANDS.name),
                 Command.Choice("JDA 5", LibraryType.JDA5.name),
-                Command.Choice("JDA-KTX", LibraryType.JDA_KTX.name)
+                Command.Choice("JDA-KTX", LibraryType.JDA_KTX.name),
+                Command.Choice("LavaPlayer", LibraryType.LAVA_PLAYER.name)
             )
             else -> listOf(
                 Command.Choice("JDA 5", LibraryType.JDA5.name),
-                Command.Choice("JDA-KTX", LibraryType.JDA_KTX.name)
+                Command.Choice("JDA-KTX", LibraryType.JDA_KTX.name),
+                Command.Choice("LavaPlayer", LibraryType.LAVA_PLAYER.name)
             )
         }
     }

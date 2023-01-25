@@ -28,6 +28,7 @@ class Versions(private val docIndexMap: DocIndexMap) {
     private val lastKnownJDAFromBCPath = Data.getVersionPath(VersionType.JDAOfBotCommands)
     private val lastKnownJDA5Path = Data.getVersionPath(VersionType.JDA5)
     private val lastKnownJDAKtxPath = Data.getVersionPath(VersionType.JDAKTX)
+    private val lastKnownLavaPlayerPath = Data.getVersionPath(VersionType.LAVAPLAYER)
     private val jdaDocsFolder = Data.jdaDocsFolder
     private val bcDocsFolder = Data.bcDocsFolder
 
@@ -39,6 +40,8 @@ class Versions(private val docIndexMap: DocIndexMap) {
         MavenVersionChecker(lastKnownJDA5Path, RepoType.MAVEN, "net.dv8tion", "JDA")
     private val jdaKtxChecker: JitpackVersionChecker =
         JitpackVersionChecker(lastKnownJDAKtxPath, "MinnDevelopment", "com.github.MinnDevelopment", "jda-ktx")
+    private val lavaPlayerChecker: JitpackVersionChecker =
+        JitpackVersionChecker(lastKnownLavaPlayerPath, "Walkyst", "com.github.Walkyst", "lavaplayer-fork")
 
     @BEventListener
     suspend fun initUpdateLoop(event: FirstReadyEvent, context: BContext) {
@@ -48,6 +51,7 @@ class Versions(private val docIndexMap: DocIndexMap) {
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDAVersionFromBC() }, 0, 30, TimeUnit.MINUTES)
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDA5Version(context) }, 0, 30, TimeUnit.MINUTES)
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDAKtxVersion() }, 0, 30, TimeUnit.MINUTES)
+        scheduledExecutorService.scheduleWithFixedDelay({ checkLatestLavaPlayerVersion() }, 0, 30, TimeUnit.MINUTES)
 
         //First index for Java's docs, may take some time
         if (docIndexMap[DocSourceType.JAVA]!!.getClassDoc("Object") == null) {
@@ -93,8 +97,8 @@ class Versions(private val docIndexMap: DocIndexMap) {
             }
 
             return changed
-        } catch (e: Exception) {
-            logger.error("An exception occurred while retrieving versions", e)
+        } catch (t: Throwable) {
+            logger.error("An exception occurred while retrieving versions", t)
         }
 
         return false
@@ -108,8 +112,21 @@ class Versions(private val docIndexMap: DocIndexMap) {
                 jdaKtxChecker.saveVersion()
                 logger.info("JDA-KTX version updated to {}", jdaKtxChecker.latest.version)
             }
-        } catch (e: Exception) {
-            logger.error("An exception occurred while retrieving versions", e)
+        } catch (t: Throwable) {
+            logger.error("An exception occurred while retrieving versions", t)
+        }
+    }
+
+    private fun checkLatestLavaPlayerVersion() {
+        try {
+            val changed = lavaPlayerChecker.checkVersion()
+            if (changed) {
+                logger.info("LavaPlayer version changed")
+                lavaPlayerChecker.saveVersion()
+                logger.info("LavaPlayer version updated to {}", lavaPlayerChecker.latest.version)
+            }
+        } catch (t: Throwable) {
+            logger.error("An exception occurred while retrieving versions", t)
         }
     }
 
@@ -121,8 +138,8 @@ class Versions(private val docIndexMap: DocIndexMap) {
                 jdaVersionFromBCChecker.saveVersion()
                 logger.info("BotCommands's JDA version updated to {}", jdaVersionFromBCChecker.latest.version)
             }
-        } catch (e: Exception) {
-            logger.error("An exception occurred while retrieving versions", e)
+        } catch (t: Throwable) {
+            logger.error("An exception occurred while retrieving versions", t)
         }
     }
 
@@ -155,8 +172,8 @@ class Versions(private val docIndexMap: DocIndexMap) {
             }
 
             return changed
-        } catch (e: Exception) {
-            logger.error("An exception occurred while retrieving versions", e)
+        } catch (t: Throwable) {
+            logger.error("An exception occurred while retrieving versions", t)
         }
 
         return false
@@ -170,6 +187,8 @@ class Versions(private val docIndexMap: DocIndexMap) {
         get() = jda5Checker.latest
     val latestJDAKtxVersion: ArtifactInfo
         get() = jdaKtxChecker.latest
+    val latestLavaPlayerVersion: ArtifactInfo
+        get() = lavaPlayerChecker.latest
 
     companion object {
         private val logger = KotlinLogging.logger { }
