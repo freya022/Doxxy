@@ -14,6 +14,9 @@ import kotlin.io.path.notExists
 import kotlin.streams.asSequence
 
 object Utils {
+    const val bcGuildId: Long = 848502702731165738
+    const val jdaGuildId: Long = 125227483518861312
+
     val walker: StackWalker = StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
 
     fun readResource(url: String): String {
@@ -32,13 +35,13 @@ object Utils {
     @Contract("null -> false")
     fun Guild?.isBCGuild(): Boolean {
         return when {
-            this != null -> idLong == 848502702731165738L || idLong == Config.config.fakeBCGuildId
+            this != null -> idLong == bcGuildId || idLong == Config.config.fakeBCGuildId
             else -> false
         }
     }
 
     @Contract("null -> false")
-    fun Guild?.isJDAGuild(): Boolean = this?.idLong == 125227483518861312L || this?.idLong == Config.config.fakeJDAGuildId
+    fun Guild?.isJDAGuild(): Boolean = this?.idLong == jdaGuildId || this?.idLong == Config.config.fakeJDAGuildId
 
     fun Path.deleteRecursively() {
         if (this.notExists()) return
