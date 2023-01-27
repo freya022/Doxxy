@@ -298,7 +298,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         val sort = when {
             query.isNullOrEmpty() -> "order by classname, identifier"
             '#' in query -> "order by similarity(classname, ?) * similarity(identifier_no_args, ?) desc"
-            else -> "order by similarity(concat(classname, '#', identifier_no_args), ?) desc"
+            else -> "order by similarity(identifier_no_args, ?) desc"
         }
 
         val sortArgs = when {
