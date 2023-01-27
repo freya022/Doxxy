@@ -2,10 +2,12 @@ package com.freya02.bot.commands.slash.docs
 
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers.Companion.CLASS_NAME_AUTOCOMPLETE_NAME
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers.Companion.METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME
+import com.freya02.bot.commands.slash.docs.CommonDocsHandlers.Companion.SEARCH_AUTOCOMPLETE_NAME
 import com.freya02.bot.commands.slash.docs.controllers.SlashDocsController
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.index.DocSuggestion
 import com.freya02.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
+import com.freya02.bot.docs.index.DocTypes
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.commands.application.CommandScope
 import com.freya02.botcommands.api.commands.application.GuildApplicationCommandManager
@@ -39,6 +41,27 @@ class DocsCommand(private val docIndexMap: DocIndexMap, private val slashDocsCon
                     function = ::onSlashDocs
                 }
             }
+
+            subcommandGroup("search") {
+                DocSourceType.typesForGuild(manager.guild).forEach { sourceType ->
+                    subcommand(sourceType.cmdName) {
+                        description = "Searches the documentation for a class, a method, a field or anything"
+
+                        generatedOption("sourceType") { sourceType }
+
+                        option(declaredName = "docTypes", optionName = "doc_type") {
+                            description = "Type of docs to look for"
+                        }
+
+                        option("query") {
+                            description = "The docs to search for"
+                            autocompleteReference(SEARCH_AUTOCOMPLETE_NAME)
+                        }
+
+                        function = ::onSlashDocsSearch
+                    }
+                }
+            }
         }
     }
 
@@ -62,6 +85,35 @@ class DocsCommand(private val docIndexMap: DocIndexMap, private val slashDocsCon
         } else {
             slashDocsController.handleFieldDocs(event, className, identifier, docIndex) {
                 return@handleFieldDocs methodOrFieldByClassAutocomplete(docIndex, className, identifier, 100).mapToSuggestions(className)
+            }
+        }
+    }
+
+    @CommandMarker
+    suspend fun onSlashDocsSearch(
+        event: GuildSlashEvent,
+        sourceType: DocSourceType,
+        docTypes: DocTypes,
+        query: String
+    ) {
+        val docIndex = docIndexMap[sourceType]!!
+        when {
+            '(' in query -> {
+                val (className, identifier) = query.split("#")
+                slashDocsController.handleMethodDocs(event, className, identifier, docIndex) {
+                    searchAutocomplete(docIndex, query, docTypes = docTypes).mapToSuggestions()
+                }
+            }
+
+            '#' in query -> {
+                val (className, identifier) = query.split("#")
+                slashDocsController.handleFieldDocs(event, className, identifier, docIndex) {
+                    searchAutocomplete(docIndex, query, docTypes = docTypes).mapToSuggestions()
+                }
+            }
+
+            else -> slashDocsController.handleClass(event, query, docIndex) {
+                searchAutocomplete(docIndex, query, docTypes = docTypes).mapToSuggestions()
             }
         }
     }

@@ -5,6 +5,7 @@ import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocResolveResult
 import com.freya02.bot.docs.index.DocSearchResult
+import com.freya02.bot.docs.index.DocTypes
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.annotations.AppOption
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
@@ -119,6 +120,16 @@ class CommonDocsHandlers(
     }
 
     @CacheAutocomplete
+    @AutocompleteHandler(name = SEARCH_AUTOCOMPLETE_NAME, showUserInput = false)
+    suspend fun onSearchAutocomplete(
+        event: CommandAutoCompleteInteractionEvent,
+        @CompositeKey @AppOption docTypes: DocTypes,
+        @CompositeKey @AppOption sourceType: DocSourceType
+    ): List<Choice> = withDocIndex(sourceType) {
+        searchAutocomplete(this, event.focusedOption.value, docTypes = docTypes).searchResultToChoices { it.humanClassIdentifier }
+    }
+
+    @CacheAutocomplete
     @AutocompleteHandler(name = RESOLVE_AUTOCOMPLETE_NAME, showUserInput = false)
     suspend fun onResolveAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
@@ -151,6 +162,7 @@ class CommonDocsHandlers(
         const val FIELD_NAME_BY_CLASS_AUTOCOMPLETE_NAME = "FieldCommand: fieldNameByClass"
         const val ANY_FIELD_NAME_AUTOCOMPLETE_NAME = "CommonDocsHandlers: anyFieldName"
         const val METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME = "CommonDocsHandlers: methodNameOrFieldByClass"
+        const val SEARCH_AUTOCOMPLETE_NAME = "CommonDocsHandlers: search"
         const val RESOLVE_AUTOCOMPLETE_NAME = "CommonDocsHandlers: resolve"
 
         const val SEE_ALSO_SELECT_LISTENER_NAME = "CommonDocsHandlers: seeAlso"
@@ -164,6 +176,7 @@ class CommonDocsHandlers(
             FIELD_NAME_BY_CLASS_AUTOCOMPLETE_NAME,
             ANY_FIELD_NAME_AUTOCOMPLETE_NAME,
             METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME,
+            SEARCH_AUTOCOMPLETE_NAME,
             RESOLVE_AUTOCOMPLETE_NAME
         )
 

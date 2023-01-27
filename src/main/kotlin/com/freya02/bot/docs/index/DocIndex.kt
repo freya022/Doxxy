@@ -42,6 +42,53 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         return CachedField(sourceType, embed, seeAlsoReferences, javadocLink, sourceLink)
     }
 
+    //TODO move to #findAnySignatures
+    override suspend fun searchSignatures(query: String?, limit: Int, docTypes: DocTypes): List<DocSearchResult> {
+        return when (docTypes) {
+            DocTypes.CLASS -> getClasses(query, limit).map { DocSearchResult(it, it, it) }
+            DocTypes.FIELD -> findAnySignatures(query, limit, DocType.FIELD)
+            DocTypes.METHOD -> findAnySignatures(query, limit, DocType.METHOD)
+            DocTypes.ANY -> {
+                if (query.isNullOrEmpty()) {
+                    return searchSignatures(query, limit, DocTypes.CLASS)
+                }
+
+                database.preparedStatement("""
+                    (select d.classname                as full_identifier,
+                            d.classname                as human_identifier,
+                            d.classname                as human_class_identifier,
+                            similarity(d.classname, ?) as overall_similarity
+                     from doc d
+                     where d.type = 1
+                       and d.source_id = ?
+                     order by overall_similarity desc
+                     limit 25)
+                    union
+                    (select concat(classname, '#', identifier)  as full_identifier,
+                            d.human_identifier,
+                            d.human_class_identifier,
+                            similarity(d.identifier_no_args, ?) as overall_similarity
+                     from doc d
+                     where d.type = any (ARRAY [2, 3])
+                       and d.source_id = ?
+                     order by overall_similarity desc
+                     limit 25)
+                    order by overall_similarity desc
+                    limit 25;
+                """.trimIndent(), readOnly = true) {
+                    executeQuery(query, sourceType.id, query, sourceType.id).map {
+                        DocSearchResult(
+                            it["full_identifier"],
+                            it["human_identifier"],
+                            it["human_class_identifier"]
+                        )
+                    }
+                }
+            }
+            else -> throw IllegalArgumentException("Unknown doc types combination: $docTypes")
+        }
+    }
+
     override suspend fun findAnySignatures(query: String?, limit: Int, vararg docTypes: DocType): List<DocSearchResult> = getAllSignatures(query, limit, *docTypes)
 
     override suspend fun findSignaturesIn(className: String, query: String?, vararg docTypes: DocType, limit: Int): List<DocSearchResult> {
