@@ -4,6 +4,7 @@ import com.freya02.bot.docs.cached.CachedClass
 import com.freya02.bot.docs.cached.CachedDoc
 import com.freya02.bot.docs.cached.CachedField
 import com.freya02.bot.docs.cached.CachedMethod
+import com.freya02.bot.utils.QueryUnion
 import com.freya02.botcommands.api.core.db.Database
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.DocsSession
@@ -42,52 +43,8 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         return CachedField(sourceType, embed, seeAlsoReferences, javadocLink, sourceLink)
     }
 
-    //TODO move to #findAnySignatures
-    override suspend fun searchSignatures(query: String?, limit: Int, docTypes: DocTypes): List<DocSearchResult> {
-        return when (docTypes) {
-            DocTypes.CLASS -> getClasses(query, limit).map { DocSearchResult(it, it, it) }
-            DocTypes.FIELD -> findAnySignatures(query, limit, DocType.FIELD)
-            DocTypes.METHOD -> findAnySignatures(query, limit, DocType.METHOD)
-            DocTypes.ANY -> {
-                if (query.isNullOrEmpty()) {
-                    return searchSignatures(query, limit, DocTypes.CLASS)
-                }
-
-                database.preparedStatement("""
-                    (select d.classname                as full_identifier,
-                            d.classname                as human_identifier,
-                            d.classname                as human_class_identifier,
-                            similarity(d.classname, ?) as overall_similarity
-                     from doc d
-                     where d.type = 1
-                       and d.source_id = ?
-                     order by overall_similarity desc
-                     limit 25)
-                    union
-                    (select concat(classname, '#', identifier)  as full_identifier,
-                            d.human_identifier,
-                            d.human_class_identifier,
-                            similarity(d.identifier_no_args, ?) as overall_similarity
-                     from doc d
-                     where d.type = any (ARRAY [2, 3])
-                       and d.source_id = ?
-                     order by overall_similarity desc
-                     limit 25)
-                    order by overall_similarity desc
-                    limit 25;
-                """.trimIndent(), readOnly = true) {
-                    executeQuery(query, sourceType.id, query, sourceType.id).map {
-                        DocSearchResult(
-                            it["full_identifier"],
-                            it["human_identifier"],
-                            it["human_class_identifier"]
-                        )
-                    }
-                }
-            }
-            else -> throw IllegalArgumentException("Unknown doc types combination: $docTypes")
-        }
-    }
+    override suspend fun searchSignatures(query: String?, limit: Int, docTypes: DocTypes): List<DocSearchResult> =
+        findAnySignatures(query, limit, *docTypes.toTypedArray())
 
     override suspend fun findAnySignatures(query: String?, limit: Int, vararg docTypes: DocType): List<DocSearchResult> = getAllSignatures(query, limit, *docTypes)
 
@@ -293,37 +250,93 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         }
     }
 
-    private suspend fun getAllSignatures(query: String?, limit: Int, vararg docTypes: DocType): List<DocSearchResult> {
-        @Language("PostgreSQL", prefix = "select * from doc ")
-        val sort = when {
-            query.isNullOrEmpty() -> "order by classname, identifier"
-            '#' in query -> "order by similarity(classname, ?) * similarity(identifier_no_args, ?) desc"
-            else -> "order by similarity(identifier_no_args, ?) desc"
+    private fun QueryUnion.addClassSearchQuery(query: String, limit: Int) {
+        return addQuery("""
+            select d.classname                as full_identifier,
+                   d.classname                as human_identifier,
+                   d.classname                as human_class_identifier,
+                   similarity(d.classname, ?) as overall_similarity
+            from doc d
+            where source_id = ?
+              and type = ?
+            order by overall_similarity desc
+            limit ?
+        """.trimIndent(), query, sourceType.id, DocType.CLASS.id, limit)
+    }
+
+    private fun QueryUnion.addSearchQuery(query: String, limit: Int, docTypes: List<DocType>) {
+        if (DocType.CLASS in docTypes) {
+            throw IllegalArgumentException("Cannot use this method on classes")
         }
 
-        val sortArgs = when {
-            query.isNullOrEmpty() -> arrayOf()
+        @Language("PostgreSQL", prefix = "select ", suffix = " as overall_similarity from doc")
+        val similarityFormula = when {
+            '#' in query -> "similarity(classname, ?) * similarity(identifier_no_args, ?)"
+            else -> "similarity(identifier_no_args, ?)"
+        }
+
+        val similarityParams = when {
             '#' in query -> arrayOf(query.substringBefore('#'), query.substringAfter('#').substringBefore('('))
             else -> arrayOf(query)
         }
 
-        database.preparedStatement(
-            """
-                select concat(classname, '#', identifier) as full_identifier, human_identifier, human_class_identifier
+        return addQuery("""
+            select concat(classname, '#', identifier) as full_identifier,
+                   human_identifier,
+                   human_class_identifier,
+                   $similarityFormula as overall_similarity
+            from doc
+            where source_id = ?
+              and type = any (?)
+            order by overall_similarity desc
+            limit ?
+        """.trimIndent(), *similarityParams, sourceType.id, docTypes.map { it.id }.toTypedArray(), limit)
+    }
+
+    private fun constructSignatureSearchQuery(query: String?, limit: Int, docTypes: List<DocType>): QueryUnion {
+        if (query.isNullOrEmpty()) { //If there's no query then pick alphabetical order of whatever the user wants to search
+            return QueryUnion("""
+                select coalesce(full_identifier, classname)        as full_identifier,
+                       coalesce(human_identifier, classname)       as human_identifier,
+                       coalesce(human_class_identifier, classname) as human_class_identifier
                 from doc
+                         natural left join doc_view
                 where source_id = ?
-                  and type = any(?)
-                $sort
+                  and type = any (?)
+                order by full_identifier
                 limit ?
-            """.trimIndent()) {
-            return executeQuery(sourceType.id, docTypes.map { it.id }.toTypedArray(), *sortArgs, limit)
-                .map {
-                    DocSearchResult(
-                        it["full_identifier"],
-                        it["human_identifier"],
-                        it["human_class_identifier"]
-                    )
-                }
+            """.trimIndent(), sourceType.id, docTypes.map { it.id }.toTypedArray(), limit)
+        }
+
+        //Union the searches for classes and identifiers
+        val queryUnion = QueryUnion().apply {
+            val identifierTypes = docTypes - DocType.CLASS
+            //Search identifiers
+            if (identifierTypes.isNotEmpty()) addSearchQuery(query, limit, identifierTypes)
+
+            //Search classes
+            if (DocType.CLASS in docTypes) addClassSearchQuery(query, limit)
+        }
+
+        //Order and limit the whole union if it is a union
+        return when {
+            queryUnion.isUnion() -> queryUnion.addSuffix("order by overall_similarity desc limit ?", limit)
+            else -> queryUnion
+        }
+    }
+
+    private suspend fun getAllSignatures(query: String?, limit: Int, vararg docTypes: DocType): List<DocSearchResult> {
+        if (docTypes.isEmpty()) throw IllegalArgumentException("Must have at least one doc type")
+
+        val (finalQuery, searchParams) = constructSignatureSearchQuery(query, limit, docTypes.asList())
+        database.preparedStatement(finalQuery) {
+            return executeQuery(*searchParams.toTypedArray()).map {
+                DocSearchResult(
+                    it["full_identifier"],
+                    it["human_identifier"],
+                    it["human_class_identifier"]
+                )
+            }
         }
     }
 

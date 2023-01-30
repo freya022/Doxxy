@@ -1,3 +1,4 @@
+drop materialized view if exists doc_view cascade;
 drop table if exists doxxy_version, tag, doc, docseealsoreference;
 
 create extension if not exists pg_trgm;
@@ -57,3 +58,10 @@ create table DocSeeAlsoReference
 );
 
 create index see_also_doc_id_index on docseealsoreference (doc_id);
+
+create materialized view doc_view as
+select id, concat(classname, '#', identifier) as full_identifier
+from doc
+where identifier is not null;
+
+--TODO refresh trigger
