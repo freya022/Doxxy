@@ -17,6 +17,11 @@
         <appender-ref ref="STDOUT"/>
     </logger>
 
+    <!-- Logging queries, set to trace to enable -->
+    <logger name="com.freya02.botcommands.api.core.db.KPreparedStatement" level="info" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+
     <root level="debug">
         <appender-ref ref="STDOUT"/>
     </root>
