@@ -56,6 +56,10 @@ internal class DocIndexWriter(
                 throw RuntimeException("An exception occurred while reading the docs of '$className' at '$classUrl'", e)
             }
         }
+
+        preparedStatement("refresh materialized view doc_view") {
+            executeUpdate(*emptyArray())
+        }
     }
 
     context(Transaction)
