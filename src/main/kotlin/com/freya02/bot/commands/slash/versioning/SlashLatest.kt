@@ -28,7 +28,7 @@ class SlashLatest(private val versions: Versions, private val components: Compon
                     builder.addBCVersion()
                     builder.addBlankField(true)
                 }
-                builder.addJDA5Version()
+                builder.addJDAVersion()
                 builder.addJDAKtxVersion()
                 when {
                     event.guild.isJDAGuild() -> builder.addLavaPlayerVersion()
@@ -36,7 +36,7 @@ class SlashLatest(private val versions: Versions, private val components: Compon
                 }
             }
             LibraryType.BOT_COMMANDS -> builder.addBCVersion()
-            LibraryType.JDA5 -> builder.addJDA5Version()
+            LibraryType.JDA -> builder.addJDAVersion()
             LibraryType.JDA_KTX -> builder.addJDAKtxVersion()
             LibraryType.LAVA_PLAYER -> builder.addLavaPlayerVersion()
         }
@@ -46,8 +46,8 @@ class SlashLatest(private val versions: Versions, private val components: Compon
             .queue()
     }
 
-    private fun EmbedBuilder.addJDA5Version() {
-        addField("JDA 5", "`" + versions.latestJDA5Version.version + "`", true)
+    private fun EmbedBuilder.addJDAVersion() {
+        addField("JDA", "`" + versions.latestJDAVersion.version + "`", true)
     }
 
     private fun EmbedBuilder.addJDAKtxVersion() {

@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit
 class Versions(private val docIndexMap: DocIndexMap) {
     private val lastKnownBotCommandsPath = Data.getVersionPath(VersionType.BotCommands)
     private val lastKnownJDAFromBCPath = Data.getVersionPath(VersionType.JDAOfBotCommands)
-    private val lastKnownJDA5Path = Data.getVersionPath(VersionType.JDA5)
+    private val lastKnownJDAPath = Data.getVersionPath(VersionType.JDA)
     private val lastKnownJDAKtxPath = Data.getVersionPath(VersionType.JDAKTX)
     private val lastKnownLavaPlayerPath = Data.getVersionPath(VersionType.LAVAPLAYER)
     private val jdaDocsFolder = Data.jdaDocsFolder
@@ -36,8 +36,8 @@ class Versions(private val docIndexMap: DocIndexMap) {
         MavenVersionChecker(lastKnownBotCommandsPath, RepoType.MAVEN, "io.github.freya022", "BotCommands")
     private val jdaVersionFromBCChecker: MavenBranchProjectDependencyVersionChecker =
         MavenBranchProjectDependencyVersionChecker(lastKnownJDAFromBCPath, "freya022", "BotCommands", "JDA", "master")
-    private val jda5Checker: MavenVersionChecker =
-        MavenVersionChecker(lastKnownJDA5Path, RepoType.MAVEN, "net.dv8tion", "JDA")
+    private val jdaChecker: MavenVersionChecker =
+        MavenVersionChecker(lastKnownJDAPath, RepoType.MAVEN, "net.dv8tion", "JDA")
     private val jdaKtxChecker: JitpackVersionChecker =
         JitpackVersionChecker(lastKnownJDAKtxPath, "MinnDevelopment", "com.github.MinnDevelopment", "jda-ktx")
     private val lavaPlayerChecker: JitpackVersionChecker =
@@ -49,7 +49,7 @@ class Versions(private val docIndexMap: DocIndexMap) {
 
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestBCVersion(context) }, 0, 30, TimeUnit.MINUTES)
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDAVersionFromBC() }, 0, 30, TimeUnit.MINUTES)
-        scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDA5Version(context) }, 0, 30, TimeUnit.MINUTES)
+        scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDAVersion(context) }, 0, 30, TimeUnit.MINUTES)
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestJDAKtxVersion() }, 0, 30, TimeUnit.MINUTES)
         scheduledExecutorService.scheduleWithFixedDelay({ checkLatestLavaPlayerVersion() }, 0, 30, TimeUnit.MINUTES)
 
@@ -64,36 +64,36 @@ class Versions(private val docIndexMap: DocIndexMap) {
         }
     }
 
-    private fun checkLatestJDA5Version(context: BContext?): Boolean {
+    private fun checkLatestJDAVersion(context: BContext?): Boolean {
         try {
-            val changed = jda5Checker.checkVersion()
+            val changed = jdaChecker.checkVersion()
 
             if (changed) {
-                logger.info("JDA 5 version changed")
+                logger.info("JDA version changed")
 
-                logger.trace("Downloading JDA 5 javadocs")
-                jda5Checker.latest.downloadMavenJavadoc().withTemporaryFile { tempZip ->
-                    logger.trace("Extracting JDA 5 javadocs")
+                logger.trace("Downloading JDA javadocs")
+                jdaChecker.latest.downloadMavenJavadoc().withTemporaryFile { tempZip ->
+                    logger.trace("Extracting JDA javadocs")
                     VersionsUtils.replaceWithZipContent(tempZip, jdaDocsFolder, "html")
                 }
 
-                jda5Checker.latest.downloadMavenSources().withTemporaryFile { tempZip ->
-                    logger.trace("Extracting JDA 5 sources")
+                jdaChecker.latest.downloadMavenSources().withTemporaryFile { tempZip ->
+                    logger.trace("Extracting JDA sources")
                     VersionsUtils.extractZip(tempZip, jdaDocsFolder, "java")
                 }
 
                 val sourceUrl = GithubUtils.getLatestReleaseHash("DV8FromTheWorld", "JDA")
                     ?.let { hash -> "https://github.com/DV8FromTheWorld/JDA/blob/${hash.hash}/src/main/java/" }
 
-                logger.trace("Invalidating JDA 5 index")
+                logger.trace("Invalidating JDA index")
                 runBlocking { docIndexMap.refreshAndInvalidateIndex(DocSourceType.JDA, ReindexData(sourceUrl)) }
                 for (handlerName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
                     context?.invalidateAutocompleteCache(handlerName)
                 }
 
-                jda5Checker.saveVersion()
+                jdaChecker.saveVersion()
 
-                logger.info("JDA 5 version updated to {}", jda5Checker.latest.version)
+                logger.info("JDA version updated to {}", jdaChecker.latest.version)
             }
 
             return changed
@@ -183,8 +183,8 @@ class Versions(private val docIndexMap: DocIndexMap) {
         get() = bcChecker.latest
     val jdaVersionFromBotCommands: ArtifactInfo
         get() = jdaVersionFromBCChecker.latest
-    val latestJDA5Version: ArtifactInfo
-        get() = jda5Checker.latest
+    val latestJDAVersion: ArtifactInfo
+        get() = jdaChecker.latest
     val latestJDAKtxVersion: ArtifactInfo
         get() = jdaKtxChecker.latest
     val latestLavaPlayerVersion: ArtifactInfo

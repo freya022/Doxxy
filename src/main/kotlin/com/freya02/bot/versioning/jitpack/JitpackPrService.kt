@@ -12,7 +12,7 @@ class JitpackPrService {
 
     fun getPullRequest(libraryType: LibraryType, pullNumber: Int): PullRequest? = when (libraryType) {
         LibraryType.BOT_COMMANDS -> bcPullRequestCache.pullRequests[pullNumber]
-        LibraryType.JDA5 -> jdaPullRequestCache.pullRequests[pullNumber]
+        LibraryType.JDA -> jdaPullRequestCache.pullRequests[pullNumber]
         LibraryType.JDA_KTX -> jdaKtxPullRequestCache.pullRequests[pullNumber]
         LibraryType.LAVA_PLAYER -> lavaPlayerPullRequestCache.pullRequests[pullNumber]
         else -> throw IllegalArgumentException()
@@ -20,7 +20,7 @@ class JitpackPrService {
 
     fun getPullRequests(libraryType: LibraryType): Collection<PullRequest> = when (libraryType) {
         LibraryType.BOT_COMMANDS -> bcPullRequestCache.pullRequests.valueCollection()
-        LibraryType.JDA5 -> jdaPullRequestCache.pullRequests.valueCollection()
+        LibraryType.JDA -> jdaPullRequestCache.pullRequests.valueCollection()
         LibraryType.JDA_KTX -> jdaKtxPullRequestCache.pullRequests.valueCollection()
         LibraryType.LAVA_PLAYER -> lavaPlayerPullRequestCache.pullRequests.valueCollection()
         else -> throw IllegalArgumentException()

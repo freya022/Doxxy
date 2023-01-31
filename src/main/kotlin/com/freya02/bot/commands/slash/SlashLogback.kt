@@ -25,13 +25,13 @@ class SlashLogback : ApplicationCommand() {
 
         val message = MessageCreate {
             val logbackXml = when (libraryType) {
-                LibraryType.JDA5 -> Utils.readResource("/logback_configs/JDA.xml")
+                LibraryType.JDA -> Utils.readResource("/logback_configs/JDA.xml")
                 LibraryType.BOT_COMMANDS -> Utils.readResource("/logback_configs/BotCommands.xml")
                 else -> throw IllegalArgumentException("Unexpected LibraryType: $libraryType")
             }
 
             val wikiLink = when (libraryType) {
-                LibraryType.JDA5 -> "https://jda.wiki/setup/logging/"
+                LibraryType.JDA -> "https://jda.wiki/setup/logging/"
                 LibraryType.BOT_COMMANDS -> "https://freya022.github.io/BotCommands-Wiki/Logging/"
                 else -> throw IllegalArgumentException("Unexpected LibraryType: $libraryType")
             }

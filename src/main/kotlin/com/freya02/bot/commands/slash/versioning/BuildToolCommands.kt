@@ -37,7 +37,7 @@ class BuildToolCommands(private val versions: Versions, private val components: 
                     versions.jdaVersionFromBotCommands,
                     versions.latestBotCommandsVersion
                 )
-                LibraryType.JDA5 -> DependencySupplier.formatJDA5(scriptType, buildToolType, versions.latestJDA5Version)
+                LibraryType.JDA -> DependencySupplier.formatJDA(scriptType, buildToolType, versions.latestJDAVersion)
                 LibraryType.JDA_KTX -> DependencySupplier.formatJitpack(scriptType, buildToolType, versions.latestJDAKtxVersion)
                 LibraryType.LAVA_PLAYER -> DependencySupplier.formatJitpack(scriptType, buildToolType, versions.latestLavaPlayerVersion)
             }
