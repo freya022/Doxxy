@@ -1,6 +1,5 @@
 package com.freya02.bot.resolvers
 
-import com.freya02.bot.docs.index.DocType
 import com.freya02.bot.docs.index.DocTypes
 import com.freya02.botcommands.api.BContext
 import com.freya02.botcommands.api.parameters.ParameterResolver
@@ -18,10 +17,10 @@ class DocTypesResolver : ParameterResolver<DocTypesResolver, DocTypes>(DocTypes:
 
     override fun getPredefinedChoices(guild: Guild?): Collection<Choice> {
         return listOf(
-            Choice("Class", DocTypes(DocType.CLASS).getRaw()),
-            Choice("Method", DocTypes(DocType.METHOD).getRaw()),
-            Choice("Field", DocTypes(DocType.FIELD).getRaw()),
-            Choice("Any", DocTypes(DocType.CLASS, DocType.METHOD, DocType.FIELD).getRaw())
+            Choice("Class", DocTypes.CLASS.getRaw()),
+            Choice("Method", DocTypes.METHOD.getRaw()),
+            Choice("Field", DocTypes.FIELD.getRaw()),
+            Choice("Any", DocTypes.ANY.getRaw())
         )
     }
 
