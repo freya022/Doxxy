@@ -49,16 +49,15 @@ class DocsCommand(private val docIndexMap: DocIndexMap, private val slashDocsCon
 
                         generatedOption("sourceType") { sourceType }
 
-                        option(declaredName = "docTypes", optionName = "doc_type") {
-                            description = "Type of docs to look for"
-                        }
+                        //Required for autocomplete
+                        generatedOption(declaredName = "docTypes") { DocTypes.ANY }
 
                         option("query") {
                             description = "The docs to search for"
                             autocompleteReference(SEARCH_AUTOCOMPLETE_NAME)
                         }
 
-                        function = ::onSlashDocsSearch
+                        function = slashDocsController::onSearchSlashCommand
                     }
                 }
             }
@@ -85,35 +84,6 @@ class DocsCommand(private val docIndexMap: DocIndexMap, private val slashDocsCon
         } else {
             slashDocsController.handleFieldDocs(event, className, identifier, docIndex) {
                 return@handleFieldDocs methodOrFieldByClassAutocomplete(docIndex, className, identifier, 100).mapToSuggestions(className)
-            }
-        }
-    }
-
-    @CommandMarker
-    suspend fun onSlashDocsSearch(
-        event: GuildSlashEvent,
-        sourceType: DocSourceType,
-        docTypes: DocTypes,
-        query: String
-    ) {
-        val docIndex = docIndexMap[sourceType]!!
-        when {
-            '(' in query -> {
-                val (className, identifier) = query.split("#")
-                slashDocsController.handleMethodDocs(event, className, identifier, docIndex) {
-                    searchAutocomplete(docIndex, query, docTypes = docTypes).mapToSuggestions()
-                }
-            }
-
-            '#' in query -> {
-                val (className, identifier) = query.split("#")
-                slashDocsController.handleFieldDocs(event, className, identifier, docIndex) {
-                    searchAutocomplete(docIndex, query, docTypes = docTypes).mapToSuggestions()
-                }
-            }
-
-            else -> slashDocsController.handleClass(event, query, docIndex) {
-                searchAutocomplete(docIndex, query, docTypes = docTypes).mapToSuggestions()
             }
         }
     }
