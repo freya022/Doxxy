@@ -63,5 +63,3 @@ create materialized view doc_view as
 select id, concat(classname, '#', identifier) as full_identifier
 from doc
 where identifier is not null;
-
---TODO refresh trigger
