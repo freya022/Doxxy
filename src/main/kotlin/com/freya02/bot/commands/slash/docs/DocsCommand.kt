@@ -20,7 +20,7 @@ class DocsCommand(private val docIndexMap: DocIndexMap, private val slashDocsCon
     @AppDeclaration
     fun declare(manager: GuildApplicationCommandManager) {
         manager.slashCommand("docs", CommandScope.GUILD) {
-            description = "Shows the documentation for a class, a method or a field"
+            description = "Shows the documentation"
 
             DocSourceType.typesForGuild(manager.guild).forEach { sourceType ->
                 subcommand(sourceType.cmdName) {
@@ -45,7 +45,7 @@ class DocsCommand(private val docIndexMap: DocIndexMap, private val slashDocsCon
             subcommandGroup("search") {
                 DocSourceType.typesForGuild(manager.guild).forEach { sourceType ->
                     subcommand(sourceType.cmdName) {
-                        description = "Searches the documentation for a class, a method, a field or anything"
+                        description = "Searches the documentation for anything"
 
                         generatedOption("sourceType") { sourceType }
 
