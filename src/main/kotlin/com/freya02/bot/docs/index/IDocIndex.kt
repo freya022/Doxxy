@@ -28,8 +28,6 @@ interface IDocIndex {
         }
     }
 
-    suspend fun searchSignatures(query: String?, limit: Int = 25, docTypes: DocTypes): List<DocSearchResult>
-
     suspend fun findAnySignatures(query: String?, limit: Int = 25, docTypes: DocTypes): List<DocSearchResult>
     suspend fun findAnyMethodSignatures(query: String? = null, limit: Int = 25): List<DocSearchResult> = findAnySignatures(query, limit, DocTypes.METHOD)
     suspend fun findAnyFieldSignatures(query: String? = null, limit: Int = 25): List<DocSearchResult> = findAnySignatures(query, limit, DocTypes.FIELD)

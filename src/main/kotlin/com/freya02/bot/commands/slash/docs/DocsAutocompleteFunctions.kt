@@ -29,4 +29,4 @@ suspend fun anyFieldNameAutocomplete(index: DocIndex, query: String, limit: Int 
     index.findAnyFieldSignatures(query, limit)
 
 suspend fun searchAutocomplete(index: DocIndex, query: String, limit: Int = 25, docTypes: DocTypes) =
-    index.searchSignatures(query, limit, docTypes)
+    index.findAnySignatures(query, limit, docTypes)

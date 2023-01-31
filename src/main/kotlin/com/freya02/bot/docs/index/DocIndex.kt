@@ -43,9 +43,6 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         return CachedField(sourceType, embed, seeAlsoReferences, javadocLink, sourceLink)
     }
 
-    override suspend fun searchSignatures(query: String?, limit: Int, docTypes: DocTypes): List<DocSearchResult> =
-        findAnySignatures(query, limit, docTypes)
-
     override suspend fun findAnySignatures(query: String?, limit: Int, docTypes: DocTypes): List<DocSearchResult> {
         if (docTypes.isEmpty()) throw IllegalArgumentException("Must have at least one doc type")
         val (finalQuery, searchParams) = constructSignatureSearchQuery(query, limit, docTypes)
