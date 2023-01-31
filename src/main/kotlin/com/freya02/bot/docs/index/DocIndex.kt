@@ -127,7 +127,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         // TextChannel#getIterableHistory()
         val tokens = query.split('#').toMutableList()
         var currentClass: String = tokens.removeFirst()
-        var docsOf: String? = currentClass
+        var docsOf: String = currentClass
 
         database.transactional {
             tokens.forEach {
@@ -147,12 +147,10 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             }
         }
 
-        return docsOf?.let { docsOf ->
-            when {
-                '(' in docsOf -> getMethodDoc(docsOf)
-                '#' in docsOf -> getFieldDoc(docsOf)
-                else -> getClassDoc(docsOf)
-            }
+        return when {
+            '(' in docsOf -> getMethodDoc(docsOf)
+            '#' in docsOf -> getFieldDoc(docsOf)
+            else -> getClassDoc(docsOf)
         }
     }
 
