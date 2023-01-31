@@ -28,6 +28,8 @@ class DocTypes(private val set: Set<DocType>): Set<DocType> by set {
         val FIELD = DocTypes(DocType.FIELD)
         val ANY = DocTypes(DocType.CLASS, DocType.METHOD, DocType.FIELD)
 
+        val IDENTIFIERS = DocTypes(DocType.FIELD, DocType.METHOD)
+
         fun fromRaw(raw: Long): DocTypes {
             val set = EnumSet.noneOf(DocType::class.java)
             for (type in DocType.values()) {

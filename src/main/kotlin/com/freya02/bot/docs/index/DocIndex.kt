@@ -44,11 +44,11 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
     }
 
     override suspend fun searchSignatures(query: String?, limit: Int, docTypes: DocTypes): List<DocSearchResult> =
-        findAnySignatures(query, limit, *docTypes.toTypedArray())
+        findAnySignatures(query, limit, docTypes)
 
-    override suspend fun findAnySignatures(query: String?, limit: Int, vararg docTypes: DocType): List<DocSearchResult> {
+    override suspend fun findAnySignatures(query: String?, limit: Int, docTypes: DocTypes): List<DocSearchResult> {
         if (docTypes.isEmpty()) throw IllegalArgumentException("Must have at least one doc type")
-        val (finalQuery, searchParams) = constructSignatureSearchQuery(query, limit, docTypes.asList())
+        val (finalQuery, searchParams) = constructSignatureSearchQuery(query, limit, docTypes)
         return database.preparedStatement(finalQuery) {
             executeQuery(*searchParams.toTypedArray()).map {
                 DocSearchResult(
@@ -277,7 +277,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         """.trimIndent(), query, sourceType.id, DocType.CLASS.id, limit)
     }
 
-    private fun QueryUnion.addSearchQuery(query: String, limit: Int, docTypes: List<DocType>) {
+    private fun QueryUnion.addSearchQuery(query: String, limit: Int, docTypes: Set<DocType>) {
         if (DocType.CLASS in docTypes) {
             throw IllegalArgumentException("Cannot use this method on classes")
         }
@@ -306,7 +306,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         """.trimIndent(), *similarityParams, sourceType.id, docTypes.map { it.id }.toTypedArray(), limit)
     }
 
-    private fun constructSignatureSearchQuery(query: String?, limit: Int, docTypes: List<DocType>): QueryUnion {
+    private fun constructSignatureSearchQuery(query: String?, limit: Int, docTypes: Set<DocType>): QueryUnion {
         if (query.isNullOrEmpty()) { //If there's no query then pick alphabetical order of whatever the user wants to search
             return QueryUnion("""
                 select coalesce(full_identifier, classname)        as full_identifier,

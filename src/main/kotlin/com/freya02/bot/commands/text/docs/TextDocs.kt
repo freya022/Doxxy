@@ -5,7 +5,7 @@ import com.freya02.bot.commands.text.docs.controllers.TextDocsController
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.index.DocSuggestion
 import com.freya02.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
-import com.freya02.bot.docs.index.DocType
+import com.freya02.bot.docs.index.DocTypes
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.commands.prefixed.BaseCommandEvent
 import com.freya02.botcommands.api.commands.prefixed.TextCommand
@@ -30,7 +30,7 @@ class TextDocs(
 
         val suggestions = when {
             '#' in query || '.' in query -> { // Method or field
-                docIndex.findAnySignatures(query, 25, DocType.FIELD, DocType.METHOD).mapToSuggestions()
+                docIndex.findAnySignatures(query, 25, DocTypes.IDENTIFIERS).mapToSuggestions()
             }
             else -> {
                 docIndex.getClassDoc(query)?.let {
