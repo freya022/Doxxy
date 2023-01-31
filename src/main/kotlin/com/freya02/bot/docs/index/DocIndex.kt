@@ -46,7 +46,19 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
     override suspend fun searchSignatures(query: String?, limit: Int, docTypes: DocTypes): List<DocSearchResult> =
         findAnySignatures(query, limit, *docTypes.toTypedArray())
 
-    override suspend fun findAnySignatures(query: String?, limit: Int, vararg docTypes: DocType): List<DocSearchResult> = getAllSignatures(query, limit, *docTypes)
+    override suspend fun findAnySignatures(query: String?, limit: Int, vararg docTypes: DocType): List<DocSearchResult> {
+        if (docTypes.isEmpty()) throw IllegalArgumentException("Must have at least one doc type")
+        val (finalQuery, searchParams) = constructSignatureSearchQuery(query, limit, docTypes.asList())
+        return database.preparedStatement(finalQuery) {
+            executeQuery(*searchParams.toTypedArray()).map {
+                DocSearchResult(
+                    it["full_identifier"],
+                    it["human_identifier"],
+                    it["human_class_identifier"]
+                )
+            }
+        }
+    }
 
     override suspend fun findSignaturesIn(className: String, query: String?, vararg docTypes: DocType, limit: Int): List<DocSearchResult> {
         val typeCheck = docTypes.joinToString(" or ") { "doc.type = ${it.id}" }
@@ -181,6 +193,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                     // as parameter names breaks the resolver
                     .map { DocResolveResult(it, it) }
             }
+
             else -> getClasses(currentClass).map { DocResolveResult(it, it) }
         }
     }
@@ -322,21 +335,6 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         return when {
             queryUnion.isUnion() -> queryUnion.addSuffix("order by overall_similarity desc limit ?", limit)
             else -> queryUnion
-        }
-    }
-
-    private suspend fun getAllSignatures(query: String?, limit: Int, vararg docTypes: DocType): List<DocSearchResult> {
-        if (docTypes.isEmpty()) throw IllegalArgumentException("Must have at least one doc type")
-
-        val (finalQuery, searchParams) = constructSignatureSearchQuery(query, limit, docTypes.asList())
-        database.preparedStatement(finalQuery) {
-            return executeQuery(*searchParams.toTypedArray()).map {
-                DocSearchResult(
-                    it["full_identifier"],
-                    it["human_identifier"],
-                    it["human_class_identifier"]
-                )
-            }
         }
     }
 
