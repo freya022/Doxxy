@@ -57,9 +57,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         }
     }
 
-    override suspend fun findSignaturesIn(className: String, query: String?, vararg docTypes: DocType, limit: Int): List<DocSearchResult> {
-        val typeCheck = docTypes.joinToString(" or ") { "doc.type = ${it.id}" }
-
+    override suspend fun findSignaturesIn(className: String, query: String?, docTypes: DocTypes, limit: Int): List<DocSearchResult> {
         @Language("PostgreSQL", prefix = "select * from doc ")
         val sort = when {
             query.isNullOrEmpty() -> "order by identifier"
@@ -75,13 +73,13 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                 select identifier, human_identifier, human_class_identifier
                 from doc
                 where source_id = ?
-                  and ($typeCheck)
+                  and type = any (?)
                   and classname = ?
                 $sort
                 limit ?
                 """.trimIndent()
         ) {
-            return executeQuery(sourceType.id, className, *sortArgs, limit)
+            return executeQuery(sourceType.id, docTypes.map { it.id }.toTypedArray(), className, *sortArgs, limit)
                 .transformEach {
                     DocSearchResult(
                         it["identifier"],
@@ -116,12 +114,6 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             executeQuery(sourceType.id, DocType.CLASS.id, *sortArgs).transformEach { it["classname"] }
         }
     }
-
-    override suspend fun getClassesWithMethods(query: String?): List<String> =
-        getClassNamesWithChildren(DocType.METHOD, query)
-
-    override suspend fun getClassesWithFields(query: String?): List<String> =
-        getClassNamesWithChildren(DocType.FIELD, query)
 
     override suspend fun resolveDoc(query: String): CachedDoc? {
         // TextChannel#getIterableHistory()
@@ -181,7 +173,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         //Do a classic search on the latest return type + optionally last token (might be a method or a field)
         return when {
             lastToken != null -> {
-                findSignaturesIn(currentClass, lastToken, DocType.METHOD, DocType.FIELD)
+                findSignaturesIn(currentClass, lastToken, DocTypes.IDENTIFIERS)
                     //Current class is added because findSignaturesIn doesn't return "identifier", not "full_signature"
                     .map { "$currentClass#${it.identifierOrFullIdentifier}" }
                     //Not showing the parameter names makes it easier for the user to continue using autocompletion with shift+tab
