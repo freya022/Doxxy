@@ -113,9 +113,9 @@
             <version>2.3.5</version>
         </dependency>
         <dependency>
-            <groupId>com.github.freya022</groupId>
+            <groupId>com.github.DV8FromTheWorld</groupId>
             <artifactId>JDA</artifactId>
-            <version>232ab9e219</version>
+            <version>30ba384de8</version>
             <exclusions>
                 <exclusion>
                     <groupId>club.minnced</groupId>
