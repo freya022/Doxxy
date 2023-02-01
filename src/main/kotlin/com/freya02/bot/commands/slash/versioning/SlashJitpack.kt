@@ -189,6 +189,7 @@ class SlashJitpack(
 
         option("buildToolType") {
             description = "The build tool to generate the script for"
+            usePredefinedChoices = true
         }
     }
 

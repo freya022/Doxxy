@@ -23,6 +23,7 @@ class SlashSearch(private val slashDocsController: SlashDocsController) {
 
                     option(declaredName = "docTypes", optionName = "doc_type") {
                         description = "Type of docs to look for"
+                        usePredefinedChoices = true
                     }
 
                     option("query") {

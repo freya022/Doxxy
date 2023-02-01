@@ -81,6 +81,7 @@ class BuildToolCommands(private val versions: Versions, private val components: 
 
                 option("scriptType") {
                     description = "Whether to show the full build script or only the dependencies"
+                    usePredefinedChoices = true
                 }
 
                 generatedOption("buildToolType") {
@@ -89,6 +90,7 @@ class BuildToolCommands(private val versions: Versions, private val components: 
 
                 option("libraryType") {
                     description = "Type of library"
+                    usePredefinedChoices = true
                 }
 
                 function = ::onSlashBuildTool

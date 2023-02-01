@@ -18,7 +18,7 @@ class SlashLatest(private val versions: Versions, private val components: Compon
     @JDASlashCommand(name = "latest", description = "Shows the latest version of the library")
     fun onSlashLatest(
         event: GuildSlashEvent,
-        @AppOption(description = "Type of library") libraryType: LibraryType?
+        @AppOption(description = "Type of library", usePredefinedChoices = true) libraryType: LibraryType?
     ) {
         val builder = EmbedBuilder().setTitle("Latest versions")
 

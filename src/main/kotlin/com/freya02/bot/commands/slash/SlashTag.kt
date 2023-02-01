@@ -259,7 +259,7 @@ class SlashTag(
     @JDASlashCommand(scope = CommandScope.GUILD, name = "tags", subcommand = "list", description = "Creates a tag in this guild")
     suspend fun listTags(
         event: GuildSlashEvent,
-        @AppOption(name = "sorting", description = "Type of tag sorting") criteria: TagCriteria = TagCriteria.NAME
+        @AppOption(name = "sorting", description = "Type of tag sorting", usePredefinedChoices = true) criteria: TagCriteria = TagCriteria.NAME
     ) {
         val totalTags = tagDB.getTotalTags(event.guild.idLong)
         val paginator = PaginatorBuilder(components)

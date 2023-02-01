@@ -54,7 +54,10 @@ object Main {
 
             val config = Config.config
             BBuilder.newBuilder({
-                devMode = Data.isDevEnvironment
+                if (Data.isDevEnvironment) {
+                    disableExceptionsInDMs = true
+                    disableAutocompleteCache = true
+                }
 
                 addOwners(*config.ownerIds.toLongArray())
 
