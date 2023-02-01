@@ -117,12 +117,6 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         }
     }
 
-    override suspend fun getClassesWithMethods(query: String?): List<String> =
-        getClassNamesWithChildren(DocType.METHOD, query)
-
-    override suspend fun getClassesWithFields(query: String?): List<String> =
-        getClassNamesWithChildren(DocType.FIELD, query)
-
     override suspend fun resolveDoc(query: String): CachedDoc? {
         // TextChannel#getIterableHistory()
         val tokens = query.split('#').toMutableList()
