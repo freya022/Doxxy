@@ -325,32 +325,6 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         }
     }
 
-    private suspend fun getClassNamesWithChildren(docType: DocType, query: String?): List<String> {
-        @Language("PostgreSQL", prefix = "select * from doc ")
-        val sort = when {
-            query.isNullOrEmpty() -> "order by classname"
-            else -> "order by similarity(classname, ?) desc"
-        }
-
-        val sortArgs = when {
-            query.isNullOrEmpty() -> arrayOf()
-            else -> arrayOf(query)
-        }
-
-        database.preparedStatement(
-            """
-                select classname
-                from doc
-                where source_id = ?
-                  and type = ?
-                group by classname
-                $sort
-                limit 25
-            """.trimIndent()) {
-            return executeQuery(sourceType.id, docType.id, *sortArgs).map { it.getString("classname") }
-        }
-    }
-
     companion object {
         private val logger = KotlinLogging.logger { }
     }
