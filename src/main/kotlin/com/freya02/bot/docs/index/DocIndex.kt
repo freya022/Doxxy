@@ -62,7 +62,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             from doc
                      natural left join doc_view
             where source_id = ?
-            order by overall_similarity desc, full_identifier
+            order by overall_similarity desc nulls last, full_identifier
             limit ?;
         """.trimIndent()) {
             executeQuery(*similarityScoreQueryParams, sourceType.id, limit).map {
@@ -226,7 +226,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                            natural left join doc_view
                   where source_id = ?) as d
             where overall_similarity > 0.22 and not full_identifier = any (?) --Remove previous results
-            order by type, overall_similarity desc, full_identifier --Class > Method > Field, then similarity
+            order by type, overall_similarity desc nulls last, full_identifier --Class > Method > Field, then similarity
             limit ?;
         """.trimIndent()) {
             executeQuery(*similarityScoreQueryParams, sourceType.id, results.map { it.identifierOrFullIdentifier }.toTypedArray(), 25 - results.size).map {
