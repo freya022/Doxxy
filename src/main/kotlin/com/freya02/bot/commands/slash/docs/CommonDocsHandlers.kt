@@ -74,6 +74,15 @@ class CommonDocsHandlers(
     }
 
     @CacheAutocomplete
+    @AutocompleteHandler(name = EXPERIMENTAL_SEARCH_AUTOCOMPLETE_NAME, showUserInput = false)
+    suspend fun onExperimentalSearchAutocomplete(
+        event: CommandAutoCompleteInteractionEvent,
+        @CompositeKey @AppOption sourceType: DocSourceType
+    ): List<Choice> = withDocIndex(sourceType) {
+        experimentalSearchAutocomplete(this, event.focusedOption.value).searchResultToChoices { it.humanClassIdentifier }
+    }
+
+    @CacheAutocomplete
     @AutocompleteHandler(name = RESOLVE_AUTOCOMPLETE_NAME, showUserInput = false)
     suspend fun onResolveAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
@@ -101,6 +110,7 @@ class CommonDocsHandlers(
         const val CLASS_NAME_AUTOCOMPLETE_NAME = "CommonDocsHandlers: className"
         const val METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME = "CommonDocsHandlers: methodNameOrFieldByClass"
         const val SEARCH_AUTOCOMPLETE_NAME = "CommonDocsHandlers: search"
+        const val EXPERIMENTAL_SEARCH_AUTOCOMPLETE_NAME = "CommonDocsHandlers: experimentalSearch"
         const val RESOLVE_AUTOCOMPLETE_NAME = "CommonDocsHandlers: resolve"
 
         const val SEE_ALSO_SELECT_LISTENER_NAME = "CommonDocsHandlers: seeAlso"
@@ -109,6 +119,7 @@ class CommonDocsHandlers(
             CLASS_NAME_AUTOCOMPLETE_NAME,
             METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME,
             SEARCH_AUTOCOMPLETE_NAME,
+            EXPERIMENTAL_SEARCH_AUTOCOMPLETE_NAME,
             RESOLVE_AUTOCOMPLETE_NAME
         )
 

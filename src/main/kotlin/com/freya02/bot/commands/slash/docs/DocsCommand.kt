@@ -1,6 +1,7 @@
 package com.freya02.bot.commands.slash.docs
 
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers.Companion.CLASS_NAME_AUTOCOMPLETE_NAME
+import com.freya02.bot.commands.slash.docs.CommonDocsHandlers.Companion.EXPERIMENTAL_SEARCH_AUTOCOMPLETE_NAME
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers.Companion.METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers.Companion.SEARCH_AUTOCOMPLETE_NAME
 import com.freya02.bot.commands.slash.docs.controllers.SlashDocsController
@@ -55,6 +56,26 @@ class DocsCommand(private val docIndexMap: DocIndexMap, private val slashDocsCon
                         option("query") {
                             description = "The docs to search for"
                             autocompleteReference(SEARCH_AUTOCOMPLETE_NAME)
+                        }
+
+                        function = slashDocsController::onSearchSlashCommand
+                    }
+                }
+            }
+
+            subcommandGroup("exp") {
+                DocSourceType.typesForGuild(manager.guild).forEach { sourceType ->
+                    subcommand(sourceType.cmdName) {
+                        description = "Experimental - Searches the documentation for anything, with a custom sort"
+
+                        generatedOption("sourceType") { sourceType }
+
+                        //Required for autocomplete
+                        generatedOption(declaredName = "docTypes") { DocTypes.ANY }
+
+                        option("query") {
+                            description = "The docs to search for"
+                            autocompleteReference(EXPERIMENTAL_SEARCH_AUTOCOMPLETE_NAME)
                         }
 
                         function = slashDocsController::onSearchSlashCommand

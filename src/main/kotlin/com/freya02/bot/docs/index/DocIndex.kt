@@ -4,7 +4,6 @@ import com.freya02.bot.docs.cached.CachedClass
 import com.freya02.bot.docs.cached.CachedDoc
 import com.freya02.bot.docs.cached.CachedField
 import com.freya02.bot.docs.cached.CachedMethod
-import com.freya02.bot.utils.QueryUnion
 import com.freya02.botcommands.api.core.db.Database
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.DocsSession
@@ -201,6 +200,42 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             }
 
             else -> getClasses(currentClass).map { DocResolveResult(it, it) }
+        }
+    }
+
+    override suspend fun experimentalSearch(query: String): List<DocSearchResult> {
+        val results = findAnySignatures(query, limit = 5, DocTypes.ANY)
+        @Language("PostgreSQL", prefix = "select ", suffix = " from doc natural left join doc_view")
+        val similarityScoreQuery = when {
+            '#' in query -> "similarity(?, classname) * similarity(?, identifier_no_args)"
+            else -> "similarity(?, coalesce(identifier_no_args, classname))"
+        }
+        val similarityScoreQueryParams = when {
+            '#' in query -> arrayOf(query.substringBefore('#'), query.substringAfter('#'))
+            else -> arrayOf(query)
+        }
+
+        return results + database.preparedStatement("""
+            select *
+            from (select coalesce(full_identifier, classname)        as full_identifier,
+                         coalesce(human_identifier, classname)       as human_identifier,
+                         coalesce(human_class_identifier, classname) as human_class_identifier,
+                         $similarityScoreQuery                       as overall_similarity,
+                         type
+                  from doc
+                           natural left join doc_view
+                  where source_id = ?) as d
+            where overall_similarity > 0.22 and not full_identifier = any (?) --Remove previous results
+            order by type, overall_similarity desc, full_identifier --Class > Method > Field, then similarity
+            limit ?;
+        """.trimIndent()) {
+            executeQuery(*similarityScoreQueryParams, sourceType.id, results.map { it.identifierOrFullIdentifier }.toTypedArray(), 25 - results.size).map {
+                DocSearchResult(
+                    it["full_identifier"],
+                    it["human_identifier"],
+                    it["human_class_identifier"]
+                )
+            }
         }
     }
 

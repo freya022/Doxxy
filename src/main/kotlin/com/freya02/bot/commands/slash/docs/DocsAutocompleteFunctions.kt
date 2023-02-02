@@ -12,3 +12,6 @@ suspend fun methodOrFieldByClassAutocomplete(index: DocIndex, className: String,
 
 suspend fun searchAutocomplete(index: DocIndex, query: String, limit: Int = 25, docTypes: DocTypes) =
     index.findAnySignatures(query, limit, docTypes)
+
+suspend fun experimentalSearchAutocomplete(index: DocIndex, query: String) =
+    index.experimentalSearch(query)

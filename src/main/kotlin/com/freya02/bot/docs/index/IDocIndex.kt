@@ -34,6 +34,8 @@ interface IDocIndex {
     suspend fun findMethodAndFieldSignaturesIn(className: String, query: String? = null, limit: Int = 25) =
         findSignaturesIn(className, query, DocTypes.IDENTIFIERS, limit = limit)
 
+    suspend fun experimentalSearch(query: String): List<DocSearchResult>
+
     suspend fun getClasses(query: String? = null, limit: Int = 25): List<String>
 
     suspend fun resolveDoc(query: String): CachedDoc?
