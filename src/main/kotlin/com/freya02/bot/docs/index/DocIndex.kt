@@ -44,35 +44,28 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
 
     override suspend fun findAnySignatures(query: String, limit: Int, docTypes: DocTypes): List<DocSearchResult> {
         if (docTypes.isEmpty()) throw IllegalArgumentException("Must have at least one doc type")
-        @Language("PostgreSQL", prefix = "select ", suffix = " from doc natural left join doc_view")
-        val similarityScoreQuery = when {
-            '#' in query -> "similarity(?, classname) * similarity(?, identifier_no_args)"
-            else -> "similarity(?, coalesce(identifier_no_args, classname))"
-        }
-        val similarityScoreQueryParams = when {
-            '#' in query -> arrayOf(query.substringBefore('#'), query.substringAfter('#'))
-            else -> arrayOf(query)
-        }
 
-        return database.preparedStatement("""
-            select coalesce(full_identifier, classname)        as full_identifier,
-                   coalesce(human_identifier, classname)       as human_identifier,
-                   coalesce(human_class_identifier, classname) as human_class_identifier,
-                   $similarityScoreQuery                       as overall_similarity
-            from doc
-                     natural left join doc_view
-            where source_id = ?
-            order by overall_similarity desc nulls last, full_identifier
-            limit ?;
-        """.trimIndent()) {
-            executeQuery(*similarityScoreQueryParams, sourceType.id, limit).map {
-                DocSearchResult(
-                    it["full_identifier"],
-                    it["human_identifier"],
-                    it["human_class_identifier"]
-                )
+        return withSimilarityScoreMethod(query) { similarityScoreQuery, similarityScoreQueryParams ->
+            database.preparedStatement("""
+                select coalesce(full_identifier, classname)        as full_identifier,
+                       coalesce(human_identifier, classname)       as human_identifier,
+                       coalesce(human_class_identifier, classname) as human_class_identifier,
+                       $similarityScoreQuery                       as overall_similarity
+                from doc
+                         natural left join doc_view
+                where source_id = ?
+                order by overall_similarity desc nulls last, full_identifier
+                limit ?;
+            """.trimIndent()) {
+                executeQuery(*similarityScoreQueryParams, sourceType.id, limit).map {
+                    DocSearchResult(
+                        it["full_identifier"],
+                        it["human_identifier"],
+                        it["human_class_identifier"]
+                    )
+                }
             }
-        }
+        } ?: return emptyList()
     }
 
     override suspend fun findSignaturesIn(className: String, query: String?, docTypes: DocTypes, limit: Int): List<DocSearchResult> {
@@ -205,38 +198,31 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
 
     override suspend fun experimentalSearch(query: String): List<DocSearchResult> {
         val results = findAnySignatures(query, limit = 5, DocTypes.ANY)
-        @Language("PostgreSQL", prefix = "select ", suffix = " from doc natural left join doc_view")
-        val similarityScoreQuery = when {
-            '#' in query -> "similarity(?, classname) * similarity(?, identifier_no_args)"
-            else -> "similarity(?, coalesce(identifier_no_args, classname))"
-        }
-        val similarityScoreQueryParams = when {
-            '#' in query -> arrayOf(query.substringBefore('#'), query.substringAfter('#'))
-            else -> arrayOf(query)
-        }
 
-        return results + database.preparedStatement("""
-            select *
-            from (select coalesce(full_identifier, classname)        as full_identifier,
-                         coalesce(human_identifier, classname)       as human_identifier,
-                         coalesce(human_class_identifier, classname) as human_class_identifier,
-                         $similarityScoreQuery                       as overall_similarity,
-                         type
-                  from doc
-                           natural left join doc_view
-                  where source_id = ?) as d
-            where overall_similarity > 0.22 and not full_identifier = any (?) --Remove previous results
-            order by type, overall_similarity desc nulls last, full_identifier --Class > Method > Field, then similarity
-            limit ?;
-        """.trimIndent()) {
-            executeQuery(*similarityScoreQueryParams, sourceType.id, results.map { it.identifierOrFullIdentifier }.toTypedArray(), 25 - results.size).map {
-                DocSearchResult(
-                    it["full_identifier"],
-                    it["human_identifier"],
-                    it["human_class_identifier"]
-                )
+        return withSimilarityScoreMethod(query) { similarityScoreQuery, similarityScoreQueryParams ->
+            results + database.preparedStatement("""
+                select *
+                from (select coalesce(full_identifier, classname)        as full_identifier,
+                             coalesce(human_identifier, classname)       as human_identifier,
+                             coalesce(human_class_identifier, classname) as human_class_identifier,
+                             $similarityScoreQuery                       as overall_similarity,
+                             type
+                      from doc
+                               natural left join doc_view
+                      where source_id = ?) as d
+                where overall_similarity > 0.22 and not full_identifier = any (?) --Remove previous results
+                order by type, overall_similarity desc nulls last, full_identifier --Class > Method > Field, then similarity
+                limit ?;
+            """.trimIndent()) {
+                executeQuery(*similarityScoreQueryParams, sourceType.id, results.map { it.identifierOrFullIdentifier }.toTypedArray(), 25 - results.size).map {
+                    DocSearchResult(
+                        it["full_identifier"],
+                        it["human_identifier"],
+                        it["human_class_identifier"]
+                    )
+                }
             }
-        }
+        } ?: emptyList()
     }
 
     suspend fun reindex(reindexData: ReindexData): DocIndex {
@@ -259,6 +245,31 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         System.gc() //Very effective
 
         return this
+    }
+
+    private suspend fun withSimilarityScoreMethod(
+        query: String,
+        block: suspend (String, Array<out Any>) -> List<DocSearchResult>
+    ): List<DocSearchResult>? {
+        val matchResult = queryRegex.matchEntire(query) ?: return null
+        val (_, classname, identifier) = matchResult.groupValues
+
+        //TODO finish
+        @Language("PostgreSQL", prefix = "select ", suffix = " from doc natural left join doc_view")
+        val similarityScoreQuery = when {
+            classname.isNotBlank() && identifier.isNotBlank() -> "similarity(?, classname) * similarity(?, identifier_no_args)"
+            classname.isNotBlank() -> "similarity(?, classname)"
+            identifier.isNotBlank() -> "similarity(?, identifier_no_args)"
+            else -> "0" //No input
+        }
+        val similarityScoreQueryParams = when {
+            classname.isNotBlank() && identifier.isNotBlank() -> arrayOf(classname, identifier)
+            classname.isNotBlank() -> arrayOf(classname)
+            identifier.isNotBlank() -> arrayOf(identifier)
+            else -> arrayOf()
+        }
+
+        return block(similarityScoreQuery, similarityScoreQueryParams)
     }
 
     private suspend fun findDoc(
@@ -306,5 +317,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
 
     companion object {
         private val logger = KotlinLogging.logger { }
+
+        private val queryRegex = Regex("""^(\w*)#?(\w*)""")
     }
 }
