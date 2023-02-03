@@ -20,8 +20,8 @@ import kotlin.time.Duration.Companion.minutes
 
 @CommandMarker
 class SlashInfo(private val context: BContext) : ApplicationCommand() {
-    private val userCountCountdown = UpdateCountdown(5.minutes)
-    private var userCount: Int = 0
+    private val combinedMemberCountCountdown = UpdateCountdown(5.minutes)
+    private var combinedMemberCount: Int = 0
 
     @JDASlashCommand(scope = CommandScope.GLOBAL_NO_DM, name = "info", description = "Gives info on the bot")
     suspend fun onSlashInfo(event: GuildSlashEvent) {
@@ -95,8 +95,8 @@ class SlashInfo(private val context: BContext) : ApplicationCommand() {
                 }
 
                 field {
-                    name = "Users"
-                    value = "${getUserCount()}"
+                    name = "Members"
+                    value = "${getCombinedMemberCount()}"
                     inline = true
                 }
             }
@@ -105,15 +105,15 @@ class SlashInfo(private val context: BContext) : ApplicationCommand() {
         }).queue()
     }
 
-    private suspend fun getUserCount(): Int {
-        if (userCountCountdown.needsUpdate()) {
-            userCount = context.jda.guilds
+    private suspend fun getCombinedMemberCount(): Int {
+        if (combinedMemberCountCountdown.needsUpdate()) {
+            combinedMemberCount = context.jda.guilds
                 .map { it.retrieveMetaData() }
                 .let { RestAction.allOf(it) }
                 .await()
                 .sumOf { it.approximateMembers }
         }
 
-        return userCount
+        return combinedMemberCount
     }
 }
