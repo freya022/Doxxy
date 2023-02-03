@@ -18,10 +18,7 @@ import com.freya02.botcommands.api.core.annotations.BService
 import com.freya02.botcommands.api.core.events.FirstReadyEvent
 import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.events.getDefaultScope
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import mu.KotlinLogging
 import java.util.concurrent.Executors
 import kotlin.time.Duration
@@ -75,7 +72,9 @@ class Versions(private val context: BContext, private val docIndexMap: DocIndexM
     private inline fun CoroutineScope.scheduleWithFixedDelay(duration: Duration, desc: String, crossinline block: suspend () -> Unit) {
         launch {
             try {
-                block()
+                withTimeout(10.minutes) {
+                    block()
+                }
             } catch (e: Throwable) {
                 logger.error("An error occurred while checking latest $desc version", e)
             }
