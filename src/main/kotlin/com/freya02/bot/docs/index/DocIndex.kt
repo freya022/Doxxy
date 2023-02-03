@@ -198,8 +198,10 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                       from doc
                                natural left join doc_view
                       where source_id = ?) as d
-                where overall_similarity > 0.22 and not full_identifier = any (?) --Remove previous results
-                order by type, overall_similarity desc nulls last, full_identifier --Class > Method > Field, then similarity
+                where overall_similarity > 0.22
+                  and not full_identifier = any (?) --Remove previous results
+                order by case when not 'Guild#' like '%#' then type end,     --Don't order by type if the query asks for identifiers of a class 
+                         overall_similarity desc nulls last, full_identifier --Class > Method > Field, then similarity
                 limit ?;
             """.trimIndent()) {
                 executeQuery(*similarityScoreQueryParams, sourceType.id, results.map { it.fullIdentifier }.toTypedArray(), 25 - results.size)
@@ -235,18 +237,24 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         block: suspend (String, Array<out Any>) -> List<DocSearchResult>
     ): List<DocSearchResult>? {
         val matchResult = queryRegex.matchEntire(query) ?: return null
-        val (_, classname, identifier) = matchResult.groupValues
+        val (entireMatch, classname, identifier) = matchResult.groupValues
 
         @Language("PostgreSQL", prefix = "select ", suffix = " from doc")
         val similarityScoreQuery = when {
+            //Guild#updateCommands, find with both columns
             classname.isNotBlank() && identifier.isNotBlank() -> "similarity(?, classname) * similarity(?, identifier_no_args)"
-            classname.isNotBlank() -> "similarity(?, classname)"
+            //Guild#, find all methods of that class
+            classname.isNotBlank() && '#' in entireMatch -> "similarity(?, classname)"
+            //updateCommands or Guild, get the best similarity between class and identifier
+            classname.isNotBlank() -> "greatest(similarity(?, classname), similarity(?, identifier_no_args))"
+            //#updateCommands, get the best similarity in identifiers
             identifier.isNotBlank() -> "similarity(?, identifier_no_args)"
             else -> "0" //No input
         }
         val similarityScoreQueryParams = when {
             classname.isNotBlank() && identifier.isNotBlank() -> arrayOf(classname, identifier)
-            classname.isNotBlank() -> arrayOf(classname)
+            classname.isNotBlank() && '#' in entireMatch -> arrayOf(classname)
+            classname.isNotBlank() -> arrayOf(classname, classname)
             identifier.isNotBlank() -> arrayOf(identifier)
             else -> arrayOf()
         }
