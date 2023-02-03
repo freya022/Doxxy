@@ -98,8 +98,8 @@ class CommonDocsHandlers(
 
     private fun Iterable<String>.toChoices() = this.map { Choice(it, it) }
     private fun Iterable<DocSearchResult>.searchResultToChoices(nameExtractor: (DocSearchResult) -> String) = this
-        .filter { it.identifierOrFullIdentifier.length <= Choice.MAX_STRING_VALUE_LENGTH }
-        .map { Choice(nameExtractor(it), it.identifierOrFullIdentifier) }
+        .filter { it.fullIdentifier.length <= Choice.MAX_STRING_VALUE_LENGTH }
+        .map { Choice(nameExtractor(it), it.fullIdentifier) }
     private fun Iterable<DocResolveResult>.resolveResultToChoices() = this
         .filter { it.value.length <= Choice.MAX_STRING_VALUE_LENGTH }
         .map { Choice(it.name, it.value) }

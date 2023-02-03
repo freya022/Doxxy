@@ -100,11 +100,11 @@ class DocsCommand(private val docIndexMap: DocIndexMap, private val slashDocsCon
             }
         } else if (identifier.contains("(")) { //prob a method
             slashDocsController.handleMethodDocs(event, className, identifier, docIndex) {
-                return@handleMethodDocs methodOrFieldByClassAutocomplete(docIndex, className, identifier, 100).mapToSuggestions(className)
+                return@handleMethodDocs methodOrFieldByClassAutocomplete(docIndex, className, identifier, 100).mapToSuggestions()
             }
         } else {
             slashDocsController.handleFieldDocs(event, className, identifier, docIndex) {
-                return@handleFieldDocs methodOrFieldByClassAutocomplete(docIndex, className, identifier, 100).mapToSuggestions(className)
+                return@handleFieldDocs methodOrFieldByClassAutocomplete(docIndex, className, identifier, 100).mapToSuggestions()
             }
         }
     }

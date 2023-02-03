@@ -108,7 +108,7 @@ class SlashDocsController(private val commonDocsController: CommonDocsController
         setCallback { buttonEvent, entry ->
             event.hook.deleteOriginal().queue()
 
-            val identifier = entry.identifier
+            val identifier = entry.fullIdentifier
             val doc = runBlocking {
                 when {
                     '(' in identifier -> docIndex.getMethodDoc(identifier)

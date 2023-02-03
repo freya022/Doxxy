@@ -57,13 +57,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                 order by overall_similarity desc nulls last, full_identifier
                 limit ?;
             """.trimIndent()) {
-                executeQuery(*similarityScoreQueryParams, sourceType.id, limit).map {
-                    DocSearchResult(
-                        it["full_identifier"],
-                        it["human_identifier"],
-                        it["human_class_identifier"]
-                    )
-                }
+                executeQuery(*similarityScoreQueryParams, sourceType.id, limit).map { DocSearchResult(it) }
             }
         } ?: return emptyList()
     }
@@ -81,8 +75,8 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         }
 
         database.preparedStatement("""
-                select identifier, human_identifier, human_class_identifier
-                from doc
+                select as full_identifier, human_identifier, human_class_identifier
+                from doc natural join doc_view
                 where source_id = ?
                   and type = any (?)
                   and classname = ?
@@ -91,13 +85,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                 """.trimIndent()
         ) {
             return executeQuery(sourceType.id, docTypes.map { it.id }.toTypedArray(), className, *sortArgs, limit)
-                .transformEach {
-                    DocSearchResult(
-                        it["identifier"],
-                        it["human_identifier"],
-                        it["human_class_identifier"],
-                    )
-                }
+                .map { DocSearchResult(it) }
         }
     }
 
@@ -122,7 +110,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             $limitingSort
             """.trimIndent()
         ) {
-            executeQuery(sourceType.id, DocType.CLASS.id, *sortArgs).transformEach { it["classname"] }
+            executeQuery(sourceType.id, DocType.CLASS.id, *sortArgs).map { it["classname"] }
         }
     }
 
@@ -186,7 +174,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             lastToken != null -> {
                 findSignaturesIn(currentClass, lastToken, DocTypes.IDENTIFIERS)
                     //Current class is added because findSignaturesIn doesn't return "identifier", not "full_signature"
-                    .map { "$currentClass#${it.identifierOrFullIdentifier}" }
+                    .map { it.fullIdentifier }
                     //Not showing the parameter names makes it easier for the user to continue using autocompletion with shift+tab
                     // as parameter names breaks the resolver
                     .map { DocResolveResult(it, it) }
@@ -214,13 +202,8 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                 order by type, overall_similarity desc nulls last, full_identifier --Class > Method > Field, then similarity
                 limit ?;
             """.trimIndent()) {
-                executeQuery(*similarityScoreQueryParams, sourceType.id, results.map { it.identifierOrFullIdentifier }.toTypedArray(), 25 - results.size).map {
-                    DocSearchResult(
-                        it["full_identifier"],
-                        it["human_identifier"],
-                        it["human_class_identifier"]
-                    )
-                }
+                executeQuery(*similarityScoreQueryParams, sourceType.id, results.map { it.fullIdentifier }.toTypedArray(), 25 - results.size)
+                    .map { DocSearchResult(it) }
             }
         } ?: emptyList()
     }
