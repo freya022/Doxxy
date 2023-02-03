@@ -1,6 +1,8 @@
 package com.freya02.bot.commands.slash
 
+import com.freya02.bot.versioning.github.UpdateCountdown
 import com.freya02.botcommands.api.BCInfo
+import com.freya02.botcommands.api.BContext
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.CommandScope
@@ -11,11 +13,16 @@ import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.MessageCreate
 import net.dv8tion.jda.api.JDAInfo
 import net.dv8tion.jda.api.interactions.components.buttons.Button
+import net.dv8tion.jda.api.requests.RestAction
 import net.dv8tion.jda.api.utils.TimeFormat
 import java.lang.management.ManagementFactory
+import kotlin.time.Duration.Companion.minutes
 
 @CommandMarker
-class SlashInfo : ApplicationCommand() {
+class SlashInfo(private val context: BContext) : ApplicationCommand() {
+    private val combinedMemberCountCountdown = UpdateCountdown(5.minutes)
+    private var combinedMemberCount: Int = 0
+
     @JDASlashCommand(scope = CommandScope.GLOBAL_NO_DM, name = "info", description = "Gives info on the bot")
     suspend fun onSlashInfo(event: GuildSlashEvent) {
         event.deferReply(true).queue()
@@ -80,9 +87,33 @@ class SlashInfo : ApplicationCommand() {
                     value = "${event.jda.gatewayPing} ms"
                     inline = true
                 }
+
+                field {
+                    name = "Guild"
+                    value = "${event.jda.guildCache.size() + event.jda.unavailableGuilds.size}"
+                    inline = true
+                }
+
+                field {
+                    name = "Members"
+                    value = "${getCombinedMemberCount()}"
+                    inline = true
+                }
             }
 
             components += row(Button.link("https://github.com/freya022/Doxxy", "Source"))
         }).queue()
+    }
+
+    private suspend fun getCombinedMemberCount(): Int {
+        if (combinedMemberCountCountdown.needsUpdate()) {
+            combinedMemberCount = context.jda.guilds
+                .map { it.retrieveMetaData() }
+                .let { RestAction.allOf(it) }
+                .await()
+                .sumOf { it.approximateMembers }
+        }
+
+        return combinedMemberCount
     }
 }
