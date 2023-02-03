@@ -28,7 +28,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
 @BService
-class Versions(private val docIndexMap: DocIndexMap) {
+class Versions(private val context: BContext, private val docIndexMap: DocIndexMap) {
     private val lastKnownBotCommandsPath = Data.getVersionPath(VersionType.BotCommands)
     private val lastKnownJDAFromBCPath = Data.getVersionPath(VersionType.JDAOfBotCommands)
     private val lastKnownJDAPath = Data.getVersionPath(VersionType.JDA)
@@ -49,17 +49,17 @@ class Versions(private val docIndexMap: DocIndexMap) {
         JitpackVersionChecker(lastKnownLavaPlayerPath, "Walkyst", "com.github.Walkyst", "lavaplayer-fork")
 
     @BEventListener(async = true, timeout = -1)
-    suspend fun initUpdateLoop(event: FirstReadyEvent, context: BContext) {
+    suspend fun initUpdateLoop(event: FirstReadyEvent) {
         val scope = getDefaultScope(
             pool = Executors.newSingleThreadScheduledExecutor { Thread(it, "Version check coroutine") },
             context = CoroutineName("Version check coroutine")
         )
 
-        scope.scheduleWithFixedDelay(30.minutes, "BC") { checkLatestBCVersion(context) }
-        scope.scheduleWithFixedDelay(30.minutes, "JDA from BC") { checkLatestJDAVersionFromBC() }
-        scope.scheduleWithFixedDelay(30.minutes, "JDA") { checkLatestJDAVersion(context) }
-        scope.scheduleWithFixedDelay(30.minutes, "JDA-KTX") { checkLatestJDAKtxVersion() }
-        scope.scheduleWithFixedDelay(30.minutes, "LavaPlayer") { checkLatestLavaPlayerVersion() }
+        scope.scheduleWithFixedDelay(30.minutes, "BC", ::checkLatestBCVersion)
+        scope.scheduleWithFixedDelay(30.minutes, "JDA from BC", ::checkLatestJDAVersionFromBC)
+        scope.scheduleWithFixedDelay(30.minutes, "JDA", ::checkLatestJDAVersion)
+        scope.scheduleWithFixedDelay(30.minutes, "JDA-KTX", ::checkLatestJDAKtxVersion)
+        scope.scheduleWithFixedDelay(30.minutes, "LavaPlayer", ::checkLatestLavaPlayerVersion)
 
         //First index for Java's docs, may take some time
         if (docIndexMap[DocSourceType.JAVA]!!.getClassDoc("Object") == null) {
@@ -83,7 +83,7 @@ class Versions(private val docIndexMap: DocIndexMap) {
         }
     }
 
-    private suspend fun checkLatestJDAVersion(context: BContext) {
+    private suspend fun checkLatestJDAVersion() {
         val changed = jdaChecker.checkVersion()
 
         if (changed) {
@@ -143,7 +143,7 @@ class Versions(private val docIndexMap: DocIndexMap) {
         }
     }
 
-    private suspend fun checkLatestBCVersion(context: BContext) {
+    private suspend fun checkLatestBCVersion() {
         val changed = bcChecker.checkVersion()
 
         if (changed) {
