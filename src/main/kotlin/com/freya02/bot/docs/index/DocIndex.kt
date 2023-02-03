@@ -254,8 +254,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         val matchResult = queryRegex.matchEntire(query) ?: return null
         val (_, classname, identifier) = matchResult.groupValues
 
-        //TODO finish
-        @Language("PostgreSQL", prefix = "select ", suffix = " from doc natural left join doc_view")
+        @Language("PostgreSQL", prefix = "select ", suffix = " from doc")
         val similarityScoreQuery = when {
             classname.isNotBlank() && identifier.isNotBlank() -> "similarity(?, classname) * similarity(?, identifier_no_args)"
             classname.isNotBlank() -> "similarity(?, classname)"
