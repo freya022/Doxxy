@@ -71,11 +71,11 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
 
         val sortArgs = when {
             query.isNullOrEmpty() -> arrayOf()
-            else -> arrayOf(query)
+            else -> arrayOf(query.lowercase())
         }
 
         database.preparedStatement("""
-                select as full_identifier, human_identifier, human_class_identifier
+                select full_identifier, human_identifier, human_class_identifier
                 from doc natural join doc_view
                 where source_id = ?
                   and type = any (?)
