@@ -200,11 +200,11 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                       where source_id = ?) as d
                 where overall_similarity > 0.22
                   and not full_identifier = any (?) --Remove previous results
-                order by case when not 'Guild#' like '%#' then type end,     --Don't order by type if the query asks for identifiers of a class 
+                order by case when not ? like '%#%' then type end,     --Don't order by type if the query asks for identifiers of a class 
                          overall_similarity desc nulls last, full_identifier --Class > Method > Field, then similarity
                 limit ?;
             """.trimIndent()) {
-                executeQuery(*similarityScoreQueryParams, sourceType.id, results.map { it.fullIdentifier }.toTypedArray(), 25 - results.size)
+                executeQuery(*similarityScoreQueryParams, sourceType.id, results.map { it.fullIdentifier }.toTypedArray(), query, 25 - results.size)
                     .map { DocSearchResult(it) }
             }
         } ?: emptyList()
