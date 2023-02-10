@@ -174,7 +174,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
     //Performance optimized
     //  The trick may be to set a lower similarity threshold as to get more, but similar enough results
     //  And then filter with the accurate similarity on the remaining rows
-    override suspend fun experimentalSearch(query: String): List<DocSearchResult> = database.withConnection(readOnly = true) {
+    override suspend fun search(query: String): List<DocSearchResult> = database.withConnection(readOnly = true) {
         preparedStatement("set pg_trgm.similarity_threshold = 0.1;") { executeUpdate(*emptyArray()) }
 
         val results = findAnySignatures0(query, limit = 5, DocTypes.ANY)

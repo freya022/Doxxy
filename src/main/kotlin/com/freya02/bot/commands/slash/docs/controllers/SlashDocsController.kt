@@ -7,7 +7,6 @@ import com.freya02.bot.docs.cached.CachedDoc
 import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocSuggestion
 import com.freya02.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
-import com.freya02.bot.docs.index.DocTypes
 import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
 import com.freya02.botcommands.api.core.annotations.BService
 import com.freya02.docs.DocSourceType
@@ -70,25 +69,25 @@ class SlashDocsController(private val commonDocsController: CommonDocsController
     }
 
     //Used by DocsCommand and SlashSearch
-    suspend fun onSearchSlashCommand(event: GuildSlashEvent, sourceType: DocSourceType, docTypes: DocTypes, query: String) {
+    suspend fun onSearchSlashCommand(event: GuildSlashEvent, sourceType: DocSourceType, query: String) {
         val docIndex = docIndexMap[sourceType]!!
         when {
             '(' in query -> {
                 val (className, identifier) = query.split("#")
                 handleMethodDocs(event, className, identifier, docIndex) {
-                    searchAutocomplete(docIndex, query, docTypes = docTypes).mapToSuggestions()
+                    searchAutocomplete(docIndex, query).mapToSuggestions()
                 }
             }
 
             '#' in query -> {
                 val (className, identifier) = query.split("#")
                 handleFieldDocs(event, className, identifier, docIndex) {
-                    searchAutocomplete(docIndex, query, docTypes = docTypes).mapToSuggestions()
+                    searchAutocomplete(docIndex, query).mapToSuggestions()
                 }
             }
 
             else -> handleClass(event, query, docIndex) {
-                searchAutocomplete(docIndex, query, docTypes = docTypes).mapToSuggestions()
+                searchAutocomplete(docIndex, query).mapToSuggestions()
             }
         }
     }

@@ -5,7 +5,6 @@ import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocResolveResult
 import com.freya02.bot.docs.index.DocSearchResult
-import com.freya02.bot.docs.index.DocTypes
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.annotations.AppOption
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
@@ -67,19 +66,9 @@ class CommonDocsHandlers(
     @AutocompleteHandler(name = SEARCH_AUTOCOMPLETE_NAME, showUserInput = false)
     suspend fun onSearchAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
-        @CompositeKey @AppOption docTypes: DocTypes,
         @CompositeKey @AppOption sourceType: DocSourceType
     ): List<Choice> = withDocIndex(sourceType) {
-        searchAutocomplete(this, event.focusedOption.value, docTypes = docTypes).searchResultToFullIdentifierChoices()
-    }
-
-    @CacheAutocomplete
-    @AutocompleteHandler(name = EXPERIMENTAL_SEARCH_AUTOCOMPLETE_NAME, showUserInput = false)
-    suspend fun onExperimentalSearchAutocomplete(
-        event: CommandAutoCompleteInteractionEvent,
-        @CompositeKey @AppOption sourceType: DocSourceType
-    ): List<Choice> = withDocIndex(sourceType) {
-        experimentalSearchAutocomplete(this, event.focusedOption.value).searchResultToFullIdentifierChoices()
+        searchAutocomplete(this, event.focusedOption.value).searchResultToFullIdentifierChoices()
     }
 
     @CacheAutocomplete
@@ -113,7 +102,6 @@ class CommonDocsHandlers(
         const val CLASS_NAME_AUTOCOMPLETE_NAME = "CommonDocsHandlers: className"
         const val METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME = "CommonDocsHandlers: methodNameOrFieldByClass"
         const val SEARCH_AUTOCOMPLETE_NAME = "CommonDocsHandlers: search"
-        const val EXPERIMENTAL_SEARCH_AUTOCOMPLETE_NAME = "CommonDocsHandlers: experimentalSearch"
         const val RESOLVE_AUTOCOMPLETE_NAME = "CommonDocsHandlers: resolve"
 
         const val SEE_ALSO_SELECT_LISTENER_NAME = "CommonDocsHandlers: seeAlso"
@@ -122,7 +110,6 @@ class CommonDocsHandlers(
             CLASS_NAME_AUTOCOMPLETE_NAME,
             METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME,
             SEARCH_AUTOCOMPLETE_NAME,
-            EXPERIMENTAL_SEARCH_AUTOCOMPLETE_NAME,
             RESOLVE_AUTOCOMPLETE_NAME
         )
 
