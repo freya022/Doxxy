@@ -19,8 +19,6 @@ import org.intellij.lang.annotations.Language
 
 //Initial construct just allows database access
 // Further updates must be invoked by external methods such as version checkers
-//TODO Improve indexing speed by disabling indexes, see https://www.postgresql.org/docs/current/populate.html
-//TODO Improve search speeds by using indexes on classname, identifier_no_args, full_identifier, see https://www.postgresql.org/docs/current/pgtrgm.html#id-1.11.7.44.8
 class DocIndex(val sourceType: DocSourceType, private val database: Database) : IDocIndex {
     private val mutex = Mutex()
 

@@ -64,4 +64,5 @@ select id, concat(classname, '#', identifier) as full_identifier
 from doc
 where identifier is not null;
 
+-- Doesn't need to be temporarily disabled since the materialized view is only refreshed once
 create index doc_view_full_identifier_gist on doc_view using gist(full_identifier gist_trgm_ops(siglen=128));
