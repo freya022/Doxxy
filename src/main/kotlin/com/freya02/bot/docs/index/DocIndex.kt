@@ -18,6 +18,52 @@ import org.intellij.lang.annotations.Language
 
 //Initial construct just allows database access
 // Further updates must be invoked by external methods such as version checkers
+//TODO Improve indexing speed by disabling indexes, see https://www.postgresql.org/docs/current/populate.html
+//TODO Improve search speeds by using indexes on classname, identifier_no_args, full_identifier, see https://www.postgresql.org/docs/current/pgtrgm.html#id-1.11.7.44.8
+// Example on L352 in console
+/*
+create index doc_view_identifier_no_args_gist on doc_view using gist(full_identifier gist_trgm_ops(siglen=256));
+
+set pg_trgm.similarity_threshold = 0.1;
+
+-- Performance optimized
+-- The trick may be to set a lower similarity threshold as to get more, but similar enough results
+--   And then filter with the accurate similarity on the remaining rows
+EXPLAIN ANALYSE
+SELECT *
+FROM (SELECT coalesce(full_identifier, classname)                                    AS full_identifier,
+             coalesce(human_identifier, classname)                                   AS human_identifier,
+             coalesce(human_class_identifier, classname)                             AS human_class_identifier,
+             similarity('Guild', classname) * similarity('upda', identifier_no_args) AS overall_similarity,
+             type
+      FROM doc_view
+               NATURAL JOIN doc --The join order is important
+      WHERE source_id = 1
+        AND full_identifier % 'Guil#upda' -- Uses a fake threshold of 0.1, set above
+     ) as search
+WHERE overall_similarity > 0.22 --Real threshold
+ORDER BY CASE WHEN NOT 'Guil#upda' LIKE '%#%' THEN type END, --Don't order by type if the query asks for identifiers of a class
+         overall_similarity DESC NULLS LAST,
+         full_identifier                                     --Class > Method > Field, then similarity
+LIMIT 25;
+
+-- Result optimized
+explain analyse
+select *
+from (select coalesce(full_identifier, classname)                                    as full_identifier,
+             coalesce(human_identifier, classname)                                   as human_identifier,
+             coalesce(human_class_identifier, classname)                             as human_class_identifier,
+             similarity('Guild', classname) * similarity('upda', identifier_no_args) as overall_similarity,
+             type
+      from doc
+               natural left join doc_view) as d
+where overall_similarity > 0.22
+  and not full_identifier = any (ARRAY []::text[]) --Remove previous results
+order by case when not 'Guil#upda' like '%#%' then type end, --Don't order by type if the query asks for identifiers of a class
+         overall_similarity desc nulls last,
+         full_identifier                                     --Class > Method > Field, then similarity
+limit 25;
+ */
 class DocIndex(val sourceType: DocSourceType, private val database: Database) : IDocIndex {
     private val mutex = Mutex()
 
@@ -42,6 +88,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         return CachedField(sourceType, embed, seeAlsoReferences, javadocLink, sourceLink)
     }
 
+    //TODO extract body into internal method, where a KConnection is in the context
     override suspend fun findAnySignatures(query: String, limit: Int, docTypes: DocTypes): List<DocSearchResult> {
         if (docTypes.isEmpty()) throw IllegalArgumentException("Must have at least one doc type")
 
@@ -184,28 +231,38 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         }
     }
 
+    //Performance optimized
+    //  The trick may be to set a lower similarity threshold as to get more, but similar enough results
+    //  And then filter with the accurate similarity on the remaining rows
     override suspend fun experimentalSearch(query: String): List<DocSearchResult> {
         val results = findAnySignatures(query, limit = 5, DocTypes.ANY)
 
         return withSimilarityScoreMethod(query) { similarityScoreQuery, similarityScoreQueryParams ->
-            results + database.preparedStatement("""
-                select *
-                from (select coalesce(full_identifier, classname)        as full_identifier,
-                             coalesce(human_identifier, classname)       as human_identifier,
-                             coalesce(human_class_identifier, classname) as human_class_identifier,
-                             $similarityScoreQuery                       as overall_similarity,
-                             type
-                      from doc
-                               natural left join doc_view
-                      where source_id = ?) as d
-                where overall_similarity > 0.22
-                  and not full_identifier = any (?) --Remove previous results
-                order by case when not ? like '%#%' then type end,     --Don't order by type if the query asks for identifiers of a class 
-                         overall_similarity desc nulls last, full_identifier --Class > Method > Field, then similarity
-                limit ?;
-            """.trimIndent()) {
-                executeQuery(*similarityScoreQueryParams, sourceType.id, results.map { it.fullIdentifier }.toTypedArray(), query, 25 - results.size)
-                    .map { DocSearchResult(it) }
+            results + database.withConnection(readOnly = true) {
+                preparedStatement("set pg_trgm.similarity_threshold = 0.1;") { executeUpdate(*emptyArray()) }
+
+                preparedStatement("""
+                    select *
+                    from (select coalesce(full_identifier, classname)        as full_identifier,
+                                 coalesce(human_identifier, classname)       as human_identifier,
+                                 coalesce(human_class_identifier, classname) as human_class_identifier,
+                                 $similarityScoreQuery                       as overall_similarity,
+                                 type
+                          from doc_view
+                                   natural left join doc
+                          where source_id = ?
+                            and full_identifier % ? -- Uses a fake threshold of 0.1, set above
+                         ) as low_accuracy_search
+                    where overall_similarity > 0.22     --Real threshold
+                      and not full_identifier = any (?) --Remove previous results
+                    order by case when not ? like '%#%' then type end, --Don't order by type if the query asks for identifiers of a class 
+                             overall_similarity desc nulls last,
+                             full_identifier                           --Class > Method > Field, then similarity
+                    limit ?;
+                """.trimIndent()) {
+                    executeQuery(*similarityScoreQueryParams, sourceType.id, query, results.map { it.fullIdentifier }.toTypedArray(), query, 25 - results.size)
+                        .map { DocSearchResult(it) }
+                }
             }
         } ?: emptyList()
     }
