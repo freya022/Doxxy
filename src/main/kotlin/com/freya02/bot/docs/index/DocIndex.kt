@@ -179,6 +179,11 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
 
         val results = findAnySignatures0(query, limit = 5, DocTypes.ANY)
 
+        val inferredTypes = when {
+            query.substringAfter('#').all { it.isUpperCase() } -> DocTypes.FIELD
+            else -> DocTypes(DocType.CLASS, DocType.METHOD)
+        }
+
         return withSimilarityScoreMethod(query) { similarityScoreQuery, similarityScoreQueryParams ->
             results + preparedStatement("""
                 select *
@@ -190,6 +195,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                       from doc_view
                                natural left join doc
                       where source_id = ?
+                        and type = any(?)
                         and full_identifier % ? -- Uses a fake threshold of 0.1, set above
                      ) as low_accuracy_search
                 where overall_similarity > 0.22     --Real threshold
@@ -199,7 +205,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                          full_identifier                           --Class > Method > Field, then similarity
                 limit ?;
             """.trimIndent()) {
-                executeQuery(*similarityScoreQueryParams, sourceType.id, query, results.map { it.fullIdentifier }.toTypedArray(), query, 25 - results.size)
+                executeQuery(*similarityScoreQueryParams, sourceType.id, inferredTypes.map { it.id }.toTypedArray(), query, results.map { it.fullIdentifier }.toTypedArray(), query, 25 - results.size)
                     .map { DocSearchResult(it) }
             }
         } ?: emptyList()
@@ -241,6 +247,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                 from doc_view
                          natural left join doc
                 where source_id = ?
+                  and type = any(?)
                 -- Uses a fake threshold set by the caller, 
                 --  it should be low enough as that the X best values are always displayed, 
                 --  but ordered by the accurate score
@@ -248,7 +255,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                 order by overall_similarity desc nulls last, full_identifier
                 limit ?;
             """.trimIndent()) {
-                executeQuery(*similarityScoreQueryParams, sourceType.id, query, limit).map { DocSearchResult(it) }
+                executeQuery(*similarityScoreQueryParams, sourceType.id, docTypes.map { it.id }.toTypedArray(), query, limit).map { DocSearchResult(it) }
             }
         } ?: return emptyList()
     }
