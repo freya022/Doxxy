@@ -295,7 +295,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                 order by overall_similarity desc nulls last, full_identifier
                 limit ?;
             """.trimIndent()) {
-                executeQuery(*similarityScoreQueryParams, sourceType.id, limit).map { DocSearchResult(it) }
+                executeQuery(*similarityScoreQueryParams, sourceType.id, query, limit).map { DocSearchResult(it) }
             }
         } ?: return emptyList()
     }
