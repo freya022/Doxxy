@@ -21,50 +21,6 @@ import org.intellij.lang.annotations.Language
 // Further updates must be invoked by external methods such as version checkers
 //TODO Improve indexing speed by disabling indexes, see https://www.postgresql.org/docs/current/populate.html
 //TODO Improve search speeds by using indexes on classname, identifier_no_args, full_identifier, see https://www.postgresql.org/docs/current/pgtrgm.html#id-1.11.7.44.8
-// Example on L352 in console
-/*
-create index doc_view_identifier_no_args_gist on doc_view using gist(full_identifier gist_trgm_ops(siglen=256));
-
-set pg_trgm.similarity_threshold = 0.1;
-
--- Performance optimized
--- The trick may be to set a lower similarity threshold as to get more, but similar enough results
---   And then filter with the accurate similarity on the remaining rows
-EXPLAIN ANALYSE
-SELECT *
-FROM (SELECT coalesce(full_identifier, classname)                                    AS full_identifier,
-             coalesce(human_identifier, classname)                                   AS human_identifier,
-             coalesce(human_class_identifier, classname)                             AS human_class_identifier,
-             similarity('Guild', classname) * similarity('upda', identifier_no_args) AS overall_similarity,
-             type
-      FROM doc_view
-               NATURAL JOIN doc --The join order is important
-      WHERE source_id = 1
-        AND full_identifier % 'Guil#upda' -- Uses a fake threshold of 0.1, set above
-     ) as search
-WHERE overall_similarity > 0.22 --Real threshold
-ORDER BY CASE WHEN NOT 'Guil#upda' LIKE '%#%' THEN type END, --Don't order by type if the query asks for identifiers of a class
-         overall_similarity DESC NULLS LAST,
-         full_identifier                                     --Class > Method > Field, then similarity
-LIMIT 25;
-
--- Result optimized
-explain analyse
-select *
-from (select coalesce(full_identifier, classname)                                    as full_identifier,
-             coalesce(human_identifier, classname)                                   as human_identifier,
-             coalesce(human_class_identifier, classname)                             as human_class_identifier,
-             similarity('Guild', classname) * similarity('upda', identifier_no_args) as overall_similarity,
-             type
-      from doc
-               natural left join doc_view) as d
-where overall_similarity > 0.22
-  and not full_identifier = any (ARRAY []::text[]) --Remove previous results
-order by case when not 'Guil#upda' like '%#%' then type end, --Don't order by type if the query asks for identifiers of a class
-         overall_similarity desc nulls last,
-         full_identifier                                     --Class > Method > Field, then similarity
-limit 25;
- */
 class DocIndex(val sourceType: DocSourceType, private val database: Database) : IDocIndex {
     private val mutex = Mutex()
 
@@ -273,7 +229,6 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         return this
     }
 
-    //TODO test
     /** **Requires `pg_trgm.similarity_threshold` to be set**  */
     context(KConnection)
     private suspend fun findAnySignatures0(query: String, limit: Int, docTypes: DocTypes): List<DocSearchResult> {
