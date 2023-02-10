@@ -91,6 +91,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
 
     override suspend fun findAnySignatures(query: String, limit: Int, docTypes: DocTypes) =
         database.withConnection(readOnly = true) {
+            preparedStatement("set pg_trgm.similarity_threshold = 0.1;") { executeUpdate(*emptyArray()) }
             findAnySignatures0(query, limit, docTypes)
         }
 
@@ -272,6 +273,8 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         return this
     }
 
+    //TODO test
+    /** **Requires `pg_trgm.similarity_threshold` to be set**  */
     context(KConnection)
     private suspend fun findAnySignatures0(query: String, limit: Int, docTypes: DocTypes): List<DocSearchResult> {
         if (docTypes.isEmpty()) throw IllegalArgumentException("Must have at least one doc type")
@@ -282,9 +285,13 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                        coalesce(human_identifier, classname)       as human_identifier,
                        coalesce(human_class_identifier, classname) as human_class_identifier,
                        $similarityScoreQuery                       as overall_similarity
-                from doc
-                         natural left join doc_view
+                from doc_view
+                         natural left join doc
                 where source_id = ?
+                -- Uses a fake threshold set by the caller, 
+                --  it should be low enough as that the X best values are always displayed, 
+                --  but ordered by the accurate score
+                  and ? % full_identifier
                 order by overall_similarity desc nulls last, full_identifier
                 limit ?;
             """.trimIndent()) {
