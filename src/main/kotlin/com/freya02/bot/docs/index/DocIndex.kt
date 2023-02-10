@@ -5,6 +5,7 @@ import com.freya02.bot.docs.cached.CachedDoc
 import com.freya02.bot.docs.cached.CachedField
 import com.freya02.bot.docs.cached.CachedMethod
 import com.freya02.botcommands.api.core.db.Database
+import com.freya02.botcommands.api.core.db.KConnection
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.DocsSession
 import com.freya02.docs.PageCache
@@ -42,25 +43,11 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         return CachedField(sourceType, embed, seeAlsoReferences, javadocLink, sourceLink)
     }
 
-    override suspend fun findAnySignatures(query: String, limit: Int, docTypes: DocTypes): List<DocSearchResult> {
-        if (docTypes.isEmpty()) throw IllegalArgumentException("Must have at least one doc type")
-
-        return withSimilarityScoreMethod(query) { similarityScoreQuery, similarityScoreQueryParams ->
-            database.preparedStatement("""
-                select coalesce(full_identifier, classname)        as full_identifier,
-                       coalesce(human_identifier, classname)       as human_identifier,
-                       coalesce(human_class_identifier, classname) as human_class_identifier,
-                       $similarityScoreQuery                       as overall_similarity
-                from doc
-                         natural left join doc_view
-                where source_id = ?
-                order by overall_similarity desc nulls last, full_identifier
-                limit ?;
-            """.trimIndent()) {
-                executeQuery(*similarityScoreQueryParams, sourceType.id, limit).map { DocSearchResult(it) }
-            }
-        } ?: return emptyList()
-    }
+    override suspend fun findAnySignatures(query: String, limit: Int, docTypes: DocTypes) =
+        database.withConnection(readOnly = true) {
+            preparedStatement("set pg_trgm.similarity_threshold = 0.1;") { executeUpdate(*emptyArray()) }
+            findAnySignatures0(query, limit, docTypes)
+        }
 
     override suspend fun findSignaturesIn(className: String, query: String?, docTypes: DocTypes, limit: Int): List<DocSearchResult> {
         @Language("PostgreSQL", prefix = "select * from doc ")
@@ -184,27 +171,35 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         }
     }
 
-    override suspend fun experimentalSearch(query: String): List<DocSearchResult> {
-        val results = findAnySignatures(query, limit = 5, DocTypes.ANY)
+    //Performance optimized
+    //  The trick may be to set a lower similarity threshold as to get more, but similar enough results
+    //  And then filter with the accurate similarity on the remaining rows
+    override suspend fun experimentalSearch(query: String): List<DocSearchResult> = database.withConnection(readOnly = true) {
+        preparedStatement("set pg_trgm.similarity_threshold = 0.1;") { executeUpdate(*emptyArray()) }
+
+        val results = findAnySignatures0(query, limit = 5, DocTypes.ANY)
 
         return withSimilarityScoreMethod(query) { similarityScoreQuery, similarityScoreQueryParams ->
-            results + database.preparedStatement("""
+            results + preparedStatement("""
                 select *
                 from (select coalesce(full_identifier, classname)        as full_identifier,
                              coalesce(human_identifier, classname)       as human_identifier,
                              coalesce(human_class_identifier, classname) as human_class_identifier,
                              $similarityScoreQuery                       as overall_similarity,
                              type
-                      from doc
-                               natural left join doc_view
-                      where source_id = ?) as d
-                where overall_similarity > 0.22
+                      from doc_view
+                               natural left join doc
+                      where source_id = ?
+                        and full_identifier % ? -- Uses a fake threshold of 0.1, set above
+                     ) as low_accuracy_search
+                where overall_similarity > 0.22     --Real threshold
                   and not full_identifier = any (?) --Remove previous results
-                order by case when not ? like '%#%' then type end,     --Don't order by type if the query asks for identifiers of a class 
-                         overall_similarity desc nulls last, full_identifier --Class > Method > Field, then similarity
+                order by case when not ? like '%#%' then type end, --Don't order by type if the query asks for identifiers of a class 
+                         overall_similarity desc nulls last,
+                         full_identifier                           --Class > Method > Field, then similarity
                 limit ?;
             """.trimIndent()) {
-                executeQuery(*similarityScoreQueryParams, sourceType.id, results.map { it.fullIdentifier }.toTypedArray(), query, 25 - results.size)
+                executeQuery(*similarityScoreQueryParams, sourceType.id, query, results.map { it.fullIdentifier }.toTypedArray(), query, 25 - results.size)
                     .map { DocSearchResult(it) }
             }
         } ?: emptyList()
@@ -230,6 +225,32 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         System.gc() //Very effective
 
         return this
+    }
+
+    /** **Requires `pg_trgm.similarity_threshold` to be set**  */
+    context(KConnection)
+    private suspend fun findAnySignatures0(query: String, limit: Int, docTypes: DocTypes): List<DocSearchResult> {
+        if (docTypes.isEmpty()) throw IllegalArgumentException("Must have at least one doc type")
+
+        return withSimilarityScoreMethod(query) { similarityScoreQuery, similarityScoreQueryParams ->
+            preparedStatement("""
+                select coalesce(full_identifier, classname)        as full_identifier,
+                       coalesce(human_identifier, classname)       as human_identifier,
+                       coalesce(human_class_identifier, classname) as human_class_identifier,
+                       $similarityScoreQuery                       as overall_similarity
+                from doc_view
+                         natural left join doc
+                where source_id = ?
+                -- Uses a fake threshold set by the caller, 
+                --  it should be low enough as that the X best values are always displayed, 
+                --  but ordered by the accurate score
+                  and ? % full_identifier
+                order by overall_similarity desc nulls last, full_identifier
+                limit ?;
+            """.trimIndent()) {
+                executeQuery(*similarityScoreQueryParams, sourceType.id, query, limit).map { DocSearchResult(it) }
+            }
+        } ?: return emptyList()
     }
 
     private suspend fun withSimilarityScoreMethod(
