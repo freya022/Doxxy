@@ -10,8 +10,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <!-- BC supports Java 17 and above -->
+        <maven.compiler.release>17</maven.compiler.release>
     </properties>
 
     <build>
@@ -64,6 +64,7 @@
             <artifactId>%s</artifactId>
             <version>%s</version>
             <exclusions>
+                <!-- Removes audio as to save space, you can remove the exclusion if you want to use audio -->
                 <exclusion>
                     <groupId>club.minnced</groupId>
                     <artifactId>opus-java</artifactId>

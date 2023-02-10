@@ -32,5 +32,6 @@ tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
     options.isIncremental = true
 
+    //BC supports Java 17 and above
     options.release.set(17)
 }
