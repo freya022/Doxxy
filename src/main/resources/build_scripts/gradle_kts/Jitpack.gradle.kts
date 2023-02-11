@@ -32,5 +32,5 @@ tasks.withType<JavaCompile> {
     options.isIncremental = true
 
     //JDA supports Java 8 and above
-    options.release.set(8)
+    sourceCompatibility = "1.8"
 }
