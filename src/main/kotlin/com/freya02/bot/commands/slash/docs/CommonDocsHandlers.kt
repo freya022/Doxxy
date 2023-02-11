@@ -5,7 +5,6 @@ import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocResolveResult
 import com.freya02.bot.docs.index.DocSearchResult
-import com.freya02.bot.docs.index.DocTypes
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.annotations.AppOption
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
@@ -60,17 +59,16 @@ class CommonDocsHandlers(
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
     ): List<Choice> = withDocIndex(sourceType) {
-        methodOrFieldByClassAutocomplete(this, className, event.focusedOption.value).searchResultToChoices { it.humanIdentifier }
+        methodOrFieldByClassAutocomplete(this, className, event.focusedOption.value).searchResultToIdentifierChoices()
     }
 
     @CacheAutocomplete
     @AutocompleteHandler(name = SEARCH_AUTOCOMPLETE_NAME, showUserInput = false)
     suspend fun onSearchAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
-        @CompositeKey @AppOption docTypes: DocTypes,
         @CompositeKey @AppOption sourceType: DocSourceType
     ): List<Choice> = withDocIndex(sourceType) {
-        searchAutocomplete(this, event.focusedOption.value, docTypes = docTypes).searchResultToChoices { it.humanClassIdentifier }
+        searchAutocomplete(this, event.focusedOption.value).searchResultToFullIdentifierChoices()
     }
 
     @CacheAutocomplete
@@ -88,9 +86,12 @@ class CommonDocsHandlers(
     }
 
     private fun Iterable<String>.toChoices() = this.map { Choice(it, it) }
-    private fun Iterable<DocSearchResult>.searchResultToChoices(nameExtractor: (DocSearchResult) -> String) = this
-        .filter { it.identifierOrFullIdentifier.length <= Choice.MAX_STRING_VALUE_LENGTH }
-        .map { Choice(nameExtractor(it), it.identifierOrFullIdentifier) }
+    private fun Iterable<DocSearchResult>.searchResultToFullIdentifierChoices() = this
+        .filter { it.fullIdentifier.length <= Choice.MAX_STRING_VALUE_LENGTH }
+        .map { Choice(it.humanClassIdentifier, it.fullIdentifier) }
+    private fun Iterable<DocSearchResult>.searchResultToIdentifierChoices() = this
+        .filter { it.identifier.length <= Choice.MAX_STRING_VALUE_LENGTH }
+        .map { Choice(it.humanIdentifier, it.identifier) }
     private fun Iterable<DocResolveResult>.resolveResultToChoices() = this
         .filter { it.value.length <= Choice.MAX_STRING_VALUE_LENGTH }
         .map { Choice(it.name, it.value) }
