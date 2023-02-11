@@ -2,12 +2,10 @@ package com.freya02.bot.commands.slash.docs
 
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers.Companion.CLASS_NAME_AUTOCOMPLETE_NAME
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers.Companion.METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME
-import com.freya02.bot.commands.slash.docs.CommonDocsHandlers.Companion.SEARCH_AUTOCOMPLETE_NAME
 import com.freya02.bot.commands.slash.docs.controllers.SlashDocsController
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.index.DocSuggestion
 import com.freya02.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
-import com.freya02.bot.docs.index.DocTypes
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.commands.application.CommandScope
 import com.freya02.botcommands.api.commands.application.GuildApplicationCommandManager
@@ -41,26 +39,6 @@ class DocsCommand(private val docIndexMap: DocIndexMap, private val slashDocsCon
                     function = ::onSlashDocs
                 }
             }
-
-            subcommandGroup("search") {
-                DocSourceType.typesForGuild(manager.guild).forEach { sourceType ->
-                    subcommand(sourceType.cmdName) {
-                        description = "Searches the documentation for anything"
-
-                        generatedOption("sourceType") { sourceType }
-
-                        //Required for autocomplete
-                        generatedOption(declaredName = "docTypes") { DocTypes.ANY }
-
-                        option("query") {
-                            description = "The docs to search for"
-                            autocompleteReference(SEARCH_AUTOCOMPLETE_NAME)
-                        }
-
-                        function = slashDocsController::onSearchSlashCommand
-                    }
-                }
-            }
         }
     }
 
@@ -79,11 +57,11 @@ class DocsCommand(private val docIndexMap: DocIndexMap, private val slashDocsCon
             }
         } else if (identifier.contains("(")) { //prob a method
             slashDocsController.handleMethodDocs(event, className, identifier, docIndex) {
-                return@handleMethodDocs methodOrFieldByClassAutocomplete(docIndex, className, identifier, 100).mapToSuggestions(className)
+                return@handleMethodDocs methodOrFieldByClassAutocomplete(docIndex, className, identifier, 100).mapToSuggestions()
             }
         } else {
             slashDocsController.handleFieldDocs(event, className, identifier, docIndex) {
-                return@handleFieldDocs methodOrFieldByClassAutocomplete(docIndex, className, identifier, 100).mapToSuggestions(className)
+                return@handleFieldDocs methodOrFieldByClassAutocomplete(docIndex, className, identifier, 100).mapToSuggestions()
             }
         }
     }
