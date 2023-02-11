@@ -28,7 +28,7 @@ class DocMentionController(
 ) {
     private val spaceRegex = Regex("""\s+""")
     private val codeBlockRegex = Regex("""```.*\n(\X*?)```""")
-    private val identifierRegex = Regex("""(\w+)[#.](\w+)(?:\((.+?)\))?""")
+    private val identifierRegex = Regex("""(\w+)[#.](\w+)""")
 
     suspend fun processMentions(contentRaw: String): DocMatches = database.withConnection(readOnly = true) {
         val cleanedContent = codeBlockRegex.replace(contentRaw, "")
@@ -37,31 +37,35 @@ class DocMentionController(
 
         val similarIdentifiers: SortedSet<SimilarIdentifier> =
             identifierRegex.findAll(cleanedContent)
-                .flatMapTo(sortedSetOf()) { result ->
+                .map { it.destructured }
+                .flatMapTo(sortedSetOf()) { (classname, identifierNoArgs) ->
                     preparedStatement(
                         """
-                            select d.source_id,
-                                   d.classname || '#' || d.identifier as fullIdentifier,
-                                   d.human_class_identifier,
-                                   similarity(d.classname, ?) * similarity(d.identifier_no_args, ?) as overall_similarity
-                            from doc d
-                            where d.type != 1
+                            select source_id,
+                                   full_identifier,
+                                   human_class_identifier,
+                                   similarity(classname, ?) * similarity(identifier_no_args, ?) as overall_similarity
+                            from doc_view
+                                     natural join doc
+                            where type != 1
+                              and classname % ?
+                              and identifier_no_args % ?
                             order by overall_similarity desc
                             limit 25;
                         """.trimIndent()
                     ) {
-                        executeQuery(result.groupValues[1], result.groupValues[2])
+                        executeQuery(classname, identifierNoArgs, classname, identifierNoArgs)
                             .mapNotNull {
-                                val sourceId: Int = it["source_id"]
+                                val sourceId = it.getInt("source_id")
 
                                 //Can't use that in a select menu :/
-                                if (it.getString("fullIdentifier").length >= 95) {
+                                if (it.getString("full_identifier").length >= 95) {
                                     return@mapNotNull null
                                 }
 
                                 SimilarIdentifier(
                                     DocSourceType.fromId(sourceId),
-                                    it["fullIdentifier"],
+                                    it["full_identifier"],
                                     it["human_class_identifier"],
                                     it["overall_similarity"]
                                 )

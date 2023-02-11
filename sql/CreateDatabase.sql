@@ -45,6 +45,7 @@ create table Doc
 
 -- raspbian doesn't support postgresql 12+ lmao
 -- create index doc_identifier_no_args_gist on doc using gist(identifier_no_args gist_trgm_ops(siglen=256));
+create index doc_classname_gist on doc using gist (classname gist_trgm_ops);
 create index doc_identifier_no_args_gist on doc using gist (identifier_no_args gist_trgm_ops);
 
 create table DocSeeAlsoReference
@@ -65,4 +66,4 @@ from doc
 where identifier is not null;
 
 -- Doesn't need to be temporarily disabled since the materialized view is only refreshed once
-create index doc_view_full_identifier_gist on doc_view using gist(full_identifier gist_trgm_ops(siglen=128));
+create index doc_view_full_identifier_gist on doc_view using gist(full_identifier gist_trgm_ops);
