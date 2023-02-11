@@ -109,7 +109,7 @@ class DocMentionController(
 
     context(KConnection)
     private suspend fun getMentionedClasses(content: String): List<ClassMention> {
-        return spaceRegex.split(content).let {
+        return spaceRegex.split(content).let { words ->
             preparedStatement(
                 """
                     select d.source_id, d.classname
@@ -118,8 +118,8 @@ class DocMentionController(
                       and classname = any (?);
                 """.trimIndent()
             ) {
-                executeQuery(it.toTypedArray()).map {
-                    val sourceId: Int = it["source_id"]
+                executeQuery(words.toTypedArray()).map {
+                    val sourceId = it.getInt("source_id")
                     ClassMention(
                         DocSourceType.fromId(sourceId),
                         it["classname"]
