@@ -58,7 +58,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
 
         val sortArgs = when {
             query.isNullOrEmpty() -> arrayOf()
-            else -> arrayOf(query.lowercase())
+            else -> arrayOf(query)
         }
 
         database.preparedStatement("""
