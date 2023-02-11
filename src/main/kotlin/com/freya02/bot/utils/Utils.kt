@@ -2,6 +2,9 @@ package com.freya02.bot.utils
 
 import com.freya02.bot.Config
 import com.freya02.botcommands.api.Logging
+import dev.minn.jda.ktx.events.getDefaultScope
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.internal.utils.JDALogger
 import org.jetbrains.annotations.Contract
@@ -9,6 +12,9 @@ import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.sql.Statement
+import java.util.concurrent.Executors
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.notExists
 import kotlin.streams.asSequence
@@ -77,5 +83,19 @@ object Utils {
         Logging.getLogger().debug("$desc took ${diff / 1000000.0} ms")
 
         return r
+    }
+
+    fun namedDefaultScope(name: String, poolSize: Int): CoroutineScope {
+        val lock = ReentrantLock()
+        var count = 0
+        val executor = Executors.newScheduledThreadPool(poolSize) {
+            Thread(it).apply {
+                lock.withLock {
+                    this.name = "$name ${++count}"
+                }
+            }
+        }
+
+        return getDefaultScope(pool = executor, context = CoroutineName(name))
     }
 }

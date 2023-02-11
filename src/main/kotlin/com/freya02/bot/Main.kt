@@ -1,20 +1,15 @@
 package com.freya02.bot
 
 import ch.qos.logback.classic.util.ContextInitializer
+import com.freya02.bot.utils.Utils
 import com.freya02.botcommands.api.core.BBuilder
 import com.freya02.docs.DocWebServer
 import dev.minn.jda.ktx.events.CoroutineEventManager
-import dev.minn.jda.ktx.events.getDefaultScope
 import dev.reformator.stacktracedecoroutinator.runtime.DecoroutinatorRuntime
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import mu.KotlinLogging
 import net.dv8tion.jda.api.events.session.ShutdownEvent
 import java.lang.management.ManagementFactory
-import java.util.concurrent.Executors
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.exists
 import kotlin.system.exitProcess
@@ -42,7 +37,7 @@ object Main {
                 logger.info("Skipping stacktrace-decoroutinator as HotswapAgent is active")
             }
 
-            val scope = getNamedDefaultScope()
+            val scope = Utils.namedDefaultScope("Doxxy coroutine", 4)
             val manager = CoroutineEventManager(scope, 1.minutes)
             manager.listener<ShutdownEvent> {
                 scope.cancel()
@@ -83,19 +78,5 @@ object Main {
             logger.error("Unable to start the bot", e)
             exitProcess(-1)
         }
-    }
-
-    private fun getNamedDefaultScope(): CoroutineScope {
-        val lock = ReentrantLock()
-        var count = 0
-        val executor = Executors.newScheduledThreadPool(4) {
-            Thread(it).apply {
-                lock.withLock {
-                    name = "Doxxy coroutine ${++count}"
-                }
-            }
-        }
-
-        return getDefaultScope(pool = executor, context = CoroutineName("Doxxy coroutine"))
     }
 }

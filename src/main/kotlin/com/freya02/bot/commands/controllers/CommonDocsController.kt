@@ -23,7 +23,7 @@ import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import net.dv8tion.jda.api.utils.messages.MessageCreateRequest
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.minutes
 
 @BService
 class CommonDocsController(private val componentsService: Components) {
@@ -90,7 +90,7 @@ class CommonDocsController(private val componentsService: Components) {
             if (referenceList.any { it.targetType != TargetType.UNKNOWN }) {
                 val selectMenu = componentsService.persistentStringSelectMenu {
                     bindTo(CommonDocsHandlers.SEE_ALSO_SELECT_LISTENER_NAME, cachedDoc.source.id)
-                    timeout(15, TimeUnit.MINUTES)
+                    timeout(15.minutes)
                     placeholder = "See also"
 
                     for (reference in referenceList) {
@@ -106,11 +106,7 @@ class CommonDocsController(private val componentsService: Components) {
                                 continue
                             }
 
-                            addOption(
-                                reference.text,
-                                optionValue,
-                                EmojiUtils.resolveJDAEmoji("clipboard")
-                            )
+                            addOption(reference.text, optionValue, clipboardEmoji)
                         }
                     }
                 }
@@ -118,5 +114,9 @@ class CommonDocsController(private val componentsService: Components) {
                 addActionRow(selectMenu)
             }
         }
+    }
+
+    companion object {
+        private val clipboardEmoji = EmojiUtils.resolveJDAEmoji("clipboard")
     }
 }
