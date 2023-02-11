@@ -52,12 +52,14 @@
     </repositories>
 
     <dependencies>
-        <!-- Logging implementation, this is recommended, but you can remove it -->
+        <!-- Logging implementation, you can remove the comments if you have a warning related to loggers -->
+        <!--
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.2.11</version>
         </dependency>
+        -->
         <dependency>
             <groupId>%s</groupId>
             <artifactId>%s</artifactId>
