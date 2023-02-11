@@ -20,8 +20,8 @@ repositories {
 }
 
 dependencies {
-    //Logging
-    implementation("ch.qos.logback:logback-classic:1.2.11")
+    //Logging implementation, you can remove the comments if you have a warning related to loggers
+    //implementation("ch.qos.logback:logback-classic:1.2.11")
 
     //JDA
     implementation("%s:%s:%s")
@@ -31,5 +31,6 @@ tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
     options.isIncremental = true
 
-    options.release.set(8)
+    //JDA supports Java 8 and above
+    sourceCompatibility = "1.8"
 }
