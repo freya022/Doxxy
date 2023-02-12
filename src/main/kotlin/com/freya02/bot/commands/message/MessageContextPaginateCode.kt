@@ -23,6 +23,7 @@ import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.interactions.components.asDisabled
 import dev.minn.jda.ktx.messages.Embed
 import dev.minn.jda.ktx.messages.reply_
+import dev.minn.jda.ktx.messages.send
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.interactions.InteractionHook
@@ -41,6 +42,9 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
         var replaceStrings: Boolean by Delegates.observable(false) { _, _, _ -> blocks = regenerateBlocks() }
         var useFormatting: Boolean by Delegates.observable(false) { _, _, _ -> blocks = regenerateBlocks() }
 
+        var canReplaceStrings = true
+        var canUseFormatting = true
+
         var blocks: List<String> = regenerateBlocks()
             private set
 
@@ -48,8 +52,8 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
             val builder = StringBuilder()
 
             originalContent
-                .letIf(replaceStrings) { replaceStrings(it) }
-                .letIf(useFormatting) { Formatter.format(it) ?: throw FormattingException() } //TODO remove once #format throws it
+                .letIf(canReplaceStrings && replaceStrings) { replaceStrings(it) }
+                .letIf(canUseFormatting && useFormatting) { Formatter.format(it) ?: throw FormattingException() } //TODO remove once #format throws it
                 .lines()
                 .also { lines ->
                     lines.forEachIndexed { index, line ->
@@ -162,8 +166,13 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
             constraints += state.owner
             bindTo { buttonEvent ->
                 buttonEvent.editComponents(buttonEvent.message.components.asDisabled()).queue()
-                state.useFormatting = !state.useFormatting
-                sendCodePaginator(buttonEvent.hook, state)
+                try {
+                    state.useFormatting = !state.useFormatting
+                    sendCodePaginator(buttonEvent.hook, state)
+                } catch (e: FormattingException) {
+                    state.canUseFormatting = false
+                    buttonEvent.hook.send("Sorry, this code could not be formatted").queue()
+                }
             }
         }
     }
@@ -174,8 +183,13 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
             constraints += state.owner
             bindTo { buttonEvent ->
                 buttonEvent.editComponents(buttonEvent.message.components.asDisabled()).queue()
-                state.replaceStrings = !state.replaceStrings
-                sendCodePaginator(buttonEvent.hook, state)
+                try {
+                    state.replaceStrings = !state.replaceStrings
+                    sendCodePaginator(buttonEvent.hook, state)
+                } catch (e: ParseProblemException) {
+                    state.canReplaceStrings = false
+                    buttonEvent.hook.send("Sorry, this code could not be parsed").queue()
+                }
             }
         }
     }
