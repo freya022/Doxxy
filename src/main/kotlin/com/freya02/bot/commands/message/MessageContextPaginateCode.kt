@@ -4,6 +4,7 @@ import com.freya02.bot.format.Formatter
 import com.freya02.bot.format.FormattingException
 import com.freya02.bot.pagination.CodePaginator
 import com.freya02.bot.pagination.CodePaginatorBuilder
+import com.freya02.bot.utils.ParsingUtils.codeBlockRegex
 import com.freya02.bot.utils.Utils.digitAmount
 import com.freya02.bot.utils.Utils.letIf
 import com.freya02.bot.utils.suppressContentWarning
@@ -195,15 +196,20 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
     }
 
     private suspend fun withCodeContent(event: IReplyCallback, message: Message, block: suspend (String) -> Unit) {
-        val attachment = suppressContentWarning {
-            if (message.attachments.size != 1) {
-                return event.reply_("There is must be 1 attachment in this message", ephemeral = true).queue()
-            } //TODO support code blocks
+        val content = suppressContentWarning {
+            if (message.attachments.size == 1) {
+                return@suppressContentWarning message.attachments.single()
+                    .proxy.download().await().use { it.readAllBytes().decodeToString() }
+            }
 
-            message.attachments.single()
+            val codeBlocks = codeBlockRegex.findAll(message.contentRaw).map { it.groupValues[1] }.toList()
+            if (codeBlocks.size == 1) {
+                return@suppressContentWarning codeBlocks.single()
+            }
+
+            return event.reply_("There is must be 1 attachment or 1 code block in this message", ephemeral = true).queue()
         }
 
-        val content = attachment.proxy.download().await().use { it.readAllBytes().decodeToString() }
-        block(content)
+        block(content.trim())
     }
 }
