@@ -1,7 +1,10 @@
 package com.freya02.bot.commands.message
 
+import com.freya02.bot.format.Formatter
+import com.freya02.bot.format.FormattingException
 import com.freya02.bot.pagination.CodePaginator
 import com.freya02.bot.pagination.CodePaginatorBuilder
+import com.freya02.bot.utils.Utils.letIf
 import com.freya02.bot.utils.suppressContentWarning
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
@@ -39,7 +42,9 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
         private fun regenerateBlocks() = buildList {
             val builder = StringBuilder()
 
-            originalContent.lines()
+            originalContent
+                .letIf(useFormatting) { Formatter.format(originalContent) ?: throw FormattingException() } //TODO remove once #format throws it
+                .lines()
                 .forEachIndexed { index, line ->
                     val toBeAppended = buildString(line.length + 10) {
                         if (showLineNumbers) append("${index + 1}  ")
@@ -101,8 +106,7 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
         val state = codeMap[messageId]!!
         val blocks = state.blocks
 
-        val lineNumbersButton = makeLineNumbersButton(state)
-        components.addComponents(lineNumbersButton)
+        components.addComponents(makeLineNumbersButton(state), makeUseFormattingButton(state))
 
         editBuilder.setContent("```java\n${blocks[page]}```")
     }
@@ -119,6 +123,18 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
             bindTo { buttonEvent ->
                 buttonEvent.editComponents(buttonEvent.message.components.asDisabled()).queue()
                 state.showLineNumbers = !state.showLineNumbers
+                sendCodePaginator(buttonEvent.hook, state)
+            }
+        }
+    }
+
+    private fun makeUseFormattingButton(state: PaginationState): Button {
+        val prefix = if (state.useFormatting) "Disable" else "Enable"
+        return componentsService.ephemeralButton(ButtonStyle.SECONDARY, "$prefix formatting") {
+            constraints += state.owner
+            bindTo { buttonEvent ->
+                buttonEvent.editComponents(buttonEvent.message.components.asDisabled()).queue()
+                state.useFormatting = !state.useFormatting
                 sendCodePaginator(buttonEvent.hook, state)
             }
         }

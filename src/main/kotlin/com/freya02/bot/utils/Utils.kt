@@ -98,4 +98,9 @@ object Utils {
 
         return getDefaultScope(pool = executor, context = CoroutineName(name))
     }
+
+    inline fun <T> T.letIf(condition: Boolean, block: () -> T): T = when {
+        condition -> block()
+        else -> this
+    }
 }
