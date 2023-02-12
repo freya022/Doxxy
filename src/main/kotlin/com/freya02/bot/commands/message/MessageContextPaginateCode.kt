@@ -169,11 +169,11 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
                 buttonEvent.editComponents(buttonEvent.message.components.asDisabled()).queue()
                 try {
                     state.useFormatting = !state.useFormatting
-                    sendCodePaginator(buttonEvent.hook, state)
                 } catch (e: FormattingException) {
                     state.canUseFormatting = false
-                    buttonEvent.hook.send("Sorry, this code could not be formatted").queue()
+                    buttonEvent.hook.send("Sorry, this code could not be formatted", ephemeral = true).queue()
                 }
+                sendCodePaginator(buttonEvent.hook, state)
             }
         }
     }
@@ -186,11 +186,11 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
                 buttonEvent.editComponents(buttonEvent.message.components.asDisabled()).queue()
                 try {
                     state.replaceStrings = !state.replaceStrings
-                    sendCodePaginator(buttonEvent.hook, state)
                 } catch (e: ParseProblemException) {
                     state.canReplaceStrings = false
-                    buttonEvent.hook.send("Sorry, this code could not be parsed").queue()
+                    buttonEvent.hook.send("Sorry, this code could not be parsed", ephemeral = true).queue()
                 }
+                sendCodePaginator(buttonEvent.hook, state)
             }
         }
     }
