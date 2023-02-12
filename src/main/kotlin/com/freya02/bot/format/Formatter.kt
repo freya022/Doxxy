@@ -36,6 +36,7 @@ object Formatter {
 
     private val templates = listOf(classTemplate, methodTemplate)
 
+    //TODO use FormattingException
     fun format(userSource: String): String? {
         for (template in templates) {
             try {

@@ -3,6 +3,8 @@ package com.freya02.bot.docs.mentions
 import com.freya02.bot.commands.controllers.CommonDocsController
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
 import com.freya02.bot.docs.DocIndexMap
+import com.freya02.bot.utils.ParsingUtils.codeBlockRegex
+import com.freya02.bot.utils.ParsingUtils.spaceRegex
 import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.components.builder.select.ephemeral.EphemeralStringSelectBuilder
 import com.freya02.botcommands.api.components.event.StringSelectEvent
@@ -26,8 +28,6 @@ class DocMentionController(
     private val docIndexMap: DocIndexMap,
     private val commonDocsController: CommonDocsController
 ) {
-    private val spaceRegex = Regex("""\s+""")
-    private val codeBlockRegex = Regex("""```.*\n(\X*?)```""")
     private val identifierRegex = Regex("""(\w+)[#.](\w+)""")
 
     suspend fun processMentions(contentRaw: String): DocMatches = database.withConnection(readOnly = true) {

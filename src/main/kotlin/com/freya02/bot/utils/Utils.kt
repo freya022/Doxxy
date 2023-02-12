@@ -17,6 +17,7 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.notExists
+import kotlin.math.log10
 import kotlin.streams.asSequence
 
 object Utils {
@@ -98,4 +99,12 @@ object Utils {
 
         return getDefaultScope(pool = executor, context = CoroutineName(name))
     }
+
+    inline fun <T> T.letIf(condition: Boolean, block: (T) -> T): T = when {
+        condition -> block(this)
+        else -> this
+    }
+
+    val Number.digitAmount: Int
+        get() = 1 + log10(this.toDouble()).toInt()
 }
