@@ -23,7 +23,6 @@ import com.github.javaparser.ast.expr.StringLiteralExpr
 import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.interactions.components.asDisabled
 import dev.minn.jda.ktx.messages.Embed
-import dev.minn.jda.ktx.messages.reply_
 import dev.minn.jda.ktx.messages.send
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.UserSnowflake
@@ -207,7 +206,7 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
                 return@suppressContentWarning codeBlocks.single()
             }
 
-            return event.reply_("There is must be 1 attachment or 1 code block in this message", ephemeral = true).queue()
+            return event.hook.send("There is must be 1 attachment or 1 code block in this message", ephemeral = true).queue()
         }
 
         block(content.trim())
