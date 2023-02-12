@@ -14,6 +14,10 @@ import com.freya02.botcommands.api.components.Button
 import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.components.data.InteractionConstraints
 import com.freya02.botcommands.api.pagination.PaginatorComponents
+import com.github.javaparser.ParseProblemException
+import com.github.javaparser.StaticJavaParser
+import com.github.javaparser.ast.Node
+import com.github.javaparser.ast.expr.StringLiteralExpr
 import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.interactions.components.asDisabled
 import dev.minn.jda.ktx.messages.Embed
@@ -43,7 +47,8 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
             val builder = StringBuilder()
 
             originalContent
-                .letIf(useFormatting) { Formatter.format(originalContent) ?: throw FormattingException() } //TODO remove once #format throws it
+                .letIf(replaceStrings) { replaceStrings(it) }
+                .letIf(useFormatting) { Formatter.format(it) ?: throw FormattingException() } //TODO remove once #format throws it
                 .lines()
                 .forEachIndexed { index, line ->
                     val toBeAppended = buildString(line.length + 10) {
@@ -61,6 +66,23 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
         }.also {
             paginator.maxPages = it.size
             paginator.page = 0
+        }
+
+        private fun replaceStrings(content: String): String {
+            val strings: List<String> = tryParseCode(content).findAll(StringLiteralExpr::class.java)
+                .map { it.asString() }.distinct()
+
+            return strings.foldIndexed(content) { i, acc, string ->
+                acc.replace(string, "str$i")
+            }
+        }
+
+        private fun tryParseCode(content: String): Node {
+            return try {
+                StaticJavaParser.parseBlock("""{ $content }""")
+            } catch (e: ParseProblemException) {
+                StaticJavaParser.parseBodyDeclaration("""class X { $content }""")
+            }
         }
 
         private companion object {
@@ -106,7 +128,7 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
         val state = codeMap[messageId]!!
         val blocks = state.blocks
 
-        components.addComponents(makeLineNumbersButton(state), makeUseFormattingButton(state))
+        components.addComponents(makeLineNumbersButton(state), makeUseFormattingButton(state), makeReplaceStringsButton(state))
 
         editBuilder.setContent("```java\n${blocks[page]}```")
     }
@@ -135,6 +157,18 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
             bindTo { buttonEvent ->
                 buttonEvent.editComponents(buttonEvent.message.components.asDisabled()).queue()
                 state.useFormatting = !state.useFormatting
+                sendCodePaginator(buttonEvent.hook, state)
+            }
+        }
+    }
+
+    private fun makeReplaceStringsButton(state: PaginationState): Button {
+        val prefix = if (state.replaceStrings) "Restore" else "Shorten"
+        return componentsService.ephemeralButton(ButtonStyle.SECONDARY, "$prefix strings") {
+            constraints += state.owner
+            bindTo { buttonEvent ->
+                buttonEvent.editComponents(buttonEvent.message.components.asDisabled()).queue()
+                state.replaceStrings = !state.replaceStrings
                 sendCodePaginator(buttonEvent.hook, state)
             }
         }
