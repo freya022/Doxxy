@@ -4,6 +4,7 @@ import com.freya02.bot.format.Formatter
 import com.freya02.bot.format.FormattingException
 import com.freya02.bot.pagination.CodePaginator
 import com.freya02.bot.pagination.CodePaginatorBuilder
+import com.freya02.bot.utils.Utils.digitAmount
 import com.freya02.bot.utils.Utils.letIf
 import com.freya02.bot.utils.suppressContentWarning
 import com.freya02.botcommands.api.annotations.CommandMarker
@@ -50,19 +51,24 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
                 .letIf(replaceStrings) { replaceStrings(it) }
                 .letIf(useFormatting) { Formatter.format(it) ?: throw FormattingException() } //TODO remove once #format throws it
                 .lines()
-                .forEachIndexed { index, line ->
-                    val toBeAppended = buildString(line.length + 10) {
-                        if (showLineNumbers) append("${index + 1}  ")
-                        appendLine(line)
-                    }
+                .also { lines ->
+                    lines.forEachIndexed { index, line ->
+                        val toBeAppended = buildString(line.length + 10) {
+                            if (showLineNumbers) {
+                                append("${index + 1}".padEnd(lines.size.digitAmount))
+                                append(" ")
+                            }
+                            appendLine(line)
+                        }
 
-                    if (builder.length + toBeAppended.length + codeBlockLength > Message.MAX_CONTENT_LENGTH) {
-                        add(builder.toString())
-                        builder.clear()
-                    }
+                        if (builder.length + toBeAppended.length + codeBlockLength > Message.MAX_CONTENT_LENGTH) {
+                            add(builder.toString())
+                            builder.clear()
+                        }
 
-                    builder.append(toBeAppended)
-                }.also { add(builder.toString()) }
+                        builder.append(toBeAppended)
+                    }.also { add(builder.toString()) }
+                }
         }.also {
             paginator.maxPages = it.size
             paginator.page = 0
