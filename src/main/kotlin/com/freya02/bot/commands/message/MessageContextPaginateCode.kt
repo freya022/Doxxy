@@ -53,7 +53,7 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
 
             originalContent
                 .letIf(canReplaceStrings && replaceStrings) { replaceStrings(it) }
-                .letIf(canUseFormatting && useFormatting) { Formatter.format(it) ?: throw FormattingException() } //TODO remove once #format throws it
+                .letIf(canUseFormatting && useFormatting) { Formatter.format(it) }
                 .lines()
                 .also { lines ->
                     lines.forEachIndexed { index, line ->

@@ -1,6 +1,7 @@
 package com.freya02.bot.commands.slash
 
 import com.freya02.bot.format.Formatter
+import com.freya02.bot.format.FormattingException
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.CommandScope
@@ -31,18 +32,21 @@ class SlashFormat : ApplicationCommand() {
         val modalEvent = modal.await()
         val code = modalEvent.getValue("code")!!.asString
 
-        val formattedSource = Formatter.format(code)?.let {
-            """
-                \`\`\`java
-                $it
-                \`\`\`
-            """.trimIndent()
-        } ?: "Cannot format this code, this formatter only supports Java, your snippet may have a syntax error."
+        try {
+            val formattedSource =
+                """
+                    \`\`\`java
+                    ${Formatter.format(code)}
+                    \`\`\`
+                """.trimIndent()
 
-        if (formattedSource.length > Message.MAX_CONTENT_LENGTH) {
-            modalEvent.reply_("The formatted code is too large, please use a paste service.", ephemeral = true).queue()
-        } else {
-            modalEvent.reply_(formattedSource, ephemeral = true).queue()
+            if (formattedSource.length > Message.MAX_CONTENT_LENGTH) {
+                modalEvent.reply_("The formatted code is too large, please use a paste service.", ephemeral = true).queue()
+            } else {
+                modalEvent.reply_(formattedSource, ephemeral = true).queue()
+            }
+        } catch (e: FormattingException) {
+            modalEvent.reply_("Cannot format this code, this formatter only supports Java, your snippet may have a syntax error.", ephemeral = true).queue()
         }
     }
 }
