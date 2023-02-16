@@ -83,7 +83,7 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
                 .map { it.asString() }.distinct()
 
             return strings.foldIndexed(content) { i, acc, string ->
-                acc.replace(string, "str$i")
+                acc.replace(""""$string"""", """"str$i"""")
             }
         }
 
