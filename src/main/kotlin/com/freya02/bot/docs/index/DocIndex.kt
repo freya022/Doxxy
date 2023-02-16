@@ -45,7 +45,8 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
 
     override suspend fun findAnySignatures(query: String, limit: Int, docTypes: DocTypes) =
         database.withConnection(readOnly = true) {
-            preparedStatement("set pg_trgm.similarity_threshold = 0.1;") { executeUpdate(*emptyArray()) }
+            val threshold = if (query.length > 6) 0.22 else 0.1 //le performance
+            preparedStatement("set pg_trgm.similarity_threshold = $threshold;") { executeUpdate(*emptyArray()) }
             findAnySignatures0(query, limit, docTypes)
         }
 
@@ -175,7 +176,8 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
     //  The trick may be to set a lower similarity threshold as to get more, but similar enough results
     //  And then filter with the accurate similarity on the remaining rows
     override suspend fun search(query: String): List<DocSearchResult> = database.withConnection(readOnly = true) {
-        preparedStatement("set pg_trgm.similarity_threshold = 0.1;") { executeUpdate(*emptyArray()) }
+        val threshold = if (query.length > 4) 0.22 else 0.1 //le performance
+        preparedStatement("set pg_trgm.similarity_threshold = $threshold;") { executeUpdate(*emptyArray()) }
 
         val results = findAnySignatures0(query, limit = 5, DocTypes.ANY)
 
@@ -187,7 +189,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         return withSimilarityScoreMethod(query) { similarityScoreQuery, similarityScoreQueryParams ->
             results + preparedStatement("""
                 select *
-                from (select coalesce(full_identifier, classname)        as full_identifier,
+                from (select full_identifier,
                              coalesce(human_identifier, classname)       as human_identifier,
                              coalesce(human_class_identifier, classname) as human_class_identifier,
                              $similarityScoreQuery                       as overall_similarity,
@@ -195,7 +197,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                       from doc_view
                                natural left join doc
                       where source_id = ?
-                        and type = any(?)
+                        and type = any (?)
                         and full_identifier % ? -- Uses a fake threshold of 0.1, set above
                      ) as low_accuracy_search
                 where overall_similarity > 0.22     --Real threshold
@@ -240,14 +242,14 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
 
         return withSimilarityScoreMethod(query) { similarityScoreQuery, similarityScoreQueryParams ->
             preparedStatement("""
-                select coalesce(full_identifier, classname)        as full_identifier,
+                select full_identifier,
                        coalesce(human_identifier, classname)       as human_identifier,
                        coalesce(human_class_identifier, classname) as human_class_identifier,
                        $similarityScoreQuery                       as overall_similarity
                 from doc_view
                          natural left join doc
                 where source_id = ?
-                  and type = any(?)
+                  and type = any (?)
                 -- Uses a fake threshold set by the caller, 
                 --  it should be low enough as that the X best values are always displayed, 
                 --  but ordered by the accurate score

@@ -61,9 +61,9 @@ create table DocSeeAlsoReference
 create index see_also_doc_id_index on docseealsoreference (doc_id);
 
 create materialized view doc_view as
-select id, concat(classname, '#', identifier) as full_identifier
-from doc
-where identifier is not null;
+select id,
+       case when identifier is null then classname else concat(classname, '#', identifier) end as full_identifier
+from doc;
 
 -- Doesn't need to be temporarily disabled since the materialized view is only refreshed once
 create index doc_view_full_identifier_gist on doc_view using gist(full_identifier gist_trgm_ops);

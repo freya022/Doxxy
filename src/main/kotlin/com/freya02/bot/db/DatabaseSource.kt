@@ -15,7 +15,7 @@ import kotlin.time.Duration.Companion.seconds
 @BService(ServiceStart.PRE_LOAD)
 @ServiceType(type = ConnectionSupplier::class)
 class DatabaseSource(config: Config) : ConnectionSupplier {
-    private val version = "2.2" //Same version as in CreateDatabase.sql
+    private val version = "2.3" //Same version as in CreateDatabase.sql
     private val source: HikariDataSource
 
     private val migrationNameRegex = Regex("""v(\d+)\.(\d+)__.+\.sql""")
