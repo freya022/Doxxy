@@ -181,6 +181,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
 
         val inferredTypes = when {
             query.substringAfter('#').all { it.isUpperCase() } -> DocTypes.FIELD
+            '#' in query -> DocTypes(DocType.METHOD)
             else -> DocTypes(DocType.CLASS, DocType.METHOD)
         }
 
