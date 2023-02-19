@@ -10,7 +10,7 @@ create table doxxy_version
 );
 
 insert into doxxy_version
-values (true, '2.2'); -- Change in DatabaseSource.kt too
+values (true, '2.3'); -- Change in DatabaseSource.kt too
 
 create table Tag
 (
