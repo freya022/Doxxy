@@ -34,7 +34,25 @@ object Formatter {
     """.trimIndent()
     )
 
-    private val templates = listOf(classTemplate, methodTemplate)
+    private val noTemplate = FormatterTemplate(
+        """
+        {}
+    """.trimIndent(),
+        """
+        (\X*)
+    """.trimIndent()
+    )
+
+    private val noTemplateMissingCurlyBracket = FormatterTemplate(
+        """
+        {}}
+    """.trimIndent(),
+        """
+        (\X*)
+    """.trimIndent()
+    )
+
+    private val templates = listOf(classTemplate, methodTemplate, noTemplate, noTemplateMissingCurlyBracket)
 
     @Throws(FormattingException::class)
     fun format(userSource: String): String {
