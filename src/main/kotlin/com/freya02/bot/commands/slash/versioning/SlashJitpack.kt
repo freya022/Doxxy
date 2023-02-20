@@ -159,7 +159,7 @@ class SlashJitpack(
 
                 addCommonJitpackOptions(manager)
                 option("pullNumber") {
-                    description = "The number of the issue"
+                    description = "The Pull Request number"
                     autocompleteReference(PR_NUMBER_AUTOCOMPLETE_NAME)
                 }
 
@@ -169,8 +169,8 @@ class SlashJitpack(
     }
 
     private fun SlashCommandBuilder.addCommonJitpackOptions(manager: GuildApplicationCommandManager) {
-        option("libraryType") {
-            description = "Type of library"
+        option(declaredName = "libraryType", optionName = "library") {
+            description = "The target library"
 
             //Override choices are already set in LibraryTypeResolver as this command could not cover all entries in the future
             choices = when {
@@ -187,7 +187,7 @@ class SlashJitpack(
             }
         }
 
-        option("buildToolType") {
+        option(declaredName = "buildToolType", optionName = "build_tool") {
             description = "The build tool to generate the script for"
             usePredefinedChoices = true
         }

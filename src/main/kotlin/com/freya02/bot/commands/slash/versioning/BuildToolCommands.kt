@@ -104,7 +104,7 @@ class BuildToolCommands(private val versions: Versions, private val componentsSe
                     buildToolType
                 }
 
-                option("libraryType") {
+                option(declaredName = "libraryType", optionName = "library") {
                     description = "Type of library"
                     usePredefinedChoices = true
                 }
