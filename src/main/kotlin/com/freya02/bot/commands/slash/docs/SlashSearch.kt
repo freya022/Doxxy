@@ -13,16 +13,16 @@ class SlashSearch(private val slashDocsController: SlashDocsController) {
     @AppDeclaration
     fun declare(manager: GuildApplicationCommandManager) {
         manager.slashCommand("search", CommandScope.GUILD) {
-            description = "Searches the documentation for a class, a method, a field or anything"
+            description = "Searches the documentation for classes, methods and fields"
 
             DocSourceType.typesForGuild(manager.guild).forEach { sourceType ->
                 subcommand(sourceType.cmdName) {
-                    description = "Searches the documentation for a class, a method, a field or anything"
+                    description = "Searches the documentation for classes, methods and fields"
 
                     generatedOption("sourceType") { sourceType }
 
                     option("query") {
-                        description = "The docs to search for"
+                        description = "Search query, # only searches methods, all uppercase for constant fields"
                         autocompleteReference(SEARCH_AUTOCOMPLETE_NAME)
                     }
 
