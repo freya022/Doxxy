@@ -91,7 +91,15 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
             return try {
                 StaticJavaParser.parseBlock("""{ $content }""")
             } catch (e: ParseProblemException) {
-                StaticJavaParser.parseBodyDeclaration("""class X { $content }""")
+                try {
+                    StaticJavaParser.parseBodyDeclaration("""class X { $content }""")
+                } catch (e: ParseProblemException) {
+                    try {
+                        StaticJavaParser.parseBodyDeclaration(content)
+                    } catch (e: ParseProblemException) {
+                        StaticJavaParser.parseBodyDeclaration("""$content }""") //Missing curly bracket
+                    }
+                }
             }
         }
 
