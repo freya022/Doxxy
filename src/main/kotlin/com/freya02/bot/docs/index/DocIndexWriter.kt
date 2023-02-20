@@ -60,6 +60,10 @@ internal class DocIndexWriter(
         preparedStatement("refresh materialized view doc_view") {
             executeUpdate(*emptyArray())
         }
+
+        preparedStatement("vacuum analyse") {
+            executeUpdate(*emptyArray())
+        }
     }
 
     context(Transaction)
