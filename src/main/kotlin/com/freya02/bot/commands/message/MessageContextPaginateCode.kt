@@ -164,36 +164,42 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
         val prefix = if (state.useFormatting) "Disable" else "Enable"
         return componentsService.ephemeralButton(ButtonStyle.SECONDARY, "$prefix formatting") {
             constraints += state.owner
+            if (!state.canUseFormatting) return@ephemeralButton
+
             bindTo { buttonEvent ->
                 buttonEvent.editComponents(buttonEvent.message.components.asDisabled()).queue()
                 try {
                     state.useFormatting = !state.useFormatting
                 } catch (e: FormattingException) {
                     state.canUseFormatting = false
+                    state.useFormatting = false
                     buttonEvent.hook.send("Sorry, this code could not be formatted", ephemeral = true).queue()
                 } finally {
                     sendCodePaginator(buttonEvent.hook, state)
                 }
             }
-        }
+        }.withDisabled(!state.canUseFormatting)
     }
 
     private fun makeReplaceStringsButton(state: PaginationState): Button {
         val prefix = if (state.replaceStrings) "Restore" else "Shorten"
         return componentsService.ephemeralButton(ButtonStyle.SECONDARY, "$prefix strings") {
             constraints += state.owner
+            if (!state.canReplaceStrings) return@ephemeralButton
+
             bindTo { buttonEvent ->
                 buttonEvent.editComponents(buttonEvent.message.components.asDisabled()).queue()
                 try {
                     state.replaceStrings = !state.replaceStrings
                 } catch (e: ParseProblemException) {
                     state.canReplaceStrings = false
+                    state.replaceStrings = false
                     buttonEvent.hook.send("Sorry, this code could not be parsed", ephemeral = true).queue()
                 } finally {
                     sendCodePaginator(buttonEvent.hook, state)
                 }
             }
-        }
+        }.withDisabled(!state.canReplaceStrings)
     }
 
     private suspend fun withCodeContent(event: IReplyCallback, message: Message, block: suspend (String) -> Unit) {
