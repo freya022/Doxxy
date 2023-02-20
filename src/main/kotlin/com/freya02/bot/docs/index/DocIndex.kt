@@ -62,7 +62,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         }
 
         database.preparedStatement("""
-                select full_identifier, human_identifier, human_class_identifier
+                select full_identifier, human_identifier, human_class_identifier, return_type
                 from doc natural join doc_view
                 where source_id = ?
                   and type = any (?)
@@ -191,6 +191,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                 from (select full_identifier,
                              coalesce(human_identifier, classname)       as human_identifier,
                              coalesce(human_class_identifier, classname) as human_class_identifier,
+                             return_type,
                              $similarityScoreQuery                       as overall_similarity,
                              type
                       from doc_view
@@ -244,6 +245,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                 select full_identifier,
                        coalesce(human_identifier, classname)       as human_identifier,
                        coalesce(human_class_identifier, classname) as human_class_identifier,
+                       return_type,
                        $similarityScoreQuery                       as overall_similarity
                 from doc_view
                          natural left join doc
