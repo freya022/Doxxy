@@ -60,8 +60,8 @@ internal class DocIndexWriter(
         preparedStatement("refresh materialized view doc_view") {
             executeUpdate(*emptyArray())
         }
-
-        preparedStatement("vacuum analyse") {
+    }.also {
+        database.preparedStatement("vacuum analyse") {
             executeUpdate(*emptyArray())
         }
     }
