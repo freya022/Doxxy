@@ -75,9 +75,9 @@ class DatabaseSource(config: Config) : ConnectionSupplier {
                 return@filter false
             }
             .joinToString { it.name }
-        return buildString {
-            append("\nHint: You should run the following migration scripts: $hintFiles")
-        }
+
+        if (hintFiles.isBlank()) return ""
+        return "\nHint: You should run the following migration scripts: $hintFiles"
     }
 
     override fun getConnection(): Connection = source.connection
