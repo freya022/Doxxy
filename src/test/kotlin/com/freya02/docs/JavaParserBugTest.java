@@ -14,26 +14,30 @@ public class JavaParserBugTest {
     public static void main(String[] args) {
         @Language("Java")
         final String code = """
-            public interface MyActivity {
-            }
-            
-            public interface MyRichPresence extends MyActivity {
-                class MyTimestamps {}
+                interface Activity {
+                    class Timestamps {}
+                    enum ActivityType {}
                 
-                MyTimestamps getTimestamps();
-            }
-           
-            class MyActivityImpl implements MyActivity {
-                
-            }
-           
-            class MyRichPresenceImpl extends MyActivityImpl implements MyRichPresence {
-                @Override
-                public MyRichPresenceImpl.MyTimestamps getTimestamps() {
-                    return timestamps;
+                    @Nonnull
+                    ActivityType getType();
+                    
+                    @Nullable
+                    Timestamps getTimestamps();
                 }
-            }
-            """;
+                
+                interface RichPresence extends Activity {}
+                
+                class ActivityImpl implements Activity {
+                    @Nonnull
+                    @Override
+                    public ActivityType getType() { return type; }
+                
+                    @Nullable
+                    public RichPresence.Timestamps getTimestamps() { return timestamps; }
+                }
+                
+                class RichPresenceImpl extends ActivityImpl implements RichPresence { }
+                """;
 
         final JavaSymbolSolver solver = new JavaSymbolSolver(new ReflectionTypeSolver(false));
 
