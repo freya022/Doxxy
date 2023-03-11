@@ -31,18 +31,13 @@ object DependencySupplier {
         )
 
     @Throws(UnsupportedDependencyException::class)
-    fun formatJDA5(scriptType: ScriptType, buildToolType: BuildToolType, version: ArtifactInfo): String =
-        readResource("/${scriptType.folderName}/${buildToolType.folderName}/JDA5.${buildToolType.getEffectiveExtension(scriptType)}")
+    fun formatJDA(scriptType: ScriptType, buildToolType: BuildToolType, version: ArtifactInfo): String =
+        readResource("/${scriptType.folderName}/${buildToolType.folderName}/JDA.${buildToolType.getEffectiveExtension(scriptType)}")
             .format(version.groupId, version.artifactId, version.version)
 
     @Throws(UnsupportedDependencyException::class)
     fun formatJitpack(scriptType: ScriptType, buildToolType: BuildToolType, version: ArtifactInfo): String =
         readResource("/${scriptType.folderName}/${buildToolType.folderName}/Jitpack.${buildToolType.getEffectiveExtension(scriptType)}")
-            .format(version.groupId, version.artifactId, version.version)
-
-    @Throws(UnsupportedDependencyException::class)
-    fun formatJDA4(scriptType: ScriptType, buildToolType: BuildToolType, version: ArtifactInfo): String =
-        readResource("/${scriptType.folderName}/${buildToolType.folderName}/JDA4.${buildToolType.getEffectiveExtension(scriptType)}")
             .format(version.groupId, version.artifactId, version.version)
 
     private fun BuildToolType.getEffectiveExtension(scriptType: ScriptType): String = when (scriptType) {

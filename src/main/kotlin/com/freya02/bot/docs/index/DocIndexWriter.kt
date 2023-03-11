@@ -7,7 +7,7 @@ import com.freya02.botcommands.api.core.db.Database
 import com.freya02.botcommands.api.core.db.Transaction
 import com.freya02.docs.ClassDocs
 import com.freya02.docs.DocSourceType
-import com.freya02.docs.DocUtils.getReturnTypeNoAnnotations
+import com.freya02.docs.DocUtils.returnTypeNoAnnotations
 import com.freya02.docs.DocsSession
 import com.freya02.docs.data.BaseDoc
 import com.freya02.docs.data.ClassDetailType
@@ -55,6 +55,14 @@ internal class DocIndexWriter(
             } catch (e: Exception) {
                 throw RuntimeException("An exception occurred while reading the docs of '$className' at '$classUrl'", e)
             }
+        }
+
+        preparedStatement("refresh materialized view doc_view") {
+            executeUpdate(*emptyArray())
+        }
+    }.also {
+        database.preparedStatement("vacuum analyse") {
+            executeUpdate(*emptyArray())
         }
     }
 
@@ -189,7 +197,7 @@ internal class DocIndexWriter(
                 baseDoc.identifierNoArgs,
                 baseDoc.humanIdentifier,
                 baseDoc.toHumanClassIdentifier(className),
-                baseDoc.getReturnTypeNoAnnotations(),
+                baseDoc.returnTypeNoAnnotations,
                 embedJson,
                 baseDoc.onlineURL,
                 sourceLink

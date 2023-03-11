@@ -29,7 +29,7 @@ class TextDocsController(private val commonDocsController: CommonDocsController)
             }
 
             setCallback { buttonEvent, entry ->
-                val identifier = entry.identifier
+                val identifier = entry.fullIdentifier
                 val doc = runBlocking {
                     when {
                         '(' in identifier -> docIndex.getMethodDoc(identifier)

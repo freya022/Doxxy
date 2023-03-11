@@ -19,7 +19,7 @@ abstract class BaseDoc {
     /** method(Type name, name2) */
     abstract val humanIdentifier: String?
     abstract fun toHumanClassIdentifier(className: String): String?
-    abstract val returnType: String
+    abstract val returnType: String?
 
     protected abstract val detailToElementsMap: DetailToElementsMap
 

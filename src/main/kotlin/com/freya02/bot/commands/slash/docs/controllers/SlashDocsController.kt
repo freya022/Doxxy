@@ -1,11 +1,15 @@
 package com.freya02.bot.commands.slash.docs.controllers
 
 import com.freya02.bot.commands.controllers.CommonDocsController
+import com.freya02.bot.commands.slash.docs.searchAutocomplete
+import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.cached.CachedDoc
 import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocSuggestion
+import com.freya02.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
 import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
 import com.freya02.botcommands.api.core.annotations.BService
+import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.messages.reply_
 import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.exceptions.ErrorHandler
@@ -15,7 +19,7 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import java.util.concurrent.TimeUnit
 
 @BService
-class SlashDocsController(private val commonDocsController: CommonDocsController) {
+class SlashDocsController(private val commonDocsController: CommonDocsController, private val docIndexMap: DocIndexMap) {
     fun sendClass(event: IReplyCallback, ephemeral: Boolean, cachedDoc: CachedDoc) {
         event.reply(commonDocsController.getDocMessageData(event.member!!, ephemeral, false, cachedDoc))
             .setEphemeral(ephemeral)
@@ -64,6 +68,30 @@ class SlashDocsController(private val commonDocsController: CommonDocsController
         sendClass(event, false, cachedField)
     }
 
+    //Used by DocsCommand and SlashSearch
+    suspend fun onSearchSlashCommand(event: GuildSlashEvent, sourceType: DocSourceType, query: String) {
+        val docIndex = docIndexMap[sourceType]!!
+        when {
+            '(' in query -> {
+                val (className, identifier) = query.split("#")
+                handleMethodDocs(event, className, identifier, docIndex) {
+                    searchAutocomplete(docIndex, query).mapToSuggestions()
+                }
+            }
+
+            '#' in query -> {
+                val (className, identifier) = query.split("#")
+                handleFieldDocs(event, className, identifier, docIndex) {
+                    searchAutocomplete(docIndex, query).mapToSuggestions()
+                }
+            }
+
+            else -> handleClass(event, query, docIndex) {
+                searchAutocomplete(docIndex, query).mapToSuggestions()
+            }
+        }
+    }
+
     private suspend fun getDocSuggestionsMenu(
         event: GuildSlashEvent,
         docIndex: DocIndex,
@@ -79,7 +107,7 @@ class SlashDocsController(private val commonDocsController: CommonDocsController
         setCallback { buttonEvent, entry ->
             event.hook.deleteOriginal().queue()
 
-            val identifier = entry.identifier
+            val identifier = entry.fullIdentifier
             val doc = runBlocking {
                 when {
                     '(' in identifier -> docIndex.getMethodDoc(identifier)

@@ -1,6 +1,8 @@
 package com.freya02.bot.commands.slash.versioning
 
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
+import com.freya02.bot.utils.Utils.isBCGuild
+import com.freya02.bot.utils.Utils.isJDAGuild
 import com.freya02.bot.versioning.LibraryType
 import com.freya02.bot.versioning.Versions
 import com.freya02.botcommands.api.annotations.CommandMarker
@@ -16,20 +18,27 @@ class SlashLatest(private val versions: Versions, private val components: Compon
     @JDASlashCommand(name = "latest", description = "Shows the latest version of the library")
     fun onSlashLatest(
         event: GuildSlashEvent,
-        @AppOption(description = "Type of library") libraryType: LibraryType?
+        @AppOption(name = "library", description = "The target library", usePredefinedChoices = true) libraryType: LibraryType?
     ) {
         val builder = EmbedBuilder().setTitle("Latest versions")
 
         when (libraryType) {
             null -> {
-                builder.addBCVersion()
-                builder.addBlankField(true)
-                builder.addJDA5Version()
+                if (event.guild.isBCGuild()) {
+                    builder.addBCVersion()
+                    builder.addBlankField(true)
+                }
+                builder.addJDAVersion()
                 builder.addJDAKtxVersion()
+                when {
+                    event.guild.isJDAGuild() -> builder.addLavaPlayerVersion()
+                    else -> builder.addBlankField(true)
+                }
             }
             LibraryType.BOT_COMMANDS -> builder.addBCVersion()
-            LibraryType.JDA5 -> builder.addJDA5Version()
+            LibraryType.JDA -> builder.addJDAVersion()
             LibraryType.JDA_KTX -> builder.addJDAKtxVersion()
+            LibraryType.LAVA_PLAYER -> builder.addLavaPlayerVersion()
         }
 
         event.replyEmbeds(builder.build())
@@ -37,12 +46,16 @@ class SlashLatest(private val versions: Versions, private val components: Compon
             .queue()
     }
 
-    private fun EmbedBuilder.addJDA5Version() {
-        addField("JDA 5", "`" + versions.latestJDA5Version.version + "`", true)
+    private fun EmbedBuilder.addJDAVersion() {
+        addField("JDA", "`" + versions.latestJDAVersion.version + "`", true)
     }
 
     private fun EmbedBuilder.addJDAKtxVersion() {
         addField("JDA KTX", "`" + versions.latestJDAKtxVersion.version + "`", true)
+    }
+
+    private fun EmbedBuilder.addLavaPlayerVersion() {
+        addField("LavaPlayer", "`" + versions.latestLavaPlayerVersion.version + "`", true)
     }
 
     private fun EmbedBuilder.addBCVersion() {

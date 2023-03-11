@@ -4,7 +4,6 @@ import com.freya02.botcommands.api.core.annotations.BService
 import com.freya02.botcommands.api.core.suppliers.annotations.InstanceSupplier
 import com.google.gson.Gson
 import mu.KotlinLogging
-import kotlin.io.path.exists
 import kotlin.io.path.readText
 
 data class DBConfig(val serverName: String, val portNumber: Int, val user: String, val password: String, val dbName: String) {
@@ -13,22 +12,25 @@ data class DBConfig(val serverName: String, val portNumber: Int, val user: Strin
 }
 
 @BService
-data class Config(val token: String, val dbConfig: DBConfig) {
+data class Config(val token: String,
+                  val ownerIds: List<Long>,
+                  val prefixes: List<String>,
+                  val testGuildIds: List<Long>,
+                  val fakeJDAGuildId: Long,
+                  val fakeBCGuildId: Long,
+                  val dbConfig: DBConfig) {
     companion object {
         private val logger = KotlinLogging.logger { }
-
-        @InstanceSupplier
-        fun supply(): Config {
-            val configPath = when {
-                Data.testConfigPath.exists() -> {
-                    logger.info("Loading test config")
-                    Data.testConfigPath //Target folder prob IJ
-                }
-
-                else -> Data.configPath
+        val config: Config by lazy {
+            val configPath = Data.getEffectiveConfigPath()
+            if (Data.isDevEnvironment) {
+                logger.info("Loading test config")
             }
 
-            return Gson().fromJson(configPath.readText(), Config::class.java)
+            return@lazy Gson().fromJson(configPath.readText(), Config::class.java)
         }
+
+        @InstanceSupplier
+        fun supply(): Config = config
     }
 }

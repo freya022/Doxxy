@@ -24,7 +24,7 @@ enum class DocSourceType(
         "botcommands",
         "http://localhost:25566/BotCommands",
         null,
-        null,
+        "https://freya022.github.io/BotCommands",
         "com\\.freya02\\.botcommands\\.api.*"
     ),
     JAVA(

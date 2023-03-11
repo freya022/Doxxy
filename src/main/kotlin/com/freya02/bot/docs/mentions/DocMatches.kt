@@ -6,8 +6,6 @@ import java.util.*
 data class ClassMention(val sourceType: DocSourceType, val identifier: String)
 
 data class SimilarIdentifier(val sourceType: DocSourceType, val fullIdentifier: String, val fullHumanIdentifier: String, val similarity: Float) : Comparable<SimilarIdentifier> {
-    fun isSimilarEnough() = similarity > 0.25
-
     private val comparator = Comparator.comparing(SimilarIdentifier::similarity)
         .reversed() //Reverse similarity order
         .thenComparing(SimilarIdentifier::fullIdentifier)
@@ -18,5 +16,5 @@ data class SimilarIdentifier(val sourceType: DocSourceType, val fullIdentifier: 
 }
 
 data class DocMatches(val classMentions: List<ClassMention>, val similarIdentifiers: SortedSet<SimilarIdentifier>) {
-    fun isSufficient() = classMentions.isNotEmpty() || similarIdentifiers.any(SimilarIdentifier::isSimilarEnough)
+    val isEmpty = classMentions.isEmpty() && similarIdentifiers.isEmpty()
 }

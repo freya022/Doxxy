@@ -1,6 +1,7 @@
 package com.freya02.bot
 
 import com.freya02.bot.utils.Utils.isBCGuild
+import com.freya02.bot.utils.Utils.isJDAGuild
 import com.freya02.botcommands.api.SettingsProvider
 import com.freya02.botcommands.api.commands.CommandList
 import com.freya02.botcommands.api.commands.CommandPath
@@ -8,17 +9,20 @@ import net.dv8tion.jda.api.entities.Guild
 
 object BotSettings : SettingsProvider {
     override fun getGuildCommands(guild: Guild): CommandList {
-        //If this is not a BC guild then we need to disable BC related subcommands in these guilds
-        if (!guild.isBCGuild()) {
-            return CommandList.filter { commandPath: CommandPath ->
+        return CommandList.filter { commandPath: CommandPath ->
+            //If this is not a BC guild then we need to disable BC related subcommands in these guilds
+            if (!guild.isBCGuild()) {
                 if (commandPath.subname != null) {
                     return@filter commandPath.subname != "botcommands"
                 }
-
-                return@filter true
             }
-        }
 
-        return super.getGuildCommands(guild)
+            //Disable tags for JDA
+            if (guild.isJDAGuild() && commandPath.name.startsWith("tag")) {
+                return@filter false
+            }
+
+            return@filter true
+        }
     }
 }

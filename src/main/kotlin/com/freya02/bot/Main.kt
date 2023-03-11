@@ -1,10 +1,10 @@
 package com.freya02.bot
 
 import ch.qos.logback.classic.util.ContextInitializer
+import com.freya02.bot.utils.Utils
 import com.freya02.botcommands.api.core.BBuilder
 import com.freya02.docs.DocWebServer
 import dev.minn.jda.ktx.events.CoroutineEventManager
-import dev.minn.jda.ktx.events.getDefaultScope
 import dev.reformator.stacktracedecoroutinator.runtime.DecoroutinatorRuntime
 import kotlinx.coroutines.cancel
 import mu.KotlinLogging
@@ -23,7 +23,12 @@ object Main {
         try {
             Data.init()
 
-            System.setProperty(ContextInitializer.CONFIG_FILE_PROPERTY, Data.logbackConfigPath.absolutePathString())
+            if (Data.logbackConfigPath.exists()) {
+                System.setProperty(ContextInitializer.CONFIG_FILE_PROPERTY, Data.logbackConfigPath.absolutePathString())
+                logger.info( "Loading production logback config")
+            } else {
+                logger.info( "Loading test logback config")
+            }
 
             //stacktrace-decoroutinator seems to have issues when reloading with hotswap agent
             if ("-XX:HotswapAgent=fatjar" !in ManagementFactory.getRuntimeMXBean().inputArguments) {
@@ -32,7 +37,7 @@ object Main {
                 logger.info("Skipping stacktrace-decoroutinator as HotswapAgent is active")
             }
 
-            val scope = getDefaultScope()
+            val scope = Utils.namedDefaultScope("Doxxy coroutine", 4)
             val manager = CoroutineEventManager(scope, 1.minutes)
             manager.listener<ShutdownEvent> {
                 scope.cancel()
@@ -42,15 +47,23 @@ object Main {
             DocWebServer.startDocWebServer()
             logger.info("Started docs web server")
 
+            val config = Config.config
             BBuilder.newBuilder({
-                devMode = Data.testConfigPath.exists()
+                if (Data.isDevEnvironment) {
+                    disableExceptionsInDMs = true
+                    disableAutocompleteCache = true
+                }
 
-                addOwners(222046562543468545L)
+                addOwners(*config.ownerIds.toLongArray())
 
                 addSearchPath("com.freya02.bot")
 
+                textCommands {
+                    usePingAsPrefix = true
+                }
+
                 applicationCommands {
-                    testGuildIds += 722891685755093072
+                    testGuildIds += config.testGuildIds
                 }
 
                 components {

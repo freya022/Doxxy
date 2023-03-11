@@ -177,8 +177,7 @@ class ClassDoc(
     override val identifierNoArgs: String? = null
     override val humanIdentifier: String? = null
     override fun toHumanClassIdentifier(className: String): String? = null
-    override val returnType: String
-        get() = className
+    override val returnType: String? = null
 
     val enumConstants: List<FieldDoc>
         get() = getFieldDocs()

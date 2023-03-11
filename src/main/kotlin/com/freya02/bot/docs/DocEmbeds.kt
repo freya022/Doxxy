@@ -69,7 +69,8 @@ object DocEmbeds {
         return EmbedBuilder {
             var title = methodDoc.getSimpleAnnotatedSignature(classDoc)
             if (title.length > MessageEmbed.TITLE_MAX_LENGTH) {
-                title = "%s#%s : %s - [full signature on online docs]".format(
+                title = "%s%s#%s : %s - [full signature on online docs]".format(
+                    if (methodDoc.isStatic) "static " else "",
                     methodDoc.classDocs.className,
                     methodDoc.methodName,
                     methodDoc.methodReturnType

@@ -1,6 +1,7 @@
 package com.freya02.bot.commands.slash.versioning
 
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
+import com.freya02.bot.commands.slash.SlashLogback
 import com.freya02.bot.versioning.LibraryType
 import com.freya02.bot.versioning.ScriptType
 import com.freya02.bot.versioning.Versions
@@ -13,13 +14,17 @@ import com.freya02.botcommands.api.commands.application.GuildApplicationCommandM
 import com.freya02.botcommands.api.commands.application.annotations.AppDeclaration
 import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
 import com.freya02.botcommands.api.components.Components
+import com.freya02.botcommands.api.utils.EmojiUtils
 import dev.minn.jda.ktx.messages.MessageCreate
 import dev.minn.jda.ktx.messages.reply_
 import mu.KotlinLogging
+import net.dv8tion.jda.api.interactions.components.ItemComponent
+import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.utils.FileUpload
+import kotlin.time.Duration.Companion.days
 
 @CommandMarker
-class BuildToolCommands(private val versions: Versions, private val components: Components) {
+class BuildToolCommands(private val versions: Versions, private val componentsService: Components, private val slashLogback: SlashLogback) {
     private val logger = KotlinLogging.logger { }
 
     @CommandMarker
@@ -37,11 +42,14 @@ class BuildToolCommands(private val versions: Versions, private val components: 
                     versions.jdaVersionFromBotCommands,
                     versions.latestBotCommandsVersion
                 )
-                LibraryType.JDA5 -> DependencySupplier.formatJDA5(scriptType, buildToolType, versions.latestJDA5Version)
+                LibraryType.JDA -> DependencySupplier.formatJDA(scriptType, buildToolType, versions.latestJDAVersion)
                 LibraryType.JDA_KTX -> DependencySupplier.formatJitpack(scriptType, buildToolType, versions.latestJDAKtxVersion)
+                LibraryType.LAVA_PLAYER -> DependencySupplier.formatJitpack(scriptType, buildToolType, versions.latestLavaPlayerVersion)
             }
 
             val messageData = MessageCreate {
+                val components: MutableList<ItemComponent> = arrayListOf(componentsService.messageDeleteButton(event.user))
+
                 when (scriptType) {
                     ScriptType.DEPENDENCIES -> {
                         embed {
@@ -56,10 +64,19 @@ class BuildToolCommands(private val versions: Versions, private val components: 
                         } else {
                             files += FileUpload.fromData(script.encodeToByteArray(), "${buildToolType.fileName}.${buildToolType.fileExtension}")
                         }
+
+                        components += componentsService.ephemeralButton(
+                            ButtonStyle.SECONDARY,
+                            label = "Logback config",
+                            emoji = EmojiUtils.resolveJDAEmoji("scroll")
+                        ) {
+                            timeout(1.days)
+                            bindTo(slashLogback::onLogbackRequest)
+                        }
                     }
                 }
 
-                actionRow(this@BuildToolCommands.components.messageDeleteButton(event.user))
+                actionRow(components)
             }
 
             event.reply(messageData).queue()
@@ -80,14 +97,16 @@ class BuildToolCommands(private val versions: Versions, private val components: 
 
                 option("scriptType") {
                     description = "Whether to show the full build script or only the dependencies"
+                    usePredefinedChoices = true
                 }
 
                 generatedOption("buildToolType") {
                     buildToolType
                 }
 
-                option("libraryType") {
+                option(declaredName = "libraryType", optionName = "library") {
                     description = "Type of library"
+                    usePredefinedChoices = true
                 }
 
                 function = ::onSlashBuildTool

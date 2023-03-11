@@ -52,7 +52,7 @@ class SlashJitpack(
                 jitpackBranchService.getUsedJDAVersionFromBranch(pullRequest.branch),
                 pullRequest.toJitpackArtifact()
             )
-            LibraryType.JDA5, LibraryType.JDA_KTX -> DependencySupplier.formatJitpack(
+            LibraryType.JDA, LibraryType.JDA_KTX, LibraryType.LAVA_PLAYER -> DependencySupplier.formatJitpack(
                 ScriptType.DEPENDENCIES,
                 buildToolType,
                 pullRequest.toJitpackArtifact()
@@ -142,62 +142,55 @@ class SlashJitpack(
         manager.slashCommand("jitpack", CommandScope.GUILD) {
             description = "Shows you how to use jitpack for your bot"
 
-            subcommandGroup("branch") {
+            subcommand("branch") {
                 description = "Shows you how to use a branch for your bot"
 
-                BuildToolType.values().forEach { toolType ->
-                    subcommand(toolType.cmdName) {
-                        description = "Shows you how to use a branch for your bot"
-
-                        addCommonJitpackOptions(manager, toolType)
-                        option("branchName") {
-                            autocompleteReference(BRANCH_NAME_AUTOCOMPLETE_NAME)
-                        }
-
-                        function = SlashJitpack::onSlashJitpackBranch
-                    }
+                addCommonJitpackOptions(manager)
+                option("branchName") {
+                    description = "The name of the Git branch to build from"
+                    autocompleteReference(BRANCH_NAME_AUTOCOMPLETE_NAME)
                 }
+
+                function = SlashJitpack::onSlashJitpackBranch
             }
 
-            subcommandGroup("pr") {
+            subcommand("pr") {
                 description = "Shows you how to use Pull Requests for your bot"
 
-                BuildToolType.values().forEach { toolType ->
-                    subcommand(toolType.cmdName) {
-                        description = "Shows you how to use Pull Requests for your bot"
-
-                        addCommonJitpackOptions(manager, toolType)
-                        option("pullNumber") {
-                            description = "The number of the issue"
-
-                            autocompleteReference(PR_NUMBER_AUTOCOMPLETE_NAME)
-                        }
-
-                        function = SlashJitpack::onSlashJitpackPR
-                    }
+                addCommonJitpackOptions(manager)
+                option("pullNumber") {
+                    description = "The Pull Request number"
+                    autocompleteReference(PR_NUMBER_AUTOCOMPLETE_NAME)
                 }
+
+                function = SlashJitpack::onSlashJitpackPR
             }
         }
     }
 
-    private fun SlashCommandBuilder.addCommonJitpackOptions(manager: GuildApplicationCommandManager, toolType: BuildToolType) {
-        option("libraryType") {
-            description = "Type of library"
+    private fun SlashCommandBuilder.addCommonJitpackOptions(manager: GuildApplicationCommandManager) {
+        option(declaredName = "libraryType", optionName = "library") {
+            description = "The target library"
 
+            //Override choices are already set in LibraryTypeResolver as this command could not cover all entries in the future
             choices = when {
                 manager.guild.isBCGuild() -> listOf(
                     Choice("BotCommands", LibraryType.BOT_COMMANDS.name),
-                    Choice("JDA 5", LibraryType.JDA5.name),
+                    Choice("JDA", LibraryType.JDA.name),
                     Choice("JDA-KTX", LibraryType.JDA_KTX.name)
                 )
                 else -> listOf(
-                    Choice("JDA 5", LibraryType.JDA5.name),
-                    Choice("JDA-KTX", LibraryType.JDA_KTX.name)
+                    Choice("JDA", LibraryType.JDA.name),
+                    Choice("JDA-KTX", LibraryType.JDA_KTX.name),
+                    Choice("LavaPlayer", LibraryType.LAVA_PLAYER.name)
                 )
             }
         }
 
-        generatedOption("buildToolType") { toolType }
+        option(declaredName = "buildToolType", optionName = "build_tool") {
+            description = "The build tool to generate the script for"
+            usePredefinedChoices = true
+        }
     }
 
     @CommandMarker
@@ -219,7 +212,7 @@ class SlashJitpack(
         val branchName = branch.branchName
 
         val dependencyStr = when (libraryType) {
-            LibraryType.JDA5, LibraryType.JDA_KTX -> DependencySupplier.formatJitpack(
+            LibraryType.JDA, LibraryType.JDA_KTX, LibraryType.LAVA_PLAYER -> DependencySupplier.formatJitpack(
                 ScriptType.DEPENDENCIES,
                 buildToolType,
                 branch.toJitpackArtifact()

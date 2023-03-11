@@ -27,7 +27,7 @@ class SlashLogging : ApplicationCommand() {
     fun onSlashLogging(
         event: GuildSlashEvent,
         @AppOption(autocomplete = LOGGER_NAME_AUTOCOMPLETE_NAME) loggerName: String,
-        @AppOption logLevel: Level
+        @AppOption(usePredefinedChoices = true) logLevel: Level
     ) {
         val loggerList = loggerContext.loggerList
         when (val logger = loggerList.firstOrNull { it.name == loggerName }) {

@@ -5,6 +5,7 @@ import com.freya02.bot.docs.cached.CachedDoc
 import com.freya02.bot.docs.cached.CachedField
 import com.freya02.bot.docs.cached.CachedMethod
 import com.freya02.botcommands.api.core.db.Database
+import com.freya02.botcommands.api.core.db.KConnection
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.DocsSession
 import com.freya02.docs.PageCache
@@ -42,11 +43,13 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         return CachedField(sourceType, embed, seeAlsoReferences, javadocLink, sourceLink)
     }
 
-    override suspend fun findAnySignatures(query: String?, limit: Int, vararg docTypes: DocType): List<DocSearchResult> = getAllSignatures(query, limit, *docTypes)
+    override suspend fun findAnySignatures(query: String, limit: Int, docTypes: DocTypes) =
+        database.withConnection(readOnly = true) {
+            preparedStatement("set pg_trgm.similarity_threshold = 0.1;") { executeUpdate(*emptyArray()) }
+            findAnySignatures0(query, limit, docTypes)
+        }
 
-    override suspend fun findSignaturesIn(className: String, query: String?, vararg docTypes: DocType, limit: Int): List<DocSearchResult> {
-        val typeCheck = docTypes.joinToString(" or ") { "doc.type = ${it.id}" }
-
+    override suspend fun findSignaturesIn(className: String, query: String?, docTypes: DocTypes, limit: Int): List<DocSearchResult> {
         @Language("PostgreSQL", prefix = "select * from doc ")
         val sort = when {
             query.isNullOrEmpty() -> "order by identifier"
@@ -59,23 +62,17 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         }
 
         database.preparedStatement("""
-                select identifier, human_identifier, human_class_identifier
-                from doc
+                select full_identifier, human_identifier, human_class_identifier, return_type
+                from doc natural join doc_view
                 where source_id = ?
-                  and ($typeCheck)
+                  and type = any (?)
                   and classname = ?
                 $sort
                 limit ?
                 """.trimIndent()
         ) {
-            return executeQuery(sourceType.id, className, *sortArgs, limit)
-                .transformEach {
-                    DocSearchResult(
-                        it["identifier"],
-                        it["human_identifier"],
-                        it["human_class_identifier"],
-                    )
-                }
+            return executeQuery(sourceType.id, docTypes.map { it.id }.toTypedArray(), className, *sortArgs, limit)
+                .map { DocSearchResult(it) }
         }
     }
 
@@ -100,21 +97,15 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             $limitingSort
             """.trimIndent()
         ) {
-            executeQuery(sourceType.id, DocType.CLASS.id, *sortArgs).transformEach { it["classname"] }
+            executeQuery(sourceType.id, DocType.CLASS.id, *sortArgs).map { it["classname"] }
         }
     }
-
-    override suspend fun getClassesWithMethods(query: String?): List<String> =
-        getClassNamesWithChildren(DocType.METHOD, query)
-
-    override suspend fun getClassesWithFields(query: String?): List<String> =
-        getClassNamesWithChildren(DocType.FIELD, query)
 
     override suspend fun resolveDoc(query: String): CachedDoc? {
         // TextChannel#getIterableHistory()
         val tokens = query.split('#').toMutableList()
         var currentClass: String = tokens.removeFirst()
-        var docsOf: String? = currentClass
+        var docsOf: String = currentClass
 
         database.transactional {
             tokens.forEach {
@@ -134,12 +125,10 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             }
         }
 
-        return docsOf?.let { docsOf ->
-            when {
-                '(' in docsOf -> getMethodDoc(docsOf)
-                '#' in docsOf -> getFieldDoc(docsOf)
-                else -> getClassDoc(docsOf)
-            }
+        return when {
+            '(' in docsOf -> getMethodDoc(docsOf)
+            '#' in docsOf -> getFieldDoc(docsOf)
+            else -> getClassDoc(docsOf)
         }
     }
 
@@ -170,15 +159,58 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         //Do a classic search on the latest return type + optionally last token (might be a method or a field)
         return when {
             lastToken != null -> {
-                findSignaturesIn(currentClass, lastToken, DocType.METHOD, DocType.FIELD)
+                findSignaturesIn(currentClass, lastToken, DocTypes.IDENTIFIERS)
                     //Current class is added because findSignaturesIn doesn't return "identifier", not "full_signature"
-                    .map { "$currentClass#${it.identifierOrFullIdentifier}" }
+                    .map { it.fullIdentifier }
                     //Not showing the parameter names makes it easier for the user to continue using autocompletion with shift+tab
                     // as parameter names breaks the resolver
                     .map { DocResolveResult(it, it) }
             }
+
             else -> getClasses(currentClass).map { DocResolveResult(it, it) }
         }
+    }
+
+    //Performance optimized
+    //  The trick may be to set a lower similarity threshold as to get more, but similar enough results
+    //  And then filter with the accurate similarity on the remaining rows
+    override suspend fun search(query: String): List<DocSearchResult> = database.withConnection(readOnly = true) {
+        preparedStatement("set pg_trgm.similarity_threshold = 0.1;") { executeUpdate(*emptyArray()) }
+
+        val results = findAnySignatures0(query, limit = 5, DocTypes.ANY)
+
+        val inferredTypes = when {
+            query.substringAfter('#').all { it.isUpperCase() } -> DocTypes.FIELD
+            '#' in query -> DocTypes(DocType.METHOD)
+            else -> DocTypes(DocType.CLASS, DocType.METHOD)
+        }
+
+        return withSimilarityScoreMethod(query) { similarityScoreQuery, similarityScoreQueryParams ->
+            results + preparedStatement("""
+                select *
+                from (select full_identifier,
+                             coalesce(human_identifier, classname)       as human_identifier,
+                             coalesce(human_class_identifier, classname) as human_class_identifier,
+                             return_type,
+                             $similarityScoreQuery                       as overall_similarity,
+                             type
+                      from doc_view
+                               natural left join doc
+                      where source_id = ?
+                        and type = any (?)
+                        and full_identifier % ? -- Uses a fake threshold of 0.1, set above
+                     ) as low_accuracy_search
+                where overall_similarity > 0.22     --Real threshold
+                  and not full_identifier = any (?) --Remove previous results
+                order by case when not ? like '%#%' then type end, --Don't order by type if the query asks for identifiers of a class 
+                         overall_similarity desc nulls last,
+                         full_identifier                           --Class > Method > Field, then similarity
+                limit ?;
+            """.trimIndent()) {
+                executeQuery(*similarityScoreQueryParams, sourceType.id, inferredTypes.map { it.id }.toTypedArray(), query, results.map { it.fullIdentifier }.toTypedArray(), query, 25 - results.size)
+                    .map { DocSearchResult(it) }
+            }
+        } ?: emptyList()
     }
 
     suspend fun reindex(reindexData: ReindexData): DocIndex {
@@ -201,6 +233,64 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         System.gc() //Very effective
 
         return this
+    }
+
+    /** **Requires `pg_trgm.similarity_threshold` to be set**  */
+    context(KConnection)
+    private suspend fun findAnySignatures0(query: String, limit: Int, docTypes: DocTypes): List<DocSearchResult> {
+        if (docTypes.isEmpty()) throw IllegalArgumentException("Must have at least one doc type")
+
+        return withSimilarityScoreMethod(query) { similarityScoreQuery, similarityScoreQueryParams ->
+            preparedStatement("""
+                select full_identifier,
+                       coalesce(human_identifier, classname)       as human_identifier,
+                       coalesce(human_class_identifier, classname) as human_class_identifier,
+                       return_type,
+                       $similarityScoreQuery                       as overall_similarity
+                from doc_view
+                         natural left join doc
+                where source_id = ?
+                  and type = any (?)
+                -- Uses a fake threshold set by the caller, 
+                --  it should be low enough as that the X best values are always displayed, 
+                --  but ordered by the accurate score
+                  and ? % full_identifier
+                order by overall_similarity desc nulls last, full_identifier
+                limit ?;
+            """.trimIndent()) {
+                executeQuery(*similarityScoreQueryParams, sourceType.id, docTypes.map { it.id }.toTypedArray(), query, limit).map { DocSearchResult(it) }
+            }
+        } ?: return emptyList()
+    }
+
+    private suspend fun withSimilarityScoreMethod(
+        query: String,
+        block: suspend (String, Array<out Any>) -> List<DocSearchResult>
+    ): List<DocSearchResult>? {
+        val matchResult = queryRegex.matchEntire(query) ?: return null
+        val (entireMatch, classname, identifier) = matchResult.groupValues
+
+        @Language("PostgreSQL", prefix = "select ", suffix = " from doc")
+        val similarityScoreQuery = when {
+            //Guild#updateCommands, find with both columns
+            classname.isNotBlank() && identifier.isNotBlank() -> "similarity(?, classname) * similarity(?, identifier_no_args)"
+            //Guild#, find all methods of that class
+            classname.isNotBlank() && '#' in entireMatch -> "similarity(?, classname)"
+            //updateCommands or Guild, get the best similarity between class and identifier
+            classname.isNotBlank() -> "greatest(similarity(?, classname), similarity(?, identifier_no_args))"
+            //#updateCommands, get the best similarity in identifiers
+            identifier.isNotBlank() -> "similarity(?, identifier_no_args)"
+            else -> "0" //No input
+        }
+        val similarityScoreQueryParams = when {
+            classname.isNotBlank() && identifier.isNotBlank() -> arrayOf(classname, identifier)
+            classname.isNotBlank() && '#' in entireMatch -> arrayOf(classname)
+            classname.isNotBlank() -> arrayOf(classname, classname)
+            identifier.isNotBlank() -> arrayOf(identifier)
+            else -> arrayOf()
+        }
+
+        return block(similarityScoreQuery, similarityScoreQueryParams)
     }
 
     private suspend fun findDoc(
@@ -246,67 +336,9 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         }
     }
 
-    private suspend fun getAllSignatures(query: String?, limit: Int, vararg docTypes: DocType): List<DocSearchResult> {
-        @Language("PostgreSQL", prefix = "select * from doc ")
-        val sort = when {
-            query.isNullOrEmpty() -> "order by classname, identifier"
-            '#' in query -> "order by similarity(classname, ?) * similarity(identifier_no_args, ?) desc"
-            else -> "order by similarity(concat(classname, '#', identifier_no_args), ?) desc"
-        }
-
-        val sortArgs = when {
-            query.isNullOrEmpty() -> arrayOf()
-            '#' in query -> arrayOf(query.substringBefore('#'), query.substringAfter('#').substringBefore('('))
-            else -> arrayOf(query)
-        }
-
-        database.preparedStatement(
-            """
-                select concat(classname, '#', identifier) as full_identifier, human_identifier, human_class_identifier
-                from doc
-                where source_id = ?
-                  and type = any(?)
-                $sort
-                limit ?
-            """.trimIndent()) {
-            return executeQuery(sourceType.id, docTypes.map { it.id }.toTypedArray(), *sortArgs, limit)
-                .map {
-                    DocSearchResult(
-                        it["full_identifier"],
-                        it["human_identifier"],
-                        it["human_class_identifier"]
-                    )
-                }
-        }
-    }
-
-    private suspend fun getClassNamesWithChildren(docType: DocType, query: String?): List<String> {
-        @Language("PostgreSQL", prefix = "select * from doc ")
-        val sort = when {
-            query.isNullOrEmpty() -> "order by classname"
-            else -> "order by similarity(classname, ?) desc"
-        }
-
-        val sortArgs = when {
-            query.isNullOrEmpty() -> arrayOf()
-            else -> arrayOf(query)
-        }
-
-        database.preparedStatement(
-            """
-                select classname
-                from doc
-                where source_id = ?
-                  and type = ?
-                group by classname
-                $sort
-                limit 25
-            """.trimIndent()) {
-            return executeQuery(sourceType.id, docType.id, *sortArgs).map { it.getString("classname") }
-        }
-    }
-
     companion object {
         private val logger = KotlinLogging.logger { }
+
+        private val queryRegex = Regex("""^(\w*)#?(\w*)""")
     }
 }

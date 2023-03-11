@@ -16,6 +16,8 @@ class MethodDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, e
     val methodParameters: MethodDocParameters?
     val methodReturnType: String
 
+    val isStatic: Boolean
+
     override val descriptionElements: HTMLElementList
     override val deprecationElement: HTMLElement?
 
@@ -45,6 +47,9 @@ class MethodDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, e
             null -> requireDoc(classDetailType == ClassDetailType.CONSTRUCTOR).let { classDocs.className }
             else -> methodReturnTypeElement.text()
         }
+
+        val modifiersElement = element.selectFirst("div.member-signature > span.modifiers")
+        isStatic = modifiersElement != null && "static" in modifiersElement.text()
 
         //Get method description
         descriptionElements = HTMLElementList.fromElements(element.select("section.detail > div.block"))

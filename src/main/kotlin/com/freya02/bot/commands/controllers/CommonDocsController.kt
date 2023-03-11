@@ -15,11 +15,7 @@ import com.freya02.docs.DocSourceType
 import com.freya02.docs.data.TargetType
 import dev.minn.jda.ktx.messages.Embed
 import mu.KotlinLogging
-import net.dv8tion.jda.api.EmbedBuilder
-import net.dv8tion.jda.api.OnlineStatus
-import net.dv8tion.jda.api.entities.ClientType
 import net.dv8tion.jda.api.entities.Member
-import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.interactions.components.ItemComponent
 import net.dv8tion.jda.api.interactions.components.buttons.Button
@@ -27,7 +23,7 @@ import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import net.dv8tion.jda.api.utils.messages.MessageCreateRequest
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.minutes
 
 @BService
 class CommonDocsController(private val componentsService: Components) {
@@ -60,7 +56,7 @@ class CommonDocsController(private val componentsService: Components) {
 
     fun getDocMessageData(caller: Member, ephemeral: Boolean, showCaller: Boolean, cachedDoc: CachedDoc): MessageCreateData {
         return MessageCreateBuilder().apply {
-            addEmbeds(cachedDoc.embed.withLink(cachedDoc, caller).let {
+            addEmbeds(cachedDoc.embed.let {
                 when {
                     showCaller -> Embed {
                         builder.copyFrom(it)
@@ -72,22 +68,6 @@ class CommonDocsController(private val componentsService: Components) {
             addDocsSeeAlso(cachedDoc)
             addDocsActionRows(ephemeral, cachedDoc, caller)
         }.build()
-    }
-
-    private fun MessageEmbed.withLink(cachedDoc: CachedDoc, member: Member?): MessageEmbed {
-        if (member == null) {
-            logger.warn("Got a null member")
-            return this
-        }
-
-        cachedDoc.javadocLink?.let { javadocLink ->
-            val mobileStatus = member.getOnlineStatus(ClientType.MOBILE)
-            if (mobileStatus == OnlineStatus.ONLINE || mobileStatus == OnlineStatus.DO_NOT_DISTURB) {
-                return EmbedBuilder(this).addField("Link", javadocLink, false).build()
-            }
-        }
-
-        return this
     }
 
     private fun MessageCreateRequest<*>.addDocsActionRows(
@@ -110,7 +90,7 @@ class CommonDocsController(private val componentsService: Components) {
             if (referenceList.any { it.targetType != TargetType.UNKNOWN }) {
                 val selectMenu = componentsService.persistentStringSelectMenu {
                     bindTo(CommonDocsHandlers.SEE_ALSO_SELECT_LISTENER_NAME, cachedDoc.source.id)
-                    timeout(15, TimeUnit.MINUTES)
+                    timeout(15.minutes)
                     placeholder = "See also"
 
                     for (reference in referenceList) {
@@ -126,11 +106,7 @@ class CommonDocsController(private val componentsService: Components) {
                                 continue
                             }
 
-                            addOption(
-                                reference.text,
-                                optionValue,
-                                EmojiUtils.resolveJDAEmoji("clipboard")
-                            )
+                            addOption(reference.text, optionValue, clipboardEmoji)
                         }
                     }
                 }
@@ -138,5 +114,9 @@ class CommonDocsController(private val componentsService: Components) {
                 addActionRow(selectMenu)
             }
         }
+    }
+
+    companion object {
+        private val clipboardEmoji = EmojiUtils.resolveJDAEmoji("clipboard")
     }
 }

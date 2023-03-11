@@ -10,6 +10,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- JDA supports Java 8 and above -->
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
     </properties>
@@ -51,16 +52,20 @@
     </repositories>
 
     <dependencies>
+        <!-- Logging implementation, you can remove the comments if you have a warning related to loggers -->
+        <!--
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.2.11</version>
         </dependency>
+        -->
         <dependency>
             <groupId>%s</groupId>
             <artifactId>%s</artifactId>
             <version>%s</version>
             <exclusions>
+                <!-- Removes audio as to save space, you can remove the exclusion if you want to use audio -->
                 <exclusion>
                     <groupId>club.minnced</groupId>
                     <artifactId>opus-java</artifactId>

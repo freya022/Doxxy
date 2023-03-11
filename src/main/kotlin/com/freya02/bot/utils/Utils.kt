@@ -1,6 +1,10 @@
 package com.freya02.bot.utils
 
+import com.freya02.bot.Config
 import com.freya02.botcommands.api.Logging
+import dev.minn.jda.ktx.events.getDefaultScope
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.internal.utils.JDALogger
 import org.jetbrains.annotations.Contract
@@ -8,11 +12,18 @@ import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.sql.Statement
+import java.util.concurrent.Executors
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.notExists
+import kotlin.math.log10
 import kotlin.streams.asSequence
 
 object Utils {
+    const val bcGuildId: Long = 848502702731165738
+    const val jdaGuildId: Long = 125227483518861312
+
     val walker: StackWalker = StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
 
     fun readResource(url: String): String {
@@ -29,12 +40,10 @@ object Utils {
     }
 
     @Contract("null -> false")
-    fun Guild?.isBCGuild(): Boolean {
-        return when {
-            this != null -> idLong == 848502702731165738L || idLong == 722891685755093072L
-            else -> false
-        }
-    }
+    fun Guild?.isBCGuild(): Boolean = this?.idLong == bcGuildId || this?.idLong == Config.config.fakeBCGuildId
+
+    @Contract("null -> false")
+    fun Guild?.isJDAGuild(): Boolean = this?.idLong == jdaGuildId || this?.idLong == Config.config.fakeJDAGuildId
 
     fun Path.deleteRecursively() {
         if (this.notExists()) return
@@ -76,4 +85,26 @@ object Utils {
 
         return r
     }
+
+    fun namedDefaultScope(name: String, poolSize: Int): CoroutineScope {
+        val lock = ReentrantLock()
+        var count = 0
+        val executor = Executors.newScheduledThreadPool(poolSize) {
+            Thread(it).apply {
+                lock.withLock {
+                    this.name = "$name ${++count}"
+                }
+            }
+        }
+
+        return getDefaultScope(pool = executor, context = CoroutineName(name))
+    }
+
+    inline fun <T> T.letIf(condition: Boolean, block: (T) -> T): T = when {
+        condition -> block(this)
+        else -> this
+    }
+
+    val Number.digitAmount: Int
+        get() = 1 + log10(this.toDouble()).toInt()
 }

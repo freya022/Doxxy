@@ -1,5 +1,6 @@
 package com.freya02.bot.commands.slash.docs
 
+import com.freya02.bot.commands.controllers.CommonDocsController
 import com.freya02.bot.commands.slash.docs.controllers.SlashDocsController
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.index.DocIndex
@@ -18,9 +19,11 @@ import dev.minn.jda.ktx.messages.reply_
 import mu.KotlinLogging
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
+import net.dv8tion.jda.api.utils.messages.MessageEditData
 
 class CommonDocsHandlers(
     private val docIndexMap: DocIndexMap,
+    private val commonDocsController: CommonDocsController,
     private val slashDocsController: SlashDocsController
 ) : ApplicationCommand() {
     @JDASelectMenuListener(name = SEE_ALSO_SELECT_LISTENER_NAME)
@@ -39,7 +42,14 @@ class CommonDocsHandlers(
 
         when (doc) {
             null -> event.reply_("This reference is not available anymore", ephemeral = true).queue()
-            else -> slashDocsController.sendClass(event, true, doc)
+            else -> when (event.message.interaction!!.user.idLong) {
+                event.user.idLong -> commonDocsController //Caller is same as original command caller, edit
+                    .getDocMessageData(event.member!!, ephemeral = false, showCaller = false, cachedDoc = doc)
+                    .let { MessageEditData.fromCreateData(it) }
+                    .let { event.editMessage(it).queue() }
+
+                else -> slashDocsController.sendClass(event, true, doc)
+            }
         }
     }
 
@@ -53,69 +63,22 @@ class CommonDocsHandlers(
     }
 
     @CacheAutocomplete
-    @AutocompleteHandler(name = CLASS_NAME_WITH_METHODS_AUTOCOMPLETE_NAME, showUserInput = false)
-    suspend fun onClassNameWithMethodsAutocomplete(
-        event: CommandAutoCompleteInteractionEvent,
-        @CompositeKey @AppOption sourceType: DocSourceType
-    ): List<Choice> = withDocIndex(sourceType) {
-        classNameWithMethodsAutocomplete(this, event.focusedOption.value).toChoices()
-    }
-
-    @CacheAutocomplete
-    @AutocompleteHandler(name = CLASS_NAME_WITH_FIELDS_AUTOCOMPLETE_NAME, showUserInput = false)
-    suspend fun onClassNameWithFieldsAutocomplete(
-        event: CommandAutoCompleteInteractionEvent,
-        @CompositeKey @AppOption sourceType: DocSourceType
-    ): List<Choice> = withDocIndex(sourceType) {
-        classNameWithFieldsAutocomplete(this, event.focusedOption.value).toChoices()
-    }
-
-    @CacheAutocomplete
-    @AutocompleteHandler(name = METHOD_NAME_BY_CLASS_AUTOCOMPLETE_NAME, showUserInput = false)
-    suspend fun onMethodNameByClassAutocomplete(
-        event: CommandAutoCompleteInteractionEvent,
-        @CompositeKey @AppOption sourceType: DocSourceType,
-        @CompositeKey @AppOption className: String
-    ): List<Choice> = withDocIndex(sourceType) {
-        methodNameByClassAutocomplete(this, className, event.focusedOption.value).searchResultToChoices { it.humanIdentifier }
-    }
-
-    @CacheAutocomplete
-    @AutocompleteHandler(name = ANY_METHOD_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
-    suspend fun onAnyMethodNameAutocomplete(
-        event: CommandAutoCompleteInteractionEvent,
-        @CompositeKey @AppOption sourceType: DocSourceType
-    ): List<Choice> = withDocIndex(sourceType) {
-        anyMethodNameAutocomplete(this, event.focusedOption.value).searchResultToChoices { it.humanClassIdentifier }
-    }
-
-    @CacheAutocomplete
-    @AutocompleteHandler(name = FIELD_NAME_BY_CLASS_AUTOCOMPLETE_NAME, showUserInput = false)
-    suspend fun onFieldNameByClassAutocomplete(
-        event: CommandAutoCompleteInteractionEvent,
-        @CompositeKey @AppOption sourceType: DocSourceType,
-        @CompositeKey @AppOption className: String
-    ): List<Choice> = withDocIndex(sourceType) {
-        fieldNameByClassAutocomplete(this, className, event.focusedOption.value).searchResultToChoices { it.humanIdentifier }
-    }
-
-    @CacheAutocomplete
-    @AutocompleteHandler(name = ANY_FIELD_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
-    suspend fun onAnyFieldNameAutocomplete(
-        event: CommandAutoCompleteInteractionEvent,
-        @CompositeKey @AppOption sourceType: DocSourceType
-    ): List<Choice> = withDocIndex(sourceType) {
-        anyFieldNameAutocomplete(this@withDocIndex, event.focusedOption.value).searchResultToChoices { it.humanClassIdentifier }
-    }
-
-    @CacheAutocomplete
     @AutocompleteHandler(name = METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME, showUserInput = false)
     suspend fun onMethodOrFieldByClassAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType,
         @CompositeKey @AppOption className: String
     ): List<Choice> = withDocIndex(sourceType) {
-        methodOrFieldByClassAutocomplete(this, className, event.focusedOption.value).searchResultToChoices { it.humanIdentifier }
+        methodOrFieldByClassAutocomplete(this, className, event.focusedOption.value).searchResultToIdentifierChoices()
+    }
+
+    @CacheAutocomplete
+    @AutocompleteHandler(name = SEARCH_AUTOCOMPLETE_NAME, showUserInput = false)
+    suspend fun onSearchAutocomplete(
+        event: CommandAutoCompleteInteractionEvent,
+        @CompositeKey @AppOption sourceType: DocSourceType
+    ): List<Choice> = withDocIndex(sourceType) {
+        searchAutocomplete(this, event.focusedOption.value).searchResultToFullIdentifierChoices()
     }
 
     @CacheAutocomplete
@@ -133,37 +96,36 @@ class CommonDocsHandlers(
     }
 
     private fun Iterable<String>.toChoices() = this.map { Choice(it, it) }
-    private fun Iterable<DocSearchResult>.searchResultToChoices(nameExtractor: (DocSearchResult) -> String) = this
-        .filter { it.identifierOrFullIdentifier.length <= Choice.MAX_STRING_VALUE_LENGTH }
-        .map { Choice(nameExtractor(it), it.identifierOrFullIdentifier) }
+    private fun Iterable<DocSearchResult>.searchResultToFullIdentifierChoices() = this
+        .filter { it.fullIdentifier.length <= Choice.MAX_STRING_VALUE_LENGTH }
+        .map { Choice(it.humanClassIdentifier.tryAppendReturnType(it), it.fullIdentifier) }
+    private fun Iterable<DocSearchResult>.searchResultToIdentifierChoices() = this
+        .filter { it.identifier.length <= Choice.MAX_STRING_VALUE_LENGTH }
+        .map { Choice(it.humanIdentifier.tryAppendReturnType(it), it.identifier) }
     private fun Iterable<DocResolveResult>.resolveResultToChoices() = this
         .filter { it.value.length <= Choice.MAX_STRING_VALUE_LENGTH }
         .map { Choice(it.name, it.value) }
+
+    private fun String.tryAppendReturnType(searchResult: DocSearchResult): String = when {
+        searchResult.returnType == null -> this
+        this.length + ": ${searchResult.returnType}".length > Choice.MAX_NAME_LENGTH -> this
+        else -> "$this: ${searchResult.returnType}"
+    }
 
     companion object {
         private val logger = KotlinLogging.logger { }
 
         const val CLASS_NAME_AUTOCOMPLETE_NAME = "CommonDocsHandlers: className"
-        const val CLASS_NAME_WITH_METHODS_AUTOCOMPLETE_NAME = "CommonDocsHandlers: classNameWithMethods"
-        const val CLASS_NAME_WITH_FIELDS_AUTOCOMPLETE_NAME = "CommonDocsHandlers: classNameWithFields"
-        const val METHOD_NAME_BY_CLASS_AUTOCOMPLETE_NAME = "CommonDocsHandlers: methodNameByClass"
-        const val ANY_METHOD_NAME_AUTOCOMPLETE_NAME = "CommonDocsHandlers: anyMethodName"
-        const val FIELD_NAME_BY_CLASS_AUTOCOMPLETE_NAME = "FieldCommand: fieldNameByClass"
-        const val ANY_FIELD_NAME_AUTOCOMPLETE_NAME = "CommonDocsHandlers: anyFieldName"
         const val METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME = "CommonDocsHandlers: methodNameOrFieldByClass"
+        const val SEARCH_AUTOCOMPLETE_NAME = "CommonDocsHandlers: search"
         const val RESOLVE_AUTOCOMPLETE_NAME = "CommonDocsHandlers: resolve"
 
         const val SEE_ALSO_SELECT_LISTENER_NAME = "CommonDocsHandlers: seeAlso"
 
         val AUTOCOMPLETE_NAMES = arrayOf(
             CLASS_NAME_AUTOCOMPLETE_NAME,
-            CLASS_NAME_WITH_METHODS_AUTOCOMPLETE_NAME,
-            CLASS_NAME_WITH_FIELDS_AUTOCOMPLETE_NAME,
-            METHOD_NAME_BY_CLASS_AUTOCOMPLETE_NAME,
-            ANY_METHOD_NAME_AUTOCOMPLETE_NAME,
-            FIELD_NAME_BY_CLASS_AUTOCOMPLETE_NAME,
-            ANY_FIELD_NAME_AUTOCOMPLETE_NAME,
             METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME,
+            SEARCH_AUTOCOMPLETE_NAME,
             RESOLVE_AUTOCOMPLETE_NAME
         )
 

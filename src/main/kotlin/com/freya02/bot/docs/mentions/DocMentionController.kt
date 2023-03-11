@@ -3,6 +3,8 @@ package com.freya02.bot.docs.mentions
 import com.freya02.bot.commands.controllers.CommonDocsController
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
 import com.freya02.bot.docs.DocIndexMap
+import com.freya02.bot.utils.ParsingUtils.codeBlockRegex
+import com.freya02.bot.utils.ParsingUtils.spaceRegex
 import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.components.builder.select.ephemeral.EphemeralStringSelectBuilder
 import com.freya02.botcommands.api.components.event.StringSelectEvent
@@ -15,6 +17,8 @@ import dev.minn.jda.ktx.messages.reply_
 import net.dv8tion.jda.api.entities.Message.MentionType
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
+import net.dv8tion.jda.api.utils.messages.MessageCreateData
+import net.dv8tion.jda.api.utils.messages.MessageEditData
 import java.util.*
 import kotlin.time.Duration.Companion.minutes
 
@@ -24,9 +28,7 @@ class DocMentionController(
     private val docIndexMap: DocIndexMap,
     private val commonDocsController: CommonDocsController
 ) {
-    private val spaceRegex = Regex("""\s+""")
-    private val codeBlockRegex = Regex("""```.*\n(\X*?)```""")
-    private val identifierRegex = Regex("""(\w+)[#.](\w+)(?:\((.+?)\))?""")
+    private val identifierRegex = Regex("""(\w+)[#.](\w+)""")
 
     suspend fun processMentions(contentRaw: String): DocMatches = database.withConnection(readOnly = true) {
         val cleanedContent = codeBlockRegex.replace(contentRaw, "")
@@ -35,31 +37,35 @@ class DocMentionController(
 
         val similarIdentifiers: SortedSet<SimilarIdentifier> =
             identifierRegex.findAll(cleanedContent)
-                .flatMapTo(sortedSetOf()) { result ->
+                .map { it.destructured }
+                .flatMapTo(sortedSetOf()) { (classname, identifierNoArgs) ->
                     preparedStatement(
                         """
-                            select d.source_id,
-                                   d.classname || '#' || d.identifier as fullIdentifier,
-                                   d.human_class_identifier,
-                                   similarity(d.classname, ?) * similarity(d.identifier_no_args, ?) as overall_similarity
-                            from doc d
-                            where d.type != 1
+                            select source_id,
+                                   full_identifier,
+                                   human_class_identifier,
+                                   similarity(classname, ?) * similarity(identifier_no_args, ?) as overall_similarity
+                            from doc_view
+                                     natural join doc
+                            where type != 1
+                              and classname % ?
+                              and identifier_no_args % ?
                             order by overall_similarity desc
                             limit 25;
                         """.trimIndent()
                     ) {
-                        executeQuery(result.groupValues[1], result.groupValues[2])
+                        executeQuery(classname, identifierNoArgs, classname, identifierNoArgs)
                             .mapNotNull {
-                                val sourceId: Int = it["source_id"]
+                                val sourceId = it.getInt("source_id")
 
                                 //Can't use that in a select menu :/
-                                if (it.getString("fullIdentifier").length >= 95) {
+                                if (it.getString("full_identifier").length >= 95) {
                                     return@mapNotNull null
                                 }
 
                                 SimilarIdentifier(
                                     DocSourceType.fromId(sourceId),
-                                    it["fullIdentifier"],
+                                    it["full_identifier"],
                                     it["human_class_identifier"],
                                     it["overall_similarity"]
                                 )
@@ -78,32 +84,32 @@ class DocMentionController(
 
     suspend fun createDocsMenuMessage(
         docMatches: DocMatches,
-        callerId: Long,
-        useDeleteButton: Boolean,
+        caller: UserSnowflake,
         timeoutCallback: suspend () -> Unit
-    ) = MessageCreate {
-        val docsMenu = componentsService.ephemeralStringSelectMenu {
-            placeholder = "Select a doc"
-            addMatchOptions(docMatches)
+    ): MessageCreateData {
+        return MessageCreate {
+            val docsMenu = componentsService.ephemeralStringSelectMenu {
+                placeholder = "Select a doc"
+                addMatchOptions(docMatches)
 
-            timeout(5.minutes, timeoutCallback)
+                constraints += caller
+                timeout(1.minutes, timeoutCallback)
+                bindTo { selectEvent -> onSelectedDoc(selectEvent) }
+            }
 
-            bindTo { selectEvent -> onSelectedDoc(selectEvent) }
-        }
+            val deleteButton = componentsService.messageDeleteButton(caller)
 
-        components += row(docsMenu)
-        if (useDeleteButton) {
-            val deleteButton = componentsService.messageDeleteButton(UserSnowflake.fromId(callerId))
+            components += row(docsMenu)
             components += row(deleteButton)
-        }
 
-        content = "<@$callerId> This message will be deleted in 5 minutes"
-        allowedMentionTypes = EnumSet.noneOf(MentionType::class.java) //No mentions
+            content = "${caller.asMention} This message will be deleted in a minute"
+            allowedMentionTypes = EnumSet.noneOf(MentionType::class.java) //No mentions
+        }
     }
 
     context(KConnection)
     private suspend fun getMentionedClasses(content: String): List<ClassMention> {
-        return spaceRegex.split(content).let {
+        return spaceRegex.split(content).let { words ->
             preparedStatement(
                 """
                     select d.source_id, d.classname
@@ -112,8 +118,8 @@ class DocMentionController(
                       and classname = any (?);
                 """.trimIndent()
             ) {
-                executeQuery(it.toTypedArray()).map {
-                    val sourceId: Int = it["source_id"]
+                executeQuery(words.toTypedArray()).map {
+                    val sourceId = it.getInt("source_id")
                     ClassMention(
                         DocSourceType.fromId(sourceId),
                         it["classname"]
@@ -130,7 +136,6 @@ class DocMentionController(
 
         docMatches.similarIdentifiers
             .take(SelectMenu.OPTIONS_MAX_AMOUNT - options.size)
-            .filter { it.similarity > 0.05 }
             .forEach {
                 addOption(it.fullHumanIdentifier, "${it.sourceType.id}:${it.fullIdentifier}")
             }
@@ -155,10 +160,15 @@ class DocMentionController(
             return
         }
 
-        selectEvent.reply(commonDocsController.getDocMessageData(selectEvent.member!!,
-            ephemeral = false,
-            showCaller = true,
-            cachedDoc = doc
-        )).setEphemeral(false).queue()
+        commonDocsController.getDocMessageData(selectEvent.member!!, ephemeral = false, showCaller = false, cachedDoc = doc)
+            .let { MessageEditData.fromCreateData(it) }
+            .also { selectEvent.editMessage(it).setReplace(true).queue() }
+            .also {
+                //Delete the components of the current message,
+                // we don't want the timeout to execute
+                selectEvent.message.components.flatMap { it.actionComponents }
+                    .mapNotNull { it.id }
+                    .also { componentsService.deleteComponentsById(it) }
+            }
     }
 }
