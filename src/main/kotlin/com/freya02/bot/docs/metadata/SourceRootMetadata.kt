@@ -6,7 +6,6 @@ import com.github.javaparser.ast.ImportDeclaration
 import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.body.*
-import com.github.javaparser.ast.expr.Name
 import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName
 import com.github.javaparser.ast.type.ClassOrInterfaceType
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter
@@ -22,24 +21,11 @@ class SourceRootMetadata(sourceRootPath: Path) {
     private val packageToClasses: MutableMap<String, MutableList<Pair<String, ClassName>>> = sortedMapOf()
 
     init {
-        val results = sourceRoot.tryToParse("net.dv8tion.jda.api")
+        val results: List<ParseResult<CompilationUnit>> = sourceRoot.tryToParse("net.dv8tion.jda.api")
 
-        processParseResults(results) { parsePackages(it) }
-        processParseResults(results) { parseResult(it) }
-        processParseResults(results) { scanMethods(it) }
-    }
-
-    private fun processParseResults(results: List<ParseResult<CompilationUnit>>, block: (CompilationUnit) -> Unit) {
-        results.forEach { result ->
-            if (result.problems.isNotEmpty()) {
-                result.problems.forEach { logger.error(it.toString()) }
-            }
-            result.ifSuccessful { unit ->
-                kotlin.runCatching { block(unit) }.onFailure {
-                    logger.error("Failed to parse method $result", it)
-                }
-            }
-        }
+        results.forEachCompilationUnit(logger) { parsePackages(it) }
+        results.forEachCompilationUnit(logger) { parseResult(it) }
+        results.forEachCompilationUnit(logger) { scanMethods(it) }
     }
 
     fun getMethodsParameters(className: ClassName, methodName: String): List<MethodMetadata> {
@@ -103,8 +89,8 @@ class SourceRootMetadata(sourceRootPath: Path) {
     // Inner classes need to be added to the pool with all their variants
     // If a type's class name cannot be found in the pool then keep the original type's class name
     private fun parseResult(compilationUnit: CompilationUnit) {
-        val imports: MutableMap<String, String> = hashMapOf()
-        val importedVariants: MutableMap<String, String> = hashMapOf()
+        val imports: MutableMap<FullSimpleClassName, PackageName> = hashMapOf()
+        val importedVariants: MutableMap<FullSimpleClassName, FullSimpleClassName> = hashMapOf()
 
         imports.putAll(packageToClasses[compilationUnit.packageDeclaration.get().nameAsString]!!)
 
@@ -166,9 +152,9 @@ class SourceRootMetadata(sourceRootPath: Path) {
 
                     imports.putAll(classes)
                 } else {
-                    val importFullSimpleClassName = n.name.getClassString()
+                    val importFullSimpleClassName = n.fullClassName
 
-                    imports[importFullSimpleClassName] = n.name.getPackageString()
+                    imports[importFullSimpleClassName] = n.fullPackageName
                     findAllImportVariants(importFullSimpleClassName).forEach { variant ->
                         importedVariants[variant] = importFullSimpleClassName
                     }
@@ -187,14 +173,6 @@ class SourceRootMetadata(sourceRootPath: Path) {
                 }
             }
         }, null)
-    }
-
-    private fun Name.getPackageString(): String {
-        return asString().split(".").filter { it.all { c -> c.isLowerCase() } }.joinToString(".")
-    }
-
-    private fun Name.getClassString(): String {
-        return asString().split(".").filter { it.any { c -> c.isUpperCase() } }.joinToString(".")
     }
 
     private fun scanMethods(compilationUnit: CompilationUnit) {

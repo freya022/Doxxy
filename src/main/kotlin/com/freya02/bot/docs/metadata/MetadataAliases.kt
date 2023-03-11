@@ -1,5 +1,6 @@
 package com.freya02.bot.docs.metadata
 
+typealias PackageName = String
 typealias ClassName = String
 typealias FullSimpleClassName = String
 typealias ResolvedClassesList = MutableMap<FullSimpleClassName, FullSimpleClassName>
