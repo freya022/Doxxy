@@ -1,6 +1,5 @@
 package com.freya02.bot.docs.metadata
 
-import com.github.javaparser.ParseResult
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.ImportDeclaration
 import com.github.javaparser.ast.Node
@@ -21,7 +20,17 @@ class SourceRootMetadata(sourceRootPath: Path) {
     private val packageToClasses: MutableMap<String, MutableList<Pair<String, ClassName>>> = sortedMapOf()
 
     init {
-        val results: List<ParseResult<CompilationUnit>> = sourceRoot.tryToParse("net.dv8tion.jda.api")
+        val results: List<CompilationUnit> = sourceRoot
+            .tryToParse("net.dv8tion.jda.api")
+            .filter { result ->
+                if (result.problems.isNotEmpty()) {
+                    result.problems.forEach { logger.error(it.toString()) }
+                } else if (!result.isSuccessful) {
+                    logger.error("Unexpected failure while parsing CU")
+                }
+
+                result.isSuccessful
+            }.map { it.result.get() }
 
         results.forEachCompilationUnit(logger) { parsePackages(it) }
         results.forEachCompilationUnit(logger) { parseResult(it) }
