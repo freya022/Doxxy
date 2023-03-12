@@ -12,14 +12,16 @@ private typealias ResolvedClass = ResolvedReferenceType
 private typealias ResolvedMethod = ResolvedMethodDeclaration
 
 class ImplementationMetadata private constructor(compilationUnits: List<CompilationUnit>) {
+    // Comparators are used to determine equality, as JP instances likely do not implement hashCode/equals correctly
     private val resolvedClassComparator: Comparator<ResolvedClass> = Comparator.comparing { it.qualifiedName }
     private val resolvedMethodComparator: Comparator<ResolvedMethod> = Comparator.comparing { it.qualifiedName + it.fixedDescriptor }
+    private val resolvedReferenceTypeDeclarationComparator: Comparator<ResolvedReferenceTypeDeclaration> = Comparator.comparing { it.qualifiedName }
 
     val subclassesMap: MutableMap<ResolvedClass, MutableList<ResolvedReferenceTypeDeclaration>> =
         Collections.synchronizedMap(TreeMap(resolvedClassComparator))
 
-    // BaseClass -> Map<TheMethod, List<ClassOverridingMethod>>
-    val classToMethodImplementations: MutableMap<ResolvedClass, MutableMap<ResolvedMethod, MutableList<ResolvedReferenceTypeDeclaration>>> =
+    // BaseClass -> Map<TheMethod, Set<ClassOverridingMethod>>
+    val classToMethodImplementations: MutableMap<ResolvedClass, MutableMap<ResolvedMethod, MutableSet<ResolvedReferenceTypeDeclaration>>> =
         Collections.synchronizedMap(TreeMap(resolvedClassComparator))
 
     init {
@@ -28,7 +30,6 @@ class ImplementationMetadata private constructor(compilationUnits: List<Compilat
 
     private fun processCU(cu: CompilationUnit) {
         cu.findAll(ClassOrInterfaceDeclaration::class.java)
-//            .filter { it.nameAsString.contains("RestAction") }
             .map { it.resolve() }
             .forEach { resolvedCU ->
                 val ancestors: List<ResolvedClass> = resolvedCU.getAllAncestors(ResolvedReferenceTypeDeclaration.breadthFirstFunc)
@@ -47,8 +48,8 @@ class ImplementationMetadata private constructor(compilationUnits: List<Compilat
                     overriddenClasses.forEach { overriddenClass ->
                         classToMethodImplementations
                             .computeIfAbsent(overriddenClass) { Collections.synchronizedMap(TreeMap(resolvedMethodComparator)) }
-                            .computeIfAbsent(resolvedMethod) { Collections.synchronizedList(arrayListOf()) }
-                            .add(resolvedCU)
+                            .computeIfAbsent(resolvedMethod) { Collections.synchronizedSet(TreeSet(resolvedReferenceTypeDeclarationComparator)) }
+                            .add(resolvedCU) //TODO not sure if a Set is really needed, it seems to always contain a single item
                     }
                 }
 
