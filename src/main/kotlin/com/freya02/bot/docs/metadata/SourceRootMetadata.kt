@@ -1,5 +1,8 @@
 package com.freya02.bot.docs.metadata
 
+import com.freya02.bot.docs.metadata.data.ClassMetadata
+import com.freya02.bot.docs.metadata.data.FieldMetadata
+import com.freya02.bot.docs.metadata.data.MethodMetadata
 import com.freya02.bot.utils.createProfiler
 import com.freya02.bot.utils.nextStep
 import com.github.javaparser.ast.CompilationUnit

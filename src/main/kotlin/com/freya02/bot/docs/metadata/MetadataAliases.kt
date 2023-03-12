@@ -1,5 +1,8 @@
 package com.freya02.bot.docs.metadata
 
+import com.freya02.bot.docs.metadata.data.FieldMetadata
+import com.freya02.bot.docs.metadata.data.MethodMetadata
+
 typealias PackageName = String
 typealias ClassName = String
 typealias FullSimpleClassName = String
