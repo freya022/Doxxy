@@ -1,5 +1,7 @@
 package com.freya02.bot.docs.metadata
 
+import com.freya02.bot.utils.createProfiler
+import com.freya02.bot.utils.nextStep
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.ImportDeclaration
 import com.github.javaparser.ast.Node
@@ -8,6 +10,10 @@ import com.github.javaparser.ast.body.*
 import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName
 import com.github.javaparser.ast.type.ClassOrInterfaceType
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter
+import com.github.javaparser.symbolsolver.JavaSymbolSolver
+import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver
+import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver
+import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver
 import com.github.javaparser.utils.SourceRoot
 import mu.KotlinLogging
 import java.nio.file.Path
@@ -16,25 +22,52 @@ import java.util.*
 class SourceRootMetadata(sourceRootPath: Path) {
     private val sourceRoot: SourceRoot = SourceRoot(sourceRootPath)
 
+    private val solver by lazy { JavaSymbolSolver(CombinedTypeSolver().also { combinedTypeSolver ->
+        combinedTypeSolver.add(JavaParserTypeSolver(sourceRootPath))
+        combinedTypeSolver.add(ReflectionTypeSolver(/* jreOnly = */ false))
+    }) }
+
     private val classMetadataMap: MutableMap<ClassName, ClassMetadata> = sortedMapOf()
     private val packageToClasses: MutableMap<String, MutableList<Pair<String, ClassName>>> = sortedMapOf()
 
+    private val implementationMetadata: ImplementationMetadata
+
     init {
-        val results: List<CompilationUnit> = sourceRoot
-            .tryToParse("net.dv8tion.jda.api")
-            .filter { result ->
-                if (result.problems.isNotEmpty()) {
-                    result.problems.forEach { logger.error(it.toString()) }
-                } else if (!result.isSuccessful) {
-                    logger.error("Unexpected failure while parsing CU")
-                }
+        createProfiler("SourceRootMetadata") {
+            nextStep("Make solver") {
+                sourceRoot.parserConfiguration.setSymbolResolver(solver)
+            }
 
-                result.isSuccessful
-            }.map { it.result.get() }
+            val compilationUnits: List<CompilationUnit> = nextStep("Parse") {
+                sourceRoot
+                    .tryToParse("net.dv8tion.jda")
+                    .filter { result ->
+                        if (result.problems.isNotEmpty()) {
+                            result.problems.forEach { Companion.logger.error(it.toString()) }
+                        } else if (!result.isSuccessful) {
+                            Companion.logger.error("Unexpected failure while parsing CU")
+                        }
 
-        results.forEachCompilationUnit(logger) { parsePackages(it) }
-        results.forEachCompilationUnit(logger) { parseResult(it) }
-        results.forEachCompilationUnit(logger) { scanMethods(it) }
+                        result.isSuccessful
+                    }.map { it.result.get() }
+            }
+
+            val apiCompilationUnits = compilationUnits.filter { it.packageDeclaration.get().nameAsString.startsWith("net.dv8tion.jda.api") }
+
+            nextStep("parsePackages") {
+                apiCompilationUnits.forEachCompilationUnit(Companion.logger) { parsePackages(it) }
+            }
+            nextStep("parseResult") {
+                apiCompilationUnits.forEachCompilationUnit(Companion.logger) { parseResult(it) }
+            }
+            nextStep("scanMethods") {
+                apiCompilationUnits.forEachCompilationUnit(Companion.logger) { scanMethods(it) }
+            }
+
+            nextStep("Implementation metadata") {
+                implementationMetadata = ImplementationMetadata.fromCompilationUnits(compilationUnits)
+            }
+        }
     }
 
     fun getMethodsParameters(className: ClassName, methodName: String): List<MethodMetadata> {
