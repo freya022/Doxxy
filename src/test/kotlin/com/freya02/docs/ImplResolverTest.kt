@@ -26,7 +26,7 @@ object ImplResolverTest {
         System.getProperty("java.class.path")
             .split(System.getProperty("path.separator"))
             .map { Path(it) }
-            .single { it.name.startsWith("JDA-5.0.0") }
+            .single { it.name.startsWith("JDA-") }
             .let { it.resolveSibling(it.nameWithoutExtension + "-sources.jar") }
             .also { p ->
                 if (p.notExists())

@@ -113,9 +113,9 @@
             <version>2.3.5</version>
         </dependency>
         <dependency>
-            <groupId>net.dv8tion</groupId>
+            <groupId>com.github.DV8FromTheWorld</groupId>
             <artifactId>JDA</artifactId>
-            <version>5.0.0-beta.5_DEV</version>
+            <version>83d370d678</version>
             <exclusions>
                 <exclusion>
                     <groupId>club.minnced</groupId>
