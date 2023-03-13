@@ -2,6 +2,7 @@ package com.freya02.bot.docs.index
 
 import com.freya02.bot.Data
 import com.freya02.bot.docs.DocEmbeds.toEmbed
+import com.freya02.bot.docs.metadata.ClassName
 import com.freya02.bot.docs.metadata.SourceRootMetadata
 import com.freya02.botcommands.api.core.db.Database
 import com.freya02.botcommands.api.core.db.Transaction
@@ -12,6 +13,7 @@ import com.freya02.docs.DocsSession
 import com.freya02.docs.data.BaseDoc
 import com.freya02.docs.data.ClassDetailType
 import com.freya02.docs.data.ClassDoc
+import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration
 import com.google.gson.GsonBuilder
 import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.MessageEmbed
@@ -27,7 +29,51 @@ internal class DocIndexWriter(
         SourceRootMetadata(Data.javadocsPath.resolve(docsFolderName))
     }
 
+    private fun ResolvedMethodDeclaration.toNamedDescription(): String {
+        return "${declaringType().className}#${name}${toDescriptor()}"
+    }
+
     suspend fun doReindex() = database.transactional {
+        sourceRootMetadata?.let { sourceRootMetadata ->
+            preparedStatement("delete from doc_link where source_id = ?") { executeUpdate(sourceType.id) }
+
+            // First add the subclasses so we can reference them later
+            val dbSubclasses: Map<ClassName, Int> = sourceRootMetadata.implementationMetadata.subclassesMap
+                .values.flatten()
+                .distinctBy { it.qualifiedName }
+                .associate {
+                    it.name to preparedStatement("""
+                        insert into doc_link (source_id, type, def, source_link) VALUES (?, ?, ?, ?) returning id
+                    """.trimIndent()) {
+                        executeQuery(sourceType.id, DocType.CLASS.id, it.name, reindexData.getClassSourceUrl(it)).readOnce()!!.getInt(1)
+                    }
+                }
+
+            val dbMethods = sourceRootMetadata.implementationMetadata.classToMethodImplementations
+                .values.flatMap { it.keys }
+                .associate {
+                    it.toNamedDescription() to preparedStatement("""
+                        insert into doc_link (source_id, type, def, source_link) VALUES (?, ?, ?, ?) returning id
+                    """.trimIndent()) {
+                        val methodRange = it.toAst().get().begin.get().line..it.toAst().get().end.get().line
+                        val methodSourceUrl = "${reindexData.getClassSourceUrl(it.declaringType())}#L${methodRange.first}-L${methodRange.last}"
+
+                        executeQuery(sourceType.id, DocType.METHOD.id, it.toNamedDescription(), methodSourceUrl).readOnce()!!.getInt(1)
+                    }
+                }
+
+//            sourceRootMetadata.implementationMetadata.classToMethodImplementations
+//                .forEach { (key, value) ->
+//                    preparedStatement("""
+//                        insert into doc_doc_link (super_def, sub_def_id) VALUES ()
+//                    """.trimIndent()) {
+//                        executeUpdate()
+//                    }
+//                }
+        }
+
+        return@transactional
+
         val updatedSource = ClassDocs.getUpdatedSource(sourceType)
 
         preparedStatement("delete from doc where source_id = ?") {

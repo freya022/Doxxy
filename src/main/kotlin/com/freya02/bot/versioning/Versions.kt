@@ -21,6 +21,7 @@ import dev.minn.jda.ktx.events.getDefaultScope
 import kotlinx.coroutines.*
 import mu.KotlinLogging
 import java.util.concurrent.Executors
+import kotlin.system.exitProcess
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
@@ -44,6 +45,16 @@ class Versions(private val context: BContext, private val docIndexMap: DocIndexM
         JitpackVersionChecker(lastKnownJDAKtxPath, "MinnDevelopment", "com.github.MinnDevelopment", "jda-ktx")
     private val lavaPlayerChecker: JitpackVersionChecker =
         JitpackVersionChecker(lastKnownLavaPlayerPath, "Walkyst", "com.github.Walkyst", "lavaplayer-fork")
+
+    init {
+        runBlocking {
+            val sourceUrl = GithubUtils.getLatestReleaseHash("DV8FromTheWorld", "JDA")
+                ?.let { hash -> "https://github.com/DV8FromTheWorld/JDA/blob/${hash.hash}/src/main/java/" }
+            docIndexMap[DocSourceType.JDA]!!.reindex(ReindexData(sourceUrl))
+        }
+
+        exitProcess(0)
+    }
 
     @BEventListener(async = true, timeout = -1)
     suspend fun initUpdateLoop(event: FirstReadyEvent) {

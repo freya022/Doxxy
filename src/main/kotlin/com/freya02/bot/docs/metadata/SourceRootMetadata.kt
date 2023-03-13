@@ -24,7 +24,7 @@ class SourceRootMetadata(sourceRootPath: Path) {
     })
 
     private val classMetadataMap: Map<ClassName, ClassMetadata>
-    private val implementationMetadata: ImplementationMetadata
+    val implementationMetadata: ImplementationMetadata
 
     init {
         createProfiler("SourceRootMetadata") {
