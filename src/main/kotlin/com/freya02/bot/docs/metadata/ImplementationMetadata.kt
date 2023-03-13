@@ -11,6 +11,8 @@ import java.util.*
 private typealias ResolvedClass = ResolvedReferenceType
 private typealias ResolvedMethod = ResolvedMethodDeclaration
 
+//TODO maybe try to reimplement by loading the JDA jars with a ClassLoader and using standard java reflection
+// Problem will be with dependency references
 class ImplementationMetadata private constructor(compilationUnits: List<CompilationUnit>) {
     // Comparators are used to determine equality, as JP instances likely do not implement hashCode/equals correctly
     private val resolvedClassComparator: Comparator<ResolvedClass> = Comparator.comparing { it.qualifiedName }
