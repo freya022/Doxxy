@@ -6,7 +6,7 @@ import mu.KLogger
 import kotlin.jvm.optionals.getOrNull
 
 val CompilationUnit.debugFQCN: String
-    get() = "${packageDeclaration.getOrNull()}.${primaryTypeName.getOrNull()}"
+    get() = "${packageDeclaration.getOrNull()?.nameAsString?.substringBefore(';')}.${primaryTypeName.getOrNull()}"
 
 val NodeWithName<*>.fullPackageName: String
     //Split name parts and take while the first char is a lower case (i.e. a package)
