@@ -1,90 +1,53 @@
 package com.freya02.bot.docs.metadata
 
-import com.github.javaparser.ast.CompilationUnit
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
-import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration
-import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration
-import com.github.javaparser.resolution.types.ResolvedReferenceType
+import io.github.classgraph.ClassGraph
+import io.github.classgraph.ClassInfo
+import io.github.classgraph.MethodInfo
 import mu.KotlinLogging
-import java.util.*
+import java.nio.file.Path
 
-private typealias ResolvedClass = ResolvedReferenceType
-private typealias ResolvedMethod = ResolvedMethodDeclaration
-
-//TODO maybe try to reimplement by loading the JDA jars with a ClassLoader and using standard java reflection
-// Problem will be with dependency references
-class ImplementationMetadata private constructor(compilationUnits: List<CompilationUnit>) {
-    // Comparators are used to determine equality, as JP instances likely do not implement hashCode/equals correctly
-    private val resolvedClassComparator: Comparator<ResolvedClass> = Comparator.comparing { it.qualifiedName }
-    private val resolvedMethodComparator: Comparator<ResolvedMethod> = Comparator.comparing { it.qualifiedName + it.fixedDescriptor }
-    private val resolvedReferenceTypeDeclarationComparator: Comparator<ResolvedReferenceTypeDeclaration> = Comparator.comparing { it.qualifiedName }
-
-    val subclassesMap: MutableMap<ResolvedClass, MutableList<ResolvedReferenceTypeDeclaration>> =
-        Collections.synchronizedMap(TreeMap(resolvedClassComparator))
-
-    // BaseClass -> Map<TheMethod, Set<ClassOverridingMethod>>
-    val classToMethodImplementations: MutableMap<ResolvedClass, MutableMap<ResolvedMethod, MutableSet<ResolvedReferenceTypeDeclaration>>> =
-        Collections.synchronizedMap(TreeMap(resolvedClassComparator))
+class ImplementationMetadata private constructor(classpath: List<Path>) {
+    val subclassesMap: Map<ClassInfo, List<ClassInfo>>
+    val classToMethodImplementations: MutableMap<ClassInfo, MutableSet<MethodInfo>> = hashMapOf()
 
     init {
-        compilationUnits.forEachCompilationUnit(logger, ::processCU)
-    }
+        ClassGraph()
+            .overrideClasspath(classpath)
+            .acceptPackages("net.dv8tion.jda")
+            .enableClassInfo()
+            .enableMethodInfo()
+            .ignoreClassVisibility()
+            .disableRuntimeInvisibleAnnotations()
+            .disableNestedJarScanning()
+            .scan()
+            .use { res ->
+                subclassesMap = res.allClasses.associateWith { (it.subclasses + it.classesImplementing) }.filterValues { it.isNotEmpty() }
 
-    private fun processCU(cu: CompilationUnit) {
-        cu.findAll(ClassOrInterfaceDeclaration::class.java)
-            .map { it.resolve() }
-            .forEach { resolvedCU ->
-                val ancestors: List<ResolvedClass> = resolvedCU.getAllAncestors(ResolvedReferenceTypeDeclaration.breadthFirstFunc)
-
-                resolvedCU.declaredMethods.forEach { resolvedMethod: ResolvedMethod ->
-                    val overriddenClasses = ancestors.filter { ancestor ->
-                        ancestor.declaredMethods.any { ancestorMethod ->
-                            resolvedMethod.name == ancestorMethod.name
-                                    && resolvedMethod.numberOfParams == ancestorMethod.noParams
-                                    && (0 until ancestorMethod.noParams).all { i ->
-                                ancestorMethod.getParamType(i).isAssignableBy(resolvedMethod.getParam(i).type)
-                            }
+                res.allClasses.forEach { superClass ->
+                    val overrides = superClass.declaredMethodInfo.flatMap { superMethod ->
+                        (superClass.subclasses + superClass.classesImplementing).mapNotNull { subClass ->
+                            subClass.declaredMethodInfo.find { it.isSameMethodSignature(superMethod) }
                         }
                     }
 
-                    overriddenClasses.forEach { overriddenClass ->
+                    if (overrides.isNotEmpty()) {
                         classToMethodImplementations
-                            .computeIfAbsent(overriddenClass) { Collections.synchronizedMap(TreeMap(resolvedMethodComparator)) }
-                            .computeIfAbsent(resolvedMethod) { Collections.synchronizedSet(TreeSet(resolvedReferenceTypeDeclarationComparator)) }
-                            .add(resolvedCU) //TODO not sure if a Set is really needed, it seems to always contain a single item
+                            .computeIfAbsent(superClass) { hashSetOf() }
+                            .addAll(overrides)
                     }
-                }
-
-                ancestors.forEach {
-                    subclassesMap.computeIfAbsent(it) { Collections.synchronizedList(arrayListOf()) }.add(resolvedCU)
                 }
             }
     }
 
-    private val ResolvedMethodDeclaration.fixedDescriptor: String
-        get() = buildString {
-            append('(')
-            for(i in 0..<numberOfParams) {
-                append(getParam(i).type.describe())
-            }
-            append(')')
-
-            append(returnType.describe())
-        }
+    private fun MethodInfo.isSameMethodSignature(superMethod: MethodInfo): Boolean {
+        return typeDescriptorStr == superMethod.typeDescriptorStr && name == superMethod.name
+    }
 
     companion object {
         private val logger = KotlinLogging.logger { }
 
-        fun <T> Map<ResolvedClass, T>.findByClassName(name: String): T {
-            return this.toList().first { (k, _) -> k.qualifiedName.endsWith(".$name") }.second
-        }
-
-        fun <T> Map<ResolvedMethod, T>.findByMethodName(name: String): Map<String, T> {
-            return this.filterKeys { it.name == name }.mapKeys { (k, _) -> k.className }
-        }
-
-        fun fromCompilationUnits(compilationUnits: List<CompilationUnit>): ImplementationMetadata {
-            return ImplementationMetadata(compilationUnits)
+        fun fromClasspath(classpath: List<Path>): ImplementationMetadata {
+            return ImplementationMetadata(classpath)
         }
     }
 }

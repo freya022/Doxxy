@@ -4,6 +4,7 @@ import com.freya02.bot.Data
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.index.ReindexData
+import com.freya02.bot.utils.HttpUtils
 import com.freya02.bot.utils.Utils.withTemporaryFile
 import com.freya02.bot.versioning.VersionsUtils.downloadMavenJavadoc
 import com.freya02.bot.versioning.VersionsUtils.downloadMavenSources
@@ -48,9 +49,14 @@ class Versions(private val context: BContext, private val docIndexMap: DocIndexM
 
     init {
         runBlocking {
+            val binaryPath = HttpUtils.downloadAt(
+                "https://repo1.maven.org/maven2/net/dv8tion/JDA/5.0.0-beta.5/JDA-5.0.0-beta.5.jar",
+                Data.binariesPath.resolve("JDA").resolve("5.0.0-beta.5")
+            )
+
             val sourceUrl = GithubUtils.getLatestReleaseHash("DV8FromTheWorld", "JDA")
                 ?.let { hash -> "https://github.com/DV8FromTheWorld/JDA/blob/${hash.hash}/src/main/java/" }
-            docIndexMap[DocSourceType.JDA]!!.reindex(ReindexData(sourceUrl))
+            docIndexMap[DocSourceType.JDA]!!.reindex(ReindexData(sourceUrl, listOf(binaryPath)))
         }
 
         exitProcess(0)

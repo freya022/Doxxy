@@ -26,7 +26,7 @@ internal class DocIndexWriter(
 ) {
     private val annotationRegex: Regex = "@\\w+ ".toRegex()
     private val sourceRootMetadata: SourceRootMetadata? = sourceType.sourceFolderName?.let { docsFolderName ->
-        SourceRootMetadata(Data.javadocsPath.resolve(docsFolderName))
+        SourceRootMetadata(Data.javadocsPath.resolve(docsFolderName), reindexData.binaryPaths)
     }
 
     private fun ResolvedMethodDeclaration.toNamedDescription(): String {

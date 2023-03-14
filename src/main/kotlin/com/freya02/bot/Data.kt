@@ -22,6 +22,7 @@ object Data {
     val logbackConfigPath: Path = configFolder.resolve("logback.xml")
 
     val javadocsPath: Path = botFolder.resolve("javadocs")
+    val binariesPath: Path = botFolder.resolve("binaries")
     private val lastKnownVersionsFolderPath: Path = botFolder.resolve("last_versions")
     private val branchVersionsFolderPath: Path = lastKnownVersionsFolderPath.resolve("branch_versions")
     private val pageCacheFolderPath: Path = botFolder.resolve("page_cache")
