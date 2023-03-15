@@ -6,7 +6,6 @@ import com.freya02.bot.docs.metadata.data.MethodMetadata
 import com.freya02.bot.utils.createProfiler
 import com.freya02.bot.utils.nestedProfiler
 import com.freya02.bot.utils.nextStep
-import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.utils.SourceRoot
 import mu.KotlinLogging
 import java.nio.file.Path
@@ -19,21 +18,19 @@ class SourceRootMetadata(sourceRootPath: Path, binariesPath: List<Path>) {
 
     init {
         createProfiler("SourceRootMetadata") {
-            val compilationUnits: List<CompilationUnit> = nextStep("Parse") {
+            nextStep("Parse") {
                 sourceRoot
-                    .tryToParse("net.dv8tion.jda")
-                    .filter { result ->
+                    .tryToParseParallelized("net.dv8tion.jda")
+                    .forEach { result ->
                         if (result.problems.isNotEmpty()) {
                             result.problems.forEach { Companion.logger.error(it.toString()) }
                         } else if (!result.isSuccessful) {
                             Companion.logger.error("Unexpected failure while parsing CU")
                         }
-
-                        result.isSuccessful
-                    }.map { it.result.get() }
+                    }
             }
 
-            nestedProfiler("ClassMetadataParser") {
+            nestedProfiler("Class metadata") {
                 classMetadataMap = ClassMetadataParser.parse(sourceRoot)
             }
 
