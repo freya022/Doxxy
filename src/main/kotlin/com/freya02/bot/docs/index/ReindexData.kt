@@ -2,10 +2,8 @@ package com.freya02.bot.docs.index
 
 import com.freya02.docs.data.ClassDoc
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration
-import io.github.classgraph.ClassInfo
-import java.nio.file.Path
 
-data class ReindexData(val sourceUrl: String? = null, val binaryPaths: List<Path> = emptyList()) {
+data class ReindexData(val sourceUrl: String? = null) {
     fun getClassSourceUrl(classDoc: ClassDoc): String? {
         if (sourceUrl == null) return null
 

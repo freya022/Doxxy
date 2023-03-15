@@ -6,18 +6,31 @@ import com.freya02.bot.docs.metadata.data.MethodMetadata
 import com.freya02.bot.utils.createProfiler
 import com.freya02.bot.utils.nestedProfiler
 import com.freya02.bot.utils.nextStep
+import com.github.javaparser.symbolsolver.JavaSymbolSolver
+import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver
+import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver
+import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver
 import com.github.javaparser.utils.SourceRoot
 import mu.KotlinLogging
 import java.nio.file.Path
 
-class SourceRootMetadata(sourceRootPath: Path, binariesPath: List<Path>) {
+class SourceRootMetadata(sourceRootPath: Path) {
     private val sourceRoot: SourceRoot = SourceRoot(sourceRootPath)
+
+    private val solver = JavaSymbolSolver(CombinedTypeSolver().also { combinedTypeSolver ->
+        combinedTypeSolver.add(JavaParserTypeSolver(sourceRootPath))
+        combinedTypeSolver.add(ReflectionTypeSolver(/* jreOnly = */ false))
+    })
 
     private val classMetadataMap: Map<ClassName, ClassMetadata>
     val implementationMetadata: ImplementationMetadata
 
     init {
         createProfiler("SourceRootMetadata") {
+            nextStep("Make solver") {
+                sourceRoot.parserConfiguration.setSymbolResolver(solver)
+            }
+
             nextStep("Parse") {
                 sourceRoot
                     .tryToParseParallelized("net.dv8tion.jda")
@@ -35,7 +48,7 @@ class SourceRootMetadata(sourceRootPath: Path, binariesPath: List<Path>) {
             }
 
             nextStep("Implementation metadata") {
-                implementationMetadata = ImplementationMetadata.fromClasspath(binariesPath)
+                implementationMetadata = ImplementationMetadata.fromCompilationUnits(compilationUnits)
             }
         }
     }
