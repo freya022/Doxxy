@@ -20,7 +20,7 @@ class ImplementationMetadata private constructor(compilationUnits: List<Compilat
     private val resolvedReferenceTypeDeclarationComparator: Comparator<ResolvedReferenceTypeDeclaration> =
         Comparator.comparing { it.qualifiedName }
 
-    val subclassesMap: MutableMap<ResolvedClass, MutableList<ResolvedReferenceTypeDeclaration>> =
+    val subclassesMap: MutableMap<ResolvedClass, MutableSet<ResolvedReferenceTypeDeclaration>> =
         Collections.synchronizedMap(TreeMap(resolvedClassComparator))
 
     // BaseClass -> Map<TheMethod, Set<ClassOverridingMethod>>
@@ -41,7 +41,7 @@ class ImplementationMetadata private constructor(compilationUnits: List<Compilat
                     .getAllAncestors(ResolvedReferenceTypeDeclaration.breadthFirstFunc)
                     .filterNot { it.isJavaLangEnum || it.isJavaLangObject }
                     .forEach {
-                        subclassesMap.computeIfAbsent(it) { Collections.synchronizedList(arrayListOf()) }
+                        subclassesMap.computeIfAbsent(it) { Collections.synchronizedSet(resolvedReferenceTypeDeclarationComparator.createSet()) }
                             .add(resolvedCU)
                     }
             }
