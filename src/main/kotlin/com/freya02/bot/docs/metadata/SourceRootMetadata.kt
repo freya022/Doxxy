@@ -34,7 +34,7 @@ class SourceRootMetadata(sourceRootPath: Path) {
 
             val compilationUnits: List<CompilationUnit> = nextStep("Parse") {
                 sourceRoot
-                    .tryToParseParallelized("net.dv8tion.jda")
+                    .tryToParseParallelized("net.dv8tion.jda.api.events")
                     .filter { result ->
                         if (result.problems.isNotEmpty()) {
                             result.problems.forEach { Companion.logger.error(it.toString()) }
@@ -47,7 +47,8 @@ class SourceRootMetadata(sourceRootPath: Path) {
             }
 
             nestedProfiler("Class metadata") {
-                classMetadataMap = ClassMetadataParser.parse(sourceRoot)
+//                classMetadataMap = ClassMetadataParser.parse(sourceRoot)
+                classMetadataMap = mapOf()
             }
 
             nextStep("Implementation metadata") {
