@@ -8,7 +8,6 @@ import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration
 import com.github.javaparser.resolution.types.ResolvedPrimitiveType
 import com.github.javaparser.resolution.types.ResolvedReferenceType
-import com.github.javaparser.symbolsolver.javaparsermodel.declarations.JavaParserMethodDeclaration
 import mu.KotlinLogging
 import java.util.*
 
@@ -58,9 +57,6 @@ class ImplementationMetadata private constructor(compilationUnits: List<Compilat
         subclassesMap.values.flatten().distinctBy { it.qualifiedName }.forEach { subclass ->
             try {
                 val allMethodsReversed = subclass.allMethodsOrdered
-                    //Don't take the reflected methods
-                    //TODO eliminate java.lang.Object from allMethodsOrdered
-                    .filter { it.declaration is JavaParserMethodDeclaration }
                     //Only keep public methods, interface methods have no access modifier but are implicitly public
                     .filter { it.declaringType().isInterface || it.declaration.accessSpecifier() == AccessSpecifier.PUBLIC }
                     .reversed()
@@ -106,6 +102,8 @@ class ImplementationMetadata private constructor(compilationUnits: List<Compilat
             }
 
             for (ancestor in allAncestors) {
+                if (ancestor.isJavaLangObject) continue
+
                 val typeParametersMap = ancestor.typeParametersMap
                 for (mu in ancestor.declaredMethods) {
                     // replace type parameters to be able to filter away overridden generified methods
