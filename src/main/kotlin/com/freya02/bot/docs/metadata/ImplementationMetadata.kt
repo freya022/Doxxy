@@ -5,7 +5,9 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
 import com.github.javaparser.resolution.MethodUsage
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration
+import com.github.javaparser.resolution.types.ResolvedPrimitiveType
 import com.github.javaparser.resolution.types.ResolvedReferenceType
+import com.github.javaparser.symbolsolver.javaparsermodel.declarations.JavaParserMethodDeclaration
 import mu.KotlinLogging
 import java.util.*
 
@@ -51,28 +53,72 @@ class ImplementationMetadata private constructor(compilationUnits: List<Compilat
     //After computing all subclasses, iterate on all superclasses (the map's keys),
     // take each subclass's methods and check signature compared to the superclass method
     private fun parseMethodImplementations() {
-        subclassesMap.forEach { (superclass, subclasses) ->
-            superclass.declaredMethods.forEach { superMethod ->
-                subclasses.forEach { subclass ->
-                    subclass.declaredMethods.forEach { subMethod ->
-                        if (isMethodCompatible(subMethod, superMethod)) {
-                            classToMethodImplementations
-                                .computeIfAbsent(superclass) { resolvedMethodComparator.createMap() }
-                                .computeIfAbsent(superMethod.declaration) { resolvedReferenceTypeDeclarationComparator.createSet() }
-                                .add(subclass)
-                        }
+        //On each class, take the allMethods Set, see if a compatible method exists for each method lower in the Set
+        subclassesMap.values.flatten().forEach { subclass ->
+            val allMethodsReversed = subclass.allMethodsOrdered
+                .filter { it.declaration is JavaParserMethodDeclaration }
+                .reversed()
+            allMethodsReversed.forEachIndexed { i, subMethod ->
+                //Check for methods above
+                allMethodsReversed.drop(i + 1).forEach { superMethod ->
+                    if (isMethodCompatible(subMethod.declaration, superMethod)) {
+                        println() //TODO should it ignore cases when subMethod is from a superclass compared to superMethod ?
                     }
                 }
             }
         }
+
+//        subclassesMap.forEach { (superclass, subclasses) ->
+//            superclass.declaredMethods.forEach { superMethod ->
+//                subclasses.forEach { subclass ->
+//                    subclass.declaredMethods.forEach { subMethod ->
+//                        if (isMethodCompatible(subMethod, superMethod)) {
+//                            classToMethodImplementations
+//                                .computeIfAbsent(superclass) { resolvedMethodComparator.createMap() }
+//                                .computeIfAbsent(superMethod.declaration) { resolvedReferenceTypeDeclarationComparator.createSet() }
+//                                .add(subclass)
+//                        }
+//                    }
+//                }
+//            }
+//        }
     }
+
+    private val ResolvedReferenceTypeDeclaration.allMethodsOrdered: Set<MethodUsage>
+        get() {
+            val methods: MutableSet<MethodUsage> = linkedSetOf()
+
+            for (methodDeclaration in declaredMethods) {
+                val methodUsage = MethodUsage(methodDeclaration)
+                methods.add(methodUsage)
+            }
+
+            for (ancestor in allAncestors) {
+                val typeParametersMap = ancestor.typeParametersMap
+                for (mu in ancestor.declaredMethods) {
+                    // replace type parameters to be able to filter away overridden generified methods
+                    var methodUsage = mu
+                    for (p in typeParametersMap) {
+                        methodUsage = methodUsage.replaceTypeParameter(p.a, p.b)
+                    }
+
+                    methods.add(mu)
+                }
+            }
+
+            return methods
+        }
 
     private fun isMethodCompatible(subMethod: ResolvedMethodDeclaration, superMethod: MethodUsage): Boolean {
         if (subMethod.name != superMethod.name) return false
         if (subMethod.numberOfParams != superMethod.noParams) return false
 
         return (0 until superMethod.noParams).all { i ->
-            superMethod.getParamType(i).isAssignableBy(subMethod.getParam(i).type)
+            when (val superType = superMethod.getParamType(i)) {
+                is ResolvedPrimitiveType -> subMethod.getParam(i).type.isPrimitive
+                        && superType.describe() == subMethod.getParam(i).type.asPrimitive().describe()
+                else -> superType.isAssignableBy(subMethod.getParam(i).type)
+            }
         }
     }
 
