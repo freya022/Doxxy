@@ -34,7 +34,7 @@ class SourceRootMetadata(sourceRootPath: Path) {
 
             val compilationUnits: List<CompilationUnit> = nextStep("Parse") {
                 sourceRoot
-                    .tryToParseParallelized("net.dv8tion.jda.api.events")
+                    .tryToParseParallelized("net.dv8tion.jda")
                     .filter { result ->
                         if (result.problems.isNotEmpty()) {
                             result.problems.forEach { Companion.logger.error(it.toString()) }

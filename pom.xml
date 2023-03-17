@@ -176,9 +176,9 @@
             <version>4a18f84801</version>
         </dependency>
         <dependency>
-            <groupId>com.github.javaparser</groupId>
+            <groupId>com.github.freya022.javaparser</groupId>
             <artifactId>javaparser-symbol-solver-core</artifactId>
-            <version>3.25.1</version>
+            <version>38699db7b4</version>
         </dependency>
         <dependency>
             <groupId>com.palantir.javaformat</groupId>
