@@ -19,6 +19,7 @@ class SourceRootMetadata(sourceRootPath: Path) {
     private val sourceRoot: SourceRoot = SourceRoot(sourceRootPath)
 
     private val solver = JavaSymbolSolver(CombinedTypeSolver().also { combinedTypeSolver ->
+        //This solver isn't needed to resolve implementations, but is used to get back the AST nodes (and thus, the ranges)
         combinedTypeSolver.add(JavaParserTypeSolver(sourceRootPath))
         combinedTypeSolver.add(ReflectionTypeSolver(/* jreOnly = */ false))
     })

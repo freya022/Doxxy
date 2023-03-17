@@ -6,6 +6,7 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
 import com.github.javaparser.resolution.MethodUsage
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration
+import com.github.javaparser.resolution.declarations.ResolvedTypeDeclaration
 import com.github.javaparser.resolution.types.ResolvedPrimitiveType
 import com.github.javaparser.resolution.types.ResolvedReferenceType
 import mu.KotlinLogging
@@ -15,12 +16,14 @@ private typealias ResolvedClass = ResolvedReferenceType
 private typealias ResolvedMethod = ResolvedMethodDeclaration
 
 class ImplementationMetadata private constructor(compilationUnits: List<CompilationUnit>) {
+    private val cache = JavaParserCache()
+
     // Comparators are used to determine equality, as JP instances likely do not implement hashCode/equals correctly
-    private val resolvedClassComparator: Comparator<ResolvedClass> = Comparator.comparing { it.qualifiedName }
-    private val resolvedMethodComparator: Comparator<ResolvedMethod> =
-        Comparator.comparing { it.qualifiedName + it.fixedDescriptor }
+    private val resolvedClassComparator: Comparator<ResolvedClass> = Comparator.comparing { it.cachedQualifiedName }
+    private val resolvedMethodComparator: Comparator<ResolvedMethod> = Comparator.comparing { it.cachedQualifiedDescriptor }
+
     private val resolvedReferenceTypeDeclarationComparator: Comparator<ResolvedReferenceTypeDeclaration> =
-        Comparator.comparing { it.qualifiedName }
+        Comparator.comparing { it.cachedQualifiedName }
 
     val subclassesMap: MutableMap<ResolvedClass, MutableSet<ResolvedReferenceTypeDeclaration>> =
         resolvedClassComparator.createMap()
@@ -54,7 +57,7 @@ class ImplementationMetadata private constructor(compilationUnits: List<Compilat
     // take each subclass's methods and check signature compared to the superclass method
     private fun parseMethodImplementations() {
         //On each class, take the allMethods Set, see if a compatible method exists for each method lower in the Set
-        subclassesMap.values.flatten().distinctBy { it.qualifiedName }.forEach { subclass ->
+        subclassesMap.values.flatten().distinctBy { it.cachedQualifiedName }.forEach { subclass ->
             try {
                 val allMethodsReversed = subclass.allMethodsOrdered
                     //Only keep public methods, interface methods have no access modifier but are implicitly public
@@ -73,7 +76,7 @@ class ImplementationMetadata private constructor(compilationUnits: List<Compilat
                         // example: SimpleLogger#debug(String, Object...) is assignable by SimpleLogger#debug(String, Object)
                         //          as Object[] is assignable to Object
                         // This also simply prevents from scanning methods from the same class lol
-                        if (subType.qualifiedName == superType.qualifiedName)
+                        if (subType.cachedQualifiedName == superType.cachedQualifiedName)
                             continue
 
                         if (isMethodCompatible(subMethod.declaration, superMethod)) {
@@ -138,16 +141,14 @@ class ImplementationMetadata private constructor(compilationUnits: List<Compilat
     private fun <K, V> Comparator<K>.createMap(): MutableMap<K, V> = Collections.synchronizedMap(TreeMap(this))
     private fun <E> Comparator<E>.createSet(): MutableSet<E> = Collections.synchronizedSet(TreeSet(this))
 
-    private val ResolvedMethodDeclaration.fixedDescriptor: String
-        get() = buildString {
-            append('(')
-            for (i in 0..<numberOfParams) {
-                append(getParam(i).type.describe())
-            }
-            append(')')
+    private val ResolvedTypeDeclaration.cachedQualifiedName
+        get() = cache.getQualifiedName(this)
 
-            append(returnType.describe())
-        }
+    private val ResolvedReferenceType.cachedQualifiedName
+        get() = cache.getQualifiedName(this)
+
+    private val ResolvedMethodDeclaration.cachedQualifiedDescriptor
+        get() = cache.getQualifiedDescriptor(this)
 
     companion object {
         private val logger = KotlinLogging.logger { }
