@@ -2,6 +2,7 @@ package com.freya02.bot.docs.metadata
 
 import com.github.javaparser.resolution.MethodUsage
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration
+import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration
 import com.github.javaparser.resolution.declarations.ResolvedTypeDeclaration
 import com.github.javaparser.resolution.types.ResolvedReferenceType
 import java.util.*
@@ -30,10 +31,12 @@ class JavaParserCache {
     private val typeDeclarationQualifiedNames = Cache<ResolvedTypeDeclaration, String> { it.qualifiedName }
     private val referenceTypeQualifiedNames = Cache<ResolvedReferenceType, String> { it.qualifiedName }
     private val methodDeclarationQualifiedDescriptors = Cache<ResolvedMethodDeclaration, String> {
-        it.qualifiedDescriptor
+        it.buildQualifiedDescriptor()
     }
 
-    private val referenceTypeDeclaredMethods = Cache<ResolvedReferenceType, Set<MethodUsage>>() { it.declaredMethods }
+    private val referenceTypeDeclaredMethods = Cache<ResolvedReferenceType, Set<MethodUsage>> { it.declaredMethods }
+    private val methodUsageDeclaringTypes =
+        Cache<MethodUsage, ResolvedReferenceTypeDeclaration> { it.declaringType() }
 
     fun getQualifiedName(declaration: ResolvedTypeDeclaration): String = typeDeclarationQualifiedNames[declaration]
 
@@ -45,15 +48,16 @@ class JavaParserCache {
     fun getDeclaredMethods(declaration: ResolvedReferenceType): Set<MethodUsage> =
         referenceTypeDeclaredMethods[declaration]
 
-    private val ResolvedMethodDeclaration.qualifiedDescriptor: String
-        get() = buildString {
-            append(qualifiedName)
-            append('(')
-            for (i in 0..<numberOfParams) {
-                append(getParam(i).type.describe())
-            }
-            append(')')
+    fun getDeclaringType(usage: MethodUsage): ResolvedReferenceTypeDeclaration = methodUsageDeclaringTypes[usage]
 
-            append(returnType.describe())
+    private fun ResolvedMethodDeclaration.buildQualifiedDescriptor(): String = buildString {
+        append(qualifiedName)
+        append('(')
+        for (i in 0..<numberOfParams) {
+            append(getParam(i).type.describe())
         }
+        append(')')
+
+        append(returnType.describe())
+    }
 }

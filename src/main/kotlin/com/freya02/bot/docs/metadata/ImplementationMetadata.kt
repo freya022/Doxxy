@@ -61,15 +61,15 @@ class ImplementationMetadata private constructor(compilationUnits: List<Compilat
             try {
                 val allMethodsReversed = subclass.allMethodsOrdered
                     //Only keep public methods, interface methods have no access modifier but are implicitly public
-                    .filter { it.declaringType().isInterface || it.declaration.accessSpecifier() == AccessSpecifier.PUBLIC }
+                    .filter { it.cachedDeclaringType.isInterface || it.declaration.accessSpecifier() == AccessSpecifier.PUBLIC }
                     .reversed()
                 allMethodsReversed.forEachIndexed { i, superMethod -> //This is a super method as the list is reversed
-                    val superType = superMethod.declaringType()
+                    val superType = superMethod.cachedDeclaringType
 
                     //Check for methods above
                     for (j in i..<allMethodsReversed.size) { //Avoid making copies
                         val subMethod = allMethodsReversed[j]
-                        val subType = subMethod.declaringType()
+                        val subType = subMethod.cachedDeclaringType
 
                         //Some method overloads might be assignable between themselves in one way but not the other
                         // Don't compare such methods,
@@ -152,6 +152,9 @@ class ImplementationMetadata private constructor(compilationUnits: List<Compilat
 
     private val ResolvedReferenceType.cachedDeclaredMethods
         get() = cache.getDeclaredMethods(this)
+
+    private val MethodUsage.cachedDeclaringType
+        get() = cache.getDeclaringType(this)
 
     companion object {
         private val logger = KotlinLogging.logger { }
