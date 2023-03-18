@@ -108,7 +108,7 @@ class ImplementationMetadata private constructor(compilationUnits: List<Compilat
                 if (ancestor.isJavaLangObject) continue
 
                 val typeParametersMap = ancestor.typeParametersMap
-                for (mu in ancestor.declaredMethods) {
+                for (mu in ancestor.cachedDeclaredMethods) {
                     // replace type parameters to be able to filter away overridden generified methods
                     var methodUsage = mu
                     for (p in typeParametersMap) {
@@ -149,6 +149,9 @@ class ImplementationMetadata private constructor(compilationUnits: List<Compilat
 
     private val ResolvedMethodDeclaration.cachedQualifiedDescriptor
         get() = cache.getQualifiedDescriptor(this)
+
+    private val ResolvedReferenceType.cachedDeclaredMethods
+        get() = cache.getDeclaredMethods(this)
 
     companion object {
         private val logger = KotlinLogging.logger { }
