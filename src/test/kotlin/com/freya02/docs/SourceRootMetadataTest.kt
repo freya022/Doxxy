@@ -1,10 +1,10 @@
 package com.freya02.docs
 
 import com.freya02.bot.Data
-import com.freya02.bot.docs.metadata.ImplementationMetadata.Companion.findByMethodName
-import com.freya02.bot.docs.metadata.ImplementationMetadata.Companion.findDeclByClassName
-import com.freya02.bot.docs.metadata.ImplementationMetadata.Companion.flattenReferences
 import com.freya02.bot.docs.metadata.SourceRootMetadata
+import com.freya02.bot.docs.metadata.findByMethodName
+import com.freya02.bot.docs.metadata.findDeclByClassName
+import com.freya02.bot.docs.metadata.flattenReferences
 
 fun main() {
     val metadata = SourceRootMetadata(Data.javadocsPath.resolve("JDA"))

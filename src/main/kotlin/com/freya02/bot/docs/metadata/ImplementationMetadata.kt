@@ -7,10 +7,8 @@ import com.github.javaparser.resolution.MethodUsage
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration
 import com.github.javaparser.resolution.declarations.ResolvedTypeDeclaration
-import com.github.javaparser.resolution.types.ResolvedPrimitiveType
 import com.github.javaparser.resolution.types.ResolvedReferenceType
 import mu.KotlinLogging
-import java.util.*
 
 private typealias ResolvedClass = ResolvedReferenceType
 private typealias ResolvedMethod = ResolvedMethodDeclaration
@@ -122,25 +120,6 @@ class ImplementationMetadata private constructor(compilationUnits: List<Compilat
             return methods
         }
 
-    private fun isMethodCompatible(subMethod: ResolvedMethodDeclaration, superMethod: MethodUsage): Boolean {
-        if (subMethod.name != superMethod.name) return false
-        if (subMethod.numberOfParams != superMethod.noParams) return false
-
-        return (0 until superMethod.noParams).all { i ->
-            when (val superType = superMethod.getParamType(i)) {
-                //JP says that converting an int to a long is possible, but what we want is to check the types
-                // Check primitive name if it is one instead
-                is ResolvedPrimitiveType -> subMethod.getParam(i).type.isPrimitive
-                        && superType.describe() == subMethod.getParam(i).type.asPrimitive().describe()
-
-                else -> superType.isAssignableBy(subMethod.getParam(i).type)
-            }
-        }
-    }
-
-    private fun <K, V> Comparator<K>.createMap(): MutableMap<K, V> = Collections.synchronizedMap(TreeMap(this))
-    private fun <E> Comparator<E>.createSet(): MutableSet<E> = Collections.synchronizedSet(TreeSet(this))
-
     private val ResolvedTypeDeclaration.cachedQualifiedName
         get() = cache.getQualifiedName(this)
 
@@ -158,21 +137,6 @@ class ImplementationMetadata private constructor(compilationUnits: List<Compilat
 
     companion object {
         private val logger = KotlinLogging.logger { }
-
-        fun <T> Map<ResolvedReferenceType, T>.findRefByClassName(name: String): T {
-            return this.toList().first { (k, _) -> k.qualifiedName.endsWith(".$name") }.second
-        }
-
-        fun <T> Map<ResolvedReferenceTypeDeclaration, T>.findDeclByClassName(name: String): T {
-            return this.toList().first { (k, _) -> k.qualifiedName.endsWith(".$name") }.second
-        }
-
-        fun <T> Map<ResolvedMethod, T>.findByMethodName(name: String): Map<String, T> {
-            return this.filterKeys { it.name == name }.mapKeys { (k, _) -> k.className }
-        }
-
-        fun <T> Map<T, Iterable<ResolvedReferenceTypeDeclaration>>.flattenReferences() =
-            map { (k, v) -> v.map { it.qualifiedName } }.flatten()
 
         fun fromCompilationUnits(compilationUnits: List<CompilationUnit>): ImplementationMetadata {
             return ImplementationMetadata(compilationUnits)
