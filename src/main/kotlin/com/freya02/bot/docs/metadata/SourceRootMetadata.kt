@@ -53,7 +53,7 @@ class SourceRootMetadata(sourceRootPath: Path) {
             }
 
             nextStep("Implementation metadata") {
-                implementationMetadata = ImplementationMetadata.fromCompilationUnits(compilationUnits)
+                implementationMetadata = ImplementationMetadataParser.parseCompilationUnits(compilationUnits)
             }
         }
     }

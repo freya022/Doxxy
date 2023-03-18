@@ -1,6 +1,6 @@
 package com.freya02.docs
 
-import com.freya02.bot.docs.metadata.ImplementationMetadata
+import com.freya02.bot.docs.metadata.ImplementationMetadataParser
 import com.freya02.bot.versioning.VersionsUtils
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration
 import com.github.javaparser.resolution.types.ResolvedReferenceType
@@ -65,7 +65,7 @@ object ImplResolverTest {
                 result.isSuccessful
             }.map { it.result.get() }
 
-        val implementationMetadata = ImplementationMetadata.fromCompilationUnits(sourceRoot.compilationUnits)
+        val implementationMetadata = ImplementationMetadataParser.parseCompilationUnits(sourceRoot.compilationUnits)
 
         println()
     }
