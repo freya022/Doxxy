@@ -17,11 +17,11 @@ class ImplementationMetadata private constructor(compilationUnits: List<Compilat
     private val cache = JavaParserCache()
 
     // Comparators are used to determine equality, as JP instances likely do not implement hashCode/equals correctly
-    private val resolvedClassComparator: Comparator<ResolvedClass> = Comparator.comparing { it.cachedQualifiedName }
-    private val resolvedMethodComparator: Comparator<ResolvedMethod> = Comparator.comparing { it.cachedQualifiedDescriptor }
+    private val resolvedClassComparator = Comparator.comparing<ResolvedClass, _> { it.cachedQualifiedName }
+    private val resolvedMethodComparator = Comparator.comparing<ResolvedMethod, _> { it.cachedQualifiedDescriptor }
 
-    private val resolvedReferenceTypeDeclarationComparator: Comparator<ResolvedReferenceTypeDeclaration> =
-        Comparator.comparing { it.cachedQualifiedName }
+    private val resolvedReferenceTypeDeclarationComparator =
+        Comparator.comparing<ResolvedReferenceTypeDeclaration, _> { it.cachedQualifiedName }
 
     val subclassesMap: MutableMap<ResolvedClass, MutableSet<ResolvedReferenceTypeDeclaration>> =
         resolvedClassComparator.createMap()
@@ -51,8 +51,8 @@ class ImplementationMetadata private constructor(compilationUnits: List<Compilat
 
     }
 
-    //After computing all subclasses, iterate on all superclasses (the map's keys),
-    // take each subclass's methods and check signature compared to the superclass method
+    //After computing all subclasses, iterate on all subclasses (the map's values),
+    // take each subclass's methods and check signature compared to the superclass method (which are lower in the Set<MethodUsage>)
     private fun parseMethodImplementations() {
         //On each class, take the allMethods Set, see if a compatible method exists for each method lower in the Set
         subclassesMap.values.flatten().distinctBy { it.cachedQualifiedName }.forEach { subclass ->
@@ -64,8 +64,8 @@ class ImplementationMetadata private constructor(compilationUnits: List<Compilat
                 allMethodsReversed.forEachIndexed { i, superMethod -> //This is a super method as the list is reversed
                     val superType = superMethod.cachedDeclaringType
 
-                    //Check for methods above
-                    for (j in i..<allMethodsReversed.size) { //Avoid making copies
+                    //Check for methods above in the hierarchy
+                    for (j in i..<allMethodsReversed.size) { //Avoid making list copies
                         val subMethod = allMethodsReversed[j]
                         val subType = subMethod.cachedDeclaringType
 
@@ -78,7 +78,6 @@ class ImplementationMetadata private constructor(compilationUnits: List<Compilat
                             continue
 
                         if (isMethodCompatible(subMethod.declaration, superMethod)) {
-                            //println() //TODO should it ignore cases when superMethod is from a superclass compared to superMethod ?
                             classToMethodImplementations
                                 .computeIfAbsent(superType) { resolvedMethodComparator.createMap() }
                                 .computeIfAbsent(superMethod.declaration) { resolvedReferenceTypeDeclarationComparator.createSet() }
@@ -87,7 +86,7 @@ class ImplementationMetadata private constructor(compilationUnits: List<Compilat
                     }
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                logger.error("An exception occurred while processing overrides of ${subclass.cachedQualifiedName}", e)
             }
         }
     }
@@ -98,27 +97,18 @@ class ImplementationMetadata private constructor(compilationUnits: List<Compilat
             val methods: MutableList<MethodUsage> = arrayListOf()
 
             for (methodDeclaration in declaredMethods) {
-                val methodUsage = MethodUsage(methodDeclaration)
-                methods.add(methodUsage)
+                methods.add(MethodUsage(methodDeclaration))
             }
 
             for (ancestor in allAncestors) {
                 if (ancestor.isJavaLangObject) continue
-
-                val typeParametersMap = ancestor.typeParametersMap
-                for (mu in ancestor.cachedDeclaredMethods) {
-                    // replace type parameters to be able to filter away overridden generified methods
-                    var methodUsage = mu
-                    for (p in typeParametersMap) {
-                        methodUsage = methodUsage.replaceTypeParameter(p.a, p.b)
-                    }
-
-                    methods.add(mu)
-                }
+                methods += ancestor.cachedDeclaredMethods
             }
 
             return methods
         }
+
+    // Caching
 
     private val ResolvedTypeDeclaration.cachedQualifiedName
         get() = cache.getQualifiedName(this)
