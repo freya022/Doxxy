@@ -34,7 +34,7 @@ class JavaParserCache {
         it.buildQualifiedDescriptor()
     }
 
-    private val referenceTypeDeclaredMethods = Cache<ResolvedReferenceType, Set<MethodUsage>> { it.declaredMethods }
+    private val referenceTypeDeclaredMethods = Cache<ResolvedReferenceType, Set<MethodUsage>>(TreeMap(Comparator.comparing { getQualifiedName(it) })) { it.declaredMethods }
     private val methodUsageDeclaringTypes =
         Cache<MethodUsage, ResolvedReferenceTypeDeclaration> { it.declaringType() }
 
