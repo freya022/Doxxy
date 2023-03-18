@@ -3,7 +3,6 @@ package com.freya02.bot.docs.metadata
 import com.github.javaparser.ast.AccessSpecifier
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
-import com.github.javaparser.resolution.MethodUsage
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration
 import com.github.javaparser.resolution.declarations.ResolvedTypeDeclaration
@@ -59,7 +58,7 @@ class ImplementationMetadata private constructor(compilationUnits: List<Compilat
             try {
                 val allMethodsReversed = subclass.allMethodsOrdered
                     //Only keep public methods, interface methods have no access modifier but are implicitly public
-                    .filter { it.cachedDeclaringType.isInterface || it.declaration.accessSpecifier() == AccessSpecifier.PUBLIC }
+                    .filter { it.cachedDeclaringType.isInterface || it.accessSpecifier() == AccessSpecifier.PUBLIC }
                     .reversed()
                 allMethodsReversed.forEachIndexed { i, superMethod -> //This is a super method as the list is reversed
                     val superType = superMethod.cachedDeclaringType
@@ -77,10 +76,10 @@ class ImplementationMetadata private constructor(compilationUnits: List<Compilat
                         if (subType.cachedQualifiedName == superType.cachedQualifiedName)
                             continue
 
-                        if (isMethodCompatible(subMethod.declaration, superMethod)) {
+                        if (isMethodCompatible(subMethod, superMethod)) {
                             classToMethodImplementations
                                 .computeIfAbsent(superType) { resolvedMethodComparator.createMap() }
-                                .computeIfAbsent(superMethod.declaration) { resolvedReferenceTypeDeclarationComparator.createSet() }
+                                .computeIfAbsent(superMethod) { resolvedReferenceTypeDeclarationComparator.createSet() }
                                 .add(subType)
                         }
                     }
@@ -92,17 +91,17 @@ class ImplementationMetadata private constructor(compilationUnits: List<Compilat
     }
 
     //See ResolvedReferenceTypeDeclaration#getAllMethods
-    private val ResolvedReferenceTypeDeclaration.allMethodsOrdered: List<MethodUsage>
+    private val ResolvedReferenceTypeDeclaration.allMethodsOrdered: List<ResolvedMethodDeclaration>
         get() {
-            val methods: MutableList<MethodUsage> = arrayListOf()
+            val methods: MutableList<ResolvedMethodDeclaration> = arrayListOf()
 
             for (methodDeclaration in declaredMethods) {
-                methods.add(MethodUsage(methodDeclaration))
+                methods.add(methodDeclaration)
             }
 
             for (ancestor in allAncestors) {
                 if (ancestor.isJavaLangObject) continue
-                methods += ancestor.cachedDeclaredMethods
+                methods += ancestor.cachedLightDeclaredMethods
             }
 
             return methods
@@ -119,10 +118,10 @@ class ImplementationMetadata private constructor(compilationUnits: List<Compilat
     private val ResolvedMethodDeclaration.cachedQualifiedDescriptor
         get() = cache.getQualifiedDescriptor(this)
 
-    private val ResolvedReferenceType.cachedDeclaredMethods
-        get() = cache.getDeclaredMethods(this)
+    private val ResolvedReferenceType.cachedLightDeclaredMethods
+        get() = cache.getLightDeclaredMethods(this)
 
-    private val MethodUsage.cachedDeclaringType
+    private val ResolvedMethodDeclaration.cachedDeclaringType
         get() = cache.getDeclaringType(this)
 
     companion object {

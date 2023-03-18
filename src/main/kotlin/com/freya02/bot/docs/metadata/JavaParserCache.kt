@@ -1,6 +1,5 @@
 package com.freya02.bot.docs.metadata
 
-import com.github.javaparser.resolution.MethodUsage
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration
 import com.github.javaparser.resolution.declarations.ResolvedTypeDeclaration
@@ -34,9 +33,10 @@ class JavaParserCache {
         it.buildQualifiedDescriptor()
     }
 
-    private val referenceTypeDeclaredMethods = Cache<ResolvedReferenceType, Set<MethodUsage>>(TreeMap(Comparator.comparing { getQualifiedName(it) })) { it.declaredMethods }
+    private val referenceTypeLightDeclaredMethods =
+        Cache<ResolvedReferenceType, Set<ResolvedMethodDeclaration>>(TreeMap(Comparator.comparing { getQualifiedName(it) })) { it.lightDeclaredMethods }
     private val methodUsageDeclaringTypes =
-        Cache<MethodUsage, ResolvedReferenceTypeDeclaration> { it.declaringType() }
+        Cache<ResolvedMethodDeclaration, ResolvedReferenceTypeDeclaration> { it.declaringType() }
 
     fun getQualifiedName(declaration: ResolvedTypeDeclaration): String = typeDeclarationQualifiedNames[declaration]
 
@@ -45,10 +45,10 @@ class JavaParserCache {
     fun getQualifiedDescriptor(declaration: ResolvedMethodDeclaration): String =
         methodDeclarationQualifiedDescriptors[declaration]
 
-    fun getDeclaredMethods(declaration: ResolvedReferenceType): Set<MethodUsage> =
-        referenceTypeDeclaredMethods[declaration]
+    fun getLightDeclaredMethods(declaration: ResolvedReferenceType): Set<ResolvedMethodDeclaration> =
+        referenceTypeLightDeclaredMethods[declaration]
 
-    fun getDeclaringType(usage: MethodUsage): ResolvedReferenceTypeDeclaration = methodUsageDeclaringTypes[usage]
+    fun getDeclaringType(usage: ResolvedMethodDeclaration): ResolvedReferenceTypeDeclaration = methodUsageDeclaringTypes[usage]
 
     private fun ResolvedMethodDeclaration.buildQualifiedDescriptor(): String = buildString {
         append(qualifiedName)
