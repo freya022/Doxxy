@@ -29,8 +29,9 @@ class JavaParserCache {
     // An IdentityHashMap is used as JP *might* not implement hashCode/equals correctly, while using a property as a key would be counterproductive
     private val typeDeclarationQualifiedNames = Cache<ResolvedTypeDeclaration, String> { it.qualifiedName }
     private val referenceTypeQualifiedNames = Cache<ResolvedReferenceType, String> { it.qualifiedName }
-    private val methodDeclarationQualifiedDescriptors =
-        Cache<ResolvedMethodDeclaration, String> { it.qualifiedName + it.fixedDescriptor }
+    private val methodDeclarationQualifiedDescriptors = Cache<ResolvedMethodDeclaration, String> {
+        it.qualifiedDescriptor
+    }
 
     private val referenceTypeDeclaredMethods = Cache<ResolvedReferenceType, Set<MethodUsage>>() { it.declaredMethods }
 
@@ -44,8 +45,9 @@ class JavaParserCache {
     fun getDeclaredMethods(declaration: ResolvedReferenceType): Set<MethodUsage> =
         referenceTypeDeclaredMethods[declaration]
 
-    private val ResolvedMethodDeclaration.fixedDescriptor: String
+    private val ResolvedMethodDeclaration.qualifiedDescriptor: String
         get() = buildString {
+            append(qualifiedName)
             append('(')
             for (i in 0..<numberOfParams) {
                 append(getParam(i).type.describe())
