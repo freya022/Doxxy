@@ -3,11 +3,9 @@ package com.freya02.bot.docs.metadata
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.nodeTypes.NodeWithName
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration
-import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration
 import com.github.javaparser.resolution.types.ResolvedPrimitiveType
 import com.github.javaparser.resolution.types.ResolvedReferenceType
 import mu.KLogger
-import java.util.*
 import kotlin.jvm.optionals.getOrNull
 
 val CompilationUnit.debugFQCN: String
@@ -50,21 +48,3 @@ fun isMethodCompatible(subMethod: ResolvedMethodDeclaration, superMethod: Resolv
         }
     }
 }
-
-fun <K, V> Comparator<K>.createMap(): MutableMap<K, V> = Collections.synchronizedMap(TreeMap(this))
-fun <E> Comparator<E>.createSet(): MutableSet<E> = Collections.synchronizedSet(TreeSet(this))
-
-fun <T> Map<ResolvedReferenceType, T>.findRefByClassName(name: String): T {
-    return this.toList().first { (k, _) -> k.qualifiedName.endsWith(".$name") }.second
-}
-
-fun <T> Map<ResolvedReferenceTypeDeclaration, T>.findDeclByClassName(name: String): T {
-    return this.toList().first { (k, _) -> k.qualifiedName.endsWith(".$name") }.second
-}
-
-fun <T> Map<ResolvedMethodDeclaration, T>.findByMethodName(name: String): Map<String, T> {
-    return this.filterKeys { it.name == name }.mapKeys { (k, _) -> k.className }
-}
-
-fun <T> Map<T, Iterable<ResolvedReferenceTypeDeclaration>>.flattenReferences() =
-    map { (k, v) -> v.map { it.qualifiedName } }.flatten()

@@ -35,7 +35,7 @@ class JavaParserCache {
     private val typeDeclarationQualifiedNames = Cache<ResolvedTypeDeclaration, String>(calcMaxSize(10121.0)) { it.qualifiedName }
     private val referenceTypeQualifiedNames = Cache<ResolvedReferenceType, String>(calcMaxSize(8477.0)) { it.qualifiedName }
     private val methodDeclarationQualifiedDescriptors = Cache<ResolvedMethodDeclaration, String>(calcMaxSize(2049.0)) {
-        it.buildQualifiedDescriptor()
+        it.buildDescriptor()
     }
 
     //A Comparator is used as the map keys are being recreated everytime, an IdentityHashMap would not work
@@ -56,8 +56,8 @@ class JavaParserCache {
 
     fun getDeclaringType(usage: ResolvedMethodDeclaration): ResolvedReferenceTypeDeclaration = methodUsageDeclaringTypes[usage]
 
-    private fun ResolvedMethodDeclaration.buildQualifiedDescriptor(): String = buildString {
-        append(qualifiedName)
+    private fun ResolvedMethodDeclaration.buildDescriptor(): String = buildString {
+        append(name)
         append('(')
         for (i in 0..<numberOfParams) {
             append(getParam(i).type.describe())

@@ -12,25 +12,13 @@ import mu.KotlinLogging
 class ImplementationMetadataParser private constructor() {
     private val cache = JavaParserCache()
 
-    // Comparators are used to determine equality, as JP instances likely do not implement hashCode/equals correctly
-    private val resolvedClassComparator = Comparator.comparing<ResolvedClass, _> { it.cachedQualifiedName }
-    private val resolvedMethodComparator = Comparator.comparing<ResolvedMethod, _> { it.cachedQualifiedDescriptor }
-
-    private val resolvedReferenceTypeDeclarationComparator =
-        Comparator.comparing<ResolvedReferenceTypeDeclaration, _> { it.cachedQualifiedName }
-
-    val subclassesMap: MutableMap<ResolvedClass, MutableSet<ResolvedReferenceTypeDeclaration>> =
-        resolvedClassComparator.createMap()
-
-    // BaseClass -> Map<TheMethod, Set<ClassOverridingMethod>>
-    val classToMethodImplementations: MutableMap<ResolvedReferenceTypeDeclaration, MutableMap<ResolvedMethod, MutableSet<ResolvedReferenceTypeDeclaration>>> =
-        resolvedReferenceTypeDeclarationComparator.createMap()
+    val classes: MutableMap<String, ImplementationMetadata.Class> = hashMapOf()
 
     fun parse(compilationUnits: List<CompilationUnit>): ImplementationMetadata {
         compilationUnits.forEachCompilationUnit(logger, ::processCU)
         parseMethodImplementations()
 
-        return ImplementationMetadata(subclassesMap, classToMethodImplementations)
+        return ImplementationMetadata(classes)
     }
 
     private fun processCU(cu: CompilationUnit) {
@@ -40,21 +28,18 @@ class ImplementationMetadataParser private constructor() {
                 //Add ancestors (superclasses & superinterfaces) to the map
                 resolvedCU
                     .getAllAncestors(ResolvedReferenceTypeDeclaration.breadthFirstFunc)
+                    .map { it.typeDeclaration.get() }
                     // Don't process classes outside the SourceRoot, as we can't get source links for them
-                    .filterNot { it.typeDeclaration.get().javaClass.simpleName.startsWith("Reflection") }
-                    .forEach {
-                        subclassesMap.computeIfAbsent(it) { resolvedReferenceTypeDeclarationComparator.createSet() }
-                            .add(resolvedCU)
-                    }
+                    .filterNot { it.javaClass.simpleName.startsWith("Reflection") }
+                    .forEach { ancestor -> ancestor.metadata.subclasses.add(resolvedCU.metadata) }
             }
-
     }
 
     //After computing all subclasses, iterate on all subclasses (the map's values),
     // take each subclass's methods and check signature compared to the superclass method (which are lower in the Set<MethodUsage>)
     private fun parseMethodImplementations() {
         //On each class, take the allMethods Set, see if a compatible method exists for each method lower in the Set
-        subclassesMap.values.flatten().distinctBy { it.cachedQualifiedName }.forEach { subclass ->
+        classes.values.map { it.declaration }.forEach { subclass ->
             try {
                 val allMethodsReversed = subclass.allMethodsOrdered
                     //Only keep public methods, interface methods have no access modifier but are implicitly public
@@ -79,10 +64,7 @@ class ImplementationMetadataParser private constructor() {
                             continue
 
                         if (isMethodCompatible(subMethod, superMethod)) {
-                            classToMethodImplementations
-                                .computeIfAbsent(superType) { resolvedMethodComparator.createMap() }
-                                .computeIfAbsent(superMethod) { resolvedReferenceTypeDeclarationComparator.createSet() }
-                                .add(subType)
+                            superMethod.metadata.implementations += subMethod.metadata
                         }
                     }
                 }
@@ -91,6 +73,19 @@ class ImplementationMetadataParser private constructor() {
             }
         }
     }
+
+    private val ResolvedReferenceTypeDeclaration.metadata: ImplementationMetadata.Class
+        get() = classes.getOrPut(this.cachedQualifiedName) {
+            ImplementationMetadata.Class(this, this.cachedQualifiedName)
+        }
+
+    private val ResolvedMethodDeclaration.metadata: ImplementationMetadata.Method
+        get() {
+            val classMetadata = cachedDeclaringType.metadata
+            return classMetadata.methods.getOrPut(this.cachedQualifiedDescriptor) {
+                ImplementationMetadata.Method(this, classMetadata, this.cachedQualifiedDescriptor)
+            }
+        }
 
     //See ResolvedReferenceTypeDeclaration#getAllMethods
     private val ResolvedReferenceTypeDeclaration.allMethodsOrdered: List<ResolvedMethodDeclaration>
@@ -112,9 +107,6 @@ class ImplementationMetadataParser private constructor() {
     // Caching
 
     private val ResolvedTypeDeclaration.cachedQualifiedName
-        get() = cache.getQualifiedName(this)
-
-    private val ResolvedReferenceType.cachedQualifiedName
         get() = cache.getQualifiedName(this)
 
     private val ResolvedMethodDeclaration.cachedQualifiedDescriptor
