@@ -40,6 +40,12 @@ class ImplementationMetadata(val classes: Map<String, Class>) {
         val qualifiedDescriptor = owner.qualifiedName + "." + descriptor
         val implementations: MutableSet<Method> = hashSetOf()
 
+        val range: IntRange
+            get() {
+                val node = declaration.toAst().get()
+                return node.begin.get().line..node.end.get().line
+            }
+
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false
