@@ -9,6 +9,7 @@ class ImplementationMetadata(val classes: Map<String, Class>) {
 
     class Class(val declaration: ResolvedReferenceTypeDeclaration, val qualifiedName: String) {
         val subclasses: MutableSet<Class> = hashSetOf()
+        val superclasses: MutableSet<Class> = hashSetOf()
         val methods: MutableMap<String, Method> = hashMapOf()
 
         fun getSubclassByQualifiedName(qualifiedName: String) = subclasses.first { it.qualifiedName == qualifiedName }
@@ -34,7 +35,9 @@ class ImplementationMetadata(val classes: Map<String, Class>) {
         override fun toString(): String = qualifiedName
     }
 
-    class Method(val declaration: ResolvedMethodDeclaration, val owner: Class, val qualifiedDescriptor: String) {
+    class Method(val declaration: ResolvedMethodDeclaration, val owner: Class, val descriptor: String) {
+        val name: String = declaration.name
+        val qualifiedDescriptor = owner.qualifiedName + "." + descriptor
         val implementations: MutableSet<Method> = hashSetOf()
 
         override fun equals(other: Any?): Boolean {

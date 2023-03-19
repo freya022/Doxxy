@@ -31,7 +31,10 @@ class ImplementationMetadataParser private constructor() {
                     .map { it.typeDeclaration.get() }
                     // Don't process classes outside the SourceRoot, as we can't get source links for them
                     .filterNot { it.javaClass.simpleName.startsWith("Reflection") }
-                    .forEach { ancestor -> ancestor.metadata.subclasses.add(resolvedCU.metadata) }
+                    .forEach { ancestor ->
+                        ancestor.metadata.subclasses.add(resolvedCU.metadata)
+                        resolvedCU.metadata.superclasses.add(ancestor.metadata)
+                    }
             }
     }
 
