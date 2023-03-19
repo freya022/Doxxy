@@ -40,7 +40,8 @@ class ImplementationMetadataParser private constructor() {
                 //Add ancestors (superclasses & superinterfaces) to the map
                 resolvedCU
                     .getAllAncestors(ResolvedReferenceTypeDeclaration.breadthFirstFunc)
-                    .filterNot { it.isJavaLangEnum || it.isJavaLangObject }
+                    // Don't process classes outside the SourceRoot, as we can't get source links for them
+                    .filterNot { it.typeDeclaration.get().javaClass.simpleName.startsWith("Reflection") }
                     .forEach {
                         subclassesMap.computeIfAbsent(it) { resolvedReferenceTypeDeclarationComparator.createSet() }
                             .add(resolvedCU)
@@ -58,6 +59,8 @@ class ImplementationMetadataParser private constructor() {
                 val allMethodsReversed = subclass.allMethodsOrdered
                     //Only keep public methods, interface methods have no access modifier but are implicitly public
                     .filter { it.cachedDeclaringType.isInterface || it.accessSpecifier() == AccessSpecifier.PUBLIC }
+                    // Don't process classes outside the SourceRoot, as we can't get source links for them
+                    .filterNot { it.cachedDeclaringType.javaClass.simpleName.startsWith("Reflection") }
                     .reversed()
                 allMethodsReversed.forEachIndexed { i, superMethod -> //This is a super method as the list is reversed
                     val superType = superMethod.cachedDeclaringType
