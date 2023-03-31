@@ -1,7 +1,7 @@
 package com.freya02.bot.docs.index
 
+import com.freya02.bot.docs.metadata.ImplementationMetadata
 import com.freya02.docs.data.ClassDoc
-import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration
 
 data class ReindexData(val sourceUrl: String? = null) {
     fun getClassSourceUrl(classDoc: ClassDoc): String? {
@@ -12,11 +12,14 @@ data class ReindexData(val sourceUrl: String? = null) {
         return "$sourceUrl$packageName/$topLevelClassName.java"
     }
 
-    fun getClassSourceUrl(typeDeclaration: ResolvedReferenceTypeDeclaration): String? {
+    fun getClassSourceUrl(classData: ImplementationMetadata.Class): String? {
         if (sourceUrl == null) return null
 
-        val packageName = typeDeclaration.packageName.replace('.', '/')
-        val topLevelClassName = typeDeclaration.className.substringBefore('.')
+        val segments = classData.qualifiedName.split('.')
+        val classIndex = segments.indexOfLast { it.all { c -> c.isLowerCase() || !c.isLetter() } } + 1
+        val packageName = segments.take(classIndex).joinToString("/")
+        //Only keep top level name, i.e. Message in Message.Attachment
+        val topLevelClassName = segments[classIndex]
         return "$sourceUrl$packageName/$topLevelClassName.java"
     }
 }
