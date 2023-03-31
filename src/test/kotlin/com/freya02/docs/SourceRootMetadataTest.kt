@@ -9,15 +9,22 @@ fun main() {
     println(
         metadata.implementationMetadata
             .getClassBySimpleName("Message")
-            .getMethodsByName("getContentRaw")
+            .getDeclaredMethodsByName("getContentRaw")
             .values.map { it.implementations }
     )
 
     println(
         metadata.implementationMetadata
             .getClassBySimpleName("IPermissionContainerManager")
-            .getMethodsByName("removePermissionOverride")
+            .getDeclaredMethodsByName("removePermissionOverride")
             .values.map { it.implementations }
+    )
+
+    println(
+        metadata.implementationMetadata
+            .getClassBySimpleName("VoiceChannelManager")
+            .getMethodsByName("removePermissionOverride")
+            .map { it.implementations }
     )
 
     //TODO add logic to find implementations from superclasses, looking at superclasses and their method implementations should be enough,

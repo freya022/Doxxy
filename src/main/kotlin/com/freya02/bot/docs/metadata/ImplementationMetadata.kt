@@ -10,12 +10,17 @@ class ImplementationMetadata(val classes: Map<String, Class>) {
     class Class(val declaration: ResolvedReferenceTypeDeclaration, val qualifiedName: String) {
         val subclasses: MutableSet<Class> = hashSetOf()
         val superclasses: MutableSet<Class> = hashSetOf()
-        val methods: MutableMap<String, Method> = hashMapOf()
+        val declaredMethods: MutableMap<String, Method> = hashMapOf()
+
+        val methods: List<Method> by lazy {
+            (declaredMethods.values + superclasses.flatMap { it.methods }).distinct()
+        }
 
         fun getSubclassByQualifiedName(qualifiedName: String) = subclasses.first { it.qualifiedName == qualifiedName }
         fun getSubclassBySimpleName(simpleName: String) = subclasses.first { it.qualifiedName.endsWith(".$simpleName") }
 
-        fun getMethodsByName(name: String) = methods.filterKeys { it.startsWith(name) }
+        fun getDeclaredMethodsByName(name: String) = declaredMethods.filterKeys { it.startsWith(name) } //TODO proper check
+        fun getMethodsByName(name: String) = methods.filter { it.name == name }
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -53,17 +58,17 @@ class ImplementationMetadata(val classes: Map<String, Class>) {
             other as Method
 
             if (owner != other.owner) return false
-            if (qualifiedDescriptor != other.qualifiedDescriptor) return false
+            if (descriptor != other.descriptor) return false
 
             return true
         }
 
         override fun hashCode(): Int {
             var result = owner.hashCode()
-            result = 31 * result + qualifiedDescriptor.hashCode()
+            result = 31 * result + descriptor.hashCode()
             return result
         }
 
-        override fun toString(): String = owner.qualifiedName + "." + qualifiedDescriptor
+        override fun toString(): String = qualifiedDescriptor
     }
 }

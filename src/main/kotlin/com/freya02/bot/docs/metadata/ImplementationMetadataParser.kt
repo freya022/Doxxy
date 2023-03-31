@@ -85,7 +85,7 @@ class ImplementationMetadataParser private constructor() {
     private val ResolvedMethodDeclaration.metadata: ImplementationMetadata.Method
         get() {
             val classMetadata = cachedDeclaringType.metadata
-            return classMetadata.methods.getOrPut(this.cachedQualifiedDescriptor) {
+            return classMetadata.declaredMethods.getOrPut(this.cachedQualifiedDescriptor) {
                 ImplementationMetadata.Method(this, classMetadata, this.cachedQualifiedDescriptor)
             }
         }
