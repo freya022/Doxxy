@@ -14,9 +14,9 @@ internal class ImplementationMetadataWriter private constructor(
         preparedStatement("delete from class where source_id = ?") { executeUpdate(sourceType.id) }
 
         // First add the classes so we can reference them later
-        val subclasses = sourceRootMetadata.implementationMetadata.classes.values
+        val classes = sourceRootMetadata.implementationMetadata.classes.values
         val dbClasses: Map<ImplementationMetadata.Class, Int> =
-            subclasses.associateWith {
+            classes.associateWith {
                 preparedStatement(
                     """
                         insert into class (source_id, qualified_name, source_link)
@@ -30,7 +30,7 @@ internal class ImplementationMetadataWriter private constructor(
             }
 
         //Add subclass relations
-        subclasses.forEach { superclass ->
+        classes.forEach { superclass ->
             superclass.subclasses.forEach { subclass ->
                 preparedStatement(
                     """
@@ -44,7 +44,7 @@ internal class ImplementationMetadataWriter private constructor(
 
         //Add methods
         val dbMethods: Map<ImplementationMetadata.Method, Int> = hashMapOf<ImplementationMetadata.Method, Int>().apply {
-            subclasses.flatMap { it.declaredMethods.values }.forEach { method ->
+            classes.flatMap { it.declaredMethods.values }.forEach { method ->
                 preparedStatement(
                     """
                         insert into method (class_id, name, signature, source_link)
@@ -67,15 +67,15 @@ internal class ImplementationMetadataWriter private constructor(
         }
 
         //Add implementations
-        subclasses.forEach { superclass ->
+        classes.forEach { clazz ->
             //Find the implementations of that class's methods, inside the subclasses
-            superclass.methods
+            clazz.methods
                 .associateWith {
                     it.implementations.filter { implementation ->
                         //Only keep implementations that are related to the (super)class
                         // i.e. only keep implementations coming from this class's subclasses
                         // why do I care about StageChannelManagerImpl if I want implementations of methods inside VoiceChannel ?
-                        superclass.subclasses.any { subclass -> subclass in implementation.owner.subclasses }
+                        clazz.subclasses.any { subclass -> subclass in implementation.owner.subclasses }
                     }
                 }
                 .forEach { (superMethod, implementations) ->
@@ -86,7 +86,7 @@ internal class ImplementationMetadataWriter private constructor(
                                 values (?, ?, ?)
                             """.trimIndent()
                         ) {
-                            executeUpdate(dbClasses[superclass], dbMethods[superMethod], dbMethods[implementation])
+                            executeUpdate(dbClasses[clazz], dbMethods[superMethod], dbMethods[implementation])
                         }
                     }
                 }
