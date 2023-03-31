@@ -68,10 +68,16 @@ internal class ImplementationMetadataWriter private constructor(
 
         //Add implementations
         subclasses.forEach { superclass ->
-            //Find the implementations of that superclass, inside the subclasses
+            //Find the implementations of that class's methods, inside the subclasses
             superclass.methods
-                .associateWith { it.implementations }
-                .mapValues { (_, v) -> v.filter { superclass.subclasses.any { subclass -> subclass in it.owner.subclasses } } }
+                .associateWith {
+                    it.implementations.filter { implementation ->
+                        //Only keep implementations that are related to the (super)class
+                        // i.e. only keep implementations coming from this class's subclasses
+                        // why do I care about StageChannelManagerImpl if I want implementations of methods inside VoiceChannel ?
+                        superclass.subclasses.any { subclass -> subclass in implementation.owner.subclasses }
+                    }
+                }
                 .forEach { (superMethod, implementations) ->
                     implementations.forEach { implementation ->
                         preparedStatement(
