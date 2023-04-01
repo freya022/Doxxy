@@ -72,10 +72,8 @@ internal class ImplementationMetadataWriter private constructor(
             clazz.methods
                 .associateWith {
                     it.implementations.filter { implementation ->
-                        //Only keep implementations that are related to the (super)class
-                        // i.e. only keep implementations coming from this class's subclasses
-                        // why do I care about StageChannelManagerImpl if I want implementations of methods inside VoiceChannel ?
-                        clazz.subclasses.any { subclass -> subclass in implementation.owner.subclasses }
+                        //Keep implementations that comes from subclasses
+                        implementation.owner.subclasses.containsAny(clazz.subclasses)
                     }
                 }
                 .forEach { (superMethod, implementations) ->
@@ -92,6 +90,9 @@ internal class ImplementationMetadataWriter private constructor(
                 }
         }
     }
+
+    private fun <T> Collection<T>.containsAny(col: Collection<T>) =
+        col.any { item -> item in this }
 
     companion object {
         context(Transaction)
