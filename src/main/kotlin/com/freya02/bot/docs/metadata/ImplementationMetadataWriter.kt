@@ -70,6 +70,10 @@ internal class ImplementationMetadataWriter private constructor(
         classes.forEach { clazz ->
             //Find the implementations of that class's methods, inside the subclasses
             clazz.methods
+                //This eliminates overridden methods to only keep the top most declaration
+                // This works only because top most declarations are always above in the list,
+                // due to how ImplementationMetadata.Class#methods work
+                .distinctBy { it.descriptor }
                 .associateWith {
                     it.implementations.filter { implementation ->
                         //Keep implementations that comes from subclasses
