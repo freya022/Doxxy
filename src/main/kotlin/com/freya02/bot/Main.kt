@@ -31,10 +31,12 @@ object Main {
             }
 
             //stacktrace-decoroutinator seems to have issues when reloading with hotswap agent
-            if ("-XX:HotswapAgent=fatjar" !in ManagementFactory.getRuntimeMXBean().inputArguments) {
-                DecoroutinatorRuntime.load()
-            } else {
+            if ("-XX:HotswapAgent=fatjar" in ManagementFactory.getRuntimeMXBean().inputArguments) {
                 logger.info("Skipping stacktrace-decoroutinator as HotswapAgent is active")
+            } else if ("--no-decoroutinator" in args) {
+                logger.info("Skipping stacktrace-decoroutinator as --no-decoroutinator is specified")
+            } else {
+                DecoroutinatorRuntime.load()
             }
 
             val scope = Utils.namedDefaultScope("Doxxy coroutine", 4)
