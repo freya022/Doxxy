@@ -85,8 +85,8 @@ class ImplementationMetadataParser private constructor() {
     private val ResolvedMethodDeclaration.metadata: ImplementationMetadata.Method
         get() {
             val classMetadata = cachedDeclaringType.metadata
-            return classMetadata.declaredMethods.getOrPut(this.cachedQualifiedDescriptor) {
-                ImplementationMetadata.Method(this, classMetadata, this.cachedQualifiedDescriptor)
+            return classMetadata.declaredMethods.getOrPut(this.cachedSignature) {
+                ImplementationMetadata.Method(this, classMetadata, this.cachedSignature)
             }
         }
 
@@ -112,8 +112,8 @@ class ImplementationMetadataParser private constructor() {
     private val ResolvedTypeDeclaration.cachedQualifiedName
         get() = cache.getQualifiedName(this)
 
-    private val ResolvedMethodDeclaration.cachedQualifiedDescriptor
-        get() = cache.getQualifiedDescriptor(this)
+    private val ResolvedMethodDeclaration.cachedSignature
+        get() = cache.getSignature(this)
 
     private val ResolvedReferenceType.cachedLightDeclaredMethods
         get() = cache.getLightDeclaredMethods(this)

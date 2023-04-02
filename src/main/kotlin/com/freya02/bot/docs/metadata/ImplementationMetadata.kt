@@ -40,9 +40,9 @@ class ImplementationMetadata(val classes: Map<String, Class>) {
         override fun toString(): String = qualifiedName
     }
 
-    class Method(val declaration: ResolvedMethodDeclaration, val owner: Class, val descriptor: String) {
+    class Method(val declaration: ResolvedMethodDeclaration, val owner: Class, val signature: String) {
         val name: String = declaration.name
-        val qualifiedDescriptor = owner.qualifiedName + "." + descriptor
+        val qualifiedSignature = owner.qualifiedName + "." + signature
         val implementations: MutableSet<Method> = hashSetOf()
 
         val range: IntRange
@@ -58,17 +58,17 @@ class ImplementationMetadata(val classes: Map<String, Class>) {
             other as Method
 
             if (owner != other.owner) return false
-            if (descriptor != other.descriptor) return false
+            if (signature != other.signature) return false
 
             return true
         }
 
         override fun hashCode(): Int {
             var result = owner.hashCode()
-            result = 31 * result + descriptor.hashCode()
+            result = 31 * result + signature.hashCode()
             return result
         }
 
-        override fun toString(): String = qualifiedDescriptor
+        override fun toString(): String = qualifiedSignature
     }
 }

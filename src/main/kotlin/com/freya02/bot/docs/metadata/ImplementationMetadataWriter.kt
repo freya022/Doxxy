@@ -73,7 +73,7 @@ internal class ImplementationMetadataWriter private constructor(
                 //This eliminates overridden methods to only keep the top most declaration
                 // This works only because top most declarations are always above in the list,
                 // due to how ImplementationMetadata.Class#methods work
-                .distinctBy { it.descriptor }
+                .distinctBy { it.signature }
                 .associateWith {
                     it.implementations.filter { implementation ->
                         //Keep implementations that comes from subclasses

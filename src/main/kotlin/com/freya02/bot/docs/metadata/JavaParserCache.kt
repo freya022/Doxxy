@@ -34,8 +34,8 @@ class JavaParserCache {
     // An IdentityHashMap is used as JP *might* not implement hashCode/equals correctly, while using a property as a key would be counterproductive
     private val typeDeclarationQualifiedNames = Cache<ResolvedTypeDeclaration, String>(calcMaxSize(10121.0)) { it.qualifiedName }
     private val referenceTypeQualifiedNames = Cache<ResolvedReferenceType, String>(calcMaxSize(8477.0)) { it.qualifiedName }
-    private val methodDeclarationQualifiedDescriptors = Cache<ResolvedMethodDeclaration, String>(calcMaxSize(2049.0)) {
-        it.buildDescriptor()
+    private val methodDeclarationSignatures = Cache<ResolvedMethodDeclaration, String>(calcMaxSize(2049.0)) {
+        it.buildSignature()
     }
 
     //A Comparator is used as the map keys are being recreated everytime, an IdentityHashMap would not work
@@ -48,23 +48,21 @@ class JavaParserCache {
 
     fun getQualifiedName(declaration: ResolvedReferenceType): String = referenceTypeQualifiedNames[declaration]
 
-    fun getQualifiedDescriptor(declaration: ResolvedMethodDeclaration): String =
-        methodDeclarationQualifiedDescriptors[declaration]
+    fun getSignature(declaration: ResolvedMethodDeclaration): String =
+        methodDeclarationSignatures[declaration]
 
     fun getLightDeclaredMethods(declaration: ResolvedReferenceType): Set<ResolvedMethodDeclaration> =
         referenceTypeLightDeclaredMethods[declaration]
 
     fun getDeclaringType(usage: ResolvedMethodDeclaration): ResolvedReferenceTypeDeclaration = methodUsageDeclaringTypes[usage]
 
-    private fun ResolvedMethodDeclaration.buildDescriptor(): String = buildString {
+    private fun ResolvedMethodDeclaration.buildSignature(): String = buildString {
         append(name)
         append('(')
         for (i in 0..<numberOfParams) {
             append(getParam(i).type.describe())
         }
         append(')')
-
-        append(returnType.describe())
     }
 
     //Used to avoid resizing IdentityHashMap, the sizes comes from the map's sizes when parsing JDA 5 beta 5
