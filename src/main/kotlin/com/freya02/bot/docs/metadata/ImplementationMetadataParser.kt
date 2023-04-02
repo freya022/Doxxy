@@ -18,6 +18,8 @@ class ImplementationMetadataParser private constructor() {
         compilationUnits.forEachCompilationUnit(logger, ::processCU)
         parseMethodImplementations()
 
+        cache.logCaches()
+
         return ImplementationMetadata(classes)
     }
 
