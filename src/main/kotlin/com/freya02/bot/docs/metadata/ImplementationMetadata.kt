@@ -12,8 +12,8 @@ class ImplementationMetadata(val classes: Map<String, Class>) {
         val superclasses: MutableSet<Class> = hashSetOf()
         val declaredMethods: MutableMap<String, Method> = hashMapOf()
 
-        val methods: List<Method> by lazy {
-            (declaredMethods.values + superclasses.flatMap { it.methods }).distinct()
+        val methods: Set<Method> by lazy {
+            (declaredMethods.values + superclasses.flatMap { it.methods }).toSet()
         }
 
         fun getSubclassByQualifiedName(qualifiedName: String) = subclasses.first { it.qualifiedName == qualifiedName }
