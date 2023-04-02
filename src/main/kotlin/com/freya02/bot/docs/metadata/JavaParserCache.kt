@@ -45,7 +45,7 @@ class JavaParserCache {
     //A Comparator is used as the map keys are being recreated everytime, an IdentityHashMap would not work
     private val referenceTypeLightDeclaredMethods =
         Cache<ResolvedReferenceType, Set<ResolvedMethodDeclaration>>(Comparator.comparing { getQualifiedName(it) }) { it.lightDeclaredMethods }
-    private val methodUsageDeclaringTypes =
+    private val methodDeclarationDeclaringTypes =
         Cache<ResolvedMethodDeclaration, ResolvedReferenceTypeDeclaration>(calcMaxSize(10028.0)) { it.declaringType() }
 
     fun getQualifiedName(declaration: ResolvedTypeDeclaration): String = typeDeclarationQualifiedNames[declaration]
@@ -58,7 +58,7 @@ class JavaParserCache {
     fun getLightDeclaredMethods(declaration: ResolvedReferenceType): Set<ResolvedMethodDeclaration> =
         referenceTypeLightDeclaredMethods[declaration]
 
-    fun getDeclaringType(usage: ResolvedMethodDeclaration): ResolvedReferenceTypeDeclaration = methodUsageDeclaringTypes[usage]
+    fun getDeclaringType(usage: ResolvedMethodDeclaration): ResolvedReferenceTypeDeclaration = methodDeclarationDeclaringTypes[usage]
 
     fun logCaches() {
         logger.info("Cache info:")
