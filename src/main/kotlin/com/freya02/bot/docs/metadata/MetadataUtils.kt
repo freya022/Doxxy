@@ -33,18 +33,23 @@ fun List<CompilationUnit>.forEachCompilationUnit(logger: KLogger, block: (Compil
     }
 }
 
-fun isMethodCompatible(subMethod: ResolvedMethodDeclaration, superMethod: ResolvedMethodDeclaration): Boolean {
+fun isMethodCompatible(
+    cache: JavaParserCache,
+    subMethod: ResolvedMethodDeclaration,
+    superMethod: ResolvedMethodDeclaration
+): Boolean {
     if (subMethod.name != superMethod.name) return false
     if (subMethod.numberOfParams != superMethod.numberOfParams) return false
 
     return (0 until superMethod.numberOfParams).all { i ->
-        when (val superType = superMethod.getParam(i).type) {
+        val subType = cache.getType(subMethod.getParam(i))
+        when (val superType = cache.getType(superMethod.getParam(i))) {
             //JP says that converting an int to a long is possible, but what we want is to check the types
             // Check primitive name if it is one instead
-            is ResolvedPrimitiveType -> subMethod.getParam(i).type.isPrimitive
-                    && superType.describe() == subMethod.getParam(i).type.asPrimitive().describe()
+            is ResolvedPrimitiveType -> subType.isPrimitive
+                    && superType.describe() == subType.asPrimitive().describe()
 
-            else -> superType.isAssignableBy(subMethod.getParam(i).type)
+            else -> superType.isAssignableBy(subType)
         }
     }
 }

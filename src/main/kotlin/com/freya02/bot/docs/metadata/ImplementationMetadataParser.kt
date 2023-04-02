@@ -68,7 +68,7 @@ class ImplementationMetadataParser private constructor() {
                         if (subType.cachedQualifiedName == superType.cachedQualifiedName)
                             continue
 
-                        if (isMethodCompatible(subMethod, superMethod)) {
+                        if (isMethodCompatible(cache, subMethod, superMethod)) {
                             superMethod.metadata.implementations += subMethod.metadata
                         }
                     }
