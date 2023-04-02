@@ -28,8 +28,7 @@ class ImplementationMetadataParser private constructor() {
             .map { it.resolve() }
             .forEach { resolvedCU ->
                 //Add ancestors (superclasses & superinterfaces) to the map
-                resolvedCU
-                    .getAllAncestors(ResolvedReferenceTypeDeclaration.breadthFirstFunc)
+                resolvedCU.getAllAncestorsOptimized(cache)
                     .map { it.typeDeclaration.get() }
                     // Don't process classes outside the SourceRoot, as we can't get source links for them
                     .filterNot { it.javaClass.simpleName.startsWith("Reflection") }

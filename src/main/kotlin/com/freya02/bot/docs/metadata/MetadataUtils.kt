@@ -3,9 +3,11 @@ package com.freya02.bot.docs.metadata
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.nodeTypes.NodeWithName
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration
+import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration
 import com.github.javaparser.resolution.types.ResolvedPrimitiveType
 import com.github.javaparser.resolution.types.ResolvedReferenceType
 import mu.KLogger
+import java.util.*
 import kotlin.jvm.optionals.getOrNull
 
 val CompilationUnit.debugFQCN: String
@@ -52,4 +54,29 @@ fun isMethodCompatible(
             else -> superType.isAssignableBy(subType)
         }
     }
+}
+
+//See ResolvedReferenceTypeDeclaration#breadthFirstFunc
+fun ResolvedReferenceTypeDeclaration.getAllAncestorsOptimized(cache: JavaParserCache): List<ResolvedReferenceType> {
+    val ancestors: MutableList<ResolvedReferenceType> = arrayListOf()
+    // We want to avoid infinite recursion in case of Object having Object as ancestor
+    if (!this.isJavaLangObject) {
+        // init direct ancestors
+        val queuedAncestors: Deque<ResolvedReferenceType> = LinkedList(this.ancestors) //Cache is not needed, this is called at most once per class
+        ancestors.addAll(queuedAncestors)
+        while (!queuedAncestors.isEmpty()) {
+            val queuedAncestor = queuedAncestors.removeFirst()
+            if (queuedAncestor.typeDeclaration.isPresent) {
+                LinkedHashSet(cache.getDirectAncestors(queuedAncestor)).forEach { ancestor: ResolvedReferenceType ->
+                    // add this ancestor to the queue (for a deferred search)
+                    queuedAncestors.add(ancestor)
+                    // add this ancestor to the list of ancestors
+                    if (!ancestors.contains(ancestor)) {
+                        ancestors.add(ancestor)
+                    }
+                }
+            }
+        }
+    }
+    return ancestors
 }

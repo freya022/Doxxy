@@ -64,6 +64,9 @@ class JavaParserCache {
             valueSupplier = { it.type }
         )
 
+    private val referenceTypeDirectAncestors =
+        Cache<ResolvedReferenceType, List<ResolvedReferenceType>>(Comparator.comparing { getQualifiedName(it) }) { it.directAncestors }
+
     fun getQualifiedName(declaration: ResolvedTypeDeclaration): String = typeDeclarationQualifiedNames[declaration]
 
     fun getQualifiedName(declaration: ResolvedReferenceType): String = referenceTypeQualifiedNames[declaration]
@@ -77,6 +80,9 @@ class JavaParserCache {
     fun getDeclaringType(usage: ResolvedMethodDeclaration): ResolvedReferenceTypeDeclaration = methodDeclarationDeclaringTypes[usage]
 
     fun getType(declaration: ResolvedParameterDeclaration): ResolvedType = parameterDeclarationTypes[declaration]
+
+    fun getDirectAncestors(declaration: ResolvedReferenceType): List<ResolvedReferenceType>
+            = referenceTypeDirectAncestors[declaration]
 
     fun logCaches() {
         logger.info("Cache info:")
