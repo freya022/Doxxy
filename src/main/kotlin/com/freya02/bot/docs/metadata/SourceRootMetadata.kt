@@ -48,8 +48,7 @@ class SourceRootMetadata(sourceRootPath: Path) {
             }
 
             nestedProfiler("Class metadata") {
-//                classMetadataMap = ClassMetadataParser.parse(sourceRoot)
-                classMetadataMap = mapOf()
+                classMetadataMap = ClassMetadataParser.parse(sourceRoot)
             }
 
             nextStep("Implementation metadata") {

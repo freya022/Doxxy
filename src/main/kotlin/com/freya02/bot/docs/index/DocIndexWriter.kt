@@ -33,8 +33,6 @@ internal class DocIndexWriter(
             ImplementationMetadataWriter.reindex(sourceType, reindexData, sourceRootMetadata)
         }
 
-        return@transactional
-
         val updatedSource = ClassDocs.getUpdatedSource(sourceType)
 
         preparedStatement("delete from doc where source_id = ?") {
