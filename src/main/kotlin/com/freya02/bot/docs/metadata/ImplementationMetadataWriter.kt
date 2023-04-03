@@ -68,7 +68,7 @@ internal class ImplementationMetadataWriter private constructor(
 
         //Add implementations
         classes.forEach { clazz ->
-            //Find the implementations of that class's methods, inside the subclasses
+            //Find the implementations of that class's methods, keep only relevant implementations
             clazz.methods
                 //This eliminates overridden methods to only keep the top most declaration
                 // This works only because top most declarations are always above in the list,
@@ -76,8 +76,10 @@ internal class ImplementationMetadataWriter private constructor(
                 .distinctBy { it.signature }
                 .associateWith {
                     it.implementations.filter { implementation ->
-                        //Keep implementations that comes from subclasses
-                        implementation.owner.subclasses.containsAny(clazz.subclasses)
+                        //Keep implementations that comes from a superclass of our own subclasses
+                        // If this is a VoiceChannelManager,
+                        // we want to keep implementations from VoiceChannelManagerImpl and it's subclasses
+                        clazz.subclasses.any { sub -> sub.isSubclassOf(implementation.owner) }
                     }
                 }
                 .forEach { (superMethod, implementations) ->
@@ -94,9 +96,6 @@ internal class ImplementationMetadataWriter private constructor(
                 }
         }
     }
-
-    private fun <T> Collection<T>.containsAny(col: Collection<T>) =
-        col.any { item -> item in this }
 
     companion object {
         context(Transaction)

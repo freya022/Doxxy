@@ -22,6 +22,8 @@ class ImplementationMetadata(val classes: Map<String, Class>) {
         fun getDeclaredMethodsByName(name: String) = declaredMethods.filterKeys { it.startsWith(name) } //TODO proper check
         fun getMethodsByName(name: String) = methods.filter { it.name == name }
 
+        fun isSubclassOf(clazz: Class): Boolean = clazz == this || clazz in superclasses
+
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false
