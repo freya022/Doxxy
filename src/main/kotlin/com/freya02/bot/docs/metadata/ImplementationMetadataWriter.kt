@@ -5,7 +5,11 @@ import com.freya02.bot.utils.createProfiler
 import com.freya02.bot.utils.nextStep
 import com.freya02.botcommands.api.core.db.Transaction
 import com.freya02.docs.DocSourceType
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.intellij.lang.annotations.Language
+import org.postgresql.copy.CopyManager
+import org.postgresql.core.BaseConnection
 import org.slf4j.profiler.Profiler
 
 internal class ImplementationMetadataWriter private constructor(
@@ -116,7 +120,7 @@ internal class ImplementationMetadataWriter private constructor(
         dbClasses: Map<ImplementationMetadata.Class, Int>,
         dbMethods: Map<ImplementationMetadata.Method, Int>
     ) {
-        classes.forEach { clazz ->
+        val implementations = classes.flatMap { clazz ->
             //Find the implementations of that class's methods, keep only relevant implementations
             clazz.methods
                 //This eliminates overridden methods to only keep the top most declaration
@@ -131,18 +135,16 @@ internal class ImplementationMetadataWriter private constructor(
                         clazz.subclasses.any { sub -> sub.isSubclassOf(implementation.owner) }
                     }
                 }
-                .forEach { (superMethod, implementations) ->
-                    implementations.forEach { implementation ->
-                        preparedStatement(
-                            """
-                                insert into implementation (class_id, method_id, implementation_id)
-                                values (?, ?, ?)
-                            """.trimIndent()
-                        ) {
-                            executeUpdate(dbClasses[clazz], dbMethods[superMethod], dbMethods[implementation])
-                        }
+                .flatMap insertLoop@{ (superMethod, implementations) ->
+                    implementations.map {
+                        listOf(dbClasses[clazz], dbMethods[superMethod], dbMethods[it])
                     }
                 }
+        }
+
+        withContext(Dispatchers.IO) {
+            CopyManager(connection.unwrap(BaseConnection::class.java))
+                .copyIn("copy implementation from stdin delimiter ','", implementations.joinToString("\n") { it.joinToString(",") }.byteInputStream())
         }
     }
 
