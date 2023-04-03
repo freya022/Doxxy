@@ -71,8 +71,7 @@ internal class ImplementationMetadataWriter private constructor(
                     returning id
                 """.trimIndent()
             ) {
-                val methodSourceUrl =
-                    "${reindexData.getClassSourceUrl(method.owner)}#L${methodRange.first}-L${methodRange.last}"
+                val methodSourceUrl = reindexData.getMethodSourceUrl(method)
 
                 executeQuery(
                     dbClasses[method.owner],
