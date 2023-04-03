@@ -33,6 +33,10 @@ internal class DocIndexWriter(
             ImplementationMetadataWriter.reindex(sourceType, reindexData, sourceRootMetadata)
         }
 
+        //This would clean type solvers stored in a static WeakHashMap
+        // But since it's a WeakHashMap, the GC should reclaim space if it becomes insufficient
+//        JavaParserFacade.clearInstances()
+
         val updatedSource = ClassDocs.getUpdatedSource(sourceType)
 
         preparedStatement("delete from doc where source_id = ?") {
