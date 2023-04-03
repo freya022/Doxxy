@@ -61,12 +61,12 @@ internal class ImplementationMetadataWriter private constructor(
         return classes.associateWith {
             preparedStatement(
                 """
-                    insert into class (source_id, qualified_name, source_link)
-                    values (?, ?, ?)
+                    insert into class (source_id, package_name, class_name, source_link)
+                    values (?, ?, ?, ?)
                     returning id
                 """.trimIndent()
             ) {
-                executeQuery(sourceType.id, it.qualifiedName, reindexData.getClassSourceUrl(it)).readOnce()!!
+                executeQuery(sourceType.id, it.packageName, it.name, reindexData.getClassSourceUrl(it)).readOnce()!!
                     .getInt(1)
             }
         }

@@ -8,12 +8,24 @@ class ImplementationMetadata(val classes: Map<String, Class>) {
     fun getClassBySimpleName(simpleName: String) = classes.entries.first { it.key.endsWith(".$simpleName") }.value
 
     class Class(val declaration: ResolvedReferenceTypeDeclaration, val qualifiedName: String) {
+        val packageName: PackageName
+        val name: FullSimpleClassName
+        val topLevelName: TopSimpleClassName
+
         val subclasses: MutableSet<Class> = hashSetOf()
         val superclasses: MutableSet<Class> = hashSetOf()
         val declaredMethods: MutableMap<String, Method> = hashMapOf()
 
         val methods: Set<Method> by lazy {
             (declaredMethods.values + superclasses.flatMap { it.methods }).toSet()
+        }
+
+        init {
+            val segments = qualifiedName.split('.')
+            val classIndex = segments.indexOfLast { it.all { c -> c.isLowerCase() || !c.isLetter() } } + 1
+            packageName = segments.take(classIndex).joinToString(".")
+            topLevelName = segments[classIndex] //Message in Message.Attachment
+            name = segments.drop(classIndex).joinToString(".")
         }
 
         fun getSubclassByQualifiedName(qualifiedName: String) = subclasses.first { it.qualifiedName == qualifiedName }

@@ -7,10 +7,11 @@ drop table if exists class, subclass, method, implementation cascade;
 -- Table containing any class
 create table class
 (
-    id             serial not null primary key,
-    source_id      int    not null,
-    qualified_name text   not null unique,
-    source_link    text   not null
+    id           serial not null primary key,
+    source_id    int    not null,
+    package_name text   not null,
+    class_name   text   not null,
+    source_link  text   not null
 );
 
 -- Subclass relations
@@ -48,46 +49,46 @@ create table implementation
     primary key (class_id, method_id, implementation_id)
 );
 
-create or replace function get_subclasses(class_name text)
+create or replace function get_subclasses(_class_name text)
     returns table
             (
-                superclass_qualified_name text,
-                subclass_qualified_name   text
+                superclass_class_name text,
+                subclass_class_name   text
             )
     language sql
 as
-'select c.qualified_name,
-        subclass.qualified_name
+'select c.class_name,
+        subclass.class_name
  from class c
           join subclass sub on sub.superclass_id = c.id
           join class subclass on subclass.id = sub.subclass_id
- where c.qualified_name like ''%.'' || class_name';
+ where c.class_name = _class_name';
 
-create or replace function get_superclasses(class_name text)
+create or replace function get_superclasses(_class_name text)
     returns table
             (
-                subclass_qualified_name   text,
-                superclass_qualified_name text
+                subclass_class_name   text,
+                superclass_class_name text
             )
     language sql
 as
-'select c.qualified_name,
-        superclass.qualified_name
+'select c.class_name,
+        superclass.class_name
  from class c
           join subclass sub on sub.subclass_id = c.id
           join class superclass on superclass.id = sub.superclass_id
- where c.qualified_name like ''%.'' || class_name';
+ where c.class_name = _class_name';
 
-create or replace function get_implementations(class_name text, method_name text)
+create or replace function get_implementations(_class_name text, _method_name text)
     returns table
             (
-                qualified_name text,
+                class_name text,
                 signature      text,
                 source_link    text
             )
     language sql
 as
-'select implementation_owner.qualified_name,
+'select implementation_owner.class_name,
         implementation.signature,
         implementation.source_link
  from implementation impl
@@ -96,5 +97,5 @@ as
                on impl.implementation_id = implementation.id
           join class implementation_owner
                on implementation.class_id = implementation_owner.id
- where superclass.qualified_name like ''%.'' || class_name
-   and implementation.name = method_name';
+ where superclass.class_name = _class_name
+   and implementation.name = _method_name';

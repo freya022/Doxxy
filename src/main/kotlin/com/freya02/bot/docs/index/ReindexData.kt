@@ -16,11 +16,8 @@ data class ReindexData(val sourceUrl: String? = null) {
         if (sourceUrl == null)
             throw IllegalStateException("Method source URL could not be computed due to a missing source URL")
 
-        val segments = classData.qualifiedName.split('.')
-        val classIndex = segments.indexOfLast { it.all { c -> c.isLowerCase() || !c.isLetter() } } + 1
-        val packageName = segments.take(classIndex).joinToString("/")
-        //Only keep top level name, i.e. Message in Message.Attachment
-        val topLevelClassName = segments[classIndex]
+        val packageName = classData.packageName.replace('.', '/')
+        val topLevelClassName = classData.topLevelName
         return "$sourceUrl$packageName/$topLevelClassName.java"
     }
 
