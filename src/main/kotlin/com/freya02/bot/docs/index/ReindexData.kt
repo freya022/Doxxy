@@ -4,7 +4,7 @@ import com.freya02.bot.docs.metadata.ImplementationMetadata
 import com.freya02.docs.data.ClassDoc
 
 data class ReindexData(val sourceUrl: String? = null) {
-    fun getClassSourceUrl(classDoc: ClassDoc): String? {
+    fun getClassSourceUrlOrNull(classDoc: ClassDoc): String? {
         if (sourceUrl == null) return null
 
         val packageName = classDoc.packageName.replace('.', '/')

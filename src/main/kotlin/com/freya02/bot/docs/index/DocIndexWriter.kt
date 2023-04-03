@@ -52,7 +52,7 @@ internal class DocIndexWriter(
 
                 val classEmbed = toEmbed(classDoc).build()
                 val classEmbedJson = GSON.toJson(classEmbed)
-                val sourceLink = reindexData.getClassSourceUrl(classDoc)
+                val sourceLink = reindexData.getClassSourceUrlOrNull(classDoc)
 
                 val classDocId = insertDoc(DocType.CLASS, classDoc.className, classDoc, classEmbedJson, sourceLink)
                 insertSeeAlso(classDoc, classDocId)
@@ -125,7 +125,7 @@ internal class DocIndexWriter(
                     }
                 }
 
-                val methodClassSourceLink = reindexData.getClassSourceUrl(methodDoc.classDocs)
+                val methodClassSourceLink = reindexData.getClassSourceUrlOrNull(methodDoc.classDocs)
                 val methodLink = when (methodRange) {
                     null -> null
                     else -> "$methodClassSourceLink#L${methodRange.first}-L${methodRange.last}"
@@ -164,7 +164,7 @@ internal class DocIndexWriter(
                     }
                 }
 
-                val fieldClassSourceLink = reindexData.getClassSourceUrl(fieldDoc.classDocs)
+                val fieldClassSourceLink = reindexData.getClassSourceUrlOrNull(fieldDoc.classDocs)
                 val fieldLink = when (fieldRange) {
                     null -> null
                     else -> "$fieldClassSourceLink#L${fieldRange.first}-L${fieldRange.last}"
