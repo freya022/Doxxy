@@ -4,6 +4,7 @@ import com.freya02.bot.docs.cached.CachedClass
 import com.freya02.bot.docs.cached.CachedDoc
 import com.freya02.bot.docs.cached.CachedField
 import com.freya02.bot.docs.cached.CachedMethod
+import com.freya02.bot.docs.metadata.ImplementationIndex
 import com.freya02.botcommands.api.core.db.Database
 import com.freya02.botcommands.api.core.db.KConnection
 import com.freya02.docs.DocSourceType
@@ -21,6 +22,8 @@ import org.intellij.lang.annotations.Language
 // Further updates must be invoked by external methods such as version checkers
 class DocIndex(val sourceType: DocSourceType, private val database: Database) : IDocIndex {
     private val mutex = Mutex()
+
+    val implementationIndex = ImplementationIndex(sourceType, database)
 
     override suspend fun getClassDoc(className: String): CachedClass? {
         val (docId, embed, javadocLink, sourceLink) = findDoc(DocType.CLASS, className) ?: return null
