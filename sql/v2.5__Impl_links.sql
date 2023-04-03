@@ -47,3 +47,54 @@ create table implementation
 
     primary key (class_id, method_id, implementation_id)
 );
+
+create or replace function get_subclasses(class_name text)
+    returns table
+            (
+                superclass_qualified_name text,
+                subclass_qualified_name   text
+            )
+    language sql
+as
+'select c.qualified_name,
+        subclass.qualified_name
+ from class c
+          join subclass sub on sub.superclass_id = c.id
+          join class subclass on subclass.id = sub.subclass_id
+ where c.qualified_name like ''%.'' || class_name';
+
+create or replace function get_superclasses(class_name text)
+    returns table
+            (
+                subclass_qualified_name   text,
+                superclass_qualified_name text
+            )
+    language sql
+as
+'select c.qualified_name,
+        superclass.qualified_name
+ from class c
+          join subclass sub on sub.subclass_id = c.id
+          join class superclass on superclass.id = sub.superclass_id
+ where c.qualified_name like ''%.'' || class_name';
+
+create or replace function get_implementations(class_name text, method_name text)
+    returns table
+            (
+                qualified_name text,
+                signature      text,
+                source_link    text
+            )
+    language sql
+as
+'select implementation_owner.qualified_name,
+        implementation.signature,
+        implementation.source_link
+ from implementation impl
+          join class superclass on impl.class_id = superclass.id
+          join method implementation
+               on impl.implementation_id = implementation.id
+          join class implementation_owner
+               on implementation.class_id = implementation_owner.id
+ where superclass.qualified_name like ''%.'' || class_name
+   and implementation.name = method_name';
