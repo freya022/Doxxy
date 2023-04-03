@@ -1,4 +1,4 @@
-package com.freya02.bot.docs.metadata
+package com.freya02.bot.docs.metadata.parser
 
 import com.freya02.bot.docs.metadata.data.FieldMetadata
 import com.freya02.bot.docs.metadata.data.MethodMetadata

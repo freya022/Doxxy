@@ -1,6 +1,6 @@
 package com.freya02.bot.docs.index
 
-import com.freya02.bot.docs.metadata.ImplementationMetadata
+import com.freya02.bot.docs.metadata.parser.ImplementationMetadata
 import com.freya02.docs.data.ClassDoc
 
 data class ReindexData(val sourceUrl: String? = null) {

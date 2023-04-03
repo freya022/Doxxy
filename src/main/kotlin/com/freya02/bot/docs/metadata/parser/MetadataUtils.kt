@@ -1,4 +1,4 @@
-package com.freya02.bot.docs.metadata
+package com.freya02.bot.docs.metadata.parser
 
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.nodeTypes.NodeWithName

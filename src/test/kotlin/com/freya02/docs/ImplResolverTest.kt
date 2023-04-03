@@ -1,6 +1,6 @@
 package com.freya02.docs
 
-import com.freya02.bot.docs.metadata.ImplementationMetadataParser
+import com.freya02.bot.docs.metadata.parser.ImplementationMetadataParser
 import com.freya02.bot.versioning.VersionsUtils
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration
 import com.github.javaparser.resolution.types.ResolvedReferenceType

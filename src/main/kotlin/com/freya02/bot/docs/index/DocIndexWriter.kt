@@ -2,8 +2,8 @@ package com.freya02.bot.docs.index
 
 import com.freya02.bot.Data
 import com.freya02.bot.docs.DocEmbeds.toEmbed
-import com.freya02.bot.docs.metadata.ImplementationMetadataWriter
-import com.freya02.bot.docs.metadata.SourceRootMetadata
+import com.freya02.bot.docs.metadata.parser.ImplementationMetadataWriter
+import com.freya02.bot.docs.metadata.parser.SourceRootMetadata
 import com.freya02.botcommands.api.core.db.Database
 import com.freya02.botcommands.api.core.db.Transaction
 import com.freya02.docs.ClassDocs

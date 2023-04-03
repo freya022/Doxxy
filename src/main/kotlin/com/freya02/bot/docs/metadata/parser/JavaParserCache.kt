@@ -1,4 +1,4 @@
-package com.freya02.bot.docs.metadata
+package com.freya02.bot.docs.metadata.parser
 
 import com.github.javaparser.ast.body.Parameter
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration

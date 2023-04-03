@@ -1,4 +1,4 @@
-package com.freya02.bot.docs.metadata
+package com.freya02.bot.docs.metadata.parser
 
 import com.freya02.bot.docs.index.ReindexData
 import com.freya02.bot.utils.createProfiler
