@@ -16,9 +16,10 @@ create table class
 -- Subclass relations
 create table subclass
 (
-    id            serial not null primary key,
-    superclass_id int    not null references class on delete cascade,
-    subclass_id   int    not null references class on delete cascade
+    superclass_id int not null references class on delete cascade,
+    subclass_id   int not null references class on delete cascade,
+
+    primary key (superclass_id, subclass_id)
 );
 
 -- **Declared** methods, i.e. does not contain inherited methods

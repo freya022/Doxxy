@@ -76,16 +76,14 @@ internal class ImplementationMetadataWriter private constructor(
         classes: Collection<ImplementationMetadata.Class>,
         dbClasses: Map<ImplementationMetadata.Class, Int>
     ) {
-        classes.forEach { superclass ->
-            superclass.subclasses.forEach { subclass ->
-                preparedStatement(
-                    """
-                        insert into subclass (superclass_id, subclass_id) values (?, ?)
-                    """.trimIndent()
-                ) {
-                    executeUpdate(dbClasses[superclass], dbClasses[subclass])
-                }
+        val subclasses = classes.flatMap { superclass ->
+            superclass.subclasses.map { subclass ->
+                listOf(dbClasses[superclass], dbClasses[subclass])
             }
+        }
+
+        withContext(Dispatchers.IO) {
+            connection.copyFrom("subclass", subclasses)
         }
     }
 
