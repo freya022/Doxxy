@@ -1,30 +1,58 @@
 package com.freya02.bot.docs.metadata
 
 import com.freya02.bot.docs.index.ReindexData
+import com.freya02.bot.utils.createProfiler
+import com.freya02.bot.utils.nextStep
 import com.freya02.botcommands.api.core.db.Transaction
 import com.freya02.docs.DocSourceType
+import org.intellij.lang.annotations.Language
+import org.slf4j.profiler.Profiler
 
 internal class ImplementationMetadataWriter private constructor(
     private val sourceType: DocSourceType,
     private val reindexData: ReindexData,
     private val sourceRootMetadata: SourceRootMetadata
 ) {
-    context(Transaction)
+    context(Transaction, Profiler)
     private suspend fun reindex() {
-        preparedStatement("delete from class where source_id = ?") { executeUpdate(sourceType.id) }
+        @Language("PostgreSQL")
+        val deleteStatements = listOf(
+            "delete from implementation where (select source_id from class where id = class_id) = ?",
+            "delete from subclass where (select source_id from class where id = subclass_id or id = superclass_id limit 1) = ?",
+            "delete from method where (select source_id from class where id = class_id) = ?",
+            "delete from class where source_id = ?"
+        )
+        nextStep("Delete old data") {
+            preparedStatement("""
+                alter table implementation disable trigger all;
+                alter table class disable trigger all;
+                alter table method disable trigger all;
+                alter table subclass disable trigger all;
+            """.trimIndent()) { executeUpdate() }
+
+            deleteStatements.forEach { preparedStatement(it) { executeUpdate(sourceType.id) } }
+
+            //Enable back after deleting as triggers are also FK checks
+            preparedStatement("""
+                alter table implementation enable trigger all;
+                alter table class enable trigger all;
+                alter table method enable trigger all;
+                alter table subclass enable trigger all;
+            """.trimIndent()) { executeUpdate() }
+        }
 
         val classes = sourceRootMetadata.implementationMetadata.classes.values
         // First add the classes so we can reference them later
-        val dbClasses: Map<ImplementationMetadata.Class, Int> = addClasses(classes)
+        val dbClasses: Map<ImplementationMetadata.Class, Int> = nextStep("Add classes") { addClasses(classes) }
 
         //Add subclass relations
-        addSubclasses(classes, dbClasses)
+        nextStep("Add subclasses") { addSubclasses(classes, dbClasses) }
 
         //Add methods
-        val dbMethods: Map<ImplementationMetadata.Method, Int> = addMethods(classes, dbClasses)
+        val dbMethods: Map<ImplementationMetadata.Method, Int> = nextStep("Add methods") { addMethods(classes, dbClasses) }
 
         //Add implementations
-        addImplementations(classes, dbClasses, dbMethods)
+        nextStep("Add implementations") { addImplementations(classes, dbClasses, dbMethods) }
     }
 
     private suspend fun Transaction.addClasses(classes: Collection<ImplementationMetadata.Class>): Map<ImplementationMetadata.Class, Int> {
@@ -125,7 +153,9 @@ internal class ImplementationMetadataWriter private constructor(
             reindexData: ReindexData,
             sourceRootMetadata: SourceRootMetadata
         ) {
-            ImplementationMetadataWriter(sourceType, reindexData, sourceRootMetadata).reindex()
+            createProfiler("ImplementationMetadataWriter") {
+                ImplementationMetadataWriter(sourceType, reindexData, sourceRootMetadata).reindex()
+            }
         }
     }
 }
