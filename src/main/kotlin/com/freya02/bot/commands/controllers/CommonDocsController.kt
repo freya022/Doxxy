@@ -106,7 +106,7 @@ class CommonDocsController(private val componentsService: Components) {
                                 continue
                             }
 
-                            addOption(reference.text, optionValue, clipboardEmoji)
+                            addOption(reference.text, optionValue, Emojis.clipboard)
                         }
                     }
                 }
