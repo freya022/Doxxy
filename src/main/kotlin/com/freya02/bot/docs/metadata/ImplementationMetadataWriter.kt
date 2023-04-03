@@ -8,8 +8,6 @@ import com.freya02.docs.DocSourceType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.intellij.lang.annotations.Language
-import org.postgresql.copy.CopyManager
-import org.postgresql.core.BaseConnection
 import org.slf4j.profiler.Profiler
 
 internal class ImplementationMetadataWriter private constructor(
@@ -143,8 +141,7 @@ internal class ImplementationMetadataWriter private constructor(
         }
 
         withContext(Dispatchers.IO) {
-            CopyManager(connection.unwrap(BaseConnection::class.java))
-                .copyIn("copy implementation from stdin delimiter ','", implementations.joinToString("\n") { it.joinToString(",") }.byteInputStream())
+            connection.copyFrom("implementation", implementations)
         }
     }
 
