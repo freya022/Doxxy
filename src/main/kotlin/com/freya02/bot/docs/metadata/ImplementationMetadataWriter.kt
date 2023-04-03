@@ -13,23 +13,39 @@ internal class ImplementationMetadataWriter private constructor(
     private suspend fun reindex() {
         preparedStatement("delete from class where source_id = ?") { executeUpdate(sourceType.id) }
 
-        // First add the classes so we can reference them later
         val classes = sourceRootMetadata.implementationMetadata.classes.values
-        val dbClasses: Map<ImplementationMetadata.Class, Int> =
-            classes.associateWith {
-                preparedStatement(
-                    """
-                        insert into class (source_id, qualified_name, source_link)
-                        values (?, ?, ?)
-                        returning id
-                    """.trimIndent()
-                ) {
-                    executeQuery(sourceType.id, it.qualifiedName, reindexData.getClassSourceUrl(it)).readOnce()!!
-                        .getInt(1)
-                }
-            }
+        // First add the classes so we can reference them later
+        val dbClasses: Map<ImplementationMetadata.Class, Int> = addClasses(classes)
 
         //Add subclass relations
+        addSubclasses(classes, dbClasses)
+
+        //Add methods
+        val dbMethods: Map<ImplementationMetadata.Method, Int> = addMethods(classes, dbClasses)
+
+        //Add implementations
+        addImplementations(classes, dbClasses, dbMethods)
+    }
+
+    private suspend fun Transaction.addClasses(classes: Collection<ImplementationMetadata.Class>): Map<ImplementationMetadata.Class, Int> {
+        return classes.associateWith {
+            preparedStatement(
+                """
+                    insert into class (source_id, qualified_name, source_link)
+                    values (?, ?, ?)
+                    returning id
+                """.trimIndent()
+            ) {
+                executeQuery(sourceType.id, it.qualifiedName, reindexData.getClassSourceUrl(it)).readOnce()!!
+                    .getInt(1)
+            }
+        }
+    }
+
+    private suspend fun Transaction.addSubclasses(
+        classes: Collection<ImplementationMetadata.Class>,
+        dbClasses: Map<ImplementationMetadata.Class, Int>
+    ) {
         classes.forEach { superclass ->
             superclass.subclasses.forEach { subclass ->
                 preparedStatement(
@@ -41,32 +57,38 @@ internal class ImplementationMetadataWriter private constructor(
                 }
             }
         }
+    }
 
-        //Add methods
-        val dbMethods: Map<ImplementationMetadata.Method, Int> = hashMapOf<ImplementationMetadata.Method, Int>().apply {
-            classes.flatMap { it.declaredMethods.values }.forEach { method ->
-                preparedStatement(
-                    """
-                        insert into method (class_id, name, signature, source_link)
-                        values (?, ?, ?, ?)
-                        returning id
-                    """.trimIndent()
-                ) {
-                    val methodRange = method.range
-                    val methodSourceUrl =
-                        "${reindexData.getClassSourceUrl(method.owner)}#L${methodRange.first}-L${methodRange.last}"
+    private suspend fun Transaction.addMethods(
+        classes: Collection<ImplementationMetadata.Class>,
+        dbClasses: Map<ImplementationMetadata.Class, Int>
+    ): Map<ImplementationMetadata.Method, Int> {
+        return classes.flatMap { it.declaredMethods.values }.associateWith { method ->
+            preparedStatement(
+                """
+                    insert into method (class_id, name, signature, source_link)
+                    values (?, ?, ?, ?)
+                    returning id
+                """.trimIndent()
+            ) {
+                val methodSourceUrl =
+                    "${reindexData.getClassSourceUrl(method.owner)}#L${methodRange.first}-L${methodRange.last}"
 
-                    this@apply[method] = executeQuery(
-                        dbClasses[method.owner],
-                        method.name,
-                        method.declaration.signature,
-                        methodSourceUrl
-                    ).readOnce()!!.getInt(1)
-                }
+                executeQuery(
+                    dbClasses[method.owner],
+                    method.name,
+                    method.declaration.signature,
+                    methodSourceUrl
+                ).readOnce()!!.getInt(1)
             }
         }
+    }
 
-        //Add implementations
+    private suspend fun Transaction.addImplementations(
+        classes: Collection<ImplementationMetadata.Class>,
+        dbClasses: Map<ImplementationMetadata.Class, Int>,
+        dbMethods: Map<ImplementationMetadata.Method, Int>
+    ) {
         classes.forEach { clazz ->
             //Find the implementations of that class's methods, keep only relevant implementations
             clazz.methods
