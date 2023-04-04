@@ -175,7 +175,7 @@ class CommonDocsController(private val componentsService: Components, private va
             }
 
             if (apiClasses.isNotEmpty()) {
-                components += apiClasses.take(SelectMenu.OPTIONS_MAX_AMOUNT / 5)
+                components += apiClasses.take(SelectMenu.OPTIONS_MAX_AMOUNT * 5)
                     .chunked(SelectMenu.OPTIONS_MAX_AMOUNT) { superclassesChunk ->
                         row(componentsService.ephemeralStringSelectMenu {
                             timeout(5.minutes)
