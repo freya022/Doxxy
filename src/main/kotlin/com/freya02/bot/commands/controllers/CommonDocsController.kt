@@ -20,6 +20,7 @@ import com.freya02.docs.data.TargetType
 import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.Embed
 import dev.minn.jda.ktx.messages.MessageCreate
+import dev.minn.jda.ktx.messages.reply_
 import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.entities.UserSnowflake
@@ -30,6 +31,7 @@ import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import net.dv8tion.jda.api.utils.messages.MessageCreateRequest
+import net.dv8tion.jda.api.utils.messages.MessageEditData
 import kotlin.time.Duration.Companion.minutes
 
 @BService
@@ -144,8 +146,8 @@ class CommonDocsController(private val componentsService: Components, private va
     }
 
     private suspend fun onSuperclassesClick(event: ButtonEvent, source: DocSourceType, className: FullSimpleClassName) {
-        val index = docIndexMap[source]
-        val superclasses = index!!.implementationIndex.getSuperclasses(className)
+        val index = docIndexMap[source] ?: throw IllegalStateException("No sources for $source")
+        val superclasses = index.implementationIndex.getSuperclasses(className)
 
         MessageCreate {
             val cachedSuperclasses = superclasses.associateWith { index.getClassDoc(it.className) }
@@ -154,7 +156,7 @@ class CommonDocsController(private val componentsService: Components, private va
 
             if (otherSuperclasses.isNotEmpty()) {
                 embed {
-                    //TODO add some text perhaps
+                    title = "Internal superclasses"
                     description = otherSuperclasses.joinToString(", ") { superclass ->
                         "[${superclass.className}](${superclass.sourceLink})"
                     }
