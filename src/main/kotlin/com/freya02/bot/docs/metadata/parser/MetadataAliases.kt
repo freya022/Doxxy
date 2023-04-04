@@ -5,6 +5,7 @@ import com.freya02.bot.docs.metadata.data.MethodMetadata
 
 typealias PackageName = String
 typealias ClassName = String
+typealias Signature = String
 typealias FullSimpleClassName = String
 typealias TopSimpleClassName = String
 typealias ResolvedClassesList = MutableMap<FullSimpleClassName, FullSimpleClassName>
