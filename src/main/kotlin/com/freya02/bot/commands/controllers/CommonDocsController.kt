@@ -7,6 +7,7 @@ import com.freya02.bot.docs.cached.CachedClass
 import com.freya02.bot.docs.cached.CachedDoc
 import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocSuggestion
+import com.freya02.bot.docs.metadata.ImplementationIndex
 import com.freya02.bot.docs.metadata.parser.FullSimpleClassName
 import com.freya02.bot.utils.Emojis
 import com.freya02.botcommands.api.components.Components
@@ -150,28 +151,41 @@ class CommonDocsController(private val componentsService: Components, private va
         val index = docIndexMap[source] ?: throw IllegalStateException("No sources for $source")
         val superclasses = index.implementationIndex.getSuperclasses(className)
 
-        MessageCreate {
-            val cachedSuperclasses = superclasses.associateWith { index.getClassDoc(it.className) }
-            val foundSuperclasses = cachedSuperclasses.filterValues { it != null }.keys
-            val otherSuperclasses = cachedSuperclasses.filterValues { it == null }.keys
+        sendClassLinks(event, index, superclasses, "superclass")
+    }
 
-            if (otherSuperclasses.isNotEmpty()) {
+    private suspend fun onSubclassesClick(event: ButtonEvent, source: DocSourceType, className: FullSimpleClassName) {
+        val index = docIndexMap[source] ?: throw IllegalStateException("No sources for $source")
+        val subclasses = index.implementationIndex.getSubclasses(className)
+
+        sendClassLinks(event, index, subclasses, "subclass")
+    }
+
+    private suspend fun sendClassLinks(event: ButtonEvent, index: DocIndex, classes: List<ImplementationIndex.Class>, desc: String) {
+        MessageCreate {
+            val cachedClasses = classes.associateWith { index.getClassDoc(it.className) }
+            val apiClasses = cachedClasses.filterValues { it != null }.keys
+            val internalClasses = cachedClasses.filterValues { it == null }.keys
+
+            if (internalClasses.isNotEmpty()) {
                 embed {
-                    title = "Internal superclasses"
-                    description = otherSuperclasses.joinToString(", ") { superclass ->
+                    title = "Internal ${desc}es"
+                    description = internalClasses.joinToString(", ") { superclass ->
                         "[${superclass.className}](${superclass.sourceLink})"
                     }
                 }
             }
 
-            if (foundSuperclasses.isNotEmpty()) {
-                components += foundSuperclasses.take(SelectMenu.OPTIONS_MAX_AMOUNT / 5)
+            if (apiClasses.isNotEmpty()) {
+                components += apiClasses.take(SelectMenu.OPTIONS_MAX_AMOUNT / 5)
                     .chunked(SelectMenu.OPTIONS_MAX_AMOUNT) { superclassesChunk ->
                         row(componentsService.ephemeralStringSelectMenu {
                             timeout(5.minutes)
 
                             val slashUserId = event.message.interaction!!.user.idLong
                             bindTo { selectEvent -> onSuperclassSelect(selectEvent, slashUserId, index, event) }
+
+                            placeholder = "Select a $desc"
 
                             superclassesChunk.forEach {
                                 addOption(it.className, it.className, it.classType.emoji)
@@ -180,12 +194,6 @@ class CommonDocsController(private val componentsService: Components, private va
                     }
             }
         }.also { event.reply(it).setEphemeral(true).queue() }
-    }
-
-    private suspend fun onSubclassesClick(event: ButtonEvent, source: DocSourceType, className: FullSimpleClassName) {
-        val subclasses = docIndexMap[source]!!.implementationIndex.getSubclasses(className)
-
-        //TODO refactor with above common code
     }
 
     private suspend fun onSuperclassSelect(
