@@ -174,7 +174,7 @@ class CommonDocsController(private val componentsService: Components, private va
                             bindTo { selectEvent -> onSuperclassSelect(selectEvent, slashUserId, index, event) }
 
                             superclassesChunk.forEach {
-                                addOption(it.className, it.className) //TODO look into adding icons if (abstract) class/interface
+                                addOption(it.className, it.className, it.classType.emoji)
                             }
                         })
                     }

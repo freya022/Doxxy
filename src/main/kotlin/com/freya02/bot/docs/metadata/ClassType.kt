@@ -1,7 +1,9 @@
 package com.freya02.bot.docs.metadata
 
+import com.freya02.bot.utils.Emojis
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration
+import net.dv8tion.jda.api.entities.emoji.Emoji
 import kotlin.jvm.optionals.getOrNull
 
 enum class ClassType(val id: Int) {
@@ -10,6 +12,15 @@ enum class ClassType(val id: Int) {
     INTERFACE(3),
     ENUM(4),
     ANNOTATION(5);
+
+    val emoji: Emoji
+        get() = when (this) {
+            CLASS -> Emojis.`class`
+            ABSTRACT_CLASS -> Emojis.abstractClass
+            INTERFACE -> Emojis.`interface`
+            ENUM -> Emojis.enum
+            ANNOTATION -> Emojis.annotation
+        }
 
     companion object {
         fun fromDeclaration(declaration: ResolvedReferenceTypeDeclaration): ClassType {
