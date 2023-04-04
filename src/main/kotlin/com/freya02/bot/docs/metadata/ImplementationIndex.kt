@@ -6,7 +6,7 @@ import com.freya02.botcommands.api.core.db.Database
 import com.freya02.docs.DocSourceType
 
 class ImplementationIndex(private val sourceType: DocSourceType, private val database: Database) {
-    class Class(val className: String, val classType: ClassType, val sourceUrl: String) {
+    class Class(val className: String, val classType: ClassType, val sourceLink: String) {
         constructor(result: DBResult) : this(result["class_name"], ClassType.fromId(result["class_type"]), result["source_link"])
     }
 

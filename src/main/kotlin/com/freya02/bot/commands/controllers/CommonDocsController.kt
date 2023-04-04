@@ -156,7 +156,7 @@ class CommonDocsController(private val componentsService: Components, private va
                 embed {
                     //TODO add some text perhaps
                     description = otherSuperclasses.joinToString(", ") { superclass ->
-                        "[${superclass.className}](${superclass.sourceUrl})"
+                        "[${superclass.className}](${superclass.sourceLink})"
                     }
                 }
             }
