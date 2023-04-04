@@ -10,6 +10,7 @@ import com.freya02.bot.docs.index.DocSuggestion
 import com.freya02.bot.docs.metadata.ClassType
 import com.freya02.bot.docs.metadata.ImplementationIndex
 import com.freya02.bot.utils.Emojis
+import com.freya02.bot.utils.joinLengthyString
 import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.components.data.InteractionConstraints
 import com.freya02.botcommands.api.components.event.ButtonEvent
@@ -26,6 +27,7 @@ import dev.minn.jda.ktx.messages.reply_
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.Member
+import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.interactions.components.ItemComponent
 import net.dv8tion.jda.api.interactions.components.buttons.Button
@@ -163,10 +165,12 @@ class CommonDocsController(private val componentsService: Components, private va
             if (internalClasses.isNotEmpty()) {
                 embed {
                     title = decorations.title
-                    //TODO truncate
-                    description = internalClasses.joinToString(", ") { superclass ->
-                        "[${superclass.className}](${superclass.sourceLink})"
-                    }
+                    description = internalClasses
+                        .joinLengthyString(
+                            separator = ", ",
+                            truncated = " and more...",
+                            lengthLimit = MessageEmbed.DESCRIPTION_MAX_LENGTH
+                        ) { internalClass -> "[${internalClass.className}](${internalClass.sourceLink})" }
                 }
             }
 
