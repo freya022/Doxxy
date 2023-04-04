@@ -25,6 +25,12 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
 
     val implementationIndex = ImplementationIndex(this, database)
 
+    override suspend fun hasClassDoc(className: String): Boolean {
+        return database.preparedStatement("select * from doc where classname = ? limit 1", readOnly = true) {
+            executeQuery(*arrayOf(className)).readOnce() != null
+        }
+    }
+
     override suspend fun getClassDoc(className: String): CachedClass? {
         val (docId, embed, javadocLink, sourceLink) = findDoc(DocType.CLASS, className) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)

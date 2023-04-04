@@ -158,9 +158,7 @@ class CommonDocsController(private val componentsService: Components, private va
 
     private suspend fun sendClassLinks(event: ButtonEvent, index: DocIndex, classes: List<ImplementationIndex.Class>, decorations: ClassType.Decorations) {
         MessageCreate {
-            val cachedClasses = classes.associateWith { it.getClassDoc() } //TODO optimize
-            val apiClasses = cachedClasses.filterValues { it != null }.keys
-            val internalClasses = cachedClasses.filterValues { it == null }.keys
+            val (apiClasses, internalClasses) = classes.partition { it.hasClassDoc() }
 
             if (internalClasses.isNotEmpty()) {
                 embed {

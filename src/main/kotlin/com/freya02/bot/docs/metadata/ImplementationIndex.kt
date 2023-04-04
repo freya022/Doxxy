@@ -18,7 +18,7 @@ class ImplementationIndex(val docIndex: DocIndex, private val database: Database
 
         suspend inline fun getSubclasses() = getSubclasses(className)
         suspend inline fun getSuperclasses() = getSuperclasses(className)
-        suspend inline fun getClassDoc() = index.docIndex.getClassDoc(className)
+        suspend inline fun hasClassDoc() = index.docIndex.hasClassDoc(className)
     }
 
     suspend fun getClass(className: FullSimpleClassName): Class? {
