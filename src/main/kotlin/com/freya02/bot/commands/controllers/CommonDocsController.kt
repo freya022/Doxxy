@@ -164,7 +164,7 @@ class CommonDocsController(private val componentsService: Components, private va
 
             if (internalClasses.isNotEmpty()) {
                 embed {
-                    title = decorations.title
+                    author(name = decorations.title, iconUrl = decorations.emoji.asCustom().imageUrl)
                     description = internalClasses
                         .joinLengthyString(
                             separator = ", ",

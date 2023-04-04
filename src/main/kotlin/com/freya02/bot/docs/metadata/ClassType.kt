@@ -5,6 +5,7 @@ import com.freya02.botcommands.api.localization.Localization
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration
 import net.dv8tion.jda.api.entities.emoji.Emoji
+import net.dv8tion.jda.api.entities.emoji.EmojiUnion
 import java.util.*
 import kotlin.jvm.optionals.getOrNull
 
@@ -35,7 +36,7 @@ enum class ClassType(
     ENUM(4, Emojis.enum, null, null),
     ANNOTATION(5, Emojis.annotation, null, null);
 
-    class Decorations private constructor(val emoji: Emoji, val label: String, val title: String, val placeholder: String) {
+    class Decorations private constructor(val emoji: EmojiUnion, val label: String, val title: String, val placeholder: String) {
         companion object {
             private val localization = Localization.getInstance("Docs", Locale.ROOT)
                 ?: throw IllegalStateException("Could not get decorations localization bundle (Docs)")
@@ -51,7 +52,7 @@ enum class ClassType(
              * @param classTypeKey class/interface
              * @param hierarchicalName super/sub
              */
-            fun fromLocalizations(emoji: Emoji, classTypeKey: String, hierarchicalName: String): Decorations {
+            fun fromLocalizations(emoji: EmojiUnion, classTypeKey: String, hierarchicalName: String): Decorations {
                 return Decorations(
                     emoji,
                     getLocalization(classTypeKey, hierarchicalName, "links_button_label"),
