@@ -12,6 +12,7 @@ import com.freya02.bot.utils.Emojis
 import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.components.data.InteractionConstraints
 import com.freya02.botcommands.api.components.event.ButtonEvent
+import com.freya02.botcommands.api.components.event.StringSelectEvent
 import com.freya02.botcommands.api.core.annotations.BService
 import com.freya02.botcommands.api.pagination.menu.ChoiceMenuBuilder
 import com.freya02.botcommands.api.utils.ButtonContent
@@ -165,34 +166,14 @@ class CommonDocsController(private val componentsService: Components, private va
 
             if (foundSuperclasses.isNotEmpty()) {
                 components += foundSuperclasses.take(SelectMenu.OPTIONS_MAX_AMOUNT / 5)
-                    .chunked(SelectMenu.OPTIONS_MAX_AMOUNT) {
+                    .chunked(SelectMenu.OPTIONS_MAX_AMOUNT) { superclassesChunk ->
                         row(componentsService.ephemeralStringSelectMenu {
                             timeout(5.minutes)
 
                             val slashUserId = event.message.interaction!!.user.idLong
-                            bindTo { selectEvent ->
-                                val selectedClassName = selectEvent.values.single()
-                                val isSameCaller = selectEvent.user.idLong == slashUserId
-                                val cachedDoc = index.getClassDoc(selectedClassName)
-                                    ?: return@bindTo selectEvent.reply_("This class no longer exists", ephemeral = true).queue()
+                            bindTo { selectEvent -> onSuperclassSelect(selectEvent, slashUserId, index, event) }
 
-                                val createData = getDocMessageData(
-                                    selectEvent.member!!,
-                                    ephemeral = !isSameCaller,
-                                    showCaller = false,
-                                    cachedDoc
-                                )
-
-                                if (isSameCaller) {
-                                    //TODO figure out how to edit original message without Message
-                                    // problem is with the lifetime of the slash command hook, combined with the component timeouts
-                                    event.message.editMessage(MessageEditData.fromCreateData(createData)).queue()
-                                } else {
-                                    selectEvent.reply(createData).setEphemeral(true).queue()
-                                }
-                            }
-
-                            it.forEach {
+                            superclassesChunk.forEach {
                                 addOption(it.className, it.className) //TODO look into adding icons if (abstract) class/interface
                             }
                         })
@@ -205,5 +186,32 @@ class CommonDocsController(private val componentsService: Components, private va
         val subclasses = docIndexMap[source]!!.implementationIndex.getSubclasses(className)
 
         //TODO refactor with above common code
+    }
+
+    private suspend fun onSuperclassSelect(
+        selectEvent: StringSelectEvent,
+        slashUserId: Long,
+        index: DocIndex,
+        event: ButtonEvent
+    ) {
+        val selectedClassName = selectEvent.values.single()
+        val isSameCaller = selectEvent.user.idLong == slashUserId
+        val cachedDoc = index.getClassDoc(selectedClassName)
+            ?: return selectEvent.reply_("This class no longer exists", ephemeral = true).queue()
+
+        val createData = getDocMessageData(
+            selectEvent.member!!,
+            ephemeral = !isSameCaller,
+            showCaller = false,
+            cachedDoc
+        )
+
+        if (isSameCaller) {
+            //TODO figure out how to edit original message without Message
+            // problem is with the lifetime of the slash command hook, combined with the component timeouts
+            event.message.editMessage(MessageEditData.fromCreateData(createData)).queue()
+        } else {
+            selectEvent.reply(createData).setEphemeral(true).queue()
+        }
     }
 }
