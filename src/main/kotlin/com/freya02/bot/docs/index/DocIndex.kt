@@ -23,7 +23,7 @@ import org.intellij.lang.annotations.Language
 class DocIndex(val sourceType: DocSourceType, private val database: Database) : IDocIndex {
     private val mutex = Mutex()
 
-    val implementationIndex = ImplementationIndex(sourceType, database)
+    val implementationIndex = ImplementationIndex(this, database)
 
     override suspend fun getClassDoc(className: String): CachedClass? {
         val (docId, embed, javadocLink, sourceLink) = findDoc(DocType.CLASS, className) ?: return null

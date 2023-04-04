@@ -6,21 +6,41 @@ import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclar
 import net.dv8tion.jda.api.entities.emoji.Emoji
 import kotlin.jvm.optionals.getOrNull
 
-enum class ClassType(val id: Int) {
-    CLASS(1),
-    ABSTRACT_CLASS(2),
-    INTERFACE(3),
-    ENUM(4),
-    ANNOTATION(5);
+enum class ClassType(
+    val id: Int,
+    val emoji: Emoji,
+    private val _superDecorations: Decorations?,
+    private val _subDecorations: Decorations?
+) {
+    CLASS(
+        1,
+        Emojis.`class`,
+        Decorations(Emojis.hasSuperclasses, "a", "superclass", "Superclasses"),
+        Decorations(Emojis.hasOverrides,  "a", "subclass", "Subclasses")
+    ),
+    ABSTRACT_CLASS(
+        2,
+        Emojis.abstractClass,
+        Decorations(Emojis.hasSuperclasses, "a", "superclass", "Superclasses"),
+        Decorations(Emojis.hasOverrides, "a", "subclass", "Subclasses")
+    ),
+    INTERFACE(
+        3,
+        Emojis.`interface`,
+        Decorations(Emojis.hasSuperinterfaces, "a", "superinterface", "Superinterfaces"),
+        Decorations(Emojis.hasImplementations, "an", "implementation", "Implementations")
+    ),
+    ENUM(4, Emojis.enum, null, null),
+    ANNOTATION(5, Emojis.annotation, null, null);
 
-    val emoji: Emoji
-        get() = when (this) {
-            CLASS -> Emojis.`class`
-            ABSTRACT_CLASS -> Emojis.abstractClass
-            INTERFACE -> Emojis.`interface`
-            ENUM -> Emojis.enum
-            ANNOTATION -> Emojis.annotation
-        }
+    //TODO replace strings by localization keys
+    data class Decorations(val emoji: Emoji, val article: String, val desc: String, val label: String)
+
+    val superDecorations
+        get() = _superDecorations ?: throw IllegalStateException("Cannot get super decorations for $this")
+
+    val subDecorations
+        get() = _subDecorations ?: throw IllegalStateException("Cannot get sub decorations for $this")
 
     companion object {
         fun fromDeclaration(declaration: ResolvedReferenceTypeDeclaration): ClassType {

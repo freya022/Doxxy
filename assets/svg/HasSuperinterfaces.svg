@@ -33,7 +33,7 @@
         viewBox="0 0 24 24"
         fill="#C3E88D"
         id="svg4"
-        sodipodi:docname="interface_dark.svg"
+        sodipodi:docname="HasSuperinterfaces.svg"
         inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
         xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
         xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -62,4 +62,9 @@
   <path
      d="M6,9V4H13V9H23V16H18V21H11V16H1V9H6M16,16H13V19H16V16M8,9H11V6H8V9M6,14V11H3V14H6M18,11V14H21V11H18M13,11V14H16V11H13M8,11V14H11V11H8Z"
      id="path2" />
+  <path
+     fill="#64b5f6"
+     d="m 16.56,11.88 h 3 V 5.1299999 l 2.625,2.625 L 24,5.9399999 18.06,0 l -5.94,5.9399999 1.815,1.815 2.625,-2.625 z"
+     id="path4"
+     style="stroke-width:0.75" />
 </svg>

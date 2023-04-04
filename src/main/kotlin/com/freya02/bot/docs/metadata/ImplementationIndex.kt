@@ -1,13 +1,37 @@
 package com.freya02.bot.docs.metadata
 
+import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.metadata.parser.FullSimpleClassName
 import com.freya02.botcommands.api.core.db.DBResult
 import com.freya02.botcommands.api.core.db.Database
 import com.freya02.docs.DocSourceType
 
-class ImplementationIndex(private val sourceType: DocSourceType, private val database: Database) {
-    class Class(val className: String, val classType: ClassType, val sourceLink: String) {
+class ImplementationIndex(val docIndex: DocIndex, private val database: Database) {
+    val sourceType: DocSourceType
+        get() = docIndex.sourceType
+
+    inner class Class(val className: String, val classType: ClassType, val sourceLink: String) {
+        val index: ImplementationIndex
+            get() = this@ImplementationIndex
+
         constructor(result: DBResult) : this(result["class_name"], ClassType.fromId(result["class_type"]), result["source_link"])
+
+        suspend inline fun getSubclasses() = getSubclasses(className)
+        suspend inline fun getSuperclasses() = getSuperclasses(className)
+        suspend inline fun getClassDoc() = index.docIndex.getClassDoc(className)
+    }
+
+    suspend fun getClass(className: FullSimpleClassName): Class? {
+        return database.preparedStatement(
+            """
+                select c.class_name, c.class_type, c.source_link
+                from class c
+                where c.source_id = ?
+                  and c.class_name = ?
+            """.trimIndent(), readOnly = true
+        ) {
+            executeQuery(sourceType.id, className).readOnce()?.let { Class(it) }
+        }
     }
 
     suspend fun getSubclasses(className: FullSimpleClassName): List<Class> {
