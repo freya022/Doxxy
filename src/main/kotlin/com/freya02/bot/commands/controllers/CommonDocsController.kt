@@ -103,7 +103,7 @@ class CommonDocsController(private val componentsService: Components, private va
                         val decorations = clazz.classType.subDecorations
                         componentsService.ephemeralButton(ButtonStyle.SECONDARY, decorations.label, decorations.emoji) {
                             timeout(5.minutes)
-                            bindTo { sendClassLinks(it, index, clazz.getSubclasses(), decorations) }
+                            bindTo { sendClassLinks(it, index, clazz, clazz.getSubclasses(), decorations) }
                         }.also { add(it) }
                     }
 
@@ -111,7 +111,7 @@ class CommonDocsController(private val componentsService: Components, private va
                         val decorations = clazz.classType.superDecorations
                         componentsService.ephemeralButton(ButtonStyle.SECONDARY, decorations.label, decorations.emoji) {
                             timeout(5.minutes)
-                            bindTo { sendClassLinks(it, index, clazz.getSuperclasses(), decorations) }
+                            bindTo { sendClassLinks(it, index, clazz, clazz.getSuperclasses(), decorations) }
                         }.also { add(it) }
                     }
                 } else {
@@ -158,13 +158,19 @@ class CommonDocsController(private val componentsService: Components, private va
         }
     }
 
-    private suspend fun sendClassLinks(event: ButtonEvent, index: DocIndex, classes: List<ImplementationIndex.Class>, decorations: ClassType.Decorations) {
+    private suspend fun sendClassLinks(
+        event: ButtonEvent,
+        index: DocIndex,
+        clazz: ImplementationIndex.Class,
+        classes: List<ImplementationIndex.Class>,
+        decorations: ClassType.Decorations
+    ) {
         MessageCreate {
-            val (apiClasses, internalClasses) = classes.partition { it.hasClassDoc() }
+            val (apiClasses, internalClasses) = classes.sortedBy { it.className }.partition { it.hasClassDoc() }
 
             if (internalClasses.isNotEmpty()) {
                 embed {
-                    author(name = decorations.title, iconUrl = decorations.emoji.asCustom().imageUrl)
+                    author(name = "${decorations.title} - ${clazz.className}", iconUrl = decorations.emoji.asCustom().imageUrl)
                     description = internalClasses
                         .joinLengthyString(
                             separator = ", ",
@@ -183,7 +189,9 @@ class CommonDocsController(private val componentsService: Components, private va
                             val slashUserId = event.message.interaction!!.user.idLong
                             bindTo { selectEvent -> onSuperclassSelect(selectEvent, slashUserId, index, event) }
 
-                            placeholder = decorations.placeholder
+                            val firstChar = superclassesChunk.first().className.first()
+                            val lastChar = superclassesChunk.last().className.first()
+                            placeholder = "${decorations.placeholder} ($firstChar-$lastChar)"
 
                             superclassesChunk.forEach {
                                 addOption(it.className, it.className, it.classType.emoji)
