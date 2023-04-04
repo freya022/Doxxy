@@ -6,36 +6,37 @@ import com.freya02.botcommands.api.core.db.Database
 import com.freya02.docs.DocSourceType
 
 class ImplementationIndex(private val sourceType: DocSourceType, private val database: Database) {
-    class Class(val className: String, val sourceUrl: String) {
-        //TODO more metadata such as class type, to determine icons
-        constructor(result: DBResult) : this(result["class_name"], result["source_link"])
+    class Class(val className: String, val classType: ClassType, val sourceUrl: String) {
+        constructor(result: DBResult) : this(result["class_name"], ClassType.fromId(result["class_type"]), result["source_link"])
     }
 
     suspend fun getSubclasses(className: FullSimpleClassName): List<Class> {
         return database.preparedStatement(
             """
-                select subclass.class_name, subclass.source_link
+                select subclass.class_name, subclass.class_type, subclass.source_link
                 from class c
                          join subclass sub on sub.superclass_id = c.id
                          join class subclass on subclass.id = sub.subclass_id
-                where c.class_name = ?
+                where c.source_id = ?
+                  and c.class_name = ?
             """.trimIndent(), readOnly = true
         ) {
-            executeQuery(*arrayOf(className)).map { Class(it) }
+            executeQuery(sourceType.id, className).map { Class(it) }
         }
     }
 
     suspend fun getSuperclasses(className: FullSimpleClassName): List<Class> {
         return database.preparedStatement(
             """
-                select superclass.class_name, superclass.source_link
+                select superclass.class_name, superclass.class_type, superclass.source_link
                 from class c
                          join subclass sub on sub.subclass_id = c.id
                          join class superclass on superclass.id = sub.superclass_id
-                where c.class_name = ?
+                where c.source_id = ?
+                  and c.class_name = ?
             """.trimIndent(), readOnly = true
         ) {
-            executeQuery(*arrayOf(className)).map { Class(it) }
+            executeQuery(sourceType.id, className).map { Class(it) }
         }
     }
 
@@ -51,7 +52,8 @@ class ImplementationIndex(private val sourceType: DocSourceType, private val dat
                               on impl.implementation_id = implementation.id
                          join class implementation_owner
                               on implementation.class_id = implementation_owner.id
-                where superclass.class_name = ?
+                where superclass.source_id = ?
+                  and superclass.class_name = ?
                   and implementation.name = ?            
             """.trimIndent(), readOnly = true
         ) {

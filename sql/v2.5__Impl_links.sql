@@ -9,6 +9,7 @@ create table class
 (
     id           serial not null primary key,
     source_id    int    not null,
+    class_type   int    not null,
     package_name text   not null,
     class_name   text   not null,
     source_link  text   not null

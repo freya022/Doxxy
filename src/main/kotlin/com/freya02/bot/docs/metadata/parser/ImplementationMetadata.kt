@@ -1,5 +1,6 @@
 package com.freya02.bot.docs.metadata.parser
 
+import com.freya02.bot.docs.metadata.ClassType
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration
 
@@ -8,6 +9,7 @@ class ImplementationMetadata(val classes: Map<String, Class>) {
     fun getClassBySimpleName(simpleName: String) = classes.entries.first { it.key.endsWith(".$simpleName") }.value
 
     class Class(val declaration: ResolvedReferenceTypeDeclaration, val qualifiedName: String) {
+        val classType = ClassType.fromDeclaration(declaration)
         val packageName: PackageName
         val name: FullSimpleClassName
         val topLevelName: TopSimpleClassName
