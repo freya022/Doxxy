@@ -1,0 +1,28 @@
+{
+  "class_type_decorations": {
+    "class": {
+      "super": {
+        "links_button_label": "Superclasses",
+        "links_embed_title": "Internal superclasses",
+        "links_select_placeholder": "Select a superclass"
+      },
+      "sub": {
+        "links_button_label": "Subclasses",
+        "links_embed_title": "Internal subclasses",
+        "links_select_placeholder": "Select a subclass"
+      }
+    },
+    "interface": {
+      "super": {
+        "links_button_label": "Superinterfaces",
+        "links_embed_title": "Internal superinterfaces",
+        "links_select_placeholder": "Select a superinterface"
+      },
+      "sub": {
+        "links_button_label": "Implementations",
+        "links_embed_title": "Internal implementations",
+        "links_select_placeholder": "Select an implementation"
+      }
+    }
+  }
+}

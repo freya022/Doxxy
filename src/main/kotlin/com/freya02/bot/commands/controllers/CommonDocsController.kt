@@ -7,6 +7,7 @@ import com.freya02.bot.docs.cached.CachedClass
 import com.freya02.bot.docs.cached.CachedDoc
 import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocSuggestion
+import com.freya02.bot.docs.metadata.ClassType
 import com.freya02.bot.docs.metadata.ImplementationIndex
 import com.freya02.bot.utils.Emojis
 import com.freya02.botcommands.api.components.Components
@@ -97,18 +98,18 @@ class CommonDocsController(private val componentsService: Components, private va
 
                 if (clazz != null) {
                     if (cachedDoc.subclasses.isNotEmpty()) {
-                        val (emoji, article, desc, label) = clazz.classType.subDecorations
-                        componentsService.ephemeralButton(ButtonStyle.SECONDARY, label, emoji) {
+                        val decorations = clazz.classType.subDecorations
+                        componentsService.ephemeralButton(ButtonStyle.SECONDARY, decorations.label, decorations.emoji) {
                             timeout(5.minutes)
-                            bindTo { sendClassLinks(it, index, clazz.getSubclasses(), article, desc) }
+                            bindTo { sendClassLinks(it, index, clazz.getSubclasses(), decorations) }
                         }.also { add(it) }
                     }
 
                     if (cachedDoc.superclasses.isNotEmpty()) {
-                        val (emoji, article, desc, label) = clazz.classType.superDecorations
-                        componentsService.ephemeralButton(ButtonStyle.SECONDARY, label, emoji) {
+                        val decorations = clazz.classType.superDecorations
+                        componentsService.ephemeralButton(ButtonStyle.SECONDARY, decorations.label, decorations.emoji) {
                             timeout(5.minutes)
-                            bindTo { sendClassLinks(it, index, clazz.getSuperclasses(), article, desc) }
+                            bindTo { sendClassLinks(it, index, clazz.getSuperclasses(), decorations) }
                         }.also { add(it) }
                     }
                 } else {
@@ -155,7 +156,7 @@ class CommonDocsController(private val componentsService: Components, private va
         }
     }
 
-    private suspend fun sendClassLinks(event: ButtonEvent, index: DocIndex, classes: List<ImplementationIndex.Class>, article: String, desc: String) {
+    private suspend fun sendClassLinks(event: ButtonEvent, index: DocIndex, classes: List<ImplementationIndex.Class>, decorations: ClassType.Decorations) {
         MessageCreate {
             val cachedClasses = classes.associateWith { it.getClassDoc() } //TODO optimize
             val apiClasses = cachedClasses.filterValues { it != null }.keys
@@ -163,7 +164,7 @@ class CommonDocsController(private val componentsService: Components, private va
 
             if (internalClasses.isNotEmpty()) {
                 embed {
-                    title = "Internal ${desc}es" //TODO tbh at this point just use a localization context
+                    title = decorations.title
                     //TODO truncate
                     description = internalClasses.joinToString(", ") { superclass ->
                         "[${superclass.className}](${superclass.sourceLink})"
@@ -180,7 +181,7 @@ class CommonDocsController(private val componentsService: Components, private va
                             val slashUserId = event.message.interaction!!.user.idLong
                             bindTo { selectEvent -> onSuperclassSelect(selectEvent, slashUserId, index, event) }
 
-                            placeholder = "Select $article $desc"
+                            placeholder = decorations.placeholder
 
                             superclassesChunk.forEach {
                                 addOption(it.className, it.className, it.classType.emoji)

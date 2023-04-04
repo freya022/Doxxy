@@ -1,9 +1,11 @@
 package com.freya02.bot.docs.metadata
 
 import com.freya02.bot.utils.Emojis
+import com.freya02.botcommands.api.localization.Localization
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration
 import net.dv8tion.jda.api.entities.emoji.Emoji
+import java.util.*
 import kotlin.jvm.optionals.getOrNull
 
 enum class ClassType(
@@ -15,26 +17,50 @@ enum class ClassType(
     CLASS(
         1,
         Emojis.`class`,
-        Decorations(Emojis.hasSuperclasses, "a", "superclass", "Superclasses"),
-        Decorations(Emojis.hasOverrides,  "a", "subclass", "Subclasses")
+        Decorations.fromLocalizations(Emojis.hasSuperclasses, "class", "super"),
+        Decorations.fromLocalizations(Emojis.hasOverrides, "class", "sub")
     ),
     ABSTRACT_CLASS(
         2,
         Emojis.abstractClass,
-        Decorations(Emojis.hasSuperclasses, "a", "superclass", "Superclasses"),
-        Decorations(Emojis.hasOverrides, "a", "subclass", "Subclasses")
+        Decorations.fromLocalizations(Emojis.hasSuperclasses, "class", "super"),
+        Decorations.fromLocalizations(Emojis.hasOverrides, "class", "sub")
     ),
     INTERFACE(
         3,
         Emojis.`interface`,
-        Decorations(Emojis.hasSuperinterfaces, "a", "superinterface", "Superinterfaces"),
-        Decorations(Emojis.hasImplementations, "an", "implementation", "Implementations")
+        Decorations.fromLocalizations(Emojis.hasSuperinterfaces, "interface", "super"),
+        Decorations.fromLocalizations(Emojis.hasImplementations, "interface", "sub")
     ),
     ENUM(4, Emojis.enum, null, null),
     ANNOTATION(5, Emojis.annotation, null, null);
 
-    //TODO replace strings by localization keys
-    data class Decorations(val emoji: Emoji, val article: String, val desc: String, val label: String)
+    class Decorations private constructor(val emoji: Emoji, val label: String, val title: String, val placeholder: String) {
+        companion object {
+            private val localization = Localization.getInstance("Docs", Locale.ROOT)
+                ?: throw IllegalStateException("Could not get decorations localization bundle (Docs)")
+
+            private fun getLocalization(classTypeKey: String, hierarchicalName: String, finalKey: String): String {
+                val key = "class_type_decorations.$classTypeKey.$hierarchicalName.$finalKey"
+
+                return localization[key]?.localize()
+                    ?: throw IllegalArgumentException("Could not get localization for $key")
+            }
+
+            /**
+             * @param classTypeKey class/interface
+             * @param hierarchicalName super/sub
+             */
+            fun fromLocalizations(emoji: Emoji, classTypeKey: String, hierarchicalName: String): Decorations {
+                return Decorations(
+                    emoji,
+                    getLocalization(classTypeKey, hierarchicalName, "links_button_label"),
+                    getLocalization(classTypeKey, hierarchicalName, "links_embed_title"),
+                    getLocalization(classTypeKey, hierarchicalName, "links_select_placeholder")
+                )
+            }
+        }
+    }
 
     val superDecorations
         get() = _superDecorations ?: throw IllegalStateException("Cannot get super decorations for $this")
