@@ -44,7 +44,13 @@ class CommonDocsHandlers(
             null -> event.reply_("This reference is not available anymore", ephemeral = true).queue()
             else -> when (event.message.interaction!!.user.idLong) {
                 event.user.idLong -> commonDocsController //Caller is same as original command caller, edit
-                    .getDocMessageData(event.member!!, ephemeral = false, showCaller = false, cachedDoc = doc)
+                    .getDocMessageData(
+                        event.hook,
+                        event.member!!,
+                        ephemeral = false,
+                        showCaller = false,
+                        cachedDoc = doc
+                    )
                     .let { MessageEditData.fromCreateData(it) }
                     .let { event.editMessage(it).queue() }
 

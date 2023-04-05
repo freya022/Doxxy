@@ -29,6 +29,7 @@ import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.UserSnowflake
+import net.dv8tion.jda.api.interactions.InteractionHook
 import net.dv8tion.jda.api.interactions.components.ItemComponent
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
@@ -37,6 +38,8 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import net.dv8tion.jda.api.utils.messages.MessageCreateRequest
 import net.dv8tion.jda.api.utils.messages.MessageEditData
+import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 
 @BService
@@ -68,7 +71,7 @@ class CommonDocsController(private val componentsService: Components, private va
             .apply(block)
             .build()
 
-    fun getDocMessageData(caller: Member, ephemeral: Boolean, showCaller: Boolean, cachedDoc: CachedDoc): MessageCreateData {
+    fun getDocMessageData(originalHook: InteractionHook?, caller: Member, ephemeral: Boolean, showCaller: Boolean, cachedDoc: CachedDoc): MessageCreateData {
         return MessageCreateBuilder().apply {
             addEmbeds(cachedDoc.embed.let {
                 when {
@@ -80,11 +83,12 @@ class CommonDocsController(private val componentsService: Components, private va
                 }
             })
             addDocsSeeAlso(cachedDoc)
-            addDocsActionRows(ephemeral, cachedDoc, caller)
+            addDocsActionRows(originalHook, ephemeral, cachedDoc, caller)
         }.build()
     }
 
     private fun MessageCreateRequest<*>.addDocsActionRows(
+        originalHook: InteractionHook?,
         ephemeral: Boolean,
         cachedDoc: CachedDoc,
         caller: UserSnowflake
@@ -103,7 +107,7 @@ class CommonDocsController(private val componentsService: Components, private va
                         val decorations = clazz.classType.subDecorations
                         componentsService.ephemeralButton(ButtonStyle.SECONDARY, decorations.label, decorations.emoji) {
                             timeout(5.minutes)
-                            bindTo { sendClassLinks(it, index, clazz, clazz.getSubclasses(), decorations) }
+                            bindTo { sendClassLinks(it, originalHook, index, clazz, clazz.getSubclasses(), decorations) }
                         }.also { add(it) }
                     }
 
@@ -111,11 +115,11 @@ class CommonDocsController(private val componentsService: Components, private va
                         val decorations = clazz.classType.superDecorations
                         componentsService.ephemeralButton(ButtonStyle.SECONDARY, decorations.label, decorations.emoji) {
                             timeout(5.minutes)
-                            bindTo { sendClassLinks(it, index, clazz, clazz.getSuperclasses(), decorations) }
+                            bindTo { sendClassLinks(it, originalHook, index, clazz, clazz.getSuperclasses(), decorations) }
                         }.also { add(it) }
                     }
                 } else {
-                    logger.warn("Found no metadata for ${cachedDoc.name}")
+                    logger.trace("Found no metadata for ${cachedDoc.name}")
                 }
             }
 
@@ -160,6 +164,7 @@ class CommonDocsController(private val componentsService: Components, private va
 
     private suspend fun sendClassLinks(
         event: ButtonEvent,
+        originalHook: InteractionHook?,
         index: DocIndex,
         clazz: ImplementationIndex.Class,
         classes: List<ImplementationIndex.Class>,
@@ -184,10 +189,21 @@ class CommonDocsController(private val componentsService: Components, private va
                 components += apiClasses.take(SelectMenu.OPTIONS_MAX_AMOUNT * 5)
                     .chunked(SelectMenu.OPTIONS_MAX_AMOUNT) { superclassesChunk ->
                         row(componentsService.ephemeralStringSelectMenu {
-                            timeout(5.minutes)
+                            if (originalHook != null) {
+                                println("Expire in ${(originalHook.expirationTimestamp - System.currentTimeMillis()).milliseconds.inWholeMinutes} minutes")
+                                timeout(originalHook.expirationTimestamp - System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+                            } else {
+                                timeout(5.minutes)
+                            }
 
                             val slashUserId = event.message.interaction!!.user.idLong
-                            bindTo { selectEvent -> onSuperclassSelect(selectEvent, slashUserId, index, event) }
+                            bindTo { selectEvent -> onClassLinkSelect(
+                                selectEvent,
+                                slashUserId,
+                                index,
+                                originalHook,
+                                event
+                            ) }
 
                             val firstChar = superclassesChunk.first().className.first()
                             val lastChar = superclassesChunk.last().className.first()
@@ -202,11 +218,12 @@ class CommonDocsController(private val componentsService: Components, private va
         }.also { event.reply(it).setEphemeral(true).queue() }
     }
 
-    private suspend fun onSuperclassSelect(
+    private suspend fun onClassLinkSelect(
         selectEvent: StringSelectEvent,
         slashUserId: Long,
         index: DocIndex,
-        event: ButtonEvent
+        originalHook: InteractionHook?, //probably from /docs or similar
+        buttonEvent: ButtonEvent
     ) {
         val selectedClassName = selectEvent.values.single()
         val isSameCaller = selectEvent.user.idLong == slashUserId
@@ -214,6 +231,7 @@ class CommonDocsController(private val componentsService: Components, private va
             ?: return selectEvent.reply_("This class no longer exists", ephemeral = true).queue()
 
         val createData = getDocMessageData(
+            originalHook,
             selectEvent.member!!,
             ephemeral = !isSameCaller,
             showCaller = false,
@@ -221,9 +239,12 @@ class CommonDocsController(private val componentsService: Components, private va
         )
 
         if (isSameCaller) {
-            //TODO figure out how to edit original message without Message
-            // problem is with the lifetime of the slash command hook, combined with the component timeouts
-            event.message.editMessage(MessageEditData.fromCreateData(createData)).queue()
+            selectEvent.deferEdit().queue()
+            if (originalHook != null) {
+                originalHook.editOriginal(MessageEditData.fromCreateData(createData)).queue()
+            } else {
+                buttonEvent.message.editMessage(MessageEditData.fromCreateData(createData)).queue()
+            }
         } else {
             selectEvent.reply(createData).setEphemeral(true).queue()
         }

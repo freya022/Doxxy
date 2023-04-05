@@ -160,7 +160,13 @@ class DocMentionController(
             return
         }
 
-        commonDocsController.getDocMessageData(selectEvent.member!!, ephemeral = false, showCaller = false, cachedDoc = doc)
+        commonDocsController.getDocMessageData(
+            selectEvent.hook,
+            selectEvent.member!!,
+            ephemeral = false,
+            showCaller = false,
+            cachedDoc = doc
+        )
             .let { MessageEditData.fromCreateData(it) }
             .also { selectEvent.editMessage(it).setReplace(true).queue() }
             .also {
