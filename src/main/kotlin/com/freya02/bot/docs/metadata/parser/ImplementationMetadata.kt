@@ -56,16 +56,14 @@ class ImplementationMetadata(val classes: Map<String, Class>) {
         override fun toString(): String = qualifiedName
     }
 
-    class Method(val declaration: ResolvedMethodDeclaration, val owner: Class, val signature: String) {
+    class Method(declaration: ResolvedMethodDeclaration, val owner: Class, val signature: String) {
         val name: String = declaration.name
         val qualifiedSignature = owner.qualifiedName + "." + signature
         val implementations: MutableSet<Method> = hashSetOf()
 
-        val range: IntRange
-            get() {
-                val node = declaration.toAst().get()
-                return node.begin.get().line..node.end.get().line
-            }
+        val range: IntRange = declaration.toAst().get().let { node ->
+            node.begin.get().line..node.end.get().line
+        }
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
