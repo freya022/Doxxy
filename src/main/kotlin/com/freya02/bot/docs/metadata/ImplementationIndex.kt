@@ -21,6 +21,17 @@ class ImplementationIndex(val docIndex: DocIndex, private val database: Database
         suspend inline fun hasClassDoc() = index.docIndex.hasClassDoc(className)
     }
 
+    //TODO replace className with Class object
+    inner class Method(val className: String, val signature: String, val sourceLink: String) {
+        val index: ImplementationIndex
+            get() = this@ImplementationIndex
+
+        constructor(result: DBResult) : this(result["class_name"], result["signature"], result["source_link"])
+
+        suspend inline fun getImplementations() = getImplementations(className, signature)
+        suspend inline fun hasMethodDoc() = index.docIndex.getMethodDoc(className, signature) != null //TODO optimize
+    }
+
     suspend fun getClass(className: FullSimpleClassName): Class? {
         return database.preparedStatement(
             """
@@ -31,6 +42,21 @@ class ImplementationIndex(val docIndex: DocIndex, private val database: Database
             """.trimIndent(), readOnly = true
         ) {
             executeQuery(sourceType.id, className).readOnce()?.let { Class(it) }
+        }
+    }
+
+    suspend fun getMethod(className: String, signature: String): ImplementationIndex.Method? {
+        return database.preparedStatement(
+            """
+                select c.class_name, m.signature, m.source_link
+                from class c
+                         join method m on m.class_id = c.id
+                where c.source_id = ?
+                  and c.class_name = ?
+                  and m.signature = ?
+            """.trimIndent(), readOnly = true
+        ) {
+            executeQuery(sourceType.id, className, signature).readOnce()?.let { Method(it) }
         }
     }
 
@@ -64,8 +90,8 @@ class ImplementationIndex(val docIndex: DocIndex, private val database: Database
         }
     }
 
-    suspend fun getImplementations(className: FullSimpleClassName, methodName: String): List<Any> {
-        database.preparedStatement(
+    suspend fun getImplementations(className: FullSimpleClassName, methodSignature: String): List<Method> {
+        return database.preparedStatement(
             """
                 select implementation_owner.class_name,
                        implementation.signature,
@@ -78,10 +104,10 @@ class ImplementationIndex(val docIndex: DocIndex, private val database: Database
                               on implementation.class_id = implementation_owner.id
                 where superclass.source_id = ?
                   and superclass.class_name = ?
-                  and implementation.name = ?            
+                  and implementation.signature = ?
             """.trimIndent(), readOnly = true
         ) {
-            TODO()
+            executeQuery(sourceType.id, className, methodSignature).map { Method(it) }
         }
     }
 }

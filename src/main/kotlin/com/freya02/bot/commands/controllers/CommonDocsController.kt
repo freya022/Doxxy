@@ -2,9 +2,9 @@ package com.freya02.bot.commands.controllers
 
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers
-import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.cached.CachedClass
 import com.freya02.bot.docs.cached.CachedDoc
+import com.freya02.bot.docs.cached.CachedMethod
 import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocSuggestion
 import com.freya02.bot.utils.Emojis
@@ -31,8 +31,8 @@ import kotlin.time.Duration.Companion.minutes
 @BService
 class CommonDocsController(
     private val componentsService: Components,
-    private val docIndexMap: DocIndexMap,
-    private val classLinksController: ClassLinksController
+    private val classLinksController: ClassLinksController,
+    private val methodLinksController: MethodLinksController
 ) {
     private val logger = KotlinLogging.logger { }
 
@@ -88,6 +88,8 @@ class CommonDocsController(
 
             if (cachedDoc is CachedClass)
                 classLinksController.addCachedClassComponents(cachedDoc, originalHook)
+            else if (cachedDoc is CachedMethod)
+                methodLinksController.addCachedMethodComponents(cachedDoc, originalHook)
 
             if (!ephemeral) add(componentsService.messageDeleteButton(caller))
         }

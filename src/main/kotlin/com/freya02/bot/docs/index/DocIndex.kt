@@ -43,8 +43,9 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
     override suspend fun getMethodDoc(className: String, identifier: String): CachedMethod? {
         val (docId, embed, javadocLink, sourceLink) = findDoc(DocType.METHOD, className, identifier) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
+        val implementations = implementationIndex.getImplementations(className, identifier)
 
-        return CachedMethod(sourceType, embed, seeAlsoReferences, javadocLink, sourceLink)
+        return CachedMethod(sourceType, className, identifier, embed, seeAlsoReferences, javadocLink, sourceLink, implementations)
     }
 
     override suspend fun getFieldDoc(className: String, fieldName: String): CachedField? {
