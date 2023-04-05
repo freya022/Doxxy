@@ -104,7 +104,7 @@ internal class ImplementationMetadataWriter private constructor(
                 executeQuery(
                     dbClasses[method.owner],
                     method.name,
-                    method.declaration.signature,
+                    method.signature,
                     methodSourceUrl
                 ).readOnce()!!.getInt(1)
             }

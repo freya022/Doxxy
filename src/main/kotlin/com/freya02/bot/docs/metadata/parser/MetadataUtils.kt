@@ -14,6 +14,8 @@ import java.sql.Connection
 import java.util.*
 import kotlin.jvm.optionals.getOrNull
 
+private val fullSimpleClassNameRegex = Regex("[A-Z].+")
+
 val CompilationUnit.debugFQCN: String
     get() = "${packageDeclaration.getOrNull()?.nameAsString?.substringBefore(';')}.${primaryTypeName.getOrNull()}"
 
@@ -38,6 +40,29 @@ fun List<CompilationUnit>.forEachCompilationUnit(logger: KLogger, block: (Compil
         }
     }
 }
+
+val ResolvedMethodDeclaration.erasedSimpleSignature: String
+    get() = buildString {
+        append(name)
+        append('(')
+        append((0..<numberOfParams).joinToString(", ") { i ->
+            val param = getParam(i)
+            val type = when {
+                param.isVariadic -> param.type.asArrayType().componentType
+                else -> param.type
+            }
+            val rawType = when {
+                type.isReferenceType -> type.asReferenceType().toRawType()
+                else -> type
+            }
+            val typeDescription = when {
+                param.isVariadic -> rawType.describe() + "..."
+                else -> rawType.describe()
+            }
+            fullSimpleClassNameRegex.find(typeDescription)?.groupValues?.first() ?: typeDescription
+        })
+        append(')')
+    }
 
 fun isMethodCompatible(
     cache: JavaParserCache,

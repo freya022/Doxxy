@@ -48,7 +48,7 @@ class JavaParserCache {
     private val typeDeclarationQualifiedNames = Cache<ResolvedTypeDeclaration, String>(calcMaxSize(10232.0)) { it.qualifiedName }
     private val referenceTypeQualifiedNames = Cache<ResolvedReferenceType, String>(calcMaxSize(3869.0)) { it.qualifiedName }
     private val methodDeclarationSignatures = Cache<ResolvedMethodDeclaration, String>(calcMaxSize(4712.0)) {
-        it.buildSignature()
+        it.erasedSimpleSignature
     }
 
     //A Comparator is used as the map keys are being recreated everytime, an IdentityHashMap would not work
@@ -93,15 +93,6 @@ class JavaParserCache {
                     ?: return logger.warn("Could not get field '${it.name}'")
                 logger.info("${it.name}: $cache")
             }
-    }
-
-    private fun ResolvedMethodDeclaration.buildSignature(): String = buildString {
-        append(name)
-        append('(')
-        for (i in 0..<numberOfParams) {
-            append(getParam(i).type.describe())
-        }
-        append(')')
     }
 
     //Used to avoid resizing IdentityHashMap, the sizes comes from the map's sizes when parsing JDA 5 beta 5
