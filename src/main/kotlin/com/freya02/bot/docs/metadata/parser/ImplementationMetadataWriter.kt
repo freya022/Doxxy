@@ -94,8 +94,8 @@ internal class ImplementationMetadataWriter private constructor(
         return classes.flatMap { it.declaredMethods.values }.associateWith { method ->
             preparedStatement(
                 """
-                    insert into method (class_id, name, signature, source_link)
-                    values (?, ?, ?, ?)
+                    insert into method (class_id, method_type, name, signature, source_link)
+                    values (?, ?, ?, ?, ?)
                     returning id
                 """.trimIndent()
             ) {
@@ -103,6 +103,7 @@ internal class ImplementationMetadataWriter private constructor(
 
                 executeQuery(
                     dbClasses[method.owner],
+                    method.type,
                     method.name,
                     method.signature,
                     methodSourceUrl

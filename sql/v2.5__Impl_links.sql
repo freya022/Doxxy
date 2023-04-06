@@ -29,6 +29,7 @@ create table method
 (
     id          serial not null primary key,
     class_id    int    not null references class on delete cascade,
+    method_type int    not null,
     name        text   not null,
     signature   text   not null,
     source_link text   not null

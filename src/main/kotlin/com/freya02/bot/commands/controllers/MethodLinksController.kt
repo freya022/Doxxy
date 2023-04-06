@@ -94,7 +94,7 @@ class MethodLinksController(
 
                             methodsChunk.forEach {
                                 val simpleQualifiedSignature = "${it.className}#${it.signature}"
-                                addOption(simpleQualifiedSignature, simpleQualifiedSignature, it.classType.emoji)
+                                addOption(simpleQualifiedSignature, simpleQualifiedSignature, it.methodType.emoji)
                             }
                         })
                     }

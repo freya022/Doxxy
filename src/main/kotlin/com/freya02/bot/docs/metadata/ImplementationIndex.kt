@@ -21,15 +21,16 @@ class ImplementationIndex(val docIndex: DocIndex, private val database: Database
         suspend inline fun hasClassDoc() = index.docIndex.hasClassDoc(className)
     }
 
-    //TODO replace className with Class object
-    inner class Method(val className: String, val signature: String, val sourceLink: String) {
+    inner class Method(val clazz: Class, val methodType: MethodType, val signature: String, val sourceLink: String) {
+        val className: String
+            get() = clazz.className
         val index: ImplementationIndex
             get() = this@ImplementationIndex
 
-        constructor(result: DBResult) : this(result["class_name"], result["signature"], result["source_link"])
+        constructor(result: DBResult) : this(Class(result), MethodType.fromId(result["method_type"]), result["signature"], result["source_link"])
 
-        suspend inline fun getImplementations() = getImplementations(className, signature)
-        suspend inline fun hasMethodDoc() = index.docIndex.getMethodDoc(className, signature) != null //TODO optimize
+        suspend inline fun getImplementations() = getImplementations(clazz.className, signature)
+        suspend inline fun hasMethodDoc() = index.docIndex.getMethodDoc(clazz.className, signature) != null //TODO optimize
     }
 
     suspend fun getClass(className: FullSimpleClassName): Class? {
@@ -48,7 +49,12 @@ class ImplementationIndex(val docIndex: DocIndex, private val database: Database
     suspend fun getMethod(className: String, signature: String): ImplementationIndex.Method? {
         return database.preparedStatement(
             """
-                select c.class_name, m.signature, m.source_link
+                select c.class_name,
+                       c.class_type,
+                       c.source_link,
+                       m.method_type,
+                       m.signature,
+                       m.source_link
                 from class c
                          join method m on m.class_id = c.id
                 where c.source_id = ?
@@ -94,6 +100,9 @@ class ImplementationIndex(val docIndex: DocIndex, private val database: Database
         return database.preparedStatement(
             """
                 select implementation_owner.class_name,
+                       implementation_owner.class_type,
+                       implementation_owner.source_link,
+                       implementation.method_type,
                        implementation.signature,
                        implementation.source_link
                 from implementation impl

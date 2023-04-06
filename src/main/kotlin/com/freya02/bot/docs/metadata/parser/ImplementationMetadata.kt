@@ -1,6 +1,7 @@
 package com.freya02.bot.docs.metadata.parser
 
 import com.freya02.bot.docs.metadata.ClassType
+import com.freya02.bot.docs.metadata.MethodType
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration
 
@@ -57,6 +58,7 @@ class ImplementationMetadata(val classes: Map<String, Class>) {
     }
 
     class Method(declaration: ResolvedMethodDeclaration, val owner: Class, val signature: String) {
+        val type: MethodType = MethodType.fromDeclaration(declaration)
         val name: String = declaration.name
         val qualifiedSignature = owner.qualifiedName + "." + signature
         val implementations: MutableSet<Method> = hashSetOf()

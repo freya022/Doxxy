@@ -16,4 +16,7 @@ object Emojis { //TODO find remaining EmojiUtils usages
     val `class` = Emoji.fromFormatted("<:class:1092833990085464175>")
     val enum = Emoji.fromFormatted("<:enum:1092833991272448130>")
     val `interface` = Emoji.fromFormatted("<:interface_dark:1092833999111602206>")
+
+    val methodDeclaration = Emoji.fromFormatted("<:abstractMethod:1093654914435137657>")
+    val methodDefinition = Emoji.fromFormatted("<:method:1093654912958726316>")
 }
