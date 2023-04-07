@@ -4,6 +4,7 @@ import com.freya02.bot.docs.cached.CachedClass
 import com.freya02.bot.docs.cached.CachedDoc
 import com.freya02.bot.docs.cached.CachedField
 import com.freya02.bot.docs.cached.CachedMethod
+import com.freya02.bot.docs.metadata.ImplementationIndex
 import com.freya02.botcommands.api.core.db.Database
 import com.freya02.botcommands.api.core.db.KConnection
 import com.freya02.docs.DocSourceType
@@ -22,18 +23,53 @@ import org.intellij.lang.annotations.Language
 class DocIndex(val sourceType: DocSourceType, private val database: Database) : IDocIndex {
     private val mutex = Mutex()
 
+    val implementationIndex = ImplementationIndex(this, database)
+
+    override suspend fun hasClassDoc(className: String): Boolean {
+        return database.preparedStatement(
+            """
+                select *
+                from doc
+                where source_id = ?
+                  and classname = ?
+                limit 1
+            """.trimIndent(), readOnly = true
+        ) {
+            executeQuery(sourceType.id, className).readOnce() != null
+        }
+    }
+
+    override suspend fun hasMethodDoc(className: String, signature: String): Boolean {
+        return database.preparedStatement(
+            """
+                select *
+                from doc
+                where source_id = ?
+                  and classname = ?
+                  and identifier = ?
+                limit 1
+            """.trimIndent(), readOnly = true
+        ) {
+            executeQuery(sourceType.id, className, signature).readOnce() != null
+        }
+    }
+
     override suspend fun getClassDoc(className: String): CachedClass? {
         val (docId, embed, javadocLink, sourceLink) = findDoc(DocType.CLASS, className) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
+        val subclasses = implementationIndex.getSubclasses(className)
+        val superclasses = implementationIndex.getSuperclasses(className)
 
-        return CachedClass(sourceType, embed, seeAlsoReferences, javadocLink, sourceLink)
+        return CachedClass(sourceType, className, embed, seeAlsoReferences, javadocLink, sourceLink, subclasses, superclasses)
     }
 
     override suspend fun getMethodDoc(className: String, identifier: String): CachedMethod? {
         val (docId, embed, javadocLink, sourceLink) = findDoc(DocType.METHOD, className, identifier) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
+        val implementations = implementationIndex.getImplementations(className, identifier)
+        val overriddenMethods = implementationIndex.getOverriddenMethods(className, identifier)
 
-        return CachedMethod(sourceType, embed, seeAlsoReferences, javadocLink, sourceLink)
+        return CachedMethod(sourceType, className, identifier, embed, seeAlsoReferences, javadocLink, sourceLink, implementations, overriddenMethods)
     }
 
     override suspend fun getFieldDoc(className: String, fieldName: String): CachedField? {

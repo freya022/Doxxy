@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit
 @BService
 class SlashDocsController(private val commonDocsController: CommonDocsController, private val docIndexMap: DocIndexMap) {
     fun sendClass(event: IReplyCallback, ephemeral: Boolean, cachedDoc: CachedDoc) {
-        event.reply(commonDocsController.getDocMessageData(event.member!!, ephemeral, false, cachedDoc))
+        event.reply(commonDocsController.getDocMessageData(event.hook, event.member!!, ephemeral, false, cachedDoc))
             .setEphemeral(ephemeral)
             .queue()
     }
@@ -121,6 +121,7 @@ class SlashDocsController(private val commonDocsController: CommonDocsController
                 else -> buttonEvent.deferEdit().flatMap {
                     event.channel.sendMessage(
                         commonDocsController.getDocMessageData(
+                            event.hook,
                             buttonEvent.member!!,
                             ephemeral = false,
                             showCaller = false,

@@ -2,7 +2,8 @@ package com.freya02.bot.docs.index
 
 import com.freya02.bot.Data
 import com.freya02.bot.docs.DocEmbeds.toEmbed
-import com.freya02.bot.docs.metadata.SourceRootMetadata
+import com.freya02.bot.docs.metadata.parser.ImplementationMetadataWriter
+import com.freya02.bot.docs.metadata.parser.SourceRootMetadata
 import com.freya02.botcommands.api.core.db.Database
 import com.freya02.botcommands.api.core.db.Transaction
 import com.freya02.docs.ClassDocs
@@ -28,6 +29,14 @@ internal class DocIndexWriter(
     }
 
     suspend fun doReindex() = database.transactional {
+        sourceRootMetadata?.let { sourceRootMetadata ->
+            ImplementationMetadataWriter.reindex(sourceType, reindexData, sourceRootMetadata)
+        }
+
+        //This would clean type solvers stored in a static WeakHashMap
+        // But since it's a WeakHashMap, the GC should reclaim space if it becomes insufficient
+//        JavaParserFacade.clearInstances()
+
         val updatedSource = ClassDocs.getUpdatedSource(sourceType)
 
         preparedStatement("delete from doc where source_id = ?") {
@@ -45,7 +54,7 @@ internal class DocIndexWriter(
 
                 val classEmbed = toEmbed(classDoc).build()
                 val classEmbedJson = GSON.toJson(classEmbed)
-                val sourceLink = reindexData.getClassSourceUrl(classDoc)
+                val sourceLink = reindexData.getClassSourceUrlOrNull(classDoc)
 
                 val classDocId = insertDoc(DocType.CLASS, classDoc.className, classDoc, classEmbedJson, sourceLink)
                 insertSeeAlso(classDoc, classDocId)
@@ -118,7 +127,7 @@ internal class DocIndexWriter(
                     }
                 }
 
-                val methodClassSourceLink = reindexData.getClassSourceUrl(methodDoc.classDocs)
+                val methodClassSourceLink = reindexData.getClassSourceUrlOrNull(methodDoc.classDocs)
                 val methodLink = when (methodRange) {
                     null -> null
                     else -> "$methodClassSourceLink#L${methodRange.first}-L${methodRange.last}"
@@ -157,7 +166,7 @@ internal class DocIndexWriter(
                     }
                 }
 
-                val fieldClassSourceLink = reindexData.getClassSourceUrl(fieldDoc.classDocs)
+                val fieldClassSourceLink = reindexData.getClassSourceUrlOrNull(fieldDoc.classDocs)
                 val fieldLink = when (fieldRange) {
                     null -> null
                     else -> "$fieldClassSourceLink#L${fieldRange.first}-L${fieldRange.last}"

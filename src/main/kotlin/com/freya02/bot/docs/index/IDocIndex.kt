@@ -6,6 +6,10 @@ import com.freya02.bot.docs.cached.CachedField
 import com.freya02.bot.docs.cached.CachedMethod
 
 interface IDocIndex {
+    suspend fun hasClassDoc(className: String): Boolean
+
+    suspend fun hasMethodDoc(className: String, signature: String): Boolean
+
     suspend fun getClassDoc(className: String): CachedClass?
 
     suspend fun getMethodDoc(className: String, identifier: String): CachedMethod?

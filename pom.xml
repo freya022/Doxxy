@@ -6,7 +6,7 @@
 
     <groupId>com.freya02</groupId>
     <artifactId>DocsBot</artifactId>
-    <version>2.4</version>
+    <version>2.5</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -113,9 +113,9 @@
             <version>2.3.5</version>
         </dependency>
         <dependency>
-            <groupId>net.dv8tion</groupId>
+            <groupId>com.github.DV8FromTheWorld</groupId>
             <artifactId>JDA</artifactId>
-            <version>5.0.0-beta.4</version>
+            <version>3d0ae900fd</version>
             <exclusions>
                 <exclusion>
                     <groupId>club.minnced</groupId>
@@ -145,6 +145,11 @@
             <version>1.2.11</version>
         </dependency>
         <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-ext</artifactId>
+            <version>1.7.36</version>
+        </dependency>
+        <dependency>
             <groupId>io.github.microutils</groupId>
             <artifactId>kotlin-logging-jvm</artifactId>
             <version>2.1.23</version>
@@ -172,8 +177,8 @@
         </dependency>
         <dependency>
             <groupId>com.github.javaparser</groupId>
-            <artifactId>javaparser-core</artifactId>
-            <version>3.24.9</version>
+            <artifactId>javaparser-symbol-solver-core</artifactId>
+            <version>3.25.2</version>
         </dependency>
         <dependency>
             <groupId>com.palantir.javaformat</groupId>

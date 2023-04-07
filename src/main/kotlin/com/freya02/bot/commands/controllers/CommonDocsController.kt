@@ -2,21 +2,24 @@ package com.freya02.bot.commands.controllers
 
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers
+import com.freya02.bot.docs.cached.CachedClass
 import com.freya02.bot.docs.cached.CachedDoc
+import com.freya02.bot.docs.cached.CachedMethod
 import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocSuggestion
+import com.freya02.bot.utils.Emojis
 import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.components.data.InteractionConstraints
 import com.freya02.botcommands.api.core.annotations.BService
 import com.freya02.botcommands.api.pagination.menu.ChoiceMenuBuilder
 import com.freya02.botcommands.api.utils.ButtonContent
-import com.freya02.botcommands.api.utils.EmojiUtils
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.data.TargetType
 import dev.minn.jda.ktx.messages.Embed
 import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.entities.UserSnowflake
+import net.dv8tion.jda.api.interactions.InteractionHook
 import net.dv8tion.jda.api.interactions.components.ItemComponent
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
@@ -26,7 +29,11 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateRequest
 import kotlin.time.Duration.Companion.minutes
 
 @BService
-class CommonDocsController(private val componentsService: Components) {
+class CommonDocsController(
+    private val componentsService: Components,
+    private val classLinksController: ClassLinksController,
+    private val methodLinksController: MethodLinksController
+) {
     private val logger = KotlinLogging.logger { }
 
     fun buildDocSuggestionsMenu(docIndex: DocIndex, suggestions: List<DocSuggestion>, user: UserSnowflake, block: ChoiceMenuBuilder<DocSuggestion>.() -> Unit) =
@@ -54,7 +61,7 @@ class CommonDocsController(private val componentsService: Components) {
             .apply(block)
             .build()
 
-    fun getDocMessageData(caller: Member, ephemeral: Boolean, showCaller: Boolean, cachedDoc: CachedDoc): MessageCreateData {
+    fun getDocMessageData(originalHook: InteractionHook?, caller: Member, ephemeral: Boolean, showCaller: Boolean, cachedDoc: CachedDoc): MessageCreateData {
         return MessageCreateBuilder().apply {
             addEmbeds(cachedDoc.embed.let {
                 when {
@@ -66,18 +73,25 @@ class CommonDocsController(private val componentsService: Components) {
                 }
             })
             addDocsSeeAlso(cachedDoc)
-            addDocsActionRows(ephemeral, cachedDoc, caller)
+            addDocsActionRows(originalHook, ephemeral, cachedDoc, caller)
         }.build()
     }
 
     private fun MessageCreateRequest<*>.addDocsActionRows(
+        originalHook: InteractionHook?,
         ephemeral: Boolean,
         cachedDoc: CachedDoc,
         caller: UserSnowflake
     ) {
         val list: List<ItemComponent> = buildList {
-            if (!ephemeral) add(componentsService.messageDeleteButton(caller))
             cachedDoc.sourceLink?.let { sourceLink -> add(Button.link(sourceLink, "Source")) }
+
+            if (cachedDoc is CachedClass)
+                classLinksController.addCachedClassComponents(cachedDoc, originalHook, caller)
+            else if (cachedDoc is CachedMethod)
+                methodLinksController.addCachedMethodComponents(cachedDoc, originalHook, caller)
+
+            if (!ephemeral) add(componentsService.messageDeleteButton(caller))
         }
 
         if (list.isNotEmpty()) {
@@ -106,7 +120,7 @@ class CommonDocsController(private val componentsService: Components) {
                                 continue
                             }
 
-                            addOption(reference.text, optionValue, clipboardEmoji)
+                            addOption(reference.text, optionValue, Emojis.clipboard)
                         }
                     }
                 }
@@ -114,9 +128,5 @@ class CommonDocsController(private val componentsService: Components) {
                 addActionRow(selectMenu)
             }
         }
-    }
-
-    companion object {
-        private val clipboardEmoji = EmojiUtils.resolveJDAEmoji("clipboard")
     }
 }
