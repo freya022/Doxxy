@@ -87,8 +87,8 @@ class MethodLinksController(
                             val slashUserId = event.message.interaction!!.user.idLong
                             bindTo { selectEvent -> TODO() }
 
-                            val firstChar = methodsChunk.first().signature.first()
-                            val lastChar = methodsChunk.last().signature.first()
+                            val firstChar = methodsChunk.first().className.first()
+                            val lastChar = methodsChunk.last().className.first()
                             placeholder = "${decorations.placeholder} ($firstChar-$lastChar)"
 
                             methodsChunk.forEach {
