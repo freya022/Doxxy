@@ -19,6 +19,7 @@ import kotlin.io.path.deleteIfExists
 import kotlin.io.path.notExists
 import kotlin.math.log10
 import kotlin.streams.asSequence
+import kotlin.text.Typography.ellipsis
 
 object Utils {
     const val bcGuildId: Long = 848502702731165738
@@ -107,4 +108,9 @@ object Utils {
 
     val Number.digitAmount: Int
         get() = 1 + log10(this.toDouble()).toInt()
+
+    fun String.truncate(length: Int): String = when {
+        this.length > length -> this.take(length - 1) + ellipsis
+        else -> this
+    }
 }

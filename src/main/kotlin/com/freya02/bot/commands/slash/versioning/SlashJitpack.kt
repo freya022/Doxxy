@@ -2,6 +2,7 @@ package com.freya02.bot.commands.slash.versioning
 
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
 import com.freya02.bot.utils.Utils.isBCGuild
+import com.freya02.bot.utils.Utils.truncate
 import com.freya02.bot.versioning.LibraryType
 import com.freya02.bot.versioning.ScriptType
 import com.freya02.bot.versioning.github.GithubBranch
@@ -28,6 +29,7 @@ import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.utils.EmojiUtils
 import dev.minn.jda.ktx.interactions.components.link
 import dev.minn.jda.ktx.messages.Embed
+import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
@@ -60,8 +62,8 @@ class SlashJitpack(
         }
 
         val embed = Embed {
-            title =
-                "${buildToolType.humanName} dependencies for ${libraryType.displayString} @ PR #${pullRequest.number}"
+            title = "${buildToolType.humanName} dependencies for ${libraryType.displayString}: ${pullRequest.title}"
+                .truncate(MessageEmbed.TITLE_MAX_LENGTH)
             url = pullRequest.pullUrl
 
             field("PR Link", pullRequest.pullUrl, false)
