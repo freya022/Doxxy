@@ -103,7 +103,7 @@ internal class ImplementationMetadataWriter private constructor(
 
                 executeQuery(
                     dbClasses[method.owner],
-                    method.type,
+                    method.type.id,
                     method.name,
                     method.signature,
                     methodSourceUrl
