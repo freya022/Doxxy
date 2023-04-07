@@ -17,6 +17,7 @@ import dev.minn.jda.ktx.messages.reply_
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.interactions.InteractionHook
 import net.dv8tion.jda.api.interactions.components.ItemComponent
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
@@ -35,7 +36,7 @@ class MethodLinksController(
     private val commonDocsController: CommonDocsController by serviceContainer.lazy()
 
     context(MutableList<ItemComponent>)
-    fun addCachedMethodComponents(cachedMethod: CachedMethod, originalHook: InteractionHook?) {
+    fun addCachedMethodComponents(cachedMethod: CachedMethod, originalHook: InteractionHook?, caller: UserSnowflake) {
         val index = docIndexMap[cachedMethod.source]!!
         val method = runBlocking {
             index.implementationIndex.getMethod(cachedMethod.className, cachedMethod.signature)
@@ -46,7 +47,7 @@ class MethodLinksController(
                 val decorations = method.methodType.implementationDecorations
                 componentsService.ephemeralButton(ButtonStyle.SECONDARY, decorations.label, decorations.emoji) {
                     timeout(5.minutes)
-                    bindTo { sendMethodLinks(it, originalHook, index, method, method.getImplementations(), decorations) }
+                    bindTo { sendMethodLinks(it, originalHook, caller, index, method, method.getImplementations(), decorations) }
                 }.also { add(it) }
             }
 
@@ -54,7 +55,7 @@ class MethodLinksController(
                 val decorations = method.methodType.overriddenMethodsDecorations
                 componentsService.ephemeralButton(ButtonStyle.SECONDARY, decorations.label, decorations.emoji) {
                     timeout(5.minutes)
-                    bindTo { sendMethodLinks(it, originalHook, index, method, method.getOverriddenMethods(), decorations) }
+                    bindTo { sendMethodLinks(it, originalHook, caller, index, method, method.getOverriddenMethods(), decorations) }
                 }.also { add(it) }
             }
         } else {
@@ -65,6 +66,7 @@ class MethodLinksController(
     private suspend fun sendMethodLinks(
         event: ButtonEvent,
         originalHook: InteractionHook?,
+        caller: UserSnowflake,
         index: DocIndex,
         method: ImplementationIndex.Method,
         methods: List<ImplementationIndex.Method>,
@@ -95,8 +97,7 @@ class MethodLinksController(
                                 timeout(5.minutes)
                             }
 
-                            val slashUserId = event.message.interaction!!.user.idLong
-                            bindTo { selectEvent -> onMethodLinkSelect(selectEvent, slashUserId, index, originalHook, event) }
+                            bindTo { selectEvent -> onMethodLinkSelect(selectEvent, caller, index, originalHook, event) }
 
                             val firstChar = methodsChunk.first().className.first()
                             val lastChar = methodsChunk.last().className.first()
@@ -114,13 +115,13 @@ class MethodLinksController(
 
     private suspend fun onMethodLinkSelect(
         selectEvent: StringSelectEvent,
-        slashUserId: Long,
+        caller: UserSnowflake,
         index: DocIndex,
         originalHook: InteractionHook?, //probably from /docs or similar
         buttonEvent: ButtonEvent
     ) {
         val selectedQualifiedMethodSignature = selectEvent.values.single()
-        val isSameCaller = selectEvent.user.idLong == slashUserId
+        val isSameCaller = selectEvent.user.idLong == caller.idLong
         val cachedMethod = index.getMethodDoc(selectedQualifiedMethodSignature)
             ?: return selectEvent.reply_("This method no longer exists", ephemeral = true).queue()
 

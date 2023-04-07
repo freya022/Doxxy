@@ -17,6 +17,7 @@ import dev.minn.jda.ktx.messages.reply_
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.interactions.InteractionHook
 import net.dv8tion.jda.api.interactions.components.ItemComponent
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
@@ -35,7 +36,7 @@ class ClassLinksController(
     private val commonDocsController: CommonDocsController by serviceContainer.lazy()
 
     context(MutableList<ItemComponent>)
-    fun addCachedClassComponents(cachedDoc: CachedClass, originalHook: InteractionHook?) {
+    fun addCachedClassComponents(cachedDoc: CachedClass, originalHook: InteractionHook?, caller: UserSnowflake) {
         val index = docIndexMap[cachedDoc.source]!!
         val clazz = runBlocking {
             index.implementationIndex.getClass(cachedDoc.name)
@@ -46,7 +47,7 @@ class ClassLinksController(
                 val decorations = clazz.classType.subDecorations
                 componentsService.ephemeralButton(ButtonStyle.SECONDARY, decorations.label, decorations.emoji) {
                     timeout(5.minutes)
-                    bindTo { sendClassLinks(it, originalHook, index, clazz, clazz.getSubclasses(), decorations) }
+                    bindTo { sendClassLinks(it, originalHook, caller, index, clazz, clazz.getSubclasses(), decorations) }
                 }.also { add(it) }
             }
 
@@ -54,7 +55,7 @@ class ClassLinksController(
                 val decorations = clazz.classType.superDecorations
                 componentsService.ephemeralButton(ButtonStyle.SECONDARY, decorations.label, decorations.emoji) {
                     timeout(5.minutes)
-                    bindTo { sendClassLinks(it, originalHook, index, clazz, clazz.getSuperclasses(), decorations) }
+                    bindTo { sendClassLinks(it, originalHook, caller, index, clazz, clazz.getSuperclasses(), decorations) }
                 }.also { add(it) }
             }
         } else {
@@ -65,6 +66,7 @@ class ClassLinksController(
     private suspend fun sendClassLinks(
         event: ButtonEvent,
         originalHook: InteractionHook?,
+        caller: UserSnowflake,
         index: DocIndex,
         clazz: ImplementationIndex.Class,
         classes: List<ImplementationIndex.Class>,
@@ -95,10 +97,9 @@ class ClassLinksController(
                                 timeout(5.minutes)
                             }
 
-                            val slashUserId = event.message.interaction!!.user.idLong
                             bindTo { selectEvent -> onClassLinkSelect(
                                 selectEvent,
-                                slashUserId,
+                                caller,
                                 index,
                                 originalHook,
                                 event
@@ -119,13 +120,13 @@ class ClassLinksController(
 
     private suspend fun onClassLinkSelect(
         selectEvent: StringSelectEvent,
-        slashUserId: Long,
+        caller: UserSnowflake,
         index: DocIndex,
         originalHook: InteractionHook?, //probably from /docs or similar
         buttonEvent: ButtonEvent
     ) {
         val selectedClassName = selectEvent.values.single()
-        val isSameCaller = selectEvent.user.idLong == slashUserId
+        val isSameCaller = selectEvent.user.idLong == caller.idLong
         val cachedDoc = index.getClassDoc(selectedClassName)
             ?: return selectEvent.reply_("This class no longer exists", ephemeral = true).queue()
 
