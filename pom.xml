@@ -115,7 +115,7 @@
         <dependency>
             <groupId>com.github.DV8FromTheWorld</groupId>
             <artifactId>JDA</artifactId>
-            <version>83d370d678</version>
+            <version>3d0ae900fd</version>
             <exclusions>
                 <exclusion>
                     <groupId>club.minnced</groupId>
@@ -176,9 +176,9 @@
             <version>4a18f84801</version>
         </dependency>
         <dependency>
-            <groupId>com.github.freya022.javaparser</groupId>
+            <groupId>com.github.javaparser</groupId>
             <artifactId>javaparser-symbol-solver-core</artifactId>
-            <version>38699db7b4</version>
+            <version>3.25.2</version>
         </dependency>
         <dependency>
             <groupId>com.palantir.javaformat</groupId>
