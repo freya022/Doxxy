@@ -8,10 +8,12 @@ import com.freya02.bot.docs.metadata.MethodType
 import com.freya02.bot.utils.joinLengthyString
 import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.components.event.ButtonEvent
+import com.freya02.botcommands.api.components.event.StringSelectEvent
 import com.freya02.botcommands.api.core.ServiceContainer
 import com.freya02.botcommands.api.core.annotations.BService
 import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.MessageCreate
+import dev.minn.jda.ktx.messages.reply_
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.MessageEmbed
@@ -19,6 +21,7 @@ import net.dv8tion.jda.api.interactions.InteractionHook
 import net.dv8tion.jda.api.interactions.components.ItemComponent
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
+import net.dv8tion.jda.api.utils.messages.MessageEditData
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.minutes
 
@@ -85,7 +88,7 @@ class MethodLinksController(
                             }
 
                             val slashUserId = event.message.interaction!!.user.idLong
-                            bindTo { selectEvent -> TODO() }
+                            bindTo { selectEvent -> onMethodLinkSelect(selectEvent, slashUserId, index, originalHook, event) }
 
                             val firstChar = methodsChunk.first().className.first()
                             val lastChar = methodsChunk.last().className.first()
@@ -99,5 +102,37 @@ class MethodLinksController(
                     }
             }
         }.also { event.reply(it).setEphemeral(true).queue() }
+    }
+
+    private suspend fun onMethodLinkSelect(
+        selectEvent: StringSelectEvent,
+        slashUserId: Long,
+        index: DocIndex,
+        originalHook: InteractionHook?, //probably from /docs or similar
+        buttonEvent: ButtonEvent
+    ) {
+        val selectedQualifiedMethodSignature = selectEvent.values.single()
+        val isSameCaller = selectEvent.user.idLong == slashUserId
+        val cachedMethod = index.getMethodDoc(selectedQualifiedMethodSignature)
+            ?: return selectEvent.reply_("This method no longer exists", ephemeral = true).queue()
+
+        val createData = commonDocsController.getDocMessageData(
+            originalHook,
+            selectEvent.member!!,
+            ephemeral = !isSameCaller,
+            showCaller = false,
+            cachedMethod
+        )
+
+        if (isSameCaller) {
+            selectEvent.deferEdit().queue()
+            if (originalHook != null) {
+                originalHook.editOriginal(MessageEditData.fromCreateData(createData)).queue()
+            } else {
+                buttonEvent.message.editMessage(MessageEditData.fromCreateData(createData)).queue()
+            }
+        } else {
+            selectEvent.reply(createData).setEphemeral(true).queue()
+        }
     }
 }
