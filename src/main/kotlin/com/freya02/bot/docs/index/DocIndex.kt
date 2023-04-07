@@ -26,8 +26,31 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
     val implementationIndex = ImplementationIndex(this, database)
 
     override suspend fun hasClassDoc(className: String): Boolean {
-        return database.preparedStatement("select * from doc where classname = ? limit 1", readOnly = true) {
-            executeQuery(*arrayOf(className)).readOnce() != null
+        return database.preparedStatement(
+            """
+                select *
+                from doc
+                where source_id = ?
+                  and classname = ?
+                limit 1
+            """.trimIndent(), readOnly = true
+        ) {
+            executeQuery(sourceType.id, className).readOnce() != null
+        }
+    }
+
+    override suspend fun hasMethodDoc(className: String, signature: String): Boolean {
+        return database.preparedStatement(
+            """
+                select *
+                from doc
+                where source_id = ?
+                  and classname = ?
+                  and identifier = ?
+                limit 1
+            """.trimIndent(), readOnly = true
+        ) {
+            executeQuery(sourceType.id, className, signature).readOnce() != null
         }
     }
 

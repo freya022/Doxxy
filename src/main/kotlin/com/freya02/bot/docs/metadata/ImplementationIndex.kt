@@ -30,7 +30,7 @@ class ImplementationIndex(val docIndex: DocIndex, private val database: Database
         constructor(result: DBResult) : this(Class(result), MethodType.fromId(result["method_type"]), result["signature"], result["method_source_link"])
 
         suspend inline fun getImplementations() = getImplementations(clazz.className, signature)
-        suspend inline fun hasMethodDoc() = index.docIndex.getMethodDoc(clazz.className, signature) != null //TODO optimize
+        suspend inline fun hasMethodDoc() = index.docIndex.hasMethodDoc(clazz.className, signature)
     }
 
     suspend fun getClass(className: FullSimpleClassName): Class? {
