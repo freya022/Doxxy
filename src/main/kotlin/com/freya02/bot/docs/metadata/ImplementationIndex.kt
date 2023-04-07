@@ -27,7 +27,7 @@ class ImplementationIndex(val docIndex: DocIndex, private val database: Database
         val index: ImplementationIndex
             get() = this@ImplementationIndex
 
-        constructor(result: DBResult) : this(Class(result), MethodType.fromId(result["method_type"]), result["signature"], result["source_link"])
+        constructor(result: DBResult) : this(Class(result), MethodType.fromId(result["method_type"]), result["signature"], result["method_source_link"])
 
         suspend inline fun getImplementations() = getImplementations(clazz.className, signature)
         suspend inline fun hasMethodDoc() = index.docIndex.getMethodDoc(clazz.className, signature) != null //TODO optimize
@@ -54,7 +54,7 @@ class ImplementationIndex(val docIndex: DocIndex, private val database: Database
                        c.source_link,
                        m.method_type,
                        m.signature,
-                       m.source_link
+                       m.source_link as method_source_link
                 from class c
                          join method m on m.class_id = c.id
                 where c.source_id = ?
@@ -104,7 +104,7 @@ class ImplementationIndex(val docIndex: DocIndex, private val database: Database
                        implementation_owner.source_link,
                        implementation.method_type,
                        implementation.signature,
-                       implementation.source_link
+                       implementation.source_link as method_source_link
                 from implementation impl
                          join class superclass on impl.class_id = superclass.id
                          join method implementation
