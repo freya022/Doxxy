@@ -10,17 +10,20 @@ import java.util.*
 enum class MethodType(
     val id: Int,
     val emoji: Emoji,
-    val implementationDecorations: Decorations
+    val implementationDecorations: Decorations,
+    val overriddenMethodsDecorations: Decorations
 ) {
     DECLARATION(
         1,
         Emojis.methodDeclaration,
-        Decorations.fromLocalizations(Emojis.hasImplementations, "declaration", "impl")
+        Decorations.fromLocalizations(Emojis.hasImplementations, "declaration", "impl"),
+        Decorations.fromLocalizations(Emojis.hasOverriddenMethods, "declaration", "overriddenMethods")
     ),
     DEFINITION(
         2,
         Emojis.methodDefinition,
-        Decorations.fromLocalizations(Emojis.hasOverrides, "definition", "impl")
+        Decorations.fromLocalizations(Emojis.hasOverrides, "definition", "impl"),
+        Decorations.fromLocalizations(Emojis.hasOverriddenMethods, "definition", "overriddenMethods")
     );
 
     class Decorations private constructor(val emoji: EmojiUnion, val label: String, val title: String, val placeholder: String) {

@@ -67,8 +67,9 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         val (docId, embed, javadocLink, sourceLink) = findDoc(DocType.METHOD, className, identifier) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
         val implementations = implementationIndex.getImplementations(className, identifier)
+        val overriddenMethods = implementationIndex.getOverriddenMethods(className, identifier)
 
-        return CachedMethod(sourceType, className, identifier, embed, seeAlsoReferences, javadocLink, sourceLink, implementations)
+        return CachedMethod(sourceType, className, identifier, embed, seeAlsoReferences, javadocLink, sourceLink, implementations, overriddenMethods)
     }
 
     override suspend fun getFieldDoc(className: String, fieldName: String): CachedField? {

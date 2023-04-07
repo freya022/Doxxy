@@ -27,10 +27,10 @@
   },
   "method_type_decorations": {
     "declaration": {
-      "super": {
-        "links_button_label": "Supermethods",
-        "links_embed_title": "Internal supermethods",
-        "links_select_placeholder": "Select a supermethod"
+      "overriddenMethods": {
+        "links_button_label": "Overridden methods",
+        "links_embed_title": "Internal overridden methods",
+        "links_select_placeholder": "Select an overridden method"
       },
       "impl": {
         "links_button_label": "Implementations",
@@ -39,10 +39,10 @@
       }
     },
     "definition": {
-      "super": {
-        "links_button_label": "Supermethods",
-        "links_embed_title": "Internal supermethods",
-        "links_select_placeholder": "Select a supermethod"
+      "overriddenMethods": {
+        "links_button_label": "Overridden methods",
+        "links_embed_title": "Internal overridden methods",
+        "links_select_placeholder": "Select an overridden method"
       },
       "impl": {
         "links_button_label": "Overrides",

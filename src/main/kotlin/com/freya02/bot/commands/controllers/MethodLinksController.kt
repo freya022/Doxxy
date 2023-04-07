@@ -49,6 +49,14 @@ class MethodLinksController(
                     bindTo { sendMethodLinks(it, originalHook, index, method, method.getImplementations(), decorations) }
                 }.also { add(it) }
             }
+
+            if (cachedMethod.overriddenMethods.isNotEmpty()) {
+                val decorations = method.methodType.overriddenMethodsDecorations
+                componentsService.ephemeralButton(ButtonStyle.SECONDARY, decorations.label, decorations.emoji) {
+                    timeout(5.minutes)
+                    bindTo { sendMethodLinks(it, originalHook, index, method, method.getOverriddenMethods(), decorations) }
+                }.also { add(it) }
+            }
         } else {
             logger.trace("Found no metadata for ${cachedMethod.className}#${cachedMethod.signature}")
         }

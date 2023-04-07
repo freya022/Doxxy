@@ -14,7 +14,11 @@ class ImplementationIndex(val docIndex: DocIndex, private val database: Database
         val index: ImplementationIndex
             get() = this@ImplementationIndex
 
-        constructor(result: DBResult) : this(result["class_name"], ClassType.fromId(result["class_type"]), result["source_link"])
+        constructor(result: DBResult) : this(
+            result["class_name"],
+            ClassType.fromId(result["class_type"]),
+            result["source_link"]
+        )
 
         suspend inline fun getSubclasses() = getSubclasses(className)
         suspend inline fun getSuperclasses() = getSuperclasses(className)
@@ -27,9 +31,15 @@ class ImplementationIndex(val docIndex: DocIndex, private val database: Database
         val index: ImplementationIndex
             get() = this@ImplementationIndex
 
-        constructor(result: DBResult) : this(Class(result), MethodType.fromId(result["method_type"]), result["signature"], result["method_source_link"])
+        constructor(result: DBResult) : this(
+            Class(result),
+            MethodType.fromId(result["method_type"]),
+            result["signature"],
+            result["method_source_link"]
+        )
 
         suspend inline fun getImplementations() = getImplementations(clazz.className, signature)
+        suspend inline fun getOverriddenMethods() = getOverriddenMethods(clazz.className, signature)
         suspend inline fun hasMethodDoc() = index.docIndex.hasMethodDoc(clazz.className, signature)
     }
 
@@ -114,6 +124,29 @@ class ImplementationIndex(val docIndex: DocIndex, private val database: Database
                 where superclass.source_id = ?
                   and superclass.class_name = ?
                   and implementation.signature = ?
+            """.trimIndent(), readOnly = true
+        ) {
+            executeQuery(sourceType.id, className, methodSignature).map { Method(it) }
+        }
+    }
+
+    suspend fun getOverriddenMethods(className: FullSimpleClassName, methodSignature: String): List<Method> {
+        return database.preparedStatement(
+            """
+                select c.class_name,
+                       c.class_type,
+                       c.source_link,
+                       m.method_type,
+                       m.signature,
+                       m.source_link as method_source_link
+                from implementation i
+                         join method impl on i.implementation_id = impl.id
+                         join class impl_owner on impl.class_id = impl_owner.id
+                         join method m on i.method_id = m.id
+                         join class c on m.class_id = c.id
+                where impl_owner.source_id = ?
+                  and impl_owner.class_name = ?
+                  and impl.signature = ?
             """.trimIndent(), readOnly = true
         ) {
             executeQuery(sourceType.id, className, methodSignature).map { Method(it) }

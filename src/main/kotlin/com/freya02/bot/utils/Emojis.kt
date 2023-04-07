@@ -8,6 +8,7 @@ object Emojis { //TODO find remaining EmojiUtils usages
 
     val hasImplementations = Emoji.fromFormatted("<:HasImplementations:1092833993612861481>")
     val hasOverrides = Emoji.fromFormatted("<:HasOverrides:1092833995076685886>")
+    val hasOverriddenMethods = Emoji.fromFormatted("<:implementingMethod:1093913243329773679>")
     val hasSuperclasses = Emoji.fromFormatted("<:HasSuper:1092833997517758506>")
     val hasSuperinterfaces = Emoji.fromFormatted("<:HasSuperinterfaces:1092846933980225596>")
 
