@@ -13,6 +13,7 @@ import com.freya02.docs.DocsSession
 import com.freya02.docs.data.BaseDoc
 import com.freya02.docs.data.ClassDetailType
 import com.freya02.docs.data.ClassDoc
+import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade
 import com.google.gson.GsonBuilder
 import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.MessageEmbed
@@ -35,7 +36,7 @@ internal class DocIndexWriter(
 
         //This would clean type solvers stored in a static WeakHashMap
         // But since it's a WeakHashMap, the GC should reclaim space if it becomes insufficient
-//        JavaParserFacade.clearInstances()
+        JavaParserFacade.clearInstances()
 
         val updatedSource = ClassDocs.getUpdatedSource(sourceType)
 
