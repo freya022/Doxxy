@@ -15,7 +15,10 @@ inline fun <R> createProfiler(name: String, block: Profiler.() -> R): R {
     return Profiler(name).apply {
         logger = KotlinLogging.logger { }
     }.let { profiler ->
-        profiler.block().also { profiler.stop().log() }
+        profiler.block().also {
+            profiler.stop()
+            if (profiler.logger.isTraceEnabled) profiler.log()
+        }
     }
 }
 
