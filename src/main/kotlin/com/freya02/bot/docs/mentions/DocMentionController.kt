@@ -71,7 +71,7 @@ class DocMentionController(
                                 )
                             }
                             .let { similarIdentifiers -> // If the token has been fully matched then only keep it and it's overloads
-                                when (similarIdentifiers.first().similarity) {
+                                when (similarIdentifiers.firstOrNull()?.similarity) {
                                     1.0f -> similarIdentifiers.filter { it.similarity == 1.0f }
                                     else -> similarIdentifiers
                                 }
