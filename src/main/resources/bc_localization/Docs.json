@@ -24,5 +24,31 @@
         "links_select_placeholder": "Select an implementation"
       }
     }
+  },
+  "method_type_decorations": {
+    "declaration": {
+      "super": {
+        "links_button_label": "Supermethods",
+        "links_embed_title": "Internal supermethods",
+        "links_select_placeholder": "Select a supermethod"
+      },
+      "impl": {
+        "links_button_label": "Implementations",
+        "links_embed_title": "Internal implementations",
+        "links_select_placeholder": "Select an implementation"
+      }
+    },
+    "definition": {
+      "super": {
+        "links_button_label": "Supermethods",
+        "links_embed_title": "Internal supermethods",
+        "links_select_placeholder": "Select a supermethod"
+      },
+      "impl": {
+        "links_button_label": "Overrides",
+        "links_embed_title": "Internal overrides",
+        "links_select_placeholder": "Select an override"
+      }
+    }
   }
 }

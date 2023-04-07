@@ -3,9 +3,8 @@ package com.freya02.bot.commands.controllers
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.cached.CachedMethod
 import com.freya02.bot.docs.index.DocIndex
-import com.freya02.bot.docs.metadata.ClassType
 import com.freya02.bot.docs.metadata.ImplementationIndex
-import com.freya02.bot.utils.Emojis
+import com.freya02.bot.docs.metadata.MethodType
 import com.freya02.bot.utils.joinLengthyString
 import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.components.event.ButtonEvent
@@ -41,10 +40,10 @@ class MethodLinksController(
 
         if (method != null) {
             if (cachedMethod.implementations.isNotEmpty()) {
-                componentsService.ephemeralButton(ButtonStyle.SECONDARY, "Implementations", Emojis.hasImplementations) {
+                val decorations = method.methodType.implementationDecorations
+                componentsService.ephemeralButton(ButtonStyle.SECONDARY, decorations.label, decorations.emoji) {
                     timeout(5.minutes)
-                    //TODO figure out what decorations are needed
-                    bindTo { sendClassLinks(it, originalHook, index, method, method.getImplementations(), decorations) }
+                    bindTo { sendMethodLinks(it, originalHook, index, method, method.getImplementations(), decorations) }
                 }.also { add(it) }
             }
         } else {
@@ -52,13 +51,13 @@ class MethodLinksController(
         }
     }
 
-    private suspend fun sendClassLinks(
+    private suspend fun sendMethodLinks(
         event: ButtonEvent,
         originalHook: InteractionHook?,
         index: DocIndex,
         method: ImplementationIndex.Method,
         methods: List<ImplementationIndex.Method>,
-        decorations: ClassType.Decorations
+        decorations: MethodType.Decorations
     ) {
         MessageCreate {
             val (apiMethods, internalMethods) = methods.sortedBy { it.className }.partition { it.hasMethodDoc() }
