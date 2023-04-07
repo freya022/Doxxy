@@ -18,10 +18,12 @@ import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.UserSnowflake
+import net.dv8tion.jda.api.exceptions.ErrorHandler
 import net.dv8tion.jda.api.interactions.InteractionHook
 import net.dv8tion.jda.api.interactions.components.ItemComponent
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
+import net.dv8tion.jda.api.requests.ErrorResponse
 import net.dv8tion.jda.api.utils.messages.MessageEditData
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.minutes
@@ -138,7 +140,8 @@ class MethodLinksController(
             if (originalHook != null) {
                 originalHook.editOriginal(MessageEditData.fromCreateData(createData)).queue()
             } else {
-                buttonEvent.message.editMessage(MessageEditData.fromCreateData(createData)).queue()
+                buttonEvent.message.editMessage(MessageEditData.fromCreateData(createData))
+                    .queue(null, ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE))
             }
         } else {
             selectEvent.reply(createData).setEphemeral(true).queue()
