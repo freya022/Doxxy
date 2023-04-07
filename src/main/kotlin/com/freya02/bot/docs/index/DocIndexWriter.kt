@@ -38,6 +38,8 @@ internal class DocIndexWriter(
         // But since it's a WeakHashMap, the GC should reclaim space if it becomes insufficient
         JavaParserFacade.clearInstances()
 
+        System.gc() //600 MB -> 30 MB
+
         val updatedSource = ClassDocs.getUpdatedSource(sourceType)
 
         preparedStatement("delete from doc where source_id = ?") {
