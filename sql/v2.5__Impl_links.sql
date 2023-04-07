@@ -1,8 +1,6 @@
 update doxxy_version
-set version = '2.4' --TODO change
+set version = '2.5'
 where one_row = true;
-
-drop table if exists class, subclass, method, implementation cascade;
 
 -- Table containing any class
 create table class
