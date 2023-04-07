@@ -57,7 +57,8 @@ internal class ImplementationMetadataWriter private constructor(
         nextStep("Add implementations") { addImplementations(classes, dbClasses, dbMethods) }
     }
 
-    private suspend fun Transaction.addClasses(classes: Collection<ImplementationMetadata.Class>): Map<ImplementationMetadata.Class, Int> {
+    context(Transaction)
+    private suspend fun addClasses(classes: Collection<ImplementationMetadata.Class>): Map<ImplementationMetadata.Class, Int> {
         return classes.associateWith {
             preparedStatement(
                 """
@@ -72,7 +73,8 @@ internal class ImplementationMetadataWriter private constructor(
         }
     }
 
-    private suspend fun Transaction.addSubclasses(
+    context(Transaction)
+    private suspend fun addSubclasses(
         classes: Collection<ImplementationMetadata.Class>,
         dbClasses: Map<ImplementationMetadata.Class, Int>
     ) {
@@ -87,7 +89,8 @@ internal class ImplementationMetadataWriter private constructor(
         }
     }
 
-    private suspend fun Transaction.addMethods(
+    context(Transaction)
+    private suspend fun addMethods(
         classes: Collection<ImplementationMetadata.Class>,
         dbClasses: Map<ImplementationMetadata.Class, Int>
     ): Map<ImplementationMetadata.Method, Int> {
@@ -112,7 +115,8 @@ internal class ImplementationMetadataWriter private constructor(
         }
     }
 
-    private suspend fun Transaction.addImplementations(
+    context(Transaction)
+    private suspend fun addImplementations(
         classes: Collection<ImplementationMetadata.Class>,
         dbClasses: Map<ImplementationMetadata.Class, Int>,
         dbMethods: Map<ImplementationMetadata.Method, Int>
