@@ -12,6 +12,7 @@ import mu.KotlinLogging
 class ImplementationMetadataParser private constructor() {
     private val cache = JavaParserCache()
 
+    private val classDeclarations: MutableMap<String, ResolvedReferenceTypeDeclaration> = hashMapOf()
     val classes: MutableMap<String, ImplementationMetadata.Class> = hashMapOf()
 
     fun parse(compilationUnits: List<CompilationUnit>): ImplementationMetadata {
@@ -43,7 +44,7 @@ class ImplementationMetadataParser private constructor() {
     // take each subclass's methods and check signature compared to the superclass method (which are lower in the Set<MethodUsage>)
     private fun parseMethodImplementations() {
         //On each class, take the allMethods Set, see if a compatible method exists for each method lower in the Set
-        classes.values.map { it.declaration }.forEach { subclass ->
+        classDeclarations.values.forEach { subclass ->
             try {
                 val allMethodsReversed = subclass.allMethodsOrdered
                     //Only keep public methods, interface methods have no access modifier but are implicitly public
@@ -80,6 +81,7 @@ class ImplementationMetadataParser private constructor() {
 
     private val ResolvedReferenceTypeDeclaration.metadata: ImplementationMetadata.Class
         get() = classes.getOrPut(this.cachedQualifiedName) {
+            classDeclarations[this.cachedQualifiedName] = this
             ImplementationMetadata.Class(this, this.cachedQualifiedName)
         }
 

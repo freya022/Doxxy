@@ -9,7 +9,7 @@ class ImplementationMetadata(val classes: Map<String, Class>) {
     fun getClassByQualifiedName(qualifiedName: String) = classes[qualifiedName]
     fun getClassBySimpleName(simpleName: String) = classes.entries.first { it.key.endsWith(".$simpleName") }.value
 
-    class Class(val declaration: ResolvedReferenceTypeDeclaration, val qualifiedName: String) {
+    class Class(declaration: ResolvedReferenceTypeDeclaration, val qualifiedName: String) {
         val classType = ClassType.fromDeclaration(declaration)
         val packageName: PackageName
         val name: FullSimpleClassName
