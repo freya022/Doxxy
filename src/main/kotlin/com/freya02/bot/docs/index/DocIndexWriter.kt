@@ -29,52 +29,54 @@ internal class DocIndexWriter(
         SourceRootMetadata(Data.javadocsPath.resolve(docsFolderName))
     }
 
-    suspend fun doReindex() = database.transactional {
-        sourceRootMetadata?.let { sourceRootMetadata ->
-            ImplementationMetadataWriter.reindex(sourceType, reindexData, sourceRootMetadata)
-        }
-
-        //This would clean type solvers stored in a static WeakHashMap
-        // But since it's a WeakHashMap, the GC should reclaim space if it becomes insufficient
-        JavaParserFacade.clearInstances()
-
-        System.gc() //600 MB -> 30 MB
-
+    suspend fun doReindex() {
         val updatedSource = ClassDocs.getUpdatedSource(sourceType)
 
-        preparedStatement("delete from doc where source_id = ?") {
-            executeUpdate(sourceType.id)
-        }
-
-        for ((className, classUrl) in updatedSource.getSimpleNameToUrlMap()) {
-            try {
-                val classDoc = docsSession.retrieveDoc(classUrl)
-
-                if (classDoc == null) {
-                    logger.warn("Unable to get docs of '${className}' at '${classUrl}', javadoc version or source type may be incorrect")
-                    continue
-                }
-
-                val classEmbed = toEmbed(classDoc).build()
-                val classEmbedJson = GSON.toJson(classEmbed)
-                val sourceLink = reindexData.getClassSourceUrlOrNull(classDoc)
-
-                val classDocId = insertDoc(DocType.CLASS, classDoc.className, classDoc, classEmbedJson, sourceLink)
-                insertSeeAlso(classDoc, classDocId)
-
-                insertMethodDocs(classDoc, sourceLink)
-                insertFieldDocs(classDoc, sourceLink)
-            } catch (e: Exception) {
-                throw RuntimeException("An exception occurred while reading the docs of '$className' at '$classUrl'", e)
+        database.transactional {
+            sourceRootMetadata?.let { sourceRootMetadata ->
+                ImplementationMetadataWriter.reindex(sourceType, reindexData, sourceRootMetadata)
             }
-        }
 
-        preparedStatement("refresh materialized view doc_view") {
-            executeUpdate(*emptyArray())
-        }
-    }.also {
-        database.preparedStatement("vacuum analyse") {
-            executeUpdate(*emptyArray())
+            //This would clean type solvers stored in a static WeakHashMap
+            // But since it's a WeakHashMap, the GC should reclaim space if it becomes insufficient
+            JavaParserFacade.clearInstances()
+
+            System.gc() //600 MB -> 30 MB
+
+            preparedStatement("delete from doc where source_id = ?") {
+                executeUpdate(sourceType.id)
+            }
+
+            for ((className, classUrl) in updatedSource.getSimpleNameToUrlMap()) {
+                try {
+                    val classDoc = docsSession.retrieveDoc(classUrl)
+
+                    if (classDoc == null) {
+                        logger.warn("Unable to get docs of '${className}' at '${classUrl}', javadoc version or source type may be incorrect")
+                        continue
+                    }
+
+                    val classEmbed = toEmbed(classDoc).build()
+                    val classEmbedJson = GSON.toJson(classEmbed)
+                    val sourceLink = reindexData.getClassSourceUrlOrNull(classDoc)
+
+                    val classDocId = insertDoc(DocType.CLASS, classDoc.className, classDoc, classEmbedJson, sourceLink)
+                    insertSeeAlso(classDoc, classDocId)
+
+                    insertMethodDocs(classDoc, sourceLink)
+                    insertFieldDocs(classDoc, sourceLink)
+                } catch (e: Exception) {
+                    throw RuntimeException("An exception occurred while reading the docs of '$className' at '$classUrl'", e)
+                }
+            }
+
+            preparedStatement("refresh materialized view doc_view") {
+                executeUpdate(*emptyArray())
+            }
+        }.also {
+            database.preparedStatement("vacuum analyse") {
+                executeUpdate(*emptyArray())
+            }
         }
     }
 
