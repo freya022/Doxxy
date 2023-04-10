@@ -126,7 +126,7 @@
         <dependency>
             <groupId>io.github.freya022</groupId>
             <artifactId>BotCommands</artifactId>
-            <version>4215492cd2</version>
+            <version>83622bca08</version>
         </dependency>
         <dependency>
             <groupId>com.github.minndevelopment</groupId>
@@ -189,11 +189,6 @@
             <groupId>com.palantir.javaformat</groupId>
             <artifactId>palantir-java-format</artifactId>
             <version>2.28.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-scripting-jsr223</artifactId>
-            <version>${kotlin.version}</version>
         </dependency>
         <dependency>
             <groupId>org.javassist</groupId>

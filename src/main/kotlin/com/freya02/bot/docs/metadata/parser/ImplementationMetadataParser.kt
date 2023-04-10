@@ -102,7 +102,7 @@ class ImplementationMetadataParser private constructor() {
                 methods.add(methodDeclaration)
             }
 
-            for (ancestor in getAllAncestorsOptimized(cache)) {
+            for (ancestor in allAncestors) {
                 if (ancestor.isJavaLangObject) continue
                 methods += ancestor.cachedLightDeclaredMethods
             }
