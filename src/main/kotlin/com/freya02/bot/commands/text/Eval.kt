@@ -19,6 +19,7 @@ import dev.minn.jda.ktx.interactions.components.asDisabled
 import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.MessageCreate
 import kotlinx.coroutines.*
+import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
@@ -34,6 +35,7 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import net.dv8tion.jda.api.utils.messages.MessageEditData
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import java.util.concurrent.Executors
+import java.util.function.Consumer
 import javax.script.ScriptContext
 import javax.script.ScriptEngineManager
 import javax.script.SimpleBindings
@@ -59,9 +61,21 @@ class Eval(
 
     private val states: MutableMap<OriginalMessageId, EvalState> = hashMapOf()
 
+    override fun getDetailedDescription(): Consumer<EmbedBuilder> = Consumer {
+        it.setAuthor("${jda.selfUser.name} - 'eval' command", null, jda.selfUser.effectiveAvatarUrl)
+
+        it.appendDescription(
+            """
+                **Tip:** You can put your code in code blocks
+                **Tip:** You can reply to an existing message to have it in a `message` variable
+                **Tip:** FileProxy are shown as links and have download buttons
+            """.trimIndent()
+        )
+    }
+
     @RequireOwner
-    @JDATextCommand(name = "eval")
-    suspend fun onTextEval(event: BaseCommandEvent, @TextOption input: String) {
+    @JDATextCommand(name = "eval", description = "Evaluates Kotlin code")
+    suspend fun onTextEval(event: BaseCommandEvent, @TextOption(name = "code", example = "guild.icon") input: String) {
         if (event.author.idLong !in config.ownerIds) {
             return event.reply("${event.author.asMention} is not in the sudoers file. This incident will be reported.").queue()
         }
