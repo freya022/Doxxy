@@ -248,7 +248,7 @@ class Eval(
         )
 
         private val timeoutScope = getDefaultScope(Executors.newSingleThreadScheduledExecutor())
-        private val codeBlockRegex = Regex("""```(\w*)\s+(.+)```""")
+        private val codeBlockRegex = Regex("""```\w*\s*\n(.+)\s*```""")
         private val engine = ScriptEngineManager().getEngineByExtension("kts")!!
 
         private fun Throwable.stackTraceToDiscordString(): String {
