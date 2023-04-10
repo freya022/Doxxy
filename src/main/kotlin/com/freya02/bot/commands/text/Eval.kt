@@ -96,7 +96,7 @@ class Eval(
     @BEventListener
     fun onButtonEvent(buttonEvent: ButtonInteractionEvent) {
         states.entries
-            .firstOrNull() { entry -> entry.value.deleteButtonId == buttonEvent.componentId }
+            .firstOrNull { entry -> entry.value.deleteButtonId == buttonEvent.componentId }
             ?.let { states.remove(it.key, it.value) }
     }
 
@@ -123,6 +123,7 @@ class Eval(
         message: Message,
         inputOffset: Int,
         context: ScriptContext,
+        //Not foolproof but whatever tbh, I'm not going to erase the command
         input: String = message.contentRaw.substring(inputOffset),
         sendAction: suspend (MessageCreateData) -> Message,
     ) {
