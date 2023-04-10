@@ -45,6 +45,8 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.TimedValue
 import kotlin.time.measureTimedValue
 
+// Some inspiration https://github.com/Xirado/Bean/blob/kotlin/src/main/kotlin/at/xirado/bean/command/legacy/EvalCommand.kt
+
 private typealias MessageId = Long
 private typealias OriginalMessageId = MessageId
 private typealias ButtonId = String
