@@ -2,6 +2,7 @@ package com.freya02.bot.commands.text
 
 import com.freya02.bot.Config
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
+import com.freya02.bot.utils.Emojis
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.commands.annotations.RequireOwner
 import com.freya02.botcommands.api.commands.prefixed.BaseCommandEvent
@@ -23,6 +24,8 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageDeleteEvent
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent
 import net.dv8tion.jda.api.exceptions.ErrorHandler
+import net.dv8tion.jda.api.interactions.components.buttons.Button
+import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.requests.ErrorResponse
 import net.dv8tion.jda.api.utils.FileProxy
 import net.dv8tion.jda.api.utils.FileUpload
@@ -135,20 +138,7 @@ class Eval(
 
         val deleteButton = componentsService.messageDeleteButton(message.author)
         val replyMessage = runResult.fold(
-            onSuccess = { returnValue ->
-                MessageCreate {
-                    embed {
-                        title = "Kotlin Eval"
-                        if (returnValue === Unit) {
-                            description = "Code executed without errors"
-                        } else {
-                            field("Return value", "```\n${returnValue.toString()}```", false)
-                        }
-                    }
-
-                    components += row(deleteButton)
-                }
-            },
+            onSuccess = { returnValue -> createMessage(returnValue, deleteButton) },
             onFailure = {
                 MessageCreate(
                     "An error occurred while evaluating",
@@ -167,6 +157,39 @@ class Eval(
         }
         states[originalMessageId] = EvalState(inputOffset, replyMessage.idLong, deleteButton.id!!, context, timeoutJob)
     }
+
+    private suspend fun createMessage(returnValue: Any?, deleteButton: Button, addAttachments: Boolean = false): MessageCreateData =
+        MessageCreate {
+            val buttons: MutableList<Button> = arrayListOf()
+            buttons += deleteButton
+
+            embed {
+                title = "Kotlin Eval"
+                if (returnValue === Unit) {
+                    description = "Code executed without errors"
+                } else if (returnValue is FileProxy) {
+                    field("Return value", "File at ${returnValue.url}")
+                    if (addAttachments) {
+                        val fileName = returnValue.url.toHttpUrl().pathSegments.last()
+                        files += FileUpload.fromData(returnValue.download().await(), fileName)
+                        image = "attachment://$fileName"
+                    } else {
+                        buttons += componentsService.ephemeralButton(ButtonStyle.SECONDARY, "Download attachment", Emojis.download) {
+                            timeout(5.minutes)
+                            bindTo { buttonEvent ->
+                                buttonEvent.editComponents(buttonEvent.message.components.asDisabled()).queue()
+                                val m = createMessage(returnValue, deleteButton, addAttachments = true)
+                                buttonEvent.hook.editOriginal(MessageEditData.fromCreateData(m)).queue()
+                            }
+                        }
+                    }
+                } else {
+                    field("Return value", "```\n${returnValue.toString()}```", false)
+                }
+            }
+
+            components += buttons.row()
+        }
 
     companion object {
         private val defaultImports = listOf(

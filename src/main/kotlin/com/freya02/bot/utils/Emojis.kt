@@ -20,4 +20,6 @@ object Emojis { //TODO find remaining EmojiUtils usages
 
     val methodDeclaration = Emoji.fromFormatted("<:abstractMethod:1093654914435137657>")
     val methodDefinition = Emoji.fromFormatted("<:method:1093654912958726316>")
+
+    val download = Emoji.fromFormatted("<:download_big:1095066213681467462>")
 }
