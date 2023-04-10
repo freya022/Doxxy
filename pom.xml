@@ -126,7 +126,7 @@
         <dependency>
             <groupId>io.github.freya022</groupId>
             <artifactId>BotCommands</artifactId>
-            <version>83622bca08</version>
+            <version>4215492cd2</version>
         </dependency>
         <dependency>
             <groupId>com.github.MinnDevelopment</groupId>
