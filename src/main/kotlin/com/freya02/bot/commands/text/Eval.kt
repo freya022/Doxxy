@@ -19,6 +19,7 @@ import dev.minn.jda.ktx.interactions.components.asDisabled
 import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.MessageCreate
 import kotlinx.coroutines.*
+import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageDeleteEvent
@@ -38,16 +39,21 @@ import javax.script.ScriptEngineManager
 import javax.script.SimpleBindings
 import javax.script.SimpleScriptContext
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.ExperimentalTime
+import kotlin.time.TimedValue
+import kotlin.time.measureTimedValue
 
 private typealias MessageId = Long
 private typealias OriginalMessageId = MessageId
 private typealias ButtonId = String
 
+@OptIn(ExperimentalTime::class)
 @CommandMarker
 class Eval(
     private val componentsService: Components,
     private val config: Config,
-    private val coroutineScopes: BCoroutineScopesConfig
+    private val coroutineScopes: BCoroutineScopesConfig,
+    private val jda: JDA
 ) : TextCommand() {
     private class EvalState(val inputOffset: Int, val replyId: MessageId, val deleteButtonId: ButtonId, val context: ScriptContext, val timeoutJob: Job)
 
@@ -131,8 +137,10 @@ class Eval(
     ) {
         val code = getCode(input)
         val runResult = runCatching {
-            withTimeout(1.minutes) {
-                (engine.eval(code, context) as Deferred<*>).await()
+            measureTimedValue {
+                withTimeout(1.minutes) {
+                    (engine.eval(code, context) as Deferred<*>).await()
+                }
             }
         }
 
@@ -158,13 +166,15 @@ class Eval(
         states[originalMessageId] = EvalState(inputOffset, replyMessage.idLong, deleteButton.id!!, context, timeoutJob)
     }
 
-    private suspend fun createMessage(returnValue: Any?, deleteButton: Button, addAttachments: Boolean = false): MessageCreateData =
-        MessageCreate {
+    private suspend fun createMessage(timedValue: TimedValue<Any?>, deleteButton: Button, addAttachments: Boolean = false): MessageCreateData {
+        val (returnValue, duration) = timedValue
+        return MessageCreate {
             val buttons: MutableList<Button> = arrayListOf()
             buttons += deleteButton
 
             embed {
-                title = "Kotlin Eval"
+                author(name = "Kotlin Eval - Evaluated in $duration", url = null, iconUrl = jda.selfUser.effectiveAvatarUrl)
+
                 if (returnValue === Unit) {
                     description = "Code executed without errors"
                 } else if (returnValue is FileProxy) {
@@ -178,7 +188,7 @@ class Eval(
                             timeout(5.minutes)
                             bindTo { buttonEvent ->
                                 buttonEvent.editComponents(buttonEvent.message.components.asDisabled()).queue()
-                                val m = createMessage(returnValue, deleteButton, addAttachments = true)
+                                val m = createMessage(timedValue, deleteButton, addAttachments = true)
                                 buttonEvent.hook.editOriginal(MessageEditData.fromCreateData(m)).queue()
                             }
                         }
@@ -190,6 +200,7 @@ class Eval(
 
             components += buttons.row()
         }
+    }
 
     companion object {
         private val defaultImports = listOf(
