@@ -109,6 +109,9 @@ class Eval(
 
     @BEventListener
     suspend fun onEditEvent(event: MessageUpdateEvent) {
+        //Can't be me
+        if (event.author.idLong !in config.ownerIds) return
+
         //Does not mean the instance expired, as it can be an update of anything else
         val state = states[event.messageIdLong] ?: return
         state.timeoutJob.cancel()
@@ -123,6 +126,9 @@ class Eval(
     //Listen to delete button being used
     @BEventListener
     fun onButtonEvent(buttonEvent: ButtonInteractionEvent) {
+        //Can't be me
+        if (buttonEvent.user.idLong !in config.ownerIds) return
+
         states.entries
             .firstOrNull { entry -> entry.value.deleteButtonId == buttonEvent.componentId }
             ?.let { states.remove(it.key, it.value) }
