@@ -129,7 +129,7 @@
             <version>4215492cd2</version>
         </dependency>
         <dependency>
-            <groupId>com.github.MinnDevelopment</groupId>
+            <groupId>com.github.minndevelopment</groupId>
             <artifactId>jda-ktx</artifactId>
             <version>9fc90f616b</version>
         </dependency>
