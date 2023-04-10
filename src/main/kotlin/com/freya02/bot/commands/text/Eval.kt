@@ -66,7 +66,7 @@ class Eval(
             return event.reply("${event.author.asMention} is not in the sudoers file. This incident will be reported.").queue()
         }
 
-        val bindings = mapOf(
+        val bindings = mutableMapOf(
             "scope" to coroutineScopes.textCommandsScope,
             "channel" to event.channel,
             "guild" to event.guild,
@@ -77,6 +77,10 @@ class Eval(
             "selfUser" to event.jda.selfUser,
             "selfMember" to event.guild.selfMember
         )
+
+        event.message.messageReference?.let { messageReference ->
+            bindings["message"] = messageReference.resolve().await()
+        }
 
         val context = SimpleScriptContext().apply {
             setBindings(SimpleBindings(bindings), ScriptContext.ENGINE_SCOPE)
