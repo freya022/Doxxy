@@ -17,19 +17,18 @@ import dev.minn.jda.ktx.events.getDefaultScope
 import dev.minn.jda.ktx.interactions.components.asDisabled
 import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.MessageCreate
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageDeleteEvent
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent
 import net.dv8tion.jda.api.exceptions.ErrorHandler
 import net.dv8tion.jda.api.requests.ErrorResponse
+import net.dv8tion.jda.api.utils.FileProxy
 import net.dv8tion.jda.api.utils.FileUpload
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import net.dv8tion.jda.api.utils.messages.MessageEditData
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import java.util.concurrent.Executors
 import javax.script.ScriptContext
 import javax.script.ScriptEngineManager
@@ -128,7 +127,11 @@ class Eval(
         sendAction: suspend (MessageCreateData) -> Message,
     ) {
         val code = getCode(input)
-        val runResult = runCatching { (engine.eval(code, context) as Deferred<*>).await() }
+        val runResult = runCatching {
+            withTimeout(1.minutes) {
+                (engine.eval(code, context) as Deferred<*>).await()
+            }
+        }
 
         val deleteButton = componentsService.messageDeleteButton(message.author)
         val replyMessage = runResult.fold(
