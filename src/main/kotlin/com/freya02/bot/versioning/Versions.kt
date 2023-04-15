@@ -41,9 +41,9 @@ class Versions(private val context: BContext, private val docIndexMap: DocIndexM
     private val jdaChecker: MavenVersionChecker =
         MavenVersionChecker(lastKnownJDAPath, RepoType.MAVEN, "net.dv8tion", "JDA")
     private val jdaKtxChecker: JitpackVersionChecker =
-        JitpackVersionChecker(lastKnownJDAKtxPath, "MinnDevelopment", "com.github.MinnDevelopment", "jda-ktx")
+        JitpackVersionChecker(lastKnownJDAKtxPath, "MinnDevelopment", "io.github.MinnDevelopment", "jda-ktx")
     private val lavaPlayerChecker: JitpackVersionChecker =
-        JitpackVersionChecker(lastKnownLavaPlayerPath, "Walkyst", "com.github.Walkyst", "lavaplayer-fork")
+        JitpackVersionChecker(lastKnownLavaPlayerPath, "Walkyst", "io.github.Walkyst", "lavaplayer-fork")
 
     @BEventListener(async = true, timeout = -1)
     suspend fun initUpdateLoop(event: FirstReadyEvent) {

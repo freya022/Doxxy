@@ -11,7 +11,7 @@ data class GithubBranch(
     val latestCommitSha: CommitHash
 ) {
     fun toJitpackArtifact(): ArtifactInfo = ArtifactInfo(
-        "com.github.$ownerName",
+        "io.github.$ownerName",
         repoName,
         latestCommitSha.asSha10
     )
