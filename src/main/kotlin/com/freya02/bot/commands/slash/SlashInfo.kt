@@ -99,6 +99,13 @@ class SlashInfo(private val context: BContext) : ApplicationCommand() {
                     value = "${getCombinedMemberCount()}"
                     inline = true
                 }
+
+                field {
+                    name = "Memory usage"
+
+                    val heapMemoryUsage = ManagementFactory.getMemoryMXBean().heapMemoryUsage
+                    value = "%.2f / %d MB".format(heapMemoryUsage.used / 1024.0 / 1024.0, (heapMemoryUsage.max / 1024.0 / 1024.0).toInt())
+                }
             }
 
             components += row(Button.link("https://github.com/freya022/Doxxy", "Source"))
