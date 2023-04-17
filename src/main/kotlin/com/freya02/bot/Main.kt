@@ -1,6 +1,6 @@
 package com.freya02.bot
 
-import ch.qos.logback.classic.util.ContextInitializer
+import ch.qos.logback.classic.ClassicConstants
 import com.freya02.bot.utils.Utils
 import com.freya02.botcommands.api.core.BBuilder
 import com.freya02.docs.DocWebServer
@@ -24,7 +24,7 @@ object Main {
             Data.init()
 
             if (Data.logbackConfigPath.exists()) {
-                System.setProperty(ContextInitializer.CONFIG_FILE_PROPERTY, Data.logbackConfigPath.absolutePathString())
+                System.setProperty(ClassicConstants.CONFIG_FILE_PROPERTY, Data.logbackConfigPath.absolutePathString())
                 logger.info( "Loading production logback config")
             } else {
                 logger.info( "Loading test logback config")
@@ -71,8 +71,6 @@ object Main {
                 components {
                     useComponents = true
                 }
-
-                settingsProvider = BotSettings
             }, manager)
 
             logger.info("Loaded commands")
