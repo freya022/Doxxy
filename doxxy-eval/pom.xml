@@ -9,7 +9,7 @@
         <version>2.6</version>
     </parent>
 
-    <artifactId>doxxy-eval</artifactId>
+    <artifactId>doxxy-eval</artifactId> <!-- Just a glorified "with-dependencies" JAR of the kotlin script engine -->
 
     <build>
         <plugins>
@@ -38,6 +38,16 @@
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-scripting-jsr223</artifactId>
             <version>${kotlin.version}</version>
+            <exclusions> <!-- Already included -->
+                <exclusion>
+                    <groupId>org.jetbrains.kotlin</groupId>
+                    <artifactId>kotlin-stdlib</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.jetbrains.kotlin</groupId>
+                    <artifactId>kotlin-reflect</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 </project>

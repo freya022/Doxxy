@@ -30,36 +30,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-maven-plugin</artifactId>
-                <version>${kotlin.version}</version>
-                <configuration>
-                    <args>
-                        <arg>-java-parameters</arg>
-                        <arg>-opt-in=kotlin.RequiresOptIn</arg>
-                        <arg>-opt-in=kotlin.ExperimentalStdlibApi</arg>
-                        <arg>-Xcontext-receivers</arg>
-<!--                        <arg>-Xlambdas=indy</arg>--> <!-- Caused issues with things like ModalBuilder unfortunately
- java.lang.invoke.LambdaConversionException: Type mismatch for lambda argument 0: interface com.freya02.botcommands.api.modals.Modals is not convertible to class com.freya02.botcommands.api.modals.ModalBuilder
- -->
-                    </args>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>compile</id>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>test-compile</id>
-                        <goals>
-                            <goal>test-compile</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin> <!-- mvn versions:display-dependency-updates -->
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>versions-maven-plugin</artifactId>
@@ -72,6 +42,36 @@
         </plugins>
         <pluginManagement>
             <plugins>
+                <plugin>
+                    <groupId>org.jetbrains.kotlin</groupId>
+                    <artifactId>kotlin-maven-plugin</artifactId>
+                    <version>${kotlin.version}</version>
+                    <configuration>
+                        <args>
+                            <arg>-java-parameters</arg>
+                            <arg>-opt-in=kotlin.RequiresOptIn</arg>
+                            <arg>-opt-in=kotlin.ExperimentalStdlibApi</arg>
+                            <arg>-Xcontext-receivers</arg>
+<!--                        <arg>-Xlambdas=indy</arg>--> <!-- Caused issues with things like ModalBuilder unfortunately
+ java.lang.invoke.LambdaConversionException: Type mismatch for lambda argument 0: interface com.freya02.botcommands.api.modals.Modals is not convertible to class com.freya02.botcommands.api.modals.ModalBuilder
+ -->
+                        </args>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>compile</id>
+                            <goals>
+                                <goal>compile</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>test-compile</id>
+                            <goals>
+                                <goal>test-compile</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-shade-plugin</artifactId>
@@ -87,25 +87,6 @@
             <url>https://jitpack.io</url>
         </repository>
     </repositories>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlinx</groupId>
-            <artifactId>kotlinx-coroutines-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.github.microutils</groupId>
-            <artifactId>kotlin-logging-jvm</artifactId>
-        </dependency>
-    </dependencies>
 
     <dependencyManagement>
         <dependencies>
