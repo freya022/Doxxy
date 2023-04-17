@@ -30,6 +30,9 @@
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>com.freya02.bot.Main</mainClass>
+                                    <manifestEntries>
+                                        <Class-Path>Doxxy-eval.jar</Class-Path>
+                                    </manifestEntries>
                                 </transformer>
                             </transformers>
 
@@ -43,6 +46,12 @@
     </build>
 
     <dependencies>
+        <dependency>
+            <groupId>com.freya02</groupId>
+            <artifactId>doxxy-eval</artifactId>
+            <version>2.6</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-reflect</artifactId>
