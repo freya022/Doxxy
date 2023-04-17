@@ -1,5 +1,6 @@
 # Project exclude paths
 /target/
+/doxxy-*/target
 .idea
 Test_Config.json
 /logs
