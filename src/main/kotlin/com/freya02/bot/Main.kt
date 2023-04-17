@@ -50,7 +50,7 @@ object Main {
             logger.info("Started docs web server")
 
             val config = Config.config
-            BBuilder.newBuilder({
+            BBuilder.newBuilder(manager) {
                 if (Data.isDevEnvironment) {
                     disableExceptionsInDMs = true
                     disableAutocompleteCache = true
@@ -71,7 +71,7 @@ object Main {
                 components {
                     useComponents = true
                 }
-            }, manager)
+            }
 
             logger.info("Loaded commands")
         } catch (e: Exception) {
