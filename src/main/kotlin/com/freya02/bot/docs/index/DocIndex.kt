@@ -143,13 +143,13 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         var currentClass: String = tokens.removeFirst()
         var docsOf: String = currentClass
 
-        database.transactional {
+        database.withConnection(readOnly = true) {
             tokens.forEach {
                 if (it.isEmpty()) {
                     // TextChannel#getIterableHistory()#
                     //  This means the last return type's docs must be sent
                     docsOf = currentClass
-                    return@transactional
+                    return@withConnection
                 }
 
                 preparedStatement("select return_type from doc where source_id = ? and lower(classname) = lower(?) and lower(identifier) = lower(?)") {
@@ -177,7 +177,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         val lastToken = tokens.lastOrNull()
 
         //Get class name of the last returned object
-        database.transactional {
+        database.withConnection(readOnly = true) {
             tokens.dropLast(1).forEach {
                 preparedStatement("select return_type from doc where source_id = ? and classname = ? and identifier = ?") {
                     val result = executeQuery(sourceType.id, currentClass, it).readOnce() ?: return emptyList()
