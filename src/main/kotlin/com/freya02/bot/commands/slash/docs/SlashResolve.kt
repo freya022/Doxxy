@@ -42,7 +42,7 @@ class SlashResolve(private val docIndexMap: DocIndexMap, private val commonDocsC
     suspend fun onSlashResolve(
         event: GuildSlashEvent,
         sourceType: DocSourceType,
-        chain: List<String?>
+        chain: List<String?> //TODO use inline class
     ) {
         val docIndex = docIndexMap[sourceType]!!
         val docChain = chain.filterResolveChain()
