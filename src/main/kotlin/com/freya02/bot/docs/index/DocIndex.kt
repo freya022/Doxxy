@@ -137,30 +137,8 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         }
     }
 
-    override suspend fun resolveDoc(query: String): CachedDoc? {
-        // TextChannel#getIterableHistory()
-        val tokens = query.split('#').toMutableList()
-        var currentClass: String = tokens.removeFirst()
-        var docsOf: String = currentClass
-
-        database.withConnection(readOnly = true) {
-            tokens.forEach {
-                if (it.isEmpty()) {
-                    // TextChannel#getIterableHistory()#
-                    //  This means the last return type's docs must be sent
-                    docsOf = currentClass
-                    return@withConnection
-                }
-
-                preparedStatement("select return_type from doc where source_id = ? and lower(classname) = lower(?) and lower(identifier) = lower(?)") {
-                    val result = executeQuery(sourceType.id, currentClass, it).readOnce() ?: return null
-
-                    docsOf = "$currentClass#$it"
-                    currentClass = result["return_type"]
-                }
-            }
-        }
-
+    override suspend fun resolveDoc(chain: List<String>): CachedDoc? {
+        val docsOf = chain.last()
         return when {
             '(' in docsOf -> getMethodDoc(docsOf)
             '#' in docsOf -> getFieldDoc(docsOf)

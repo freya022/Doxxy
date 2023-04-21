@@ -1,6 +1,7 @@
 package com.freya02.bot.commands.slash.docs
 
-import com.freya02.bot.commands.slash.docs.controllers.SlashDocsController
+import com.freya02.bot.commands.controllers.CommonDocsController
+import com.freya02.bot.commands.slash.docs.CommonDocsHandlers.Companion.transformResolveChain
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.commands.application.CommandScope
@@ -11,7 +12,7 @@ import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.messages.reply_
 
 @CommandMarker
-class SlashResolve(private val docIndexMap: DocIndexMap, private val slashDocsController: SlashDocsController){
+class SlashResolve(private val docIndexMap: DocIndexMap, private val commonDocsController: CommonDocsController) {
     @AppDeclaration
     fun declare(manager: GuildApplicationCommandManager) {
         manager.slashCommand("resolve", CommandScope.GUILD) {
@@ -44,12 +45,25 @@ class SlashResolve(private val docIndexMap: DocIndexMap, private val slashDocsCo
         chain: List<String?>
     ) {
         val docIndex = docIndexMap[sourceType]!!
-
-        val doc = docIndex.resolveDoc(TODO()) ?: let {
+        val docChain = chain.transformResolveChain()
+        val doc = docIndex.resolveDoc(docChain) ?: let {
             event.reply_("Could not find documentation for `$chain`", ephemeral = true).queue()
             return
         }
-        slashDocsController.sendClass(event, false, doc)
+
+        val chainString = when (docChain.size) {
+            1 -> docChain.first()
+            else -> docChain.first() + "#" + docChain.drop(1).joinToString("#") { it.substringAfter('#') }
+        }
+
+        commonDocsController.getDocMessageData(
+            originalHook = event.hook,
+            caller = event.member,
+            ephemeral = false,
+            showCaller = false,
+            cachedDoc = doc,
+            chain = chainString
+        ).let { event.reply(it).setEphemeral(false).queue() }
     }
 
     companion object {

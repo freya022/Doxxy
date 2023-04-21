@@ -61,13 +61,16 @@ class CommonDocsController(
             .apply(block)
             .build()
 
-    fun getDocMessageData(originalHook: InteractionHook?, caller: Member, ephemeral: Boolean, showCaller: Boolean, cachedDoc: CachedDoc): MessageCreateData {
+    fun getDocMessageData(originalHook: InteractionHook?, caller: Member, ephemeral: Boolean, showCaller: Boolean, cachedDoc: CachedDoc, chain: String? = null): MessageCreateData {
         return MessageCreateBuilder().apply {
             addEmbeds(cachedDoc.embed.let {
                 when {
-                    showCaller -> Embed {
+                    showCaller || chain != null -> Embed {
                         builder.copyFrom(it)
-                        author(caller.effectiveName, iconUrl = caller.effectiveAvatarUrl)
+                        if (showCaller)
+                            author(caller.effectiveName, iconUrl = caller.effectiveAvatarUrl)
+                        if (chain != null)
+                            field("Resolved from", chain, true)
                     }
                     else -> it
                 }
