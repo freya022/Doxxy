@@ -101,23 +101,6 @@ class CommonDocsHandlers(
         return block(map)
     }
 
-    private fun Iterable<String>.toChoices() = this.map { Choice(it, it) }
-    private fun Iterable<DocSearchResult>.searchResultToFullIdentifierChoices() = this
-        .filter { it.fullIdentifier.length <= Choice.MAX_STRING_VALUE_LENGTH }
-        .map { Choice(it.humanClassIdentifier.tryAppendReturnType(it), it.fullIdentifier) }
-    private fun Iterable<DocSearchResult>.searchResultToIdentifierChoices() = this
-        .filter { it.identifier.length <= Choice.MAX_STRING_VALUE_LENGTH }
-        .map { Choice(it.humanIdentifier.tryAppendReturnType(it), it.identifier) }
-    private fun Iterable<DocResolveResult>.resolveResultToChoices() = this
-        .filter { it.value.length <= Choice.MAX_STRING_VALUE_LENGTH }
-        .map { Choice(it.name, it.value) }
-
-    private fun String.tryAppendReturnType(searchResult: DocSearchResult): String = when {
-        searchResult.returnType == null -> this
-        this.length + ": ${searchResult.returnType}".length > Choice.MAX_NAME_LENGTH -> this
-        else -> "$this: ${searchResult.returnType}"
-    }
-
     companion object {
         private val logger = KotlinLogging.logger { }
 
@@ -135,6 +118,20 @@ class CommonDocsHandlers(
             RESOLVE_AUTOCOMPLETE_NAME
         )
 
-        fun String.transformResolveChain() = this.replace('.', '#')
+        fun Iterable<String>.toChoices() = this.map { Choice(it, it) }
+        fun Iterable<DocSearchResult>.searchResultToFullIdentifierChoices() = this
+            .filter { it.fullIdentifier.length <= Choice.MAX_STRING_VALUE_LENGTH }
+            .map { Choice(it.humanClassIdentifier.tryAppendReturnType(it), it.fullIdentifier) }
+        fun Iterable<DocSearchResult>.searchResultToIdentifierChoices() = this
+            .filter { it.identifier.length <= Choice.MAX_STRING_VALUE_LENGTH }
+            .map { Choice(it.humanIdentifier.tryAppendReturnType(it), it.identifier) }
+
+        private fun String.tryAppendReturnType(searchResult: DocSearchResult): String = when {
+            searchResult.returnType == null -> this
+            this.length + ": ${searchResult.returnType}".length > Choice.MAX_NAME_LENGTH -> this
+            else -> "$this: ${searchResult.returnType}"
+        }
+
+        fun List<String?>.transformResolveChain() = this.filterNotNull()
     }
 }
