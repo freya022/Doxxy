@@ -93,7 +93,7 @@ class CommonDocsHandlers(
         @CompositeKey @AppOption sourceType: DocSourceType,
         @AppOption chain: List<String?>
     ): List<Choice> = withDocIndex(sourceType) {
-        resolveDocAutocomplete(chain.transformResolveChain()).searchResultToFullIdentifierChoices()
+        resolveDocAutocomplete(chain.filterResolveChain()).searchResultToFullIdentifierChoices()
     }
 
     private inline fun withDocIndex(sourceType: DocSourceType, block: DocIndex.() -> List<Choice>): List<Choice> {
@@ -132,6 +132,6 @@ class CommonDocsHandlers(
             else -> "$this: ${searchResult.returnType}"
         }
 
-        fun List<String?>.transformResolveChain() = this.filterNotNull()
+        fun List<String?>.filterResolveChain() = this.filterNotNull()
     }
 }

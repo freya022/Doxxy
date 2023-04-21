@@ -1,7 +1,7 @@
 package com.freya02.bot.commands.slash.docs
 
 import com.freya02.bot.commands.controllers.CommonDocsController
-import com.freya02.bot.commands.slash.docs.CommonDocsHandlers.Companion.transformResolveChain
+import com.freya02.bot.commands.slash.docs.CommonDocsHandlers.Companion.filterResolveChain
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.commands.application.CommandScope
@@ -45,7 +45,7 @@ class SlashResolve(private val docIndexMap: DocIndexMap, private val commonDocsC
         chain: List<String?>
     ) {
         val docIndex = docIndexMap[sourceType]!!
-        val docChain = chain.transformResolveChain()
+        val docChain = chain.filterResolveChain()
         val doc = docIndex.resolveDoc(docChain) ?: let {
             event.reply_("Could not find documentation for `$chain`", ephemeral = true).queue()
             return
