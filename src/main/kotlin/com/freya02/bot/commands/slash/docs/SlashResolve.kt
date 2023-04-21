@@ -68,8 +68,8 @@ class SlashResolve(private val docIndexMap: DocIndexMap, private val commonDocsC
 
     companion object {
         private const val commandDescription =
-            "Experimental - Resolves method/field calls into its final return type, and shows its documentation"
+            "Concatenates qualified signatures and shows the documentation of the last chain"
         private const val chainArgDescription =
-            "Chain of method/field calls, can also just be a class name. Each component is separated with an #"
+            "Qualified signature of a method/field, shows methods if first chain start with #"
     }
 }
