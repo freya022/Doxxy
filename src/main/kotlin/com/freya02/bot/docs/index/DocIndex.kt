@@ -168,42 +168,28 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         }
     }
 
-    //TODO make it resolve incrementally with each token, so that it picks the #1 result of the previous chain before resolving the next token
-    override suspend fun resolveDocAutocomplete(query: String): List<DocResolveResult> {
-        // TextChannel#getIter ==> TextChannel#getIterableHistory()
-        // TextChannel#getIterableHistory()#forEachAsy ==> MessagePaginationAction#forEachAsync()
-        val tokens = query.split('#').toMutableList()
-        var currentClass: String = tokens.removeFirst()
-        val lastToken = tokens.lastOrNull()
-
-        //Get class name of the last returned object
-        database.withConnection(readOnly = true) {
-            tokens.dropLast(1).forEach {
-                preparedStatement("select return_type from doc where source_id = ? and classname = ? and identifier = ?") {
-                    val result = executeQuery(sourceType.id, currentClass, it).readOnce() ?: return emptyList()
-
-                    currentClass = result["return_type"]
-                }
-            }
+    override suspend fun resolveDocAutocomplete(chain: List<String>): List<DocSearchResult> {
+        //Find back last search result
+        val lastFullIdentifier = chain.dropLast(1).lastOrNull()
+        val type: String? = database.preparedStatement(
+            """
+                select coalesce(return_type, classname) as type
+                from doc
+                         natural left join doc_view
+                where source_id = ?
+                  and full_identifier = ?
+                limit 1
+            """.trimIndent(), readOnly = true
+        ) {
+            executeQuery(sourceType.id, lastFullIdentifier).readOnce()?.getString("type")
         }
 
-        //This happens with "TextChannel#getIterableHistory()#", this gets the docs of the return type of getIterableHistory
-        if (lastToken?.isEmpty() == true) {
-            return listOf(DocResolveResult(currentClass, currentClass))
-        }
-
-        //Do a classic search on the latest return type + optionally last token (might be a method or a field)
-        return when {
-            lastToken != null -> {
-                findSignaturesIn(currentClass, lastToken, DocTypes.IDENTIFIERS)
-                    //Current class is added because findSignaturesIn doesn't return "identifier", not "full_signature"
-                    .map { it.fullIdentifier }
-                    //Not showing the parameter names makes it easier for the user to continue using autocompletion with shift+tab
-                    // as parameter names breaks the resolver
-                    .map { DocResolveResult(it, it) }
+        //Query next methods
+        return chain.last().let { token ->
+            when {
+                type != null -> search("$type#${token}")
+                else -> search(token)
             }
-
-            else -> getClasses(currentClass).map { DocResolveResult(it, it) }
         }
     }
 

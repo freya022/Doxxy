@@ -4,7 +4,6 @@ import com.freya02.bot.commands.controllers.CommonDocsController
 import com.freya02.bot.commands.slash.docs.controllers.SlashDocsController
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.index.DocIndex
-import com.freya02.bot.docs.index.DocResolveResult
 import com.freya02.bot.docs.index.DocSearchResult
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.annotations.AppOption
@@ -91,9 +90,10 @@ class CommonDocsHandlers(
     @AutocompleteHandler(name = RESOLVE_AUTOCOMPLETE_NAME, showUserInput = false)
     suspend fun onResolveAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
-        @CompositeKey @AppOption sourceType: DocSourceType
+        @CompositeKey @AppOption sourceType: DocSourceType,
+        @AppOption chain: List<String?>
     ): List<Choice> = withDocIndex(sourceType) {
-        resolveDocAutocomplete(event.focusedOption.value.transformResolveChain()).resolveResultToChoices()
+        resolveDocAutocomplete(chain.transformResolveChain()).searchResultToFullIdentifierChoices()
     }
 
     private inline fun withDocIndex(sourceType: DocSourceType, block: DocIndex.() -> List<Choice>): List<Choice> {

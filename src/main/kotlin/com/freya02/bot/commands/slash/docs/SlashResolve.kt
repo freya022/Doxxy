@@ -1,6 +1,5 @@
 package com.freya02.bot.commands.slash.docs
 
-import com.freya02.bot.commands.slash.docs.CommonDocsHandlers.Companion.transformResolveChain
 import com.freya02.bot.commands.slash.docs.controllers.SlashDocsController
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.botcommands.api.annotations.CommandMarker
@@ -26,6 +25,9 @@ class SlashResolve(private val docIndexMap: DocIndexMap, private val slashDocsCo
 
                     option("chain") {
                         description = chainArgDescription
+                        varArgs = 10
+                        requiredVarArgs = 1
+
                         autocompleteReference(CommonDocsHandlers.RESOLVE_AUTOCOMPLETE_NAME)
                     }
 
@@ -39,11 +41,11 @@ class SlashResolve(private val docIndexMap: DocIndexMap, private val slashDocsCo
     suspend fun onSlashResolve(
         event: GuildSlashEvent,
         sourceType: DocSourceType,
-        chain: String
+        chain: List<String?>
     ) {
         val docIndex = docIndexMap[sourceType]!!
 
-        val doc = docIndex.resolveDoc(chain.transformResolveChain()) ?: let {
+        val doc = docIndex.resolveDoc(TODO()) ?: let {
             event.reply_("Could not find documentation for `$chain`", ephemeral = true).queue()
             return
         }
