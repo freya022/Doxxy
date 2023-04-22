@@ -4,7 +4,6 @@ import com.freya02.bot.commands.controllers.CommonDocsController
 import com.freya02.bot.commands.slash.docs.controllers.SlashDocsController
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.index.DocIndex
-import com.freya02.bot.docs.index.DocResolveResult
 import com.freya02.bot.docs.index.DocSearchResult
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.annotations.AppOption
@@ -91,31 +90,15 @@ class CommonDocsHandlers(
     @AutocompleteHandler(name = RESOLVE_AUTOCOMPLETE_NAME, showUserInput = false)
     suspend fun onResolveAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
-        @CompositeKey @AppOption sourceType: DocSourceType
+        @CompositeKey @AppOption sourceType: DocSourceType,
+        @AppOption chain: List<String?>
     ): List<Choice> = withDocIndex(sourceType) {
-        resolveDocAutocomplete(event.focusedOption.value.transformResolveChain()).resolveResultToChoices()
+        resolveDocAutocomplete(chain.filterResolveChain()).searchResultToFullIdentifierChoices()
     }
 
     private inline fun withDocIndex(sourceType: DocSourceType, block: DocIndex.() -> List<Choice>): List<Choice> {
         val map = docIndexMap[sourceType] ?: return emptyList()
         return block(map)
-    }
-
-    private fun Iterable<String>.toChoices() = this.map { Choice(it, it) }
-    private fun Iterable<DocSearchResult>.searchResultToFullIdentifierChoices() = this
-        .filter { it.fullIdentifier.length <= Choice.MAX_STRING_VALUE_LENGTH }
-        .map { Choice(it.humanClassIdentifier.tryAppendReturnType(it), it.fullIdentifier) }
-    private fun Iterable<DocSearchResult>.searchResultToIdentifierChoices() = this
-        .filter { it.identifier.length <= Choice.MAX_STRING_VALUE_LENGTH }
-        .map { Choice(it.humanIdentifier.tryAppendReturnType(it), it.identifier) }
-    private fun Iterable<DocResolveResult>.resolveResultToChoices() = this
-        .filter { it.value.length <= Choice.MAX_STRING_VALUE_LENGTH }
-        .map { Choice(it.name, it.value) }
-
-    private fun String.tryAppendReturnType(searchResult: DocSearchResult): String = when {
-        searchResult.returnType == null -> this
-        this.length + ": ${searchResult.returnType}".length > Choice.MAX_NAME_LENGTH -> this
-        else -> "$this: ${searchResult.returnType}"
     }
 
     companion object {
@@ -135,6 +118,20 @@ class CommonDocsHandlers(
             RESOLVE_AUTOCOMPLETE_NAME
         )
 
-        fun String.transformResolveChain() = this.replace('.', '#')
+        fun Iterable<String>.toChoices() = this.map { Choice(it, it) }
+        fun Iterable<DocSearchResult>.searchResultToFullIdentifierChoices() = this
+            .filter { it.fullIdentifier.length <= Choice.MAX_STRING_VALUE_LENGTH }
+            .map { Choice(it.humanClassIdentifier.tryAppendReturnType(it), it.fullIdentifier) }
+        fun Iterable<DocSearchResult>.searchResultToIdentifierChoices() = this
+            .filter { it.identifier.length <= Choice.MAX_STRING_VALUE_LENGTH }
+            .map { Choice(it.humanIdentifier.tryAppendReturnType(it), it.identifier) }
+
+        private fun String.tryAppendReturnType(searchResult: DocSearchResult): String = when {
+            searchResult.returnType == null -> this
+            this.length + ": ${searchResult.returnType}".length > Choice.MAX_NAME_LENGTH -> this
+            else -> "$this: ${searchResult.returnType}"
+        }
+
+        fun List<String?>.filterResolveChain() = this.filterNotNull()
     }
 }

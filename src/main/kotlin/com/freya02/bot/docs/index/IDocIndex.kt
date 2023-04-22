@@ -42,6 +42,6 @@ interface IDocIndex {
 
     suspend fun getClasses(query: String? = null, limit: Int = 25): List<String>
 
-    suspend fun resolveDoc(query: String): CachedDoc?
-    suspend fun resolveDocAutocomplete(query: String): List<DocResolveResult>
+    suspend fun resolveDoc(chain: List<String>): CachedDoc?
+    suspend fun resolveDocAutocomplete(chain: List<String>): List<DocSearchResult>
 }
