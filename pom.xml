@@ -135,10 +135,10 @@
         <dependency>
             <groupId>io.github.freya022</groupId>
             <artifactId>BotCommands</artifactId>
-            <version>9395fad7c6</version>
+            <version>444303eb55</version>
         </dependency>
         <dependency>
-            <groupId>com.github.minndevelopment</groupId>
+            <groupId>io.github.minndevelopment</groupId>
             <artifactId>jda-ktx</artifactId>
             <version>9fc90f616b</version>
         </dependency>

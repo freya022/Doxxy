@@ -70,7 +70,7 @@ class CommonDocsController(
                         if (showCaller)
                             author(caller.effectiveName, iconUrl = caller.effectiveAvatarUrl)
                         if (chain != null)
-                            field("Resolved from", chain, true)
+                            field("Resolved from", "`$chain`", true)
                     }
                     else -> it
                 }
