@@ -94,17 +94,14 @@ class SlashJitpack(
     ): Collection<Choice> {
         val pullRequests = jitpackPrService.getPullRequests(libraryType)
 
-        return pullRequests
-            .fuzzyMatching(
-                { referent: PullRequest -> referent.title + referent.branch.authorName }, //Don't autocomplete based on the branch number
-                event.focusedOption.value
-            )
-            .map { r ->
-                Choice(
-                    r.item.asHumanDescription,
-                    r.item.number.toLong()
-                )
-            }
+        return when {
+            event.focusedOption.value.isBlank() -> pullRequests.sortedByDescending { it.number }
+            else -> pullRequests.fuzzyMatching(
+                //Don't autocomplete based on the branch number
+                toStringFunction = { referent: PullRequest -> referent.title + referent.branch.authorName },
+                query = event.focusedOption.value
+            ).map { fuzzyResult -> fuzzyResult.item }
+        }.map { r -> r.toChoice() }
     }
 
     @CacheAutocomplete
@@ -247,6 +244,8 @@ class SlashJitpack(
     companion object {
         const val PR_NUMBER_AUTOCOMPLETE_NAME = "SlashJitpack: prNumber"
         private const val BRANCH_NAME_AUTOCOMPLETE_NAME = "SlashJitpack: branchName"
+
+        private fun PullRequest.toChoice() = Choice(asHumanDescription, number.toLong())
 
         private fun Collection<PullRequest>.fuzzyMatching(
             toStringFunction: ToStringFunction<PullRequest>,
