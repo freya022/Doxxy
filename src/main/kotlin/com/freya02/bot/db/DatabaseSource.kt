@@ -80,5 +80,7 @@ class DatabaseSource(config: Config) : ConnectionSupplier {
         return "\nHint: You should run the following migration scripts: $hintFiles"
     }
 
+    override fun getMaxConnections() = source.maximumPoolSize
+
     override fun getConnection(): Connection = source.connection
 }
