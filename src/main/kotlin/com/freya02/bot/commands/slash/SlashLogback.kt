@@ -1,16 +1,20 @@
 package com.freya02.bot.commands.slash
 
+import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
 import com.freya02.bot.utils.Utils
 import com.freya02.bot.versioning.LibraryType
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
+import com.freya02.botcommands.api.commands.application.annotations.AppOption
 import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
 import com.freya02.botcommands.api.commands.application.slash.annotations.JDASlashCommand
+import com.freya02.botcommands.api.components.Components
+import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.MessageCreate
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 
 @CommandMarker
-class SlashLogback : ApplicationCommand() {
+class SlashLogback(private val componentsService: Components) : ApplicationCommand() {
     private val contentTemplate = """
         ```xml
         %s```
@@ -20,11 +24,15 @@ class SlashLogback : ApplicationCommand() {
     """.trimIndent()
 
     @JDASlashCommand(name = "logback", description = "Gives a logback.xml")
-    fun onSlashLogback(event: GuildSlashEvent) {
-        onLogbackRequest(event)
+    fun onSlashLogback(
+        event: GuildSlashEvent,
+        @AppOption(description = "Whether to display the reply as an ephemeral message") ephemeral: Boolean?
+    ) = when (ephemeral) {
+        null -> onLogbackRequest(event)
+        else -> onLogbackRequest(event, ephemeral)
     }
 
-    fun onLogbackRequest(event: IReplyCallback) {
+    fun onLogbackRequest(event: IReplyCallback, ephemeral: Boolean = true) {
         // BC/JDA wiki link depending on the guild
         val libraryType = LibraryType.getDefaultLibrary(event.guild!!)
 
@@ -42,8 +50,12 @@ class SlashLogback : ApplicationCommand() {
             }
 
             content = contentTemplate.format(logbackXml, wikiLink)
+
+            if (!ephemeral) {
+                components += row(componentsService.messageDeleteButton(event.user))
+            }
         }
 
-        event.reply(message).setEphemeral(true).queue()
+        event.reply(message).setEphemeral(ephemeral).queue()
     }
 }
