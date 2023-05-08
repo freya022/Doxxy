@@ -79,7 +79,7 @@ class SlashJitpack(
                 components.messageDeleteButton(event.user),
                 link(
                     "https://jda.wiki/using-jda/using-new-features/",
-                    "How ? (Wiki)",
+                    "How? (Wiki)",
                     EmojiUtils.resolveJDAEmoji("face_with_monocle")
                 )
             )

@@ -244,7 +244,7 @@ class SlashTag(
                 timeout(2.minutes)
             }
 
-            event.reply("Are you sure you want to delete the tag '${tag.name}' ?")
+            event.reply("Are you sure you want to delete the tag '${tag.name}'?")
                 .addActionRow(deleteButton, noButton)
                 .setEphemeral(true)
                 .queue()
