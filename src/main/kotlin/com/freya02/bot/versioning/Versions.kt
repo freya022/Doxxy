@@ -71,15 +71,19 @@ class Versions(private val context: BContext, private val docIndexMap: DocIndexM
 
     private inline fun CoroutineScope.scheduleWithFixedDelay(duration: Duration, desc: String, crossinline block: suspend () -> Unit) {
         launch {
-            while (true) {
-                try {
-                    withTimeout(10.minutes) {
-                        block()
+            try {
+                while (true) {
+                    try {
+                        withTimeout(10.minutes) {
+                            block()
+                        }
+                    } catch (e: Throwable) {
+                        logger.error("An error occurred while checking latest $desc version", e)
                     }
-                } catch (e: Throwable) {
-                    logger.error("An error occurred while checking latest $desc version", e)
+                    delay(duration)
                 }
-                delay(duration)
+            } finally {
+                throw IllegalStateException("Exited version check loop")
             }
         }
     }
