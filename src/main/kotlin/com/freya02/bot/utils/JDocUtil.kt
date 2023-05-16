@@ -21,7 +21,7 @@ import com.overzealous.remark.Remark
 import java.util.regex.Pattern
 
 object JDocUtil {
-    private val linkEscapeRegex = Regex("([<>])")
+    private val linkEscapeRegex = Regex("""<\[(.*?)]\((.*)\)>""")
     private val FIX_NEW_LINES_PATTERN = Pattern.compile("\n{3,}")
     private val FIX_SPACE_PATTERN = Pattern.compile("\\h")
     private val REMARK: Remark =
@@ -48,5 +48,5 @@ object JDocUtil {
     /**
      * Escapes links surrounded with <>, including markdown links
      */
-    private fun String.escapeAutolink() = this.replace(linkEscapeRegex, """\\$1""")
+    private fun String.escapeAutolink() = this.replace(linkEscapeRegex, """\\<[$1]($2)\\>""")
 }
