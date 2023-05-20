@@ -1,8 +1,8 @@
 package com.freya02.bot.commands.slash.docs
 
 import com.freya02.bot.commands.controllers.CommonDocsController
-import com.freya02.bot.commands.slash.docs.CommonDocsHandlers.Companion.filterResolveChain
 import com.freya02.bot.docs.DocIndexMap
+import com.freya02.bot.docs.DocResolveChain
 import com.freya02.botcommands.api.annotations.CommandMarker
 import com.freya02.botcommands.api.commands.application.CommandScope
 import com.freya02.botcommands.api.commands.application.GuildApplicationCommandManager
@@ -24,7 +24,9 @@ class SlashResolve(private val docIndexMap: DocIndexMap, private val commonDocsC
 
                     generatedOption("sourceType") { sourceType }
 
-                    optionVararg("chain", 10, 1, { "chain_$it" }) {
+                    inlineClassOptionVararg<DocResolveChain>("chain", amount = 10, requiredAmount = 1,
+                        optionNameSupplier = { if (it == 0) "chain" else "chain_$it" }
+                    ) {
                         description = chainArgDescription
 
                         autocompleteReference(CommonDocsHandlers.RESOLVE_AUTOCOMPLETE_NAME)
@@ -38,18 +40,12 @@ class SlashResolve(private val docIndexMap: DocIndexMap, private val commonDocsC
     suspend fun onSlashResolve(
         event: GuildSlashEvent,
         sourceType: DocSourceType,
-        chain: List<String?> //TODO use inline class
+        chain: DocResolveChain
     ) {
         val docIndex = docIndexMap[sourceType]!!
-        val docChain = chain.filterResolveChain()
-        val doc = docIndex.resolveDoc(docChain) ?: let {
+        val doc = docIndex.resolveDoc(chain) ?: let {
             event.reply_("Could not find documentation for `$chain`", ephemeral = true).queue()
             return
-        }
-
-        val chainString = when (docChain.size) {
-            1 -> docChain.first()
-            else -> docChain.first() + "#" + docChain.drop(1).joinToString("#") { it.substringAfter('#') }
         }
 
         commonDocsController.getDocMessageData(
@@ -58,7 +54,7 @@ class SlashResolve(private val docIndexMap: DocIndexMap, private val commonDocsC
             ephemeral = false,
             showCaller = false,
             cachedDoc = doc,
-            chain = chainString
+            chain = chain
         ).let { event.reply(it).setEphemeral(false).queue() }
     }
 

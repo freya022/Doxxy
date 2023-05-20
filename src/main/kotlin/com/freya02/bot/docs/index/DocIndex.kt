@@ -1,5 +1,6 @@
 package com.freya02.bot.docs.index
 
+import com.freya02.bot.docs.DocResolveChain
 import com.freya02.bot.docs.cached.CachedClass
 import com.freya02.bot.docs.cached.CachedDoc
 import com.freya02.bot.docs.cached.CachedField
@@ -137,18 +138,18 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         }
     }
 
-    override suspend fun resolveDoc(chain: List<String>): CachedDoc? {
-        val docsOf = chain.last()
+    override suspend fun resolveDoc(chain: DocResolveChain): CachedDoc? {
+        val qualifiedSignature = chain.lastQualifiedSignature
         return when {
-            '(' in docsOf -> getMethodDoc(docsOf)
-            '#' in docsOf -> getFieldDoc(docsOf)
-            else -> getClassDoc(docsOf)
+            '(' in qualifiedSignature -> getMethodDoc(qualifiedSignature)
+            '#' in qualifiedSignature -> getFieldDoc(qualifiedSignature)
+            else -> getClassDoc(qualifiedSignature)
         }
     }
 
-    override suspend fun resolveDocAutocomplete(chain: List<String>): List<DocSearchResult> {
+    override suspend fun resolveDocAutocomplete(chain: DocResolveChain): List<DocSearchResult> {
         //Find back last search result
-        val lastFullIdentifier = chain.dropLast(1).lastOrNull()
+        val lastFullIdentifier = chain.secondLastQualifiedSignatureOrNull
         val type: String? = database.preparedStatement(
             """
                 select coalesce(return_type, classname) as type
@@ -163,10 +164,10 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         }
 
         //Query next methods
-        return chain.last().let { token ->
+        return chain.lastSignature.let { lastSignature ->
             when {
-                type != null -> search("$type#${token}")
-                else -> search(token)
+                type != null -> search("$type#${lastSignature}")
+                else -> search(lastSignature)
             }
         }
     }

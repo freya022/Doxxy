@@ -3,6 +3,7 @@ package com.freya02.bot.commands.slash.docs
 import com.freya02.bot.commands.controllers.CommonDocsController
 import com.freya02.bot.commands.slash.docs.controllers.SlashDocsController
 import com.freya02.bot.docs.DocIndexMap
+import com.freya02.bot.docs.DocResolveChain
 import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocSearchResult
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
@@ -91,9 +92,9 @@ class CommonDocsHandlers(
     suspend fun onResolveAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         @CompositeKey @AppOption sourceType: DocSourceType,
-        @AppOption chain: List<String?>
+        @AppOption chain: DocResolveChain
     ): List<Choice> = withDocIndex(sourceType) {
-        resolveDocAutocomplete(chain.filterResolveChain()).searchResultToFullIdentifierChoices()
+        resolveDocAutocomplete(chain).searchResultToFullIdentifierChoices()
     }
 
     private inline fun withDocIndex(sourceType: DocSourceType, block: DocIndex.() -> List<Choice>): List<Choice> {
@@ -131,7 +132,5 @@ class CommonDocsHandlers(
             this.length + ": ${searchResult.returnType}".length > Choice.MAX_NAME_LENGTH -> this
             else -> "$this: ${searchResult.returnType}"
         }
-
-        fun List<String?>.filterResolveChain() = this.filterNotNull()
     }
 }

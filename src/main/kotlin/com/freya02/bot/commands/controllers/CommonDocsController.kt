@@ -2,6 +2,7 @@ package com.freya02.bot.commands.controllers
 
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers
+import com.freya02.bot.docs.DocResolveChain
 import com.freya02.bot.docs.cached.CachedClass
 import com.freya02.bot.docs.cached.CachedDoc
 import com.freya02.bot.docs.cached.CachedMethod
@@ -61,7 +62,7 @@ class CommonDocsController(
             .apply(block)
             .build()
 
-    fun getDocMessageData(originalHook: InteractionHook?, caller: Member, ephemeral: Boolean, showCaller: Boolean, cachedDoc: CachedDoc, chain: String? = null): MessageCreateData {
+    fun getDocMessageData(originalHook: InteractionHook?, caller: Member, ephemeral: Boolean, showCaller: Boolean, cachedDoc: CachedDoc, chain: DocResolveChain? = null): MessageCreateData {
         return MessageCreateBuilder().apply {
             addEmbeds(cachedDoc.embed.let {
                 when {
