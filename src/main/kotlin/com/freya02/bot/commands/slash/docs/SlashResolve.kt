@@ -15,24 +15,20 @@ import dev.minn.jda.ktx.messages.reply_
 class SlashResolve(private val docIndexMap: DocIndexMap, private val commonDocsController: CommonDocsController) {
     @AppDeclaration
     fun declare(manager: GuildApplicationCommandManager) {
-        manager.slashCommand("resolve", CommandScope.GUILD) {
+        manager.slashCommand("resolve", CommandScope.GUILD, null) {
             description = commandDescription
 
             DocSourceType.typesForGuild(manager.guild).forEach { sourceType ->
-                subcommand(sourceType.cmdName) {
+                subcommand(sourceType.cmdName, ::onSlashResolve) {
                     description = commandDescription
 
                     generatedOption("sourceType") { sourceType }
 
-                    option("chain") {
+                    optionVararg("chain", 10, 1, { "chain_$it" }) {
                         description = chainArgDescription
-                        varArgs = 10
-                        requiredVarArgs = 1
 
                         autocompleteReference(CommonDocsHandlers.RESOLVE_AUTOCOMPLETE_NAME)
                     }
-
-                    function = ::onSlashResolve
                 }
             }
         }

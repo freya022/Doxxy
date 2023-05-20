@@ -17,11 +17,11 @@ import com.freya02.docs.DocSourceType
 class DocsCommand(private val docIndexMap: DocIndexMap, private val slashDocsController: SlashDocsController) {
     @AppDeclaration
     fun declare(manager: GuildApplicationCommandManager) {
-        manager.slashCommand("docs", CommandScope.GUILD) {
+        manager.slashCommand("docs", CommandScope.GUILD, null) {
             description = "Shows the documentation"
 
             DocSourceType.typesForGuild(manager.guild).forEach { sourceType ->
-                subcommand(sourceType.cmdName) {
+                subcommand(sourceType.cmdName, ::onSlashDocs) {
                     description = "Shows the documentation for a class, a method or a field"
 
                     generatedOption("sourceType") { sourceType }
@@ -35,8 +35,6 @@ class DocsCommand(private val docIndexMap: DocIndexMap, private val slashDocsCon
                         description = "Signature of the method / field name"
                         autocompleteReference(METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME)
                     }
-
-                    function = ::onSlashDocs
                 }
             }
         }

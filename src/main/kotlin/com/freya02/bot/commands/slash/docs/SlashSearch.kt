@@ -12,11 +12,11 @@ import com.freya02.docs.DocSourceType
 class SlashSearch(private val slashDocsController: SlashDocsController) {
     @AppDeclaration
     fun declare(manager: GuildApplicationCommandManager) {
-        manager.slashCommand("search", CommandScope.GUILD) {
+        manager.slashCommand("search", CommandScope.GUILD, null) {
             description = "Searches the documentation for classes, methods and fields"
 
             DocSourceType.typesForGuild(manager.guild).forEach { sourceType ->
-                subcommand(sourceType.cmdName) {
+                subcommand(sourceType.cmdName, slashDocsController::onSearchSlashCommand) {
                     description = "Searches the documentation for classes, methods and fields"
 
                     generatedOption("sourceType") { sourceType }
@@ -25,8 +25,6 @@ class SlashSearch(private val slashDocsController: SlashDocsController) {
                         description = "Search query, # only searches methods, all uppercase for constant fields"
                         autocompleteReference(SEARCH_AUTOCOMPLETE_NAME)
                     }
-
-                    function = slashDocsController::onSearchSlashCommand
                 }
             }
         }

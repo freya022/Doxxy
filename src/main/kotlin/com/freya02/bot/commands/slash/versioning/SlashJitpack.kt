@@ -138,10 +138,10 @@ class SlashJitpack(
 
     @AppDeclaration
     fun declare(manager: GuildApplicationCommandManager) {
-        manager.slashCommand("jitpack", CommandScope.GUILD) {
+        manager.slashCommand("jitpack", CommandScope.GUILD, null) {
             description = "Shows you how to use jitpack for your bot"
 
-            subcommand("branch") {
+            subcommand("branch", SlashJitpack::onSlashJitpackBranch) {
                 description = "Shows you how to use a branch for your bot"
 
                 addCommonJitpackOptions(manager)
@@ -149,11 +149,9 @@ class SlashJitpack(
                     description = "The name of the Git branch to build from"
                     autocompleteReference(BRANCH_NAME_AUTOCOMPLETE_NAME)
                 }
-
-                function = SlashJitpack::onSlashJitpackBranch
             }
 
-            subcommand("pr") {
+            subcommand("pr", SlashJitpack::onSlashJitpackPR) {
                 description = "Shows you how to use Pull Requests for your bot"
 
                 addCommonJitpackOptions(manager)
@@ -161,8 +159,6 @@ class SlashJitpack(
                     description = "The Pull Request number"
                     autocompleteReference(PR_NUMBER_AUTOCOMPLETE_NAME)
                 }
-
-                function = SlashJitpack::onSlashJitpackPR
             }
         }
     }

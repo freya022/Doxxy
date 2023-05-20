@@ -14,7 +14,7 @@ class Exit : TextCommand() {
     @RequireOwner
     @JDATextCommand(name = "exit")
     fun exit(event: BaseCommandEvent) {
-        logger.warn("Shutdown initiated by {} ({})", event.author.asTag, event.author.id)
+        logger.warn("Shutdown initiated by {} ({})", event.author.name, event.author.id)
         event.reactSuccess().mapToResult().complete()
 
         event.jda.shutdown()

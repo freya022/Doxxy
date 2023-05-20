@@ -309,14 +309,14 @@ class SlashTag(
                 val ownerMember = event.guild.retrieveMemberById(tag.ownerId).await()
                 if (ownerMember != null) {
                     author {
-                        name = ownerMember.user.asTag
+                        name = ownerMember.user.name
                         iconUrl = ownerMember.effectiveAvatarUrl
                     }
                 } else {
                     val owner = event.jda.retrieveUserById(tag.ownerId).await()
 
                     author {
-                        name = owner.asTag
+                        name = owner.name
                         iconUrl = owner.effectiveAvatarUrl
                     }
                 }
