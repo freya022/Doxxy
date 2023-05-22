@@ -137,6 +137,27 @@ class SlashJitpack(
         }.map { r -> r.toChoice() }
     }
 
+    private val mutex = Mutex()
+    private suspend fun onUpdatePrClick(event: ButtonEvent, callerId: Long, libraryType: LibraryType, buildToolType: BuildToolType, pullNumber: Int) {
+        //TODO add support for BC, JDA-KTX and LP
+        if (mutex.isLocked)
+            return event.reply_("A pull request is already being updated", ephemeral = true).queue()
+
+        val pullRequest = jitpackPrService.getPullRequest(libraryType, pullNumber)
+            ?: return event.reply_("Unknown Pull Request", ephemeral = true).queue()
+
+        mutex.withLock {
+            jitpackPrService.updatePr(event, pullNumber) { branch ->
+                val message = createPrMessage(event, libraryType, buildToolType, pullRequest, branch.toGithubBranch())
+                if (event.user.idLong == callerId) {
+                    event.hook.editOriginal(MessageEditData.fromCreateData(message)).queue()
+                } else {
+                    event.reply(message).setEphemeral(true).queue()
+                }
+            }
+        }
+    }
+
     @CacheAutocomplete
     @AutocompleteHandler(name = BRANCH_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onBranchNameAutocomplete(

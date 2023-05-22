@@ -79,12 +79,27 @@ object GithubUtils {
 
                 return (0 until branches.length()).map { i ->
                     val branchObject = branches.getObject(i)
-                    val name = branchObject.getString("name")
-                    val sha = branchObject.getObject("commit").getString("sha")
-
-                    GithubBranch(ownerName, ownerName, repoName, name, CommitHash(sha))
+                    makeBranch(branchObject, ownerName, repoName)
                 }
             }
+    }
+
+    @Throws(IOException::class)
+    fun getBranch(ownerName: String, repoName: String, branchName: String): GithubBranch {
+        val url = "https://api.github.com/repos/$ownerName/$repoName/branches/$branchName".toHttpUrl()
+        HttpUtils.CLIENT.newCall(newGithubRequest(url).build())
+            .execute()
+            .use { response ->
+                val json = response.body!!.string()
+                return makeBranch(DataObject.fromJson(json), ownerName, repoName)
+            }
+    }
+
+    private fun makeBranch(branchObject: DataObject, ownerName: String, repoName: String): GithubBranch {
+        val name = branchObject.getString("name")
+        val sha = branchObject.getObject("commit").getString("sha")
+
+        return GithubBranch(ownerName, ownerName, repoName, name, CommitHash(sha))
     }
 
     @Throws(IOException::class)
