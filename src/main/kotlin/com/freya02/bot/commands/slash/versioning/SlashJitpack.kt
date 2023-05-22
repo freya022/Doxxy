@@ -152,7 +152,7 @@ class SlashJitpack(
                 if (event.user.idLong == callerId) {
                     event.hook.editOriginal(MessageEditData.fromCreateData(message)).queue()
                 } else {
-                    event.reply(message).setEphemeral(true).queue()
+                    event.hook.sendMessage(message).setEphemeral(true).queue()
                 }
             }
         }

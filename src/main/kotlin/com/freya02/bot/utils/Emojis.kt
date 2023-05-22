@@ -21,5 +21,5 @@ object Emojis { //TODO find remaining EmojiUtils usages
     val methodDeclaration = Emoji.fromFormatted("<:abstractMethod:1093654914435137657>")
     val methodDefinition = Emoji.fromFormatted("<:method:1093654912958726316>")
 
-    val sync = Emoji.fromFormatted("<:sync:1110230892464570458>")
+    val sync = Emoji.fromFormatted("<:sync:1110297711778988193>")
 }
