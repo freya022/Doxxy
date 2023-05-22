@@ -1,6 +1,7 @@
 package com.freya02.bot.commands.slash.versioning
 
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
+import com.freya02.bot.utils.Emojis
 import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.bot.utils.Utils.truncate
 import com.freya02.bot.versioning.LibraryType
@@ -26,64 +27,96 @@ import com.freya02.botcommands.api.commands.application.slash.autocomplete.annot
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.CompositeKey
 import com.freya02.botcommands.api.commands.application.slash.builder.SlashCommandBuilder
 import com.freya02.botcommands.api.components.Components
+import com.freya02.botcommands.api.components.event.ButtonEvent
 import com.freya02.botcommands.api.utils.EmojiUtils
 import dev.minn.jda.ktx.interactions.components.link
+import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.Embed
+import dev.minn.jda.ktx.messages.MessageCreate
+import dev.minn.jda.ktx.messages.reply_
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.interactions.components.ItemComponent
+import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
+import net.dv8tion.jda.api.utils.messages.MessageCreateData
+import net.dv8tion.jda.api.utils.messages.MessageEditData
 
 @CommandMarker
 class SlashJitpack(
-    private val components: Components,
+    private val componentsService: Components,
     private val jitpackPrService: JitpackPrService,
     private val jitpackBranchService: JitpackBranchService
 ) : ApplicationCommand() {
     @CommandMarker
     fun onSlashJitpackPR(event: GuildSlashEvent, libraryType: LibraryType, buildToolType: BuildToolType, pullNumber: Int) {
-        val pullRequest = jitpackPrService.getPullRequest(libraryType, pullNumber) ?: run {
-            event.reply("Unknown Pull Request").setEphemeral(true).queue()
-            return
-        }
+        val pullRequest = jitpackPrService.getPullRequest(libraryType, pullNumber)
+            ?: return event.reply_("Unknown Pull Request", ephemeral = true).queue()
 
+        val message = createPrMessage(event, libraryType, buildToolType, pullRequest, pullRequest.branch)
+
+        event.reply(message).queue()
+    }
+
+    private fun createPrMessage(
+        event: GenericInteractionCreateEvent,
+        libraryType: LibraryType,
+        buildToolType: BuildToolType,
+        pullRequest: PullRequest,
+        targetBranch: GithubBranch
+    ): MessageCreateData {
         val dependencyStr: String = when (libraryType) {
             LibraryType.BOT_COMMANDS -> DependencySupplier.formatBCJitpack(
                 ScriptType.DEPENDENCIES,
                 buildToolType,
-                jitpackBranchService.getUsedJDAVersionFromBranch(pullRequest.branch),
-                pullRequest.toJitpackArtifact()
+                jitpackBranchService.getUsedJDAVersionFromBranch(targetBranch),
+                targetBranch.toJitpackArtifact()
             )
             LibraryType.JDA, LibraryType.JDA_KTX, LibraryType.LAVA_PLAYER -> DependencySupplier.formatJitpack(
                 ScriptType.DEPENDENCIES,
                 buildToolType,
-                pullRequest.toJitpackArtifact()
+                targetBranch.toJitpackArtifact()
             )
         }
 
-        val embed = Embed {
-            title = "${buildToolType.humanName} dependencies for ${libraryType.displayString}: ${pullRequest.title}"
-                .truncate(MessageEmbed.TITLE_MAX_LENGTH)
-            url = pullRequest.pullUrl
+        return MessageCreate {
+            embed {
+                title = "${buildToolType.humanName} dependencies for ${libraryType.displayString}: ${pullRequest.title}"
+                    .truncate(MessageEmbed.TITLE_MAX_LENGTH)
+                url = pullRequest.pullUrl
 
-            field("PR Link", pullRequest.pullUrl, false)
+                field("PR Link", pullRequest.pullUrl, false)
 
-            description = when (buildToolType) {
-                BuildToolType.MAVEN -> "```xml\n$dependencyStr```"
-                BuildToolType.GRADLE, BuildToolType.GRADLE_KTS -> "```gradle\n$dependencyStr```"
+                description = when (buildToolType) {
+                    BuildToolType.MAVEN -> "```xml\n$dependencyStr```"
+                    BuildToolType.GRADLE, BuildToolType.GRADLE_KTS -> "```gradle\n$dependencyStr```"
+                }
             }
-        }
 
-        event.replyEmbeds(embed)
-            .addActionRow(
-                components.messageDeleteButton(event.user),
+            val row: MutableList<ItemComponent> = arrayListOf(
+                componentsService.messageDeleteButton(event.user),
                 link(
                     "https://jda.wiki/using-jda/using-new-features/",
                     "How? (Wiki)",
                     EmojiUtils.resolveJDAEmoji("face_with_monocle")
                 )
             )
-            .queue()
+
+            if (libraryType == LibraryType.JDA) {
+                row += componentsService.ephemeralButton(ButtonStyle.PRIMARY, label = "Update", emoji = Emojis.sync) {
+                    val callerId = event.user.idLong
+                    bindTo {
+                        onUpdatePrClick(it, callerId, libraryType, buildToolType, pullRequest.number)
+                    }
+                }
+            }
+
+            components += row.row()
+        }
     }
 
     @CacheAutocomplete
@@ -233,7 +266,7 @@ class SlashJitpack(
         }
 
         event.replyEmbeds(embed)
-            .addActionRow(components.messageDeleteButton(event.user))
+            .addActionRow(componentsService.messageDeleteButton(event.user))
             .queue()
     }
 
