@@ -1,5 +1,6 @@
 package com.freya02.bot.commands.slash.versioning
 
+import com.freya02.bot.Config
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
 import com.freya02.bot.utils.Emojis
 import com.freya02.bot.utils.Utils.isBCGuild
@@ -50,7 +51,8 @@ import net.dv8tion.jda.api.utils.messages.MessageEditData
 class SlashJitpack(
     private val componentsService: Components,
     private val jitpackPrService: JitpackPrService,
-    private val jitpackBranchService: JitpackBranchService
+    private val jitpackBranchService: JitpackBranchService,
+    private val config: Config
 ) : ApplicationCommand() {
     @CommandMarker
     fun onSlashJitpackPR(event: GuildSlashEvent, libraryType: LibraryType, buildToolType: BuildToolType, pullNumber: Int) {
@@ -106,7 +108,7 @@ class SlashJitpack(
                 )
             )
 
-            if (libraryType == LibraryType.JDA) {
+            if (libraryType == LibraryType.JDA && config.pullUpdaterToken.isNotBlank()) {
                 row += componentsService.ephemeralButton(ButtonStyle.PRIMARY, label = "Update", emoji = Emojis.sync) {
                     val callerId = event.user.idLong
                     bindTo {

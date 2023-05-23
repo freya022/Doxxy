@@ -1,5 +1,6 @@
 package com.freya02.bot.versioning.jitpack
 
+import com.freya02.bot.Config
 import com.freya02.bot.utils.HttpUtils
 import com.freya02.bot.versioning.LibraryType
 import com.freya02.bot.versioning.github.GithubBranch
@@ -14,7 +15,7 @@ import mu.KotlinLogging
 import net.dv8tion.jda.api.utils.data.DataObject
 import okhttp3.Request
 
-class JitpackPrService {
+class JitpackPrService(private val config: Config) {
     data class PullUpdaterBranch(val forkBotName: String, val forkRepoName: String, val forkedBranchName: String) {
         fun toGithubBranch(): GithubBranch = GithubUtils.getBranch(forkBotName, forkRepoName, forkedBranchName)
     }
@@ -46,19 +47,24 @@ class JitpackPrService {
         event.deferEdit().queue()
         val waitMessage = event.hook.send("Please wait while the pull request is being updated", ephemeral = true).await()
 
-        val response = HttpUtils.CLIENT.newCall(Request.Builder().url("http://127.0.0.1:8080/update/$pullNumber").build()).await()
-        val dataObject = DataObject.fromJson(response.body!!.string())
-
+        val response = HttpUtils.CLIENT.newCall(pullUpdateRequestBuilder("/update/$pullNumber").build()).await()
         event.hook.deleteMessageById(waitMessage.idLong).queue()
+
+        val responseBody = response.body!!.string()
         if (!response.isSuccessful) {
-            val message = dataObject.getString("message")
+            val message = if (responseBody.isBlank()) DataObject.fromJson(responseBody).getString("message") else null
             logger.warn("Could not update pull request, code: ${response.code}, response: $message")
             return event.hook.send("Could not update pull request", ephemeral = true).queue()
         }
+        val dataObject = DataObject.fromJson(responseBody)
         block(PullUpdaterBranch(
             dataObject.getString("forkBotName"),
             dataObject.getString("forkRepoName"),
             dataObject.getString("forkedBranchName")
         ))
     }
+
+    private fun pullUpdateRequestBuilder(route: String) = Request.Builder()
+        .url("${config.pullUpdaterBaseUrl}$route")
+        .header("Authorization", "Bearer ${config.pullUpdaterToken}")
 }

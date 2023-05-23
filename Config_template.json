@@ -8,6 +8,8 @@
   ],
   "fakeJDAGuildId": 4321,
   "fakeBCGuildId": 1234,
+  "pullUpdaterBaseUrl": "http://127.0.0.1:8080",
+  "pullUpdaterToken": "",
   "dbConfig": {
     "serverName": "",
     "portNumber": 0,
