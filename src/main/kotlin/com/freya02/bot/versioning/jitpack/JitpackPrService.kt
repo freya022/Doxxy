@@ -59,9 +59,15 @@ class JitpackPrService(private val config: Config) {
                 dataObject.getString("forkedBranchName")
             ))
         } else {
-            val message = if (responseBody.isBlank()) DataObject.fromJson(responseBody).getString("message") else null
-            logger.warn("Could not update pull request, code: ${response.code}, response: $message")
-            event.hook.send("Could not update pull request", ephemeral = true).queue()
+            val message = if (responseBody.isNotBlank()) DataObject.fromJson(responseBody).getString("message") else null
+            if (response.code != 409)
+                logger.warn("Could not update pull request, code: ${response.code}, response: $message")
+
+            val userReply = when (response.code) {
+                409 -> "Could not update pull request as it has merge conflicts"
+                else -> "Could not update pull request"
+            }
+            event.hook.send(userReply, ephemeral = true).queue()
         }
     }
 
