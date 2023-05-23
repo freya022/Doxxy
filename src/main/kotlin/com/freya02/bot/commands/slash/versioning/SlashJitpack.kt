@@ -100,26 +100,23 @@ class SlashJitpack(
                 }
             }
 
-            val row: MutableList<ItemComponent> = arrayListOf(
-                componentsService.messageDeleteButton(event.user),
-                link(
+            components += buildList<ItemComponent>(3) {
+                if (libraryType == LibraryType.JDA && config.usePullUpdater) {
+                    this += componentsService.ephemeralButton(ButtonStyle.PRIMARY, label = "Update PR", emoji = Emojis.sync) {
+                        val callerId = event.user.idLong
+                        timeout(1.hours)
+                        bindTo {
+                            onUpdatePrClick(it, callerId, libraryType, buildToolType, pullRequest.number)
+                        }
+                    }
+                }
+                this += link(
                     "https://jda.wiki/using-jda/using-new-features/",
                     "How? (Wiki)",
                     EmojiUtils.resolveJDAEmoji("face_with_monocle")
                 )
-            )
-
-            if (libraryType == LibraryType.JDA && config.usePullUpdater) {
-                row += componentsService.ephemeralButton(ButtonStyle.PRIMARY, label = "Update", emoji = Emojis.sync) {
-                    val callerId = event.user.idLong
-                    timeout(1.hours)
-                    bindTo {
-                        onUpdatePrClick(it, callerId, libraryType, buildToolType, pullRequest.number)
-                    }
-                }
-            }
-
-            components += row.row()
+                this += componentsService.messageDeleteButton(event.user)
+            }.row()
         }
     }
 
