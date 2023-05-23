@@ -143,7 +143,6 @@ class SlashJitpack(
 
     private val mutex = Mutex()
     private suspend fun onUpdatePrClick(event: ButtonEvent, callerId: Long, libraryType: LibraryType, buildToolType: BuildToolType, pullNumber: Int) {
-        //TODO add support for BC, JDA-KTX and LP
         if (mutex.isLocked)
             return event.reply_("A pull request is already being updated", ephemeral = true).queue()
 

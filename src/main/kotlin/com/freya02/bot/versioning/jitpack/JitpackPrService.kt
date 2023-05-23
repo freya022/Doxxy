@@ -47,7 +47,7 @@ class JitpackPrService(private val config: Config) {
         event.deferEdit().queue()
         val waitMessage = event.hook.send("Please wait while the pull request is being updated", ephemeral = true).await()
 
-        val response = HttpUtils.CLIENT.newCall(pullUpdateRequestBuilder("/update/$pullNumber").build()).await()
+        val response = HttpUtils.CLIENT.newCall(pullUpdateRequestBuilder("/update/JDA/$pullNumber").build()).await()
         event.hook.deleteMessageById(waitMessage.idLong).queue()
 
         val responseBody = response.body!!.string()
