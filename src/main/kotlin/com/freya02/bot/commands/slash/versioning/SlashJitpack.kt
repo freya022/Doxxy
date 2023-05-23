@@ -109,7 +109,7 @@ class SlashJitpack(
                 )
             )
 
-            if (libraryType == LibraryType.JDA && config.pullUpdaterToken.isNotBlank()) {
+            if (libraryType == LibraryType.JDA && config.usePullUpdater) {
                 row += componentsService.ephemeralButton(ButtonStyle.PRIMARY, label = "Update", emoji = Emojis.sync) {
                     val callerId = event.user.idLong
                     timeout(1.hours)
