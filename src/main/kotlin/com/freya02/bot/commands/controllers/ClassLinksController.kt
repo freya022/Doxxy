@@ -142,12 +142,12 @@ class ClassLinksController(
 
         if (isSameCaller) {
             selectEvent.deferEdit().queue()
-            if (originalHook != null) {
-                originalHook.editOriginal(MessageEditData.fromCreateData(createData)).queue()
-            } else {
-                buttonEvent.message.editMessage(MessageEditData.fromCreateData(createData))
-                    .queue(null, ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE))
+            val editAction = when {
+                originalHook != null -> originalHook.editOriginal(MessageEditData.fromCreateData(createData))
+                else -> buttonEvent.message.editMessage(MessageEditData.fromCreateData(createData))
             }
+            //I guess this can happen if the user clicks the button and then immediately deletes the message
+            editAction.queue(null, ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE))
         } else {
             selectEvent.reply(createData).setEphemeral(true).queue()
         }
