@@ -51,17 +51,18 @@ class JitpackPrService(private val config: Config) {
         event.hook.deleteMessageById(waitMessage.idLong).queue()
 
         val responseBody = response.body!!.string()
-        if (!response.isSuccessful) {
+        if (response.isSuccessful) {
+            val dataObject = DataObject.fromJson(responseBody)
+            block(PullUpdaterBranch(
+                dataObject.getString("forkBotName"),
+                dataObject.getString("forkRepoName"),
+                dataObject.getString("forkedBranchName")
+            ))
+        } else {
             val message = if (responseBody.isBlank()) DataObject.fromJson(responseBody).getString("message") else null
             logger.warn("Could not update pull request, code: ${response.code}, response: $message")
-            return event.hook.send("Could not update pull request", ephemeral = true).queue()
+            event.hook.send("Could not update pull request", ephemeral = true).queue()
         }
-        val dataObject = DataObject.fromJson(responseBody)
-        block(PullUpdaterBranch(
-            dataObject.getString("forkBotName"),
-            dataObject.getString("forkRepoName"),
-            dataObject.getString("forkedBranchName")
-        ))
     }
 
     private fun pullUpdateRequestBuilder(route: String) = Request.Builder()
