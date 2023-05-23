@@ -46,6 +46,7 @@ import net.dv8tion.jda.api.interactions.components.ItemComponent
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import net.dv8tion.jda.api.utils.messages.MessageEditData
+import kotlin.time.Duration.Companion.hours
 
 @CommandMarker
 class SlashJitpack(
@@ -111,6 +112,7 @@ class SlashJitpack(
             if (libraryType == LibraryType.JDA && config.pullUpdaterToken.isNotBlank()) {
                 row += componentsService.ephemeralButton(ButtonStyle.PRIMARY, label = "Update", emoji = Emojis.sync) {
                     val callerId = event.user.idLong
+                    timeout(1.hours)
                     bindTo {
                         onUpdatePrClick(it, callerId, libraryType, buildToolType, pullRequest.number)
                     }
