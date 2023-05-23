@@ -97,7 +97,7 @@ class SlashJitpack(
                 description = when (buildToolType) {
                     BuildToolType.MAVEN -> "```xml\n$dependencyStr```"
                     BuildToolType.GRADLE, BuildToolType.GRADLE_KTS -> "```gradle\n$dependencyStr```"
-                }
+                } + "\nYou can also click on the `Update PR` button to merge the latest changes."
             }
 
             components += buildList<ItemComponent>(3) {
