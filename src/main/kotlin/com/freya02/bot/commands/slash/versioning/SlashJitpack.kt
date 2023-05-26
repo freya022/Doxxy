@@ -24,7 +24,6 @@ import com.freya02.botcommands.api.commands.application.slash.autocomplete.Autoc
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.FuzzyResult
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.ToStringFunction
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
-import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.CacheAutocomplete
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.CompositeKey
 import com.freya02.botcommands.api.commands.application.slash.builder.SlashCommandBuilder
 import com.freya02.botcommands.api.components.Components
@@ -120,7 +119,6 @@ class SlashJitpack(
         }
     }
 
-    @CacheAutocomplete
     @AutocompleteHandler(name = PR_NUMBER_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onPRNumberAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
@@ -158,7 +156,6 @@ class SlashJitpack(
         }
     }
 
-    @CacheAutocomplete
     @AutocompleteHandler(name = BRANCH_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onBranchNameAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
