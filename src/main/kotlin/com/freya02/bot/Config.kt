@@ -18,6 +18,9 @@ data class Config(val token: String,
                   val testGuildIds: List<Long>,
                   val fakeJDAGuildId: Long,
                   val fakeBCGuildId: Long,
+                  val usePullUpdater: Boolean,
+                  val pullUpdaterBaseUrl: String,
+                  val pullUpdaterToken: String,
                   val dbConfig: DBConfig) {
     companion object {
         private val logger = KotlinLogging.logger { }

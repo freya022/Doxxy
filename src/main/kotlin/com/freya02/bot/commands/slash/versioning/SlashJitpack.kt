@@ -1,6 +1,8 @@
 package com.freya02.bot.commands.slash.versioning
 
+import com.freya02.bot.Config
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
+import com.freya02.bot.utils.Emojis
 import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.bot.utils.Utils.truncate
 import com.freya02.bot.versioning.LibraryType
@@ -22,71 +24,101 @@ import com.freya02.botcommands.api.commands.application.slash.autocomplete.Autoc
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.FuzzyResult
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.ToStringFunction
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
-import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.CacheAutocomplete
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.CompositeKey
 import com.freya02.botcommands.api.commands.application.slash.builder.SlashCommandBuilder
 import com.freya02.botcommands.api.components.Components
+import com.freya02.botcommands.api.components.event.ButtonEvent
 import com.freya02.botcommands.api.utils.EmojiUtils
 import dev.minn.jda.ktx.interactions.components.link
+import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.Embed
+import dev.minn.jda.ktx.messages.MessageCreate
+import dev.minn.jda.ktx.messages.reply_
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.interactions.components.ItemComponent
+import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
+import net.dv8tion.jda.api.utils.messages.MessageCreateData
+import net.dv8tion.jda.api.utils.messages.MessageEditData
+import kotlin.time.Duration.Companion.hours
 
 @CommandMarker
 class SlashJitpack(
-    private val components: Components,
+    private val componentsService: Components,
     private val jitpackPrService: JitpackPrService,
-    private val jitpackBranchService: JitpackBranchService
+    private val jitpackBranchService: JitpackBranchService,
+    private val config: Config
 ) : ApplicationCommand() {
     @CommandMarker
     fun onSlashJitpackPR(event: GuildSlashEvent, libraryType: LibraryType, buildToolType: BuildToolType, pullNumber: Int) {
-        val pullRequest = jitpackPrService.getPullRequest(libraryType, pullNumber) ?: run {
-            event.reply("Unknown Pull Request").setEphemeral(true).queue()
-            return
-        }
+        val pullRequest = jitpackPrService.getPullRequest(libraryType, pullNumber)
+            ?: return event.reply_("Unknown Pull Request", ephemeral = true).queue()
 
+        val message = createPrMessage(event, libraryType, buildToolType, pullRequest, pullRequest.branch)
+
+        event.reply(message).queue()
+    }
+
+    private fun createPrMessage(
+        event: GenericInteractionCreateEvent,
+        libraryType: LibraryType,
+        buildToolType: BuildToolType,
+        pullRequest: PullRequest,
+        targetBranch: GithubBranch
+    ): MessageCreateData {
         val dependencyStr: String = when (libraryType) {
             LibraryType.BOT_COMMANDS -> DependencySupplier.formatBCJitpack(
                 ScriptType.DEPENDENCIES,
                 buildToolType,
-                jitpackBranchService.getUsedJDAVersionFromBranch(pullRequest.branch),
-                pullRequest.toJitpackArtifact()
+                jitpackBranchService.getUsedJDAVersionFromBranch(targetBranch),
+                targetBranch.toJitpackArtifact()
             )
             LibraryType.JDA, LibraryType.JDA_KTX, LibraryType.LAVA_PLAYER -> DependencySupplier.formatJitpack(
                 ScriptType.DEPENDENCIES,
                 buildToolType,
-                pullRequest.toJitpackArtifact()
+                targetBranch.toJitpackArtifact()
             )
         }
 
-        val embed = Embed {
-            title = "${buildToolType.humanName} dependencies for ${libraryType.displayString}: ${pullRequest.title}"
-                .truncate(MessageEmbed.TITLE_MAX_LENGTH)
-            url = pullRequest.pullUrl
+        return MessageCreate {
+            embed {
+                title = "${buildToolType.humanName} dependencies for ${libraryType.displayString}: ${pullRequest.title}"
+                    .truncate(MessageEmbed.TITLE_MAX_LENGTH)
+                url = pullRequest.pullUrl
 
-            field("PR Link", pullRequest.pullUrl, false)
+                field("PR Link", pullRequest.pullUrl, false)
 
-            description = when (buildToolType) {
-                BuildToolType.MAVEN -> "```xml\n$dependencyStr```"
-                BuildToolType.GRADLE, BuildToolType.GRADLE_KTS -> "```gradle\n$dependencyStr```"
+                description = when (buildToolType) {
+                    BuildToolType.MAVEN -> "```xml\n$dependencyStr```"
+                    BuildToolType.GRADLE, BuildToolType.GRADLE_KTS -> "```gradle\n$dependencyStr```"
+                } + "\nYou can also click on the `Update PR` button to merge the latest changes."
             }
-        }
 
-        event.replyEmbeds(embed)
-            .addActionRow(
-                components.messageDeleteButton(event.user),
-                link(
+            components += buildList<ItemComponent>(3) {
+                if (libraryType == LibraryType.JDA && config.usePullUpdater) {
+                    this += componentsService.ephemeralButton(ButtonStyle.PRIMARY, label = "Update PR", emoji = Emojis.sync) {
+                        val callerId = event.user.idLong
+                        timeout(1.hours)
+                        bindTo {
+                            onUpdatePrClick(it, callerId, libraryType, buildToolType, pullRequest.number)
+                        }
+                    }
+                }
+                this += link(
                     "https://jda.wiki/using-jda/using-new-features/",
                     "How? (Wiki)",
                     EmojiUtils.resolveJDAEmoji("face_with_monocle")
                 )
-            )
-            .queue()
+                this += componentsService.messageDeleteButton(event.user)
+            }.row()
+        }
     }
 
-    @CacheAutocomplete
     @AutocompleteHandler(name = PR_NUMBER_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onPRNumberAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
@@ -104,7 +136,26 @@ class SlashJitpack(
         }.map { r -> r.toChoice() }
     }
 
-    @CacheAutocomplete
+    private val mutex = Mutex()
+    private suspend fun onUpdatePrClick(event: ButtonEvent, callerId: Long, libraryType: LibraryType, buildToolType: BuildToolType, pullNumber: Int) {
+        if (mutex.isLocked)
+            return event.reply_("A pull request is already being updated", ephemeral = true).queue()
+
+        val pullRequest = jitpackPrService.getPullRequest(libraryType, pullNumber)
+            ?: return event.reply_("Unknown Pull Request", ephemeral = true).queue()
+
+        mutex.withLock {
+            jitpackPrService.updatePr(event, pullNumber) { branch ->
+                val message = createPrMessage(event, libraryType, buildToolType, pullRequest, branch.toGithubBranch())
+                if (event.user.idLong == callerId) {
+                    event.hook.editOriginal(MessageEditData.fromCreateData(message)).queue()
+                } else {
+                    event.hook.sendMessage(message).setEphemeral(true).queue()
+                }
+            }
+        }
+    }
+
     @AutocompleteHandler(name = BRANCH_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onBranchNameAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
@@ -233,7 +284,7 @@ class SlashJitpack(
         }
 
         event.replyEmbeds(embed)
-            .addActionRow(components.messageDeleteButton(event.user))
+            .addActionRow(componentsService.messageDeleteButton(event.user))
             .queue()
     }
 
