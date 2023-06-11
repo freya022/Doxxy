@@ -11,7 +11,7 @@ import java.sql.Connection
 import kotlin.io.path.*
 import kotlin.time.Duration.Companion.seconds
 
-@BService()
+@BService
 @ServiceType(ConnectionSupplier::class)
 class DatabaseSource(config: Config) : ConnectionSupplier {
     private val version = "2.5" //Same version as in CreateDatabase.sql
