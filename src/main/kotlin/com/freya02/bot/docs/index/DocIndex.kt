@@ -7,7 +7,9 @@ import com.freya02.bot.docs.cached.CachedField
 import com.freya02.bot.docs.cached.CachedMethod
 import com.freya02.bot.docs.metadata.ImplementationIndex
 import com.freya02.botcommands.api.core.db.Database
-import com.freya02.botcommands.api.core.db.KConnection
+import com.freya02.botcommands.api.core.db.Transaction
+import com.freya02.botcommands.api.core.db.preparedStatement
+import com.freya02.botcommands.api.core.db.transactional
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.DocsSession
 import com.freya02.docs.PageCache
@@ -81,7 +83,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
     }
 
     override suspend fun findAnySignatures(query: String, limit: Int, docTypes: DocTypes) =
-        database.withConnection(readOnly = true) {
+        database.transactional(readOnly = true) {
             preparedStatement("set pg_trgm.similarity_threshold = 0.1;") { executeUpdate(*emptyArray()) }
             findAnySignatures0(query, limit, docTypes)
         }
@@ -175,7 +177,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
     //Performance optimized
     //  The trick may be to set a lower similarity threshold as to get more, but similar enough results
     //  And then filter with the accurate similarity on the remaining rows
-    override suspend fun search(query: String): List<DocSearchResult> = database.withConnection(readOnly = true) {
+    override suspend fun search(query: String): List<DocSearchResult> = database.transactional(readOnly = true) {
         preparedStatement("set pg_trgm.similarity_threshold = 0.1;") { executeUpdate(*emptyArray()) }
 
         val results = findAnySignatures0(query, limit = 5, DocTypes.ANY)
@@ -237,7 +239,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
     }
 
     /** **Requires `pg_trgm.similarity_threshold` to be set**  */
-    context(KConnection)
+    context(Transaction)
     private suspend fun findAnySignatures0(query: String, limit: Int, docTypes: DocTypes): List<DocSearchResult> {
         if (docTypes.isEmpty()) throw IllegalArgumentException("Must have at least one doc type")
 

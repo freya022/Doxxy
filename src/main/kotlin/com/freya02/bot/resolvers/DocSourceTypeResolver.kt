@@ -2,6 +2,7 @@ package com.freya02.bot.resolvers
 
 import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.botcommands.api.BContext
+import com.freya02.botcommands.api.core.service.annotations.Resolver
 import com.freya02.botcommands.api.parameters.ComponentParameterResolver
 import com.freya02.botcommands.api.parameters.ParameterResolver
 import com.freya02.botcommands.api.parameters.RegexParameterResolver
@@ -19,6 +20,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import java.util.regex.Pattern
 
+@Resolver
 class DocSourceTypeResolver : ParameterResolver<DocSourceTypeResolver, DocSourceType>(DocSourceType::class),
     SlashParameterResolver<DocSourceTypeResolver, DocSourceType>,
     RegexParameterResolver<DocSourceTypeResolver, DocSourceType>,

@@ -8,7 +8,7 @@ import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocSuggestion
 import com.freya02.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
 import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
-import com.freya02.botcommands.api.core.annotations.BService
+import com.freya02.botcommands.api.core.service.annotations.BService
 import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.messages.reply_
 import kotlinx.coroutines.runBlocking

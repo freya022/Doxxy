@@ -1,5 +1,6 @@
 package com.freya02.bot.commands.text
 
+import com.freya02.botcommands.api.commands.annotations.Command
 import com.freya02.botcommands.api.commands.annotations.RequireOwner
 import com.freya02.botcommands.api.commands.prefixed.BaseCommandEvent
 import com.freya02.botcommands.api.commands.prefixed.TextCommand
@@ -8,6 +9,7 @@ import mu.KotlinLogging
 import net.dv8tion.jda.api.JDA
 import kotlin.system.exitProcess
 
+@Command
 class Exit : TextCommand() {
     private val logger = KotlinLogging.logger { }
 

@@ -1,10 +1,9 @@
 package com.freya02.bot.db
 
 import com.freya02.bot.Config
-import com.freya02.botcommands.api.core.ServiceStart
-import com.freya02.botcommands.api.core.annotations.BService
-import com.freya02.botcommands.api.core.annotations.ServiceType
 import com.freya02.botcommands.api.core.db.ConnectionSupplier
+import com.freya02.botcommands.api.core.service.annotations.BService
+import com.freya02.botcommands.api.core.service.annotations.ServiceType
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import java.nio.file.Path
@@ -12,8 +11,8 @@ import java.sql.Connection
 import kotlin.io.path.*
 import kotlin.time.Duration.Companion.seconds
 
-@BService(ServiceStart.PRE_LOAD)
-@ServiceType(type = ConnectionSupplier::class)
+@BService()
+@ServiceType(ConnectionSupplier::class)
 class DatabaseSource(config: Config) : ConnectionSupplier {
     private val version = "2.5" //Same version as in CreateDatabase.sql
     private val source: HikariDataSource

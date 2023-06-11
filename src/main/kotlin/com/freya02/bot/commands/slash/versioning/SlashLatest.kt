@@ -5,7 +5,7 @@ import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.bot.utils.Utils.isJDAGuild
 import com.freya02.bot.versioning.LibraryType
 import com.freya02.bot.versioning.Versions
-import com.freya02.botcommands.api.annotations.CommandMarker
+import com.freya02.botcommands.api.commands.annotations.Command
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.annotations.AppOption
 import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
@@ -13,7 +13,7 @@ import com.freya02.botcommands.api.commands.application.slash.annotations.JDASla
 import com.freya02.botcommands.api.components.Components
 import net.dv8tion.jda.api.EmbedBuilder
 
-@CommandMarker
+@Command
 class SlashLatest(private val versions: Versions, private val components: Components) : ApplicationCommand() {
     @JDASlashCommand(name = "latest", description = "Shows the latest version of the library")
     fun onSlashLatest(

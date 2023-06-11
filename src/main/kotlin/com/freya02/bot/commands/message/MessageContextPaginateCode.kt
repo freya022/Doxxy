@@ -8,7 +8,7 @@ import com.freya02.bot.utils.ParsingUtils.codeBlockRegex
 import com.freya02.bot.utils.Utils.digitAmount
 import com.freya02.bot.utils.Utils.letIf
 import com.freya02.bot.utils.suppressContentWarning
-import com.freya02.botcommands.api.annotations.CommandMarker
+import com.freya02.botcommands.api.commands.annotations.Command
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.context.annotations.JDAMessageCommand
 import com.freya02.botcommands.api.commands.application.context.message.GuildMessageEvent
@@ -35,7 +35,7 @@ import kotlin.properties.Delegates
 
 private typealias MessageId = Long
 
-@CommandMarker
+@Command
 class MessageContextPaginateCode(private val componentsService: Components) : ApplicationCommand() {
     private class PaginationState(val paginator: CodePaginator, val originalContent: String, val owner: UserSnowflake) {
         var showLineNumbers: Boolean by Delegates.observable(false) { _, _, _ -> blocks = regenerateBlocks() }

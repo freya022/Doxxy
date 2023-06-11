@@ -11,7 +11,7 @@ import com.freya02.bot.docs.index.DocSuggestion
 import com.freya02.bot.utils.Emojis
 import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.components.data.InteractionConstraints
-import com.freya02.botcommands.api.core.annotations.BService
+import com.freya02.botcommands.api.core.service.annotations.BService
 import com.freya02.botcommands.api.pagination.menu.ChoiceMenuBuilder
 import com.freya02.botcommands.api.utils.ButtonContent
 import com.freya02.docs.DocSourceType

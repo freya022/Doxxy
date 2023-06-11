@@ -1,7 +1,7 @@
 package com.freya02.bot.commands.slash
 
 import com.freya02.bot.tag.*
-import com.freya02.botcommands.api.annotations.CommandMarker
+import com.freya02.botcommands.api.commands.annotations.Command
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.CommandScope
 import com.freya02.botcommands.api.commands.application.annotations.AppOption
@@ -31,7 +31,7 @@ import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
-import net.dv8tion.jda.api.interactions.commands.Command
+import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
@@ -49,7 +49,7 @@ private const val USER_TAGS_AUTOCOMPLETE = "userTagsAutocomplete"
 private const val TAGS_CREATE_MODAL_HANDLER = "SlashTag: tagsCreate"
 private const val TAGS_EDIT_MODAL_HANDLER = "SlashTag: tagsEdit"
 
-@CommandMarker
+@Command
 class SlashTag(
     private val tagDB: TagDB,
     private val modals: Modals,
@@ -339,18 +339,18 @@ class SlashTag(
     }
 
     @AutocompleteHandler(name = GUILD_TAGS_AUTOCOMPLETE, showUserInput = false)
-    fun guildTagsAutocomplete(event: CommandAutoCompleteInteractionEvent): List<Command.Choice> {
+    fun guildTagsAutocomplete(event: CommandAutoCompleteInteractionEvent): List<Choice> {
         val guild = checkGuild(event.guild)
         return AutocompleteAlgorithms
             .fuzzyMatching(
                 tagDB.getShortTagsSorted(guild.idLong, TagCriteria.USES), { obj: ShortTag -> obj.name },
                 event.focusedOption.value
             )
-            .map { r -> Command.Choice(r.item.asChoiceName(), r.string) }
+            .map { r -> Choice(r.item.asChoiceName(), r.string) }
     }
 
     @AutocompleteHandler(name = USER_TAGS_AUTOCOMPLETE, showUserInput = false)
-    fun userTagsAutocomplete(event: CommandAutoCompleteInteractionEvent): List<Command.Choice> {
+    fun userTagsAutocomplete(event: CommandAutoCompleteInteractionEvent): List<Choice> {
         val guild = checkGuild(event.guild)
         return AutocompleteAlgorithms
             .fuzzyMatching(
@@ -358,7 +358,7 @@ class SlashTag(
                 { obj: ShortTag -> obj.name },
                 event.focusedOption.value
             )
-            .map { r -> Command.Choice(r.item.asChoiceName(), r.string) }
+            .map { r -> Choice(r.item.asChoiceName(), r.string) }
     }
 
     private fun ShortTag.asChoiceName(): String {

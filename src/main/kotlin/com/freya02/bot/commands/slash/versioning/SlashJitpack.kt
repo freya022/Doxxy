@@ -14,6 +14,7 @@ import com.freya02.bot.versioning.jitpack.JitpackPrService
 import com.freya02.bot.versioning.supplier.BuildToolType
 import com.freya02.bot.versioning.supplier.DependencySupplier
 import com.freya02.botcommands.api.annotations.CommandMarker
+import com.freya02.botcommands.api.commands.annotations.Command
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.CommandScope
 import com.freya02.botcommands.api.commands.application.GuildApplicationCommandManager
@@ -47,7 +48,7 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import net.dv8tion.jda.api.utils.messages.MessageEditData
 import kotlin.time.Duration.Companion.hours
 
-@CommandMarker
+@Command
 class SlashJitpack(
     private val componentsService: Components,
     private val jitpackPrService: JitpackPrService,

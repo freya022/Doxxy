@@ -7,13 +7,14 @@ import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.index.DocSuggestion
 import com.freya02.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
 import com.freya02.botcommands.api.annotations.CommandMarker
+import com.freya02.botcommands.api.commands.annotations.Command
 import com.freya02.botcommands.api.commands.application.CommandScope
 import com.freya02.botcommands.api.commands.application.GuildApplicationCommandManager
 import com.freya02.botcommands.api.commands.application.annotations.AppDeclaration
 import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
 import com.freya02.docs.DocSourceType
 
-@CommandMarker
+@Command
 class DocsCommand(private val docIndexMap: DocIndexMap, private val slashDocsController: SlashDocsController) {
     @AppDeclaration
     fun declare(manager: GuildApplicationCommandManager) {

@@ -6,6 +6,8 @@ import com.freya02.bot.docs.metadata.parser.ImplementationMetadataWriter
 import com.freya02.bot.docs.metadata.parser.SourceRootMetadata
 import com.freya02.botcommands.api.core.db.Database
 import com.freya02.botcommands.api.core.db.Transaction
+import com.freya02.botcommands.api.core.db.preparedStatement
+import com.freya02.botcommands.api.core.db.transactional
 import com.freya02.docs.ClassDocs
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.DocUtils.returnTypeNoAnnotations

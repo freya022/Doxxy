@@ -1,7 +1,6 @@
 package com.freya02.bot
 
-import com.freya02.botcommands.api.core.annotations.BService
-import com.freya02.botcommands.api.core.suppliers.annotations.InstanceSupplier
+import com.freya02.botcommands.api.core.service.annotations.BService
 import com.google.gson.Gson
 import mu.KotlinLogging
 import kotlin.io.path.readText
@@ -24,6 +23,8 @@ data class Config(val token: String,
                   val dbConfig: DBConfig) {
     companion object {
         private val logger = KotlinLogging.logger { }
+
+        @get:BService
         val config: Config by lazy {
             val configPath = Data.getEffectiveConfigPath()
             if (Data.isDevEnvironment) {
@@ -32,8 +33,5 @@ data class Config(val token: String,
 
             return@lazy Gson().fromJson(configPath.readText(), Config::class.java)
         }
-
-        @InstanceSupplier
-        fun supply(): Config = config
     }
 }
