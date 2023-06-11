@@ -2,6 +2,7 @@ package com.freya02.bot.resolvers
 
 import com.freya02.bot.docs.index.DocTypes
 import com.freya02.botcommands.api.BContext
+import com.freya02.botcommands.api.core.service.annotations.Resolver
 import com.freya02.botcommands.api.parameters.ParameterResolver
 import com.freya02.botcommands.api.parameters.SlashParameterResolver
 import com.freya02.botcommands.internal.commands.application.slash.SlashCommandInfo
@@ -11,6 +12,7 @@ import net.dv8tion.jda.api.interactions.commands.CommandInteractionPayload
 import net.dv8tion.jda.api.interactions.commands.OptionMapping
 import net.dv8tion.jda.api.interactions.commands.OptionType
 
+@Resolver
 class DocTypesResolver : ParameterResolver<DocTypesResolver, DocTypes>(DocTypes::class),
     SlashParameterResolver<DocTypesResolver, DocTypes> {
     override val optionType: OptionType = OptionType.INTEGER

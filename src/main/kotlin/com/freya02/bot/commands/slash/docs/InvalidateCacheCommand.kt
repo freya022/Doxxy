@@ -1,14 +1,14 @@
 package com.freya02.bot.commands.slash.docs
 
 import com.freya02.bot.docs.DocIndexMap
-import com.freya02.botcommands.api.annotations.CommandMarker
+import com.freya02.botcommands.api.commands.annotations.Command
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.CommandScope
 import com.freya02.botcommands.api.commands.application.annotations.Test
 import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
 import com.freya02.botcommands.api.commands.application.slash.annotations.JDASlashCommand
 
-@CommandMarker
+@Command
 class InvalidateCacheCommand(private val docIndexMap: DocIndexMap) : ApplicationCommand() {
     @Test
     @JDASlashCommand(scope = CommandScope.GUILD, name = "invalidate")

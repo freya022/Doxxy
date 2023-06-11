@@ -2,7 +2,7 @@ package com.freya02.bot.commands.slash
 
 import com.freya02.bot.format.Formatter
 import com.freya02.bot.format.FormattingException
-import com.freya02.botcommands.api.annotations.CommandMarker
+import com.freya02.botcommands.api.commands.annotations.Command
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.CommandScope
 import com.freya02.botcommands.api.commands.application.slash.GlobalSlashEvent
@@ -13,7 +13,7 @@ import com.freya02.botcommands.api.modals.paragraphTextInput
 import dev.minn.jda.ktx.messages.reply_
 import net.dv8tion.jda.api.entities.Message
 
-@CommandMarker
+@Command
 class SlashFormat : ApplicationCommand() {
     @JDASlashCommand(
         scope = CommandScope.GLOBAL,

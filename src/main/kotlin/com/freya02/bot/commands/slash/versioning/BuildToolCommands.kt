@@ -9,6 +9,7 @@ import com.freya02.bot.versioning.supplier.BuildToolType
 import com.freya02.bot.versioning.supplier.DependencySupplier
 import com.freya02.bot.versioning.supplier.UnsupportedDependencyException
 import com.freya02.botcommands.api.annotations.CommandMarker
+import com.freya02.botcommands.api.commands.annotations.Command
 import com.freya02.botcommands.api.commands.application.CommandScope
 import com.freya02.botcommands.api.commands.application.GuildApplicationCommandManager
 import com.freya02.botcommands.api.commands.application.annotations.AppDeclaration
@@ -23,7 +24,7 @@ import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.utils.FileUpload
 import kotlin.time.Duration.Companion.days
 
-@CommandMarker
+@Command
 class BuildToolCommands(private val versions: Versions, private val componentsService: Components, private val slashLogback: SlashLogback) {
     private val logger = KotlinLogging.logger { }
 

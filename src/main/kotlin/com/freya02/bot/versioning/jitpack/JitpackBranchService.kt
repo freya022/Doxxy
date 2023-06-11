@@ -10,10 +10,12 @@ import com.freya02.bot.versioning.github.GithubUtils
 import com.freya02.bot.versioning.github.UpdateCountdown
 import com.freya02.bot.versioning.maven.MavenBranchProjectDependencyVersionChecker
 import com.freya02.botcommands.api.BContext
+import com.freya02.botcommands.api.core.service.annotations.BService
 import java.io.IOException
 import java.util.*
 import kotlin.time.Duration.Companion.minutes
 
+@BService
 class JitpackBranchService(private val context: BContext) {
     private val updateMap: MutableMap<LibraryType, UpdateCountdown> = EnumMap(LibraryType::class.java)
     private val branchMap: MutableMap<LibraryType, GithubBranchMap> = EnumMap(LibraryType::class.java)

@@ -3,7 +3,7 @@ package com.freya02.bot.commands.slash
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
 import com.freya02.bot.utils.Utils
 import com.freya02.bot.versioning.LibraryType
-import com.freya02.botcommands.api.annotations.CommandMarker
+import com.freya02.botcommands.api.commands.annotations.Command
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.annotations.AppOption
 import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
@@ -13,7 +13,7 @@ import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.MessageCreate
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 
-@CommandMarker
+@Command
 class SlashLogback(private val componentsService: Components) : ApplicationCommand() {
     private val contentTemplate = """
         ```xml

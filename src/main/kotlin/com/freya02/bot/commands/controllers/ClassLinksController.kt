@@ -9,8 +9,9 @@ import com.freya02.bot.utils.joinLengthyString
 import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.components.event.ButtonEvent
 import com.freya02.botcommands.api.components.event.StringSelectEvent
-import com.freya02.botcommands.api.core.ServiceContainer
-import com.freya02.botcommands.api.core.annotations.BService
+import com.freya02.botcommands.api.core.service.ServiceContainer
+import com.freya02.botcommands.api.core.service.annotations.BService
+import com.freya02.botcommands.api.core.service.lazy
 import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.MessageCreate
 import dev.minn.jda.ktx.messages.reply_

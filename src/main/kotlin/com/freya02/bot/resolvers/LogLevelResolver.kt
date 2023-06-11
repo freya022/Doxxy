@@ -2,6 +2,7 @@ package com.freya02.bot.resolvers
 
 import ch.qos.logback.classic.Level
 import com.freya02.botcommands.api.BContext
+import com.freya02.botcommands.api.core.service.annotations.Resolver
 import com.freya02.botcommands.api.parameters.ParameterResolver
 import com.freya02.botcommands.api.parameters.SlashParameterResolver
 import com.freya02.botcommands.internal.commands.application.slash.SlashCommandInfo
@@ -11,6 +12,7 @@ import net.dv8tion.jda.api.interactions.commands.CommandInteractionPayload
 import net.dv8tion.jda.api.interactions.commands.OptionMapping
 import net.dv8tion.jda.api.interactions.commands.OptionType
 
+@Resolver
 class LogLevelResolver : ParameterResolver<LogLevelResolver, Level>(Level::class.java), SlashParameterResolver<LogLevelResolver, Level> {
     override val optionType: OptionType = OptionType.STRING
 

@@ -3,12 +3,14 @@ package com.freya02.bot.commands.slash
 import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.components.annotations.JDAButtonListener
 import com.freya02.botcommands.api.components.event.ButtonEvent
+import com.freya02.botcommands.api.core.annotations.Handler
 import com.freya02.botcommands.api.utils.EmojiUtils
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 
+@Handler
 class DeleteButtonListener {
     @JDAButtonListener(name = DELETE_MESSAGE_BUTTON_LISTENER_NAME)
     suspend fun onDeleteMessageClick(event: ButtonEvent, components: Components) {

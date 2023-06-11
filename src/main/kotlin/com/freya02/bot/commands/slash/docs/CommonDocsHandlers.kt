@@ -13,6 +13,7 @@ import com.freya02.botcommands.api.commands.application.slash.autocomplete.annot
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.CompositeKey
 import com.freya02.botcommands.api.components.annotations.JDASelectMenuListener
 import com.freya02.botcommands.api.components.event.StringSelectEvent
+import com.freya02.botcommands.api.core.annotations.Handler
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.data.TargetType
 import dev.minn.jda.ktx.messages.reply_
@@ -21,6 +22,7 @@ import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInterac
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.utils.messages.MessageEditData
 
+@Handler
 class CommonDocsHandlers(
     private val docIndexMap: DocIndexMap,
     private val commonDocsController: CommonDocsController,

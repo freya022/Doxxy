@@ -9,7 +9,9 @@ import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.components.builder.select.ephemeral.EphemeralStringSelectBuilder
 import com.freya02.botcommands.api.components.event.StringSelectEvent
 import com.freya02.botcommands.api.core.db.Database
-import com.freya02.botcommands.api.core.db.KConnection
+import com.freya02.botcommands.api.core.db.Transaction
+import com.freya02.botcommands.api.core.db.transactional
+import com.freya02.botcommands.api.core.service.annotations.BService
 import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.MessageCreate
@@ -22,6 +24,7 @@ import net.dv8tion.jda.api.utils.messages.MessageEditData
 import java.util.*
 import kotlin.time.Duration.Companion.minutes
 
+@BService
 class DocMentionController(
     private val database: Database,
     private val componentsService: Components,
@@ -30,7 +33,7 @@ class DocMentionController(
 ) {
     private val identifierRegex = Regex("""(\w+)[#.](\w+)""")
 
-    suspend fun processMentions(contentRaw: String): DocMatches = database.withConnection(readOnly = true) {
+    suspend fun processMentions(contentRaw: String): DocMatches = database.transactional(readOnly = true) {
         val cleanedContent = codeBlockRegex.replace(contentRaw, "")
 
         val mentionedClasses = getMentionedClasses(cleanedContent)
@@ -107,7 +110,7 @@ class DocMentionController(
         }
     }
 
-    context(KConnection)
+    context(Transaction)
     private suspend fun getMentionedClasses(content: String): List<ClassMention> {
         return spaceRegex.split(content).let { words ->
             preparedStatement(

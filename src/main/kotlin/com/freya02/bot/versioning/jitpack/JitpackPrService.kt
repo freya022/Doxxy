@@ -8,6 +8,7 @@ import com.freya02.bot.versioning.github.GithubUtils
 import com.freya02.bot.versioning.github.PullRequest
 import com.freya02.bot.versioning.github.PullRequestCache
 import com.freya02.botcommands.api.components.event.ButtonEvent
+import com.freya02.botcommands.api.core.service.annotations.BService
 import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.messages.send
 import dev.minn.jda.ktx.util.await
@@ -15,6 +16,7 @@ import mu.KotlinLogging
 import net.dv8tion.jda.api.utils.data.DataObject
 import okhttp3.Request
 
+@BService
 class JitpackPrService(private val config: Config) {
     data class PullUpdaterBranch(val forkBotName: String, val forkRepoName: String, val forkedBranchName: String) {
         fun toGithubBranch(): GithubBranch = GithubUtils.getBranch(forkBotName, forkRepoName, forkedBranchName)

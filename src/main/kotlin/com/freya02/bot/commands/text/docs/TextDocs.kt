@@ -6,7 +6,7 @@ import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.index.DocSuggestion
 import com.freya02.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
 import com.freya02.bot.docs.index.DocTypes
-import com.freya02.botcommands.api.annotations.CommandMarker
+import com.freya02.botcommands.api.commands.annotations.Command
 import com.freya02.botcommands.api.commands.prefixed.BaseCommandEvent
 import com.freya02.botcommands.api.commands.prefixed.TextCommand
 import com.freya02.botcommands.api.commands.prefixed.annotations.JDATextCommand
@@ -14,7 +14,7 @@ import com.freya02.botcommands.api.commands.prefixed.annotations.TextOption
 import com.freya02.docs.DocSourceType
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
 
-@CommandMarker
+@Command
 class TextDocs(
     private val docIndexMap: DocIndexMap,
     private val commonDocsController: CommonDocsController,

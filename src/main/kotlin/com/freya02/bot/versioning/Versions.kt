@@ -14,8 +14,8 @@ import com.freya02.bot.versioning.maven.MavenVersionChecker
 import com.freya02.bot.versioning.maven.RepoType
 import com.freya02.botcommands.api.BContext
 import com.freya02.botcommands.api.core.annotations.BEventListener
-import com.freya02.botcommands.api.core.annotations.BService
 import com.freya02.botcommands.api.core.events.FirstReadyEvent
+import com.freya02.botcommands.api.core.service.annotations.BService
 import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.events.getDefaultScope
 import kotlinx.coroutines.*

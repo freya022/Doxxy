@@ -3,7 +3,7 @@ package com.freya02.bot.commands.slash
 import com.freya02.bot.versioning.github.UpdateCountdown
 import com.freya02.botcommands.api.BCInfo
 import com.freya02.botcommands.api.BContext
-import com.freya02.botcommands.api.annotations.CommandMarker
+import com.freya02.botcommands.api.commands.annotations.Command
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.CommandScope
 import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
@@ -18,7 +18,7 @@ import net.dv8tion.jda.api.utils.TimeFormat
 import java.lang.management.ManagementFactory
 import kotlin.time.Duration.Companion.minutes
 
-@CommandMarker
+@Command
 class SlashInfo(private val context: BContext) : ApplicationCommand() {
     private val combinedMemberCountCountdown = UpdateCountdown(5.minutes)
     private var combinedMemberCount: Int = 0

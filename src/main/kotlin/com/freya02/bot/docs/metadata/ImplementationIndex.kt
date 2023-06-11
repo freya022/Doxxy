@@ -4,6 +4,7 @@ import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.metadata.parser.FullSimpleClassName
 import com.freya02.botcommands.api.core.db.DBResult
 import com.freya02.botcommands.api.core.db.Database
+import com.freya02.botcommands.api.core.db.preparedStatement
 import com.freya02.docs.DocSourceType
 
 class ImplementationIndex(val docIndex: DocIndex, private val database: Database) {
