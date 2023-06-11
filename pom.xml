@@ -122,9 +122,9 @@
             <version>2.3.6</version>
         </dependency>
         <dependency>
-            <groupId>io.github.DV8FromTheWorld</groupId>
+            <groupId>io.github.JDA-Fork</groupId>
             <artifactId>JDA</artifactId>
-            <version>2e2653e411</version>
+            <version>886fe95bdc</version>
             <exclusions>
                 <exclusion>
                     <groupId>club.minnced</groupId>
