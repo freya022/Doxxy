@@ -51,8 +51,8 @@ class SlashInfo(private val context: BContext) : ApplicationCommand() {
 
                     @Suppress("SENSELESS_COMPARISON") //Might be null depending on version used
                     value = when {
-                        JDAInfo.COMMIT_HASH == null || JDAInfo.COMMIT_HASH.endsWith("DEV") -> "[${JDAInfo.VERSION}](https://github.com/DV8FromTheWorld/JDA)"
-                        else -> "[${JDAInfo.VERSION}](https://github.com/DV8FromTheWorld/JDA/commit/${JDAInfo.COMMIT_HASH})"
+                        JDAInfo.COMMIT_HASH == null || JDAInfo.COMMIT_HASH.endsWith("DEV") -> "[${JDAInfo.VERSION}](https://github.com/discord-jda/JDA)"
+                        else -> "[${JDAInfo.VERSION}](https://github.com/discord-jda/JDA/commit/${JDAInfo.COMMIT_HASH})"
                     }
 
                     inline = true

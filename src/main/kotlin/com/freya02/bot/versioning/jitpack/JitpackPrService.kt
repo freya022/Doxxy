@@ -25,7 +25,7 @@ class JitpackPrService(private val config: Config) {
     private val logger = KotlinLogging.logger { }
 
     private val bcPullRequestCache = PullRequestCache("freya022", "BotCommands", null)
-    private val jdaPullRequestCache = PullRequestCache("DV8FromTheWorld", "JDA", "master")
+    private val jdaPullRequestCache = PullRequestCache("discord-jda", "JDA", "master")
     private val jdaKtxPullRequestCache = PullRequestCache("MinnDevelopment", "jda-ktx", "master")
     private val lavaPlayerPullRequestCache = PullRequestCache("Walkyst", "lavaplayer-fork", "original")
 

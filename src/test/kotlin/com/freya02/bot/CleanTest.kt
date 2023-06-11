@@ -49,7 +49,7 @@ object CleanTest {
 				""".trimIndent()
         val clean = Jsoup.clean(
             str,
-            "https://ci.dv8tion.net/job/JDA/javadoc/net/dv8tion/jda/api/JDABuilder.html",
+            "https://docs.jda.wiki/net/dv8tion/jda/api/JDABuilder.html",
             Safelist.relaxed()
                 .removeAttributes("a", "title")
         )

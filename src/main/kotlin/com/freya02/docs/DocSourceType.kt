@@ -16,7 +16,7 @@ enum class DocSourceType(
         "jda",
         "http://localhost:25566/JDA",
         "JDA",
-        "https://ci.dv8tion.net/job/JDA5/javadoc",
+        "https://docs.jda.wiki",
         "net\\.dv8tion\\.jda.*"
     ),
     BOT_COMMANDS(

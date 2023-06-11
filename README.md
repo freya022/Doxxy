@@ -1,5 +1,5 @@
 # Doxxy
-A Discord bot to display the javadocs of [BotCommands](https://github.com/freya022/BotCommands), [JDA](https://github.com/DV8FromTheWorld/JDA) and Java 17
+A Discord bot to display the javadocs of [BotCommands](https://github.com/freya022/BotCommands), [JDA](https://github.com/discord-jda/JDA) and Java 17
 
 ## Features
 * Searching docs

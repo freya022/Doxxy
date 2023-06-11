@@ -33,7 +33,7 @@ object DocsTest3 {
         val url = updatedSource.getSimpleNameToUrlMap()["OptionData"]
         val onlineClassDoc = ClassDoc(
             DocsSession(),
-            "https://ci.dv8tion.net/job/JDA5/javadoc/net/dv8tion/jda/api/entities/MessageType.html"
+            "https://docs.jda.wiki/net/dv8tion/jda/api/entities/MessageType.html"
         )
         val classDoc = ClassDoc(DocsSession(), url!!)
         val methodDoc = classDoc.getMethodDocs()["putRolePermissionOverride(long,long,long)"]

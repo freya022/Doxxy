@@ -9,14 +9,14 @@ class AutolinkEscapeTest {
     fun test() {
         val returnsDetailHtml = """
             <dd>
-             <a href="https://ci.dv8tion.net/job/JDA5/javadoc/net/dv8tion/jda/api/requests/RestAction.html" title="interface in net.dv8tion.jda.api.requests"><code>RestAction</code></a> - Type: List&lt;<a href="https://ci.dv8tion.net/job/JDA5/javadoc/net/dv8tion/jda/api/entities/Invite.html" title="interface in net.dv8tion.jda.api.entities"><code>Invite</code></a>&gt; <br>
+             <a href="https://docs.jda.wiki/net/dv8tion/jda/api/requests/RestAction.html" title="interface in net.dv8tion.jda.api.requests"><code>RestAction</code></a> - Type: List&lt;<a href="https://docs.jda.wiki/net/dv8tion/jda/api/entities/Invite.html" title="interface in net.dv8tion.jda.api.entities"><code>Invite</code></a>&gt; <br>
              The list of expanded Invite objects
             </dd>
         """.trimIndent()
-        val md = JDocUtil.formatText(returnsDetailHtml, "https://ci.dv8tion.net/job/JDA5/javadoc/net/dv8tion/jda/api/entities/Guild.html")
+        val md = JDocUtil.formatText(returnsDetailHtml, "https://docs.jda.wiki/net/dv8tion/jda/api/entities/Guild.html")
 
         assertEquals("""
-            [`RestAction`](https://ci.dv8tion.net/job/JDA5/javadoc/net/dv8tion/jda/api/requests/RestAction.html) \- Type: List\<[`Invite`](https://ci.dv8tion.net/job/JDA5/javadoc/net/dv8tion/jda/api/entities/Invite.html)\>
+            [`RestAction`](https://docs.jda.wiki/net/dv8tion/jda/api/requests/RestAction.html) \- Type: List\<[`Invite`](https://docs.jda.wiki/net/dv8tion/jda/api/entities/Invite.html)\>
             The list of expanded Invite objects
         """.trimIndent(), md)
     }
@@ -41,7 +41,7 @@ class AutolinkEscapeTest {
              </code></pre></div>
         """.trimIndent()
 
-        val md = JDocUtil.formatText(descriptionHtml, "https://ci.dv8tion.net/job/JDA5/javadoc/net/dv8tion/jda/api/entities/emoji/Emoji.html")
+        val md = JDocUtil.formatText(descriptionHtml, "https://docs.jda.wiki/net/dv8tion/jda/api/entities/emoji/Emoji.html")
 
         assertEquals("""
             Parses the provided markdown formatting, or unicode characters, to an Emoji instance.

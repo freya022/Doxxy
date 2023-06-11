@@ -105,8 +105,8 @@ class Versions(private val context: BContext, private val docIndexMap: DocIndexM
                 VersionsUtils.extractZip(tempZip, jdaDocsFolder, "java")
             }
 
-            val sourceUrl = GithubUtils.getLatestReleaseHash("DV8FromTheWorld", "JDA")
-                ?.let { hash -> "https://github.com/DV8FromTheWorld/JDA/blob/${hash.hash}/src/main/java/" }
+            val sourceUrl = GithubUtils.getLatestReleaseHash("discord-jda", "JDA")
+                ?.let { hash -> "https://github.com/discord-jda/JDA/blob/${hash.hash}/src/main/java/" }
 
             logger.trace("Invalidating JDA index")
             docIndexMap.refreshAndInvalidateIndex(DocSourceType.JDA, ReindexData(sourceUrl))
