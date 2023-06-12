@@ -178,6 +178,17 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
     //  The trick may be to set a lower similarity threshold as to get more, but similar enough results
     //  And then filter with the accurate similarity on the remaining rows
     override suspend fun search(query: String): List<DocSearchResult> = database.transactional(readOnly = true) {
+        if ('#' in query) {
+            //If the class name has an exact match
+            val className = query.substringBefore('#')
+            preparedStatement("select id from doc where source_id = ? and classname = ? limit 1") {
+                executeQuery(sourceType.id, className).readOnce()?.let {
+                    //If there is something found
+                    return findSignaturesIn(className, query.substringAfter('#'), DocTypes.IDENTIFIERS, 25)
+                }
+            }
+        }
+
         preparedStatement("set pg_trgm.similarity_threshold = 0.1;") { executeUpdate(*emptyArray()) }
 
         val results = findAnySignatures0(query, limit = 5, DocTypes.ANY)
