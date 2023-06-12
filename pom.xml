@@ -124,7 +124,7 @@
         <dependency>
             <groupId>io.github.JDA-Fork</groupId>
             <artifactId>JDA</artifactId>
-            <version>4630a326c1</version>
+            <version>9989d6fa1a</version>
             <exclusions>
                 <exclusion>
                     <groupId>club.minnced</groupId>
@@ -135,7 +135,7 @@
         <dependency>
             <groupId>io.github.freya022</groupId>
             <artifactId>BotCommands</artifactId>
-            <version>3342276175</version>
+            <version>df6ade58b1</version>
         </dependency>
         <dependency>
             <groupId>io.github.minndevelopment</groupId>
