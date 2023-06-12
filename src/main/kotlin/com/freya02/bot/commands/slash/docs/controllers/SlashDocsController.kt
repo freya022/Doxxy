@@ -72,7 +72,7 @@ class SlashDocsController(private val commonDocsController: CommonDocsController
     suspend fun onSearchSlashCommand(event: GuildSlashEvent, sourceType: DocSourceType, query: String) {
         val docIndex = docIndexMap[sourceType]!!
         when {
-            '(' in query -> {
+            '(' in query && '#' in query -> {
                 val (className, identifier) = query.split("#")
                 handleMethodDocs(event, className, identifier, docIndex) {
                     searchAutocomplete(docIndex, query).mapToSuggestions()
