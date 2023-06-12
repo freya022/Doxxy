@@ -76,7 +76,7 @@ class CommonDocsController(
                     else -> it
                 }
             })
-            addDocsSeeAlso(cachedDoc)
+            addDocsSeeAlso(caller, cachedDoc)
             addDocsActionRows(originalHook, ephemeral, cachedDoc, caller)
         }.build()
     }
@@ -103,11 +103,11 @@ class CommonDocsController(
         }
     }
 
-    private fun MessageCreateRequest<*>.addDocsSeeAlso(cachedDoc: CachedDoc) {
+    private fun MessageCreateRequest<*>.addDocsSeeAlso(caller: UserSnowflake, cachedDoc: CachedDoc) {
         cachedDoc.seeAlsoReferences.let { referenceList ->
             if (referenceList.any { it.targetType != TargetType.UNKNOWN }) {
                 val selectMenu = componentsService.persistentStringSelectMenu {
-                    bindTo(CommonDocsHandlers.SEE_ALSO_SELECT_LISTENER_NAME, cachedDoc.source.id)
+                    bindTo(CommonDocsHandlers.SEE_ALSO_SELECT_LISTENER_NAME, caller.idLong, cachedDoc.source.id)
                     timeout(15.minutes)
                     placeholder = "See also"
 

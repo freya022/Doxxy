@@ -29,7 +29,7 @@ class CommonDocsHandlers(
     private val slashDocsController: SlashDocsController
 ) : ApplicationCommand() {
     @JDASelectMenuListener(name = SEE_ALSO_SELECT_LISTENER_NAME)
-    suspend fun onSeeAlsoSelect(event: StringSelectEvent, docSourceType: DocSourceType) {
+    suspend fun onSeeAlsoSelect(event: StringSelectEvent, ownerId: Long, docSourceType: DocSourceType) {
         val values = event.selectedOptions.single().value.split(":")
         val targetType = TargetType.valueOf(values[0])
         val fullSignature = values[1]
@@ -44,7 +44,7 @@ class CommonDocsHandlers(
 
         when (doc) {
             null -> event.reply_("This reference is not available anymore", ephemeral = true).queue()
-            else -> when (event.message.interaction!!.user.idLong) {
+            else -> when (ownerId) {
                 event.user.idLong -> commonDocsController //Caller is same as original command caller, edit
                     .getDocMessageData(
                         event.hook,
