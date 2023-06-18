@@ -24,7 +24,7 @@ Contributions are welcome, here are the prerequisites in order to run the bot, s
    ```kt
    Path(System.getProperty("user.home"), "Bots", "Doxxy")
    ```
-2. Set up the tables with [this script](https://github.com/freya022/BotCommands/blob/UNSTABLE-3.0.0/sql/CreateDatabase.sql) and [this one](https://github.com/freya022/Doxxy/blob/master/sql/CreateDatabase.sql).
+2. Set up the tables with [this script](https://github.com/freya022/BotCommands/blob/3.0.0-dev/src/main/resources/bc_database_scripts/V3.0.0.2023.05.21__Create_database.sql) and [this one](https://github.com/freya022/Doxxy/blob/master/sql/CreateDatabase.sql).
 3. Have a valid `Test_Config.json` in the project root, to which you can find a template [here](Config_template.json).
 4. When running the bot, add this to the VM options: `--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED`
 5. ???
