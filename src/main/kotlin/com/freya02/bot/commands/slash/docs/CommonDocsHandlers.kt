@@ -59,7 +59,7 @@ class CommonDocsHandlers(
         }
     }
 
-    @CacheAutocomplete(compositeKeys = ["sourceType"])
+    @CacheAutocomplete
     @AutocompleteHandler(name = CLASS_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
     suspend fun onClassNameAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
@@ -68,7 +68,7 @@ class CommonDocsHandlers(
         classNameAutocomplete(this, event.focusedOption.value).toChoices()
     }
 
-    @CacheAutocomplete(compositeKeys = ["sourceType", "className"])
+    @CacheAutocomplete(compositeKeys = ["className"])
     @AutocompleteHandler(name = METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME, showUserInput = false)
     suspend fun onMethodOrFieldByClassAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
@@ -78,7 +78,7 @@ class CommonDocsHandlers(
         methodOrFieldByClassAutocomplete(this, className, event.focusedOption.value).searchResultToIdentifierChoices()
     }
 
-    @CacheAutocomplete(compositeKeys = ["sourceType"])
+    @CacheAutocomplete
     @AutocompleteHandler(name = SEARCH_AUTOCOMPLETE_NAME, showUserInput = false)
     suspend fun onSearchAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
@@ -87,7 +87,7 @@ class CommonDocsHandlers(
         searchAutocomplete(this, event.focusedOption.value).searchResultToFullIdentifierChoices()
     }
 
-    @CacheAutocomplete(compositeKeys = ["sourceType"])
+    @CacheAutocomplete
     @AutocompleteHandler(name = RESOLVE_AUTOCOMPLETE_NAME, showUserInput = false)
     suspend fun onResolveAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
