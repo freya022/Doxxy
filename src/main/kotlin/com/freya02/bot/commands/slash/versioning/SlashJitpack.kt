@@ -19,13 +19,11 @@ import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.CommandScope
 import com.freya02.botcommands.api.commands.application.GuildApplicationCommandManager
 import com.freya02.botcommands.api.commands.application.annotations.AppDeclaration
-import com.freya02.botcommands.api.commands.application.annotations.AppOption
 import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.AutocompleteAlgorithms
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.FuzzyResult
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.ToStringFunction
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
-import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.CompositeKey
 import com.freya02.botcommands.api.commands.application.slash.builder.SlashCommandBuilder
 import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.components.event.ButtonEvent
@@ -123,7 +121,7 @@ class SlashJitpack(
     @AutocompleteHandler(name = PR_NUMBER_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onPRNumberAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
-        @CompositeKey @AppOption libraryType: LibraryType
+        libraryType: LibraryType
     ): Collection<Choice> {
         val pullRequests = jitpackPrService.getPullRequests(libraryType)
 
@@ -160,7 +158,7 @@ class SlashJitpack(
     @AutocompleteHandler(name = BRANCH_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
     fun onBranchNameAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
-        @CompositeKey @AppOption libraryType: LibraryType
+        libraryType: LibraryType
     ): Collection<Choice> {
         val branchMap = jitpackBranchService.getBranchMap(libraryType)
         val defaultBranchName = branchMap.defaultBranch.branchName

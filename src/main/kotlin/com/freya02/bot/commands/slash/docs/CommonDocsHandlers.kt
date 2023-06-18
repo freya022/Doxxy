@@ -7,10 +7,8 @@ import com.freya02.bot.docs.DocResolveChain
 import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocSearchResult
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
-import com.freya02.botcommands.api.commands.application.annotations.AppOption
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.CacheAutocomplete
-import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.CompositeKey
 import com.freya02.botcommands.api.components.annotations.JDASelectMenuListener
 import com.freya02.botcommands.api.components.event.StringSelectEvent
 import com.freya02.botcommands.api.core.annotations.Handler
@@ -61,40 +59,40 @@ class CommonDocsHandlers(
         }
     }
 
-    @CacheAutocomplete
+    @CacheAutocomplete(compositeKeys = ["sourceType"])
     @AutocompleteHandler(name = CLASS_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
     suspend fun onClassNameAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
-        @CompositeKey @AppOption sourceType: DocSourceType
+        sourceType: DocSourceType
     ): List<Choice> = withDocIndex(sourceType) {
         classNameAutocomplete(this, event.focusedOption.value).toChoices()
     }
 
-    @CacheAutocomplete
+    @CacheAutocomplete(compositeKeys = ["sourceType", "className"])
     @AutocompleteHandler(name = METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME, showUserInput = false)
     suspend fun onMethodOrFieldByClassAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
-        @CompositeKey @AppOption sourceType: DocSourceType,
-        @CompositeKey @AppOption className: String
+        sourceType: DocSourceType,
+        className: String
     ): List<Choice> = withDocIndex(sourceType) {
         methodOrFieldByClassAutocomplete(this, className, event.focusedOption.value).searchResultToIdentifierChoices()
     }
 
-    @CacheAutocomplete
+    @CacheAutocomplete(compositeKeys = ["sourceType"])
     @AutocompleteHandler(name = SEARCH_AUTOCOMPLETE_NAME, showUserInput = false)
     suspend fun onSearchAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
-        @CompositeKey @AppOption sourceType: DocSourceType
+        sourceType: DocSourceType
     ): List<Choice> = withDocIndex(sourceType) {
         searchAutocomplete(this, event.focusedOption.value).searchResultToFullIdentifierChoices()
     }
 
-    @CacheAutocomplete
+    @CacheAutocomplete(compositeKeys = ["sourceType"])
     @AutocompleteHandler(name = RESOLVE_AUTOCOMPLETE_NAME, showUserInput = false)
     suspend fun onResolveAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
-        @CompositeKey @AppOption sourceType: DocSourceType,
-        @AppOption chain: DocResolveChain
+        sourceType: DocSourceType,
+        chain: DocResolveChain
     ): List<Choice> = withDocIndex(sourceType) {
         resolveDocAutocomplete(chain).searchResultToFullIdentifierChoices()
     }
