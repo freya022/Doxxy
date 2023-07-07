@@ -6,13 +6,11 @@ import java.io.IOException
 import java.nio.file.Path
 
 class MavenVersionChecker(
-    lastSavedPath: Path?,
+    lastSavedPath: Path,
     private val repoType: RepoType,
     private val groupId: String,
     private val artifactId: String
-) : VersionChecker(
-    lastSavedPath!!
-) {
+) : VersionChecker(lastSavedPath) {
     @Throws(IOException::class)
     override fun checkVersion(): Boolean {
         ArtifactInfo(
