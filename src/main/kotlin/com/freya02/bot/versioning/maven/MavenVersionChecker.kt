@@ -18,7 +18,7 @@ class MavenVersionChecker(
         ArtifactInfo(
             groupId,
             artifactId,
-            MavenUtils.getLatestMavenVersion(repoType.urlFormat, groupId, artifactId)
+            MavenUtils.getLatestStableMavenVersion(repoType.urlFormat, groupId, artifactId)
         ).let { latestVersion ->
             val changed = latestVersion != diskLatest
             latest = latestVersion
