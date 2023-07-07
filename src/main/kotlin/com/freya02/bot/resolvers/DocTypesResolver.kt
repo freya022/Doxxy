@@ -26,7 +26,7 @@ class DocTypesResolver : ParameterResolver<DocTypesResolver, DocTypes>(DocTypes:
         )
     }
 
-    override suspend fun resolveSuspend(context: BContext, info: SlashCommandInfo, event: CommandInteractionPayload, optionMapping: OptionMapping): DocTypes? {
+    override suspend fun resolveSuspend(context: BContext, info: SlashCommandInfo, event: CommandInteractionPayload, optionMapping: OptionMapping): DocTypes {
         return DocTypes.fromRaw(optionMapping.asLong)
     }
 }

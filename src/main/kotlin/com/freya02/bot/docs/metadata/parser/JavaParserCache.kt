@@ -100,7 +100,7 @@ class JavaParserCache {
             .forEach {
                 val cache: Cache<*, *, *> = it.javaField?.get(this) as? Cache<*, *, *>
                     ?: return logger.warn("Could not get field '${it.name}'")
-                logger.trace("${it.name}: $cache")
+                logger.trace { "${it.name}: $cache" }
 
                 //Cache's map was expanded
                 if (cache.expectedSize < cache.size) {

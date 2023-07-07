@@ -85,6 +85,6 @@ enum class ClassType(
             throw IllegalArgumentException("Unknown class type: $declaration")
         }
 
-        fun fromId(id: Int): ClassType = values().first { it.id == id }
+        fun fromId(id: Int): ClassType = entries.first { it.id == id }
     }
 }

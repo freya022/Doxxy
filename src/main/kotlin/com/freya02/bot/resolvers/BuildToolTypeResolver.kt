@@ -25,6 +25,6 @@ class BuildToolTypeResolver : ParameterResolver<BuildToolTypeResolver, BuildTool
     ): BuildToolType = BuildToolType.valueOf(optionMapping.asString)
 
     override fun getPredefinedChoices(guild: Guild?): Collection<Command.Choice> {
-        return BuildToolType.values().map { Command.Choice(it.humanName, it.name) }
+        return BuildToolType.entries.map { Command.Choice(it.humanName, it.name) }
     }
 }

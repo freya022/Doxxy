@@ -59,6 +59,6 @@ enum class MethodType(
             else -> DEFINITION
         }
 
-        fun fromId(id: Int): MethodType = values().first { it.id == id }
+        fun fromId(id: Int): MethodType = entries.first { it.id == id }
     }
 }

@@ -32,7 +32,7 @@ class DocTypes(private val set: Set<DocType>): Set<DocType> by set {
 
         fun fromRaw(raw: Long): DocTypes {
             val set = EnumSet.noneOf(DocType::class.java)
-            for (type in DocType.values()) {
+            for (type in DocType.entries) {
                 if ((raw and type.raw) == type.raw) {
                     set.add(type)
                 }

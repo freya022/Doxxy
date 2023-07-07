@@ -22,6 +22,6 @@ enum class DocDetailType(val elementText: String) {
     THROWS("Throws:");
 
     companion object {
-        fun parseType(elementText: String): DocDetailType? = values().find { it.elementText == elementText }
+        fun parseType(elementText: String): DocDetailType? = entries.find { it.elementText == elementText }
     }
 }

@@ -37,7 +37,6 @@ class DatabaseSource(config: Config) : ConnectionSupplier {
         checkVersion()
     }
 
-    @OptIn(ExperimentalPathApi::class)
     private fun checkVersion() {
         source.connection.use { connection ->
             connection.prepareStatement("select version from doxxy_version").use { statement ->

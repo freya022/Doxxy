@@ -19,7 +19,7 @@ class HTMLElement private constructor(val targetElement: Element) {
                     val href = node.absUrl("href")
 
                     //Try to resolve into an online link
-                    for (type in DocSourceType.values()) {
+                    for (type in DocSourceType.entries) {
                         val effectiveUrl = type.toEffectiveURL(href)
                         if (!doesStartByLocalhost(effectiveUrl)) { //If it's a valid link then don't remove it
                             node.attr("href", effectiveUrl)

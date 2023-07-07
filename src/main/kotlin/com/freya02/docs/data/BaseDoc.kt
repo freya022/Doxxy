@@ -24,7 +24,7 @@ abstract class BaseDoc {
     protected abstract val detailToElementsMap: DetailToElementsMap
 
     fun getDetails(includedTypes: EnumSet<DocDetailType>): List<DocDetail> =
-        DocDetailType.values()
+        DocDetailType.entries
             .filter { it in includedTypes }
             .mapNotNull { detailType -> detailToElementsMap.getDetail(detailType) }
 }

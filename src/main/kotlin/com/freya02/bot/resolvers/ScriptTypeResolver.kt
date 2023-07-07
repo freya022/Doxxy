@@ -17,7 +17,7 @@ class ScriptTypeResolver : ParameterResolver<ScriptTypeResolver, ScriptType>(Scr
     override val optionType: OptionType = OptionType.STRING
 
     override fun getPredefinedChoices(guild: Guild?): Collection<Command.Choice> {
-        return ScriptType.values()
+        return ScriptType.entries
             .map { type ->
                 Command.Choice(type.name.lowercase().replaceFirstChar { c -> c.uppercaseChar() }, type.name)
             }
