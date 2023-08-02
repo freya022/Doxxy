@@ -10,12 +10,13 @@ import com.freya02.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
 import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
 import com.freya02.botcommands.api.core.service.annotations.BService
 import com.freya02.docs.DocSourceType
-import dev.minn.jda.ktx.messages.reply_
 import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.exceptions.ErrorHandler
+import net.dv8tion.jda.api.interactions.callbacks.IMessageEditCallback
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 import net.dv8tion.jda.api.requests.ErrorResponse
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
+import net.dv8tion.jda.api.utils.messages.MessageEditData
 import java.util.concurrent.TimeUnit
 
 @BService
@@ -30,9 +31,7 @@ class SlashDocsController(private val commonDocsController: CommonDocsController
         val cachedClass = docIndex.getClassDoc(className) ?: run {
             val menu = getDocSuggestionsMenu(event, docIndex, block)
 
-            event.reply(MessageCreateData.fromEditData(menu.get()))
-                .setEphemeral(true)
-                .queue()
+            event.reply(MessageCreateData.fromEditData(menu.get())).queue()
 
             return
         }
@@ -44,9 +43,7 @@ class SlashDocsController(private val commonDocsController: CommonDocsController
         val cachedMethod = docIndex.getMethodDoc(className, identifier) ?: run {
             val menu = getDocSuggestionsMenu(event, docIndex, block)
 
-            event.reply(MessageCreateData.fromEditData(menu.get()))
-                .setEphemeral(true)
-                .queue()
+            event.reply(MessageCreateData.fromEditData(menu.get())).queue()
 
             return
         }
@@ -58,9 +55,7 @@ class SlashDocsController(private val commonDocsController: CommonDocsController
         val cachedField = docIndex.getFieldDoc(className, identifier) ?: run {
             val menu = getDocSuggestionsMenu(event, docIndex, block)
 
-            event.reply(MessageCreateData.fromEditData(menu.get()))
-                .setEphemeral(true)
-                .queue()
+            event.reply(MessageCreateData.fromEditData(menu.get())).queue()
 
             return
         }
@@ -105,8 +100,6 @@ class SlashDocsController(private val commonDocsController: CommonDocsController
         }
 
         setCallback { buttonEvent, entry ->
-            event.hook.deleteOriginal().queue()
-
             val identifier = entry.fullIdentifier
             val doc = runBlocking {
                 when {
@@ -117,19 +110,23 @@ class SlashDocsController(private val commonDocsController: CommonDocsController
             }
 
             when (doc) {
-                null -> buttonEvent.reply_("This item is now invalid, try again", ephemeral = true).queue()
-                else -> buttonEvent.deferEdit().flatMap {
-                    event.channel.sendMessage(
-                        commonDocsController.getDocMessageData(
-                            event.hook,
-                            buttonEvent.member!!,
-                            ephemeral = false,
-                            showCaller = false,
-                            cachedDoc = doc
-                        )
-                    )
-                }.queue()
+                null -> buttonEvent.editMessage("The docs were updated, please try again").queue()
+                else -> commonDocsController.getDocMessageData(
+                    event.hook,
+                    buttonEvent.member!!,
+                    ephemeral = false,
+                    showCaller = false,
+                    cachedDoc = doc
+                ).toEditData()
+                    .edit(buttonEvent)
+                    .queue()
             }
         }
     }
+
+    //TODO make available and replace existing usages
+    private fun MessageCreateData.toEditData() =
+        MessageEditData.fromCreateData(this)
+    private fun MessageEditData.edit(callback: IMessageEditCallback) =
+        callback.editMessage(this)
 }
