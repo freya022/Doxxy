@@ -4,9 +4,9 @@ import com.freya02.bot.tag.*
 import com.freya02.botcommands.api.commands.annotations.Command
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.CommandScope
-import com.freya02.botcommands.api.commands.application.annotations.AppOption
 import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
 import com.freya02.botcommands.api.commands.application.slash.annotations.JDASlashCommand
+import com.freya02.botcommands.api.commands.application.slash.annotations.SlashOption
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.AutocompleteAlgorithms
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
 import com.freya02.botcommands.api.components.Components
@@ -89,7 +89,7 @@ class SlashTag(
     @JDASlashCommand(scope = CommandScope.GUILD, name = "tag", description = "Sends a predefined tag")
     suspend fun sendTag(
         event: GuildSlashEvent,
-        @AppOption(description = "Name of the tag", autocomplete = GUILD_TAGS_AUTOCOMPLETE) name: String
+        @SlashOption(description = "Name of the tag", autocomplete = GUILD_TAGS_AUTOCOMPLETE) name: String
     ) {
         withTag(event, name) { tag: Tag ->
             tagDB.incrementTag(event.guild.idLong, tag.name)
@@ -105,7 +105,7 @@ class SlashTag(
     )
     suspend fun sendRawTag(
         event: GuildSlashEvent,
-        @AppOption(description = "Name of the tag", autocomplete = GUILD_TAGS_AUTOCOMPLETE) name: String
+        @SlashOption(description = "Name of the tag", autocomplete = GUILD_TAGS_AUTOCOMPLETE) name: String
     ) {
         withTag(event, name) { tag: Tag -> event.reply(MarkdownSanitizer.escape(tag.content)).queue() }
     }
@@ -158,7 +158,7 @@ class SlashTag(
     @JDASlashCommand(scope = CommandScope.GUILD, name = "tags", subcommand = "edit", description = "Edits a tag in this guild")
     suspend fun editTag(
         event: GuildSlashEvent,
-        @AppOption(description = "Name of the tag", autocomplete = USER_TAGS_AUTOCOMPLETE) name: String
+        @SlashOption(description = "Name of the tag", autocomplete = USER_TAGS_AUTOCOMPLETE) name: String
     ) {
         withOwnedTag(event, name) { tag: Tag ->
             val modal = modals.create("Edit a tag") {
@@ -207,8 +207,8 @@ class SlashTag(
     )
     suspend fun transferTag(
         event: GuildSlashEvent,
-        @AppOption(description = "Name of the tag", autocomplete = USER_TAGS_AUTOCOMPLETE) name: String,
-        @AppOption(description = "Member to transfer the tag to") newOwner: Member
+        @SlashOption(description = "Name of the tag", autocomplete = USER_TAGS_AUTOCOMPLETE) name: String,
+        @SlashOption(description = "Member to transfer the tag to") newOwner: Member
     ) {
         if (newOwner.user.isBot) {
             event.reply("The member to transfer the tag to cannot be a bot").setEphemeral(true).queue()
@@ -231,7 +231,7 @@ class SlashTag(
     @JDASlashCommand(scope = CommandScope.GUILD, name = "tags", subcommand = "delete", description = "Deletes a tag you own in this guild")
     suspend fun deleteTag(
         event: GuildSlashEvent,
-        @AppOption(description = "Name of the tag", autocomplete = USER_TAGS_AUTOCOMPLETE) name: String
+        @SlashOption(description = "Name of the tag", autocomplete = USER_TAGS_AUTOCOMPLETE) name: String
     ) {
         withOwnedTag(event, name) { tag: Tag ->
             val deleteButton = components.ephemeralButton(ButtonStyle.DANGER, "Delete") {
@@ -259,7 +259,7 @@ class SlashTag(
     @JDASlashCommand(scope = CommandScope.GUILD, name = "tags", subcommand = "list", description = "Creates a tag in this guild")
     suspend fun listTags(
         event: GuildSlashEvent,
-        @AppOption(name = "sorting", description = "Type of tag sorting", usePredefinedChoices = true) criteria: TagCriteria = TagCriteria.NAME
+        @SlashOption(name = "sorting", description = "Type of tag sorting", usePredefinedChoices = true) criteria: TagCriteria = TagCriteria.NAME
     ) {
         val totalTags = tagDB.getTotalTags(event.guild.idLong)
         val paginator = PaginatorBuilder(components)
@@ -300,7 +300,7 @@ class SlashTag(
     @JDASlashCommand(scope = CommandScope.GUILD, name = "tags", subcommand = "info", description = "Gives information about a tag in this guild")
     suspend fun infoTags(
         event: GuildSlashEvent,
-        @AppOption(description = "Name of the tag", autocomplete = GUILD_TAGS_AUTOCOMPLETE) tagName: String
+        @SlashOption(description = "Name of the tag", autocomplete = GUILD_TAGS_AUTOCOMPLETE) tagName: String
     ) {
         withTag(event, tagName) { tag: Tag ->
             event.deferReply(true).queue() //Retrieve might take some time, ig

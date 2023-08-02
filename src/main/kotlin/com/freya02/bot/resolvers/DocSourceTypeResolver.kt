@@ -2,6 +2,7 @@ package com.freya02.bot.resolvers
 
 import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.botcommands.api.BContext
+import com.freya02.botcommands.api.commands.prefixed.BaseCommandEvent
 import com.freya02.botcommands.api.core.service.annotations.Resolver
 import com.freya02.botcommands.api.parameters.ComponentParameterResolver
 import com.freya02.botcommands.api.parameters.ParameterResolver
@@ -19,6 +20,7 @@ import net.dv8tion.jda.api.interactions.commands.CommandInteractionPayload
 import net.dv8tion.jda.api.interactions.commands.OptionMapping
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import java.util.regex.Pattern
+import kotlin.reflect.KParameter
 
 @Resolver
 class DocSourceTypeResolver : ParameterResolver<DocSourceTypeResolver, DocSourceType>(DocSourceType::class),
@@ -67,6 +69,10 @@ class DocSourceTypeResolver : ParameterResolver<DocSourceTypeResolver, DocSource
     override val pattern: Pattern = Pattern.compile("(?i)(JDA|java|BotCommands|BC)(?-i)")
 
     override val testExample: String = "jda"
+
+    override fun getHelpExample(parameter: KParameter, event: BaseCommandEvent, isID: Boolean): String {
+        return "jda"
+    }
 
     override fun resolve(
         context: BContext,

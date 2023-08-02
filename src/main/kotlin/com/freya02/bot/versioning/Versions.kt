@@ -14,7 +14,7 @@ import com.freya02.bot.versioning.maven.MavenVersionChecker
 import com.freya02.bot.versioning.maven.RepoType
 import com.freya02.botcommands.api.BContext
 import com.freya02.botcommands.api.core.annotations.BEventListener
-import com.freya02.botcommands.api.core.events.FirstReadyEvent
+import com.freya02.botcommands.api.core.events.InjectedJDAEvent
 import com.freya02.botcommands.api.core.service.annotations.BService
 import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.events.getDefaultScope
@@ -46,7 +46,7 @@ class Versions(private val context: BContext, private val docIndexMap: DocIndexM
         JitpackVersionChecker(lastKnownLavaPlayerPath, "Walkyst", "io.github.Walkyst", "lavaplayer-fork")
 
     @BEventListener(async = true, timeout = -1)
-    suspend fun initUpdateLoop(event: FirstReadyEvent) {
+    suspend fun initUpdateLoop(event: InjectedJDAEvent) {
         val scope = getDefaultScope(
             pool = Executors.newSingleThreadScheduledExecutor { Thread(it, "Version check coroutine") },
             context = CoroutineName("Version check coroutine")

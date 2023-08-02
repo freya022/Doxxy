@@ -7,9 +7,9 @@ import com.freya02.bot.versioning.LibraryType
 import com.freya02.bot.versioning.Versions
 import com.freya02.botcommands.api.commands.annotations.Command
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
-import com.freya02.botcommands.api.commands.application.annotations.AppOption
 import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
 import com.freya02.botcommands.api.commands.application.slash.annotations.JDASlashCommand
+import com.freya02.botcommands.api.commands.application.slash.annotations.SlashOption
 import com.freya02.botcommands.api.components.Components
 import net.dv8tion.jda.api.EmbedBuilder
 
@@ -18,7 +18,7 @@ class SlashLatest(private val versions: Versions, private val components: Compon
     @JDASlashCommand(name = "latest", description = "Shows the latest version of the library")
     fun onSlashLatest(
         event: GuildSlashEvent,
-        @AppOption(name = "library", description = "The target library", usePredefinedChoices = true) libraryType: LibraryType?
+        @SlashOption(name = "library", description = "The target library", usePredefinedChoices = true) libraryType: LibraryType?
     ) {
         val builder = EmbedBuilder().setTitle("Latest versions")
 

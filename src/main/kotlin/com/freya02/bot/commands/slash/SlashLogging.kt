@@ -5,10 +5,10 @@ import ch.qos.logback.classic.LoggerContext
 import com.freya02.botcommands.api.commands.annotations.Command
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.CommandScope
-import com.freya02.botcommands.api.commands.application.annotations.AppOption
 import com.freya02.botcommands.api.commands.application.annotations.Test
 import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
 import com.freya02.botcommands.api.commands.application.slash.annotations.JDASlashCommand
+import com.freya02.botcommands.api.commands.application.slash.annotations.SlashOption
 import com.freya02.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
 import dev.minn.jda.ktx.messages.reply_
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
@@ -26,8 +26,8 @@ class SlashLogging : ApplicationCommand() {
     )
     fun onSlashLogging(
         event: GuildSlashEvent,
-        @AppOption(autocomplete = LOGGER_NAME_AUTOCOMPLETE_NAME) loggerName: String,
-        @AppOption(usePredefinedChoices = true) logLevel: Level
+        @SlashOption(autocomplete = LOGGER_NAME_AUTOCOMPLETE_NAME) loggerName: String,
+        @SlashOption(usePredefinedChoices = true) logLevel: Level
     ) {
         val loggerList = loggerContext.loggerList
         when (val logger = loggerList.firstOrNull { it.name == loggerName }) {
