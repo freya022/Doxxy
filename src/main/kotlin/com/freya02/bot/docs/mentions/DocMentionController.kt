@@ -2,6 +2,8 @@ package com.freya02.bot.docs.mentions
 
 import com.freya02.bot.commands.controllers.CommonDocsController
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
+import com.freya02.bot.commands.utils.edit
+import com.freya02.bot.commands.utils.toEditData
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.utils.ParsingUtils.codeBlockRegex
 import com.freya02.bot.utils.ParsingUtils.spaceRegex
@@ -20,7 +22,6 @@ import net.dv8tion.jda.api.entities.Message.MentionType
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
-import net.dv8tion.jda.api.utils.messages.MessageEditData
 import java.util.*
 import kotlin.time.Duration.Companion.minutes
 
@@ -169,9 +170,10 @@ class DocMentionController(
             ephemeral = false,
             showCaller = false,
             cachedDoc = doc
-        )
-            .let { MessageEditData.fromCreateData(it) }
-            .also { selectEvent.editMessage(it).setReplace(true).queue() }
+        ).toEditData()
+            .edit(selectEvent)
+            .setReplace(true)
+            .queue()
             .also {
                 //Delete the components of the current message,
                 // we don't want the timeout to execute

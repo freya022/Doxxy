@@ -2,6 +2,8 @@ package com.freya02.bot.commands.slash.docs.controllers
 
 import com.freya02.bot.commands.controllers.CommonDocsController
 import com.freya02.bot.commands.slash.docs.searchAutocomplete
+import com.freya02.bot.commands.utils.edit
+import com.freya02.bot.commands.utils.toEditData
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.cached.CachedDoc
 import com.freya02.bot.docs.index.DocIndex
@@ -12,11 +14,9 @@ import com.freya02.botcommands.api.core.service.annotations.BService
 import com.freya02.docs.DocSourceType
 import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.exceptions.ErrorHandler
-import net.dv8tion.jda.api.interactions.callbacks.IMessageEditCallback
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 import net.dv8tion.jda.api.requests.ErrorResponse
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
-import net.dv8tion.jda.api.utils.messages.MessageEditData
 import java.util.concurrent.TimeUnit
 
 @BService
@@ -123,10 +123,4 @@ class SlashDocsController(private val commonDocsController: CommonDocsController
             }
         }
     }
-
-    //TODO make available and replace existing usages
-    private fun MessageCreateData.toEditData() =
-        MessageEditData.fromCreateData(this)
-    private fun MessageEditData.edit(callback: IMessageEditCallback) =
-        callback.editMessage(this)
 }

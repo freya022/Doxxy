@@ -2,6 +2,8 @@ package com.freya02.bot.commands.slash.docs
 
 import com.freya02.bot.commands.controllers.CommonDocsController
 import com.freya02.bot.commands.slash.docs.controllers.SlashDocsController
+import com.freya02.bot.commands.utils.edit
+import com.freya02.bot.commands.utils.toEditData
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.DocResolveChain
 import com.freya02.bot.docs.index.DocIndex
@@ -18,7 +20,6 @@ import dev.minn.jda.ktx.messages.reply_
 import mu.KotlinLogging
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
-import net.dv8tion.jda.api.utils.messages.MessageEditData
 
 @Handler
 class CommonDocsHandlers(
@@ -43,16 +44,16 @@ class CommonDocsHandlers(
         when (doc) {
             null -> event.reply_("This reference is not available anymore", ephemeral = true).queue()
             else -> when (ownerId) {
-                event.user.idLong -> commonDocsController //Caller is same as original command caller, edit
-                    .getDocMessageData(
-                        event.hook,
-                        event.member!!,
-                        ephemeral = false,
-                        showCaller = false,
-                        cachedDoc = doc
-                    )
-                    .let { MessageEditData.fromCreateData(it) }
-                    .let { event.editMessage(it).queue() }
+                //Caller is the same as original command caller, edit
+                event.user.idLong -> commonDocsController.getDocMessageData(
+                    event.hook,
+                    event.member!!,
+                    ephemeral = false,
+                    showCaller = false,
+                    cachedDoc = doc
+                ).toEditData()
+                    .edit(event)
+                    .queue()
 
                 else -> slashDocsController.sendClass(event, true, doc)
             }

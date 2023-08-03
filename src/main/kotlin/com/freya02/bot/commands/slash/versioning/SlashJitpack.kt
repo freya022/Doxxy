@@ -2,6 +2,7 @@ package com.freya02.bot.commands.slash.versioning
 
 import com.freya02.bot.Config
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
+import com.freya02.bot.commands.utils.toEditData
 import com.freya02.bot.utils.Emojis
 import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.bot.utils.Utils.truncate
@@ -43,7 +44,6 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.ItemComponent
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
-import net.dv8tion.jda.api.utils.messages.MessageEditData
 import kotlin.time.Duration.Companion.hours
 
 @Command
@@ -147,7 +147,7 @@ class SlashJitpack(
             jitpackPrService.updatePr(event, pullNumber) { branch ->
                 val message = createPrMessage(event, libraryType, buildToolType, pullRequest, branch.toGithubBranch())
                 if (event.user.idLong == callerId) {
-                    event.hook.editOriginal(MessageEditData.fromCreateData(message)).queue()
+                    event.hook.editOriginal(message.toEditData()).queue()
                 } else {
                     event.hook.sendMessage(message).setEphemeral(true).queue()
                 }

@@ -1,5 +1,6 @@
 package com.freya02.bot.commands.controllers
 
+import com.freya02.bot.commands.utils.toEditData
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.cached.CachedClass
 import com.freya02.bot.docs.index.DocIndex
@@ -25,7 +26,6 @@ import net.dv8tion.jda.api.interactions.components.ItemComponent
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.requests.ErrorResponse
-import net.dv8tion.jda.api.utils.messages.MessageEditData
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.minutes
 
@@ -144,8 +144,8 @@ class ClassLinksController(
         if (isSameCaller) {
             selectEvent.deferEdit().queue()
             val editAction = when {
-                originalHook != null -> originalHook.editOriginal(MessageEditData.fromCreateData(createData))
-                else -> buttonEvent.message.editMessage(MessageEditData.fromCreateData(createData))
+                originalHook != null -> originalHook.editOriginal(createData.toEditData())
+                else -> buttonEvent.message.editMessage(createData.toEditData())
             }
             //I guess this can happen if the user clicks the button and then immediately deletes the message
             editAction.queue(null, ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE))
