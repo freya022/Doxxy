@@ -92,6 +92,8 @@ class SlashDocsController(private val commonDocsController: CommonDocsController
         docIndex: DocIndex,
         block: suspend () -> List<DocSuggestion>
     ) = commonDocsController.buildDocSuggestionsMenu(docIndex, block(), event.user) {
+        useDeleteButton(true)
+
         setTimeout(2, TimeUnit.MINUTES) { menu, _ ->
             menu.cleanup()
             event.hook
