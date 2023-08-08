@@ -2,8 +2,6 @@ package com.freya02.bot.docs.mentions
 
 import com.freya02.bot.commands.controllers.CommonDocsController
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
-import com.freya02.bot.commands.utils.edit
-import com.freya02.bot.commands.utils.toEditData
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.utils.ParsingUtils.codeBlockRegex
 import com.freya02.bot.utils.ParsingUtils.spaceRegex
@@ -14,6 +12,8 @@ import com.freya02.botcommands.api.core.db.Database
 import com.freya02.botcommands.api.core.db.Transaction
 import com.freya02.botcommands.api.core.db.transactional
 import com.freya02.botcommands.api.core.service.annotations.BService
+import com.freya02.botcommands.api.core.utils.edit
+import com.freya02.botcommands.api.core.utils.toEditData
 import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.MessageCreate

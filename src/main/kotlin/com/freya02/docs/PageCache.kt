@@ -2,7 +2,6 @@ package com.freya02.docs
 
 import com.freya02.bot.Data
 import com.freya02.bot.utils.HttpUtils
-import com.freya02.bot.utils.Utils.deleteRecursively
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Request
 import org.jsoup.nodes.Document
@@ -79,6 +78,7 @@ class PageCache(val type: DocSourceType) {
         }
     }
 
+    @OptIn(ExperimentalPathApi::class)
     fun clearCache() {
         globalLock.withLock {
             baseFolder.deleteRecursively()

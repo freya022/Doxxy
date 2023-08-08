@@ -1,8 +1,8 @@
 package com.freya02.bot
 
 import ch.qos.logback.classic.ClassicConstants
-import com.freya02.bot.utils.Utils
 import com.freya02.botcommands.api.core.BBuilder
+import com.freya02.botcommands.api.core.utils.namedDefaultScope
 import com.freya02.docs.DocWebServer
 import dev.minn.jda.ktx.events.CoroutineEventManager
 import dev.reformator.stacktracedecoroutinator.runtime.DecoroutinatorRuntime
@@ -39,7 +39,7 @@ object Main {
                 DecoroutinatorRuntime.load()
             }
 
-            val scope = Utils.namedDefaultScope("Doxxy coroutine", 4)
+            val scope = namedDefaultScope("Doxxy coroutine", 4)
             val manager = CoroutineEventManager(scope, 1.minutes)
             manager.listener<ShutdownEvent> {
                 scope.cancel()

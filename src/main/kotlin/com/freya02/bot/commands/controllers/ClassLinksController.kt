@@ -1,18 +1,19 @@
 package com.freya02.bot.commands.controllers
 
-import com.freya02.bot.commands.utils.toEditData
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.cached.CachedClass
 import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.metadata.ClassType
 import com.freya02.bot.docs.metadata.ImplementationIndex
 import com.freya02.bot.utils.joinLengthyString
+import com.freya02.botcommands.api.BContext
 import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.components.event.ButtonEvent
 import com.freya02.botcommands.api.components.event.StringSelectEvent
 import com.freya02.botcommands.api.core.service.ServiceContainer
 import com.freya02.botcommands.api.core.service.annotations.BService
 import com.freya02.botcommands.api.core.service.lazy
+import com.freya02.botcommands.api.core.utils.toEditData
 import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.MessageCreate
 import dev.minn.jda.ktx.messages.reply_
@@ -31,6 +32,7 @@ import kotlin.time.Duration.Companion.minutes
 
 @BService
 class ClassLinksController(
+    private val context: BContext,
     serviceContainer: ServiceContainer,
     private val componentsService: Components,
     private val docIndexMap: DocIndexMap
@@ -48,7 +50,7 @@ class ClassLinksController(
         if (clazz != null) {
             if (cachedDoc.subclasses.isNotEmpty()) {
                 val decorations = clazz.classType.subDecorations
-                componentsService.ephemeralButton(ButtonStyle.SECONDARY, decorations.label, decorations.emoji) {
+                componentsService.ephemeralButton(ButtonStyle.SECONDARY, decorations.getLabel(context), decorations.emoji) {
                     timeout(5.minutes)
                     bindTo { sendClassLinks(it, originalHook, caller, index, clazz, clazz.getSubclasses(), decorations) }
                 }.also { add(it) }
@@ -56,7 +58,7 @@ class ClassLinksController(
 
             if (cachedDoc.superclasses.isNotEmpty()) {
                 val decorations = clazz.classType.superDecorations
-                componentsService.ephemeralButton(ButtonStyle.SECONDARY, decorations.label, decorations.emoji) {
+                componentsService.ephemeralButton(ButtonStyle.SECONDARY, decorations.getLabel(context), decorations.emoji) {
                     timeout(5.minutes)
                     bindTo { sendClassLinks(it, originalHook, caller, index, clazz, clazz.getSuperclasses(), decorations) }
                 }.also { add(it) }
@@ -80,7 +82,7 @@ class ClassLinksController(
 
             if (internalClasses.isNotEmpty()) {
                 embed {
-                    author(name = "${decorations.title} - ${clazz.className}", iconUrl = decorations.emoji.asCustom().imageUrl)
+                    author(name = "${decorations.getTitle(context)} - ${clazz.className}", iconUrl = decorations.emoji.asCustom().imageUrl)
                     description = internalClasses
                         .joinLengthyString(
                             separator = ", ",
@@ -110,7 +112,7 @@ class ClassLinksController(
 
                             val firstChar = superclassesChunk.first().className.first()
                             val lastChar = superclassesChunk.last().className.first()
-                            placeholder = "${decorations.placeholder} ($firstChar-$lastChar)"
+                            placeholder = "${decorations.getPlaceholder(context)} ($firstChar-$lastChar)"
 
                             superclassesChunk.forEach {
                                 addOption(it.className, it.className, it.classType.emoji)

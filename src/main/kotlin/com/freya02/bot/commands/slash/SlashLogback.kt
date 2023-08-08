@@ -1,7 +1,6 @@
 package com.freya02.bot.commands.slash
 
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
-import com.freya02.bot.utils.Utils
 import com.freya02.bot.versioning.LibraryType
 import com.freya02.botcommands.api.commands.annotations.Command
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
@@ -9,6 +8,7 @@ import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
 import com.freya02.botcommands.api.commands.application.slash.annotations.JDASlashCommand
 import com.freya02.botcommands.api.commands.application.slash.annotations.SlashOption
 import com.freya02.botcommands.api.components.Components
+import com.freya02.botcommands.api.core.utils.readResource
 import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.MessageCreate
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
@@ -38,8 +38,8 @@ class SlashLogback(private val componentsService: Components) : ApplicationComma
 
         val message = MessageCreate {
             val logbackXml = when (libraryType) {
-                LibraryType.JDA -> Utils.readResource("/logback_configs/JDA.xml")
-                LibraryType.BOT_COMMANDS -> Utils.readResource("/logback_configs/BotCommands.xml")
+                LibraryType.JDA -> readResource("/logback_configs/JDA.xml")
+                LibraryType.BOT_COMMANDS -> readResource("/logback_configs/BotCommands.xml")
                 else -> throw IllegalArgumentException("Unexpected LibraryType: $libraryType")
             }
 

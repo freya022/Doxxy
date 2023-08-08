@@ -2,7 +2,6 @@ package com.freya02.bot.commands.slash.versioning
 
 import com.freya02.bot.Config
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
-import com.freya02.bot.commands.utils.toEditData
 import com.freya02.bot.utils.Emojis
 import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.bot.utils.Utils.truncate
@@ -28,6 +27,7 @@ import com.freya02.botcommands.api.commands.application.slash.autocomplete.annot
 import com.freya02.botcommands.api.commands.application.slash.builder.SlashCommandBuilder
 import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.components.event.ButtonEvent
+import com.freya02.botcommands.api.core.utils.toEditData
 import com.freya02.botcommands.api.utils.EmojiUtils
 import dev.minn.jda.ktx.interactions.components.link
 import dev.minn.jda.ktx.interactions.components.row

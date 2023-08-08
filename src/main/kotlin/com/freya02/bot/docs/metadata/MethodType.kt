@@ -1,7 +1,9 @@
 package com.freya02.bot.docs.metadata
 
 import com.freya02.bot.utils.Emojis
-import com.freya02.botcommands.api.localization.Localization
+import com.freya02.botcommands.api.BContext
+import com.freya02.botcommands.api.core.service.getService
+import com.freya02.botcommands.api.localization.LocalizationService
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration
 import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.entities.emoji.EmojiUnion
@@ -26,18 +28,24 @@ enum class MethodType(
         Decorations.fromLocalizations(Emojis.hasOverriddenMethods, "definition", "overriddenMethods")
     );
 
-    class Decorations private constructor(val emoji: EmojiUnion, val label: String, val title: String, val placeholder: String) {
-        companion object {
-            private val localization = Localization.getInstance("Docs", Locale.ROOT)
+    class Decorations private constructor(
+        val emoji: EmojiUnion,
+        private val labelKey: String,
+        private val titleKey: String,
+        private val placeholderKey: String
+    ) {
+        fun getLabel(context: BContext): String = getLocalization(context, labelKey)
+        fun getTitle(context: BContext): String = getLocalization(context, titleKey)
+        fun getPlaceholder(context: BContext): String = getLocalization(context, placeholderKey)
+
+        private fun getLocalization(context: BContext, key: String): String {
+            val localization = context.getService<LocalizationService>().getInstance("Docs", Locale.ROOT)
                 ?: throw IllegalStateException("Could not get decorations localization bundle (Docs)")
+            return localization[key]?.localize()
+                ?: throw IllegalArgumentException("Could not get localization for $key")
+        }
 
-            private fun getLocalization(classTypeKey: String, hierarchicalName: String, finalKey: String): String {
-                val key = "method_type_decorations.$classTypeKey.$hierarchicalName.$finalKey"
-
-                return localization[key]?.localize()
-                    ?: throw IllegalArgumentException("Could not get localization for $key")
-            }
-
+        companion object {
             /**
              * @param classTypeKey declaration/definition
              * @param hierarchicalName impl/super
@@ -45,9 +53,9 @@ enum class MethodType(
             fun fromLocalizations(emoji: EmojiUnion, classTypeKey: String, hierarchicalName: String): Decorations {
                 return Decorations(
                     emoji,
-                    getLocalization(classTypeKey, hierarchicalName, "links_button_label"),
-                    getLocalization(classTypeKey, hierarchicalName, "links_embed_title"),
-                    getLocalization(classTypeKey, hierarchicalName, "links_select_placeholder")
+                    "method_type_decorations.$classTypeKey.$hierarchicalName.${"links_button_label"}",
+                    "method_type_decorations.$classTypeKey.$hierarchicalName.${"links_embed_title"}",
+                    "method_type_decorations.$classTypeKey.$hierarchicalName.${"links_select_placeholder"}"
                 )
             }
         }

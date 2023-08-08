@@ -1,18 +1,19 @@
 package com.freya02.bot.commands.controllers
 
-import com.freya02.bot.commands.utils.toEditData
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.cached.CachedMethod
 import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.metadata.ImplementationIndex
 import com.freya02.bot.docs.metadata.MethodType
 import com.freya02.bot.utils.joinLengthyString
+import com.freya02.botcommands.api.BContext
 import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.components.event.ButtonEvent
 import com.freya02.botcommands.api.components.event.StringSelectEvent
 import com.freya02.botcommands.api.core.service.ServiceContainer
 import com.freya02.botcommands.api.core.service.annotations.BService
 import com.freya02.botcommands.api.core.service.lazy
+import com.freya02.botcommands.api.core.utils.toEditData
 import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.MessageCreate
 import dev.minn.jda.ktx.messages.reply_
@@ -31,6 +32,7 @@ import kotlin.time.Duration.Companion.minutes
 
 @BService
 class MethodLinksController(
+    private val context: BContext,
     serviceContainer: ServiceContainer,
     private val componentsService: Components,
     private val docIndexMap: DocIndexMap
@@ -48,7 +50,7 @@ class MethodLinksController(
         if (method != null) {
             if (cachedMethod.implementations.isNotEmpty()) {
                 val decorations = method.methodType.implementationDecorations
-                componentsService.ephemeralButton(ButtonStyle.SECONDARY, decorations.label, decorations.emoji) {
+                componentsService.ephemeralButton(ButtonStyle.SECONDARY, decorations.getLabel(context), decorations.emoji) {
                     timeout(5.minutes)
                     bindTo { sendMethodLinks(it, originalHook, caller, index, method, method.getImplementations(), decorations) }
                 }.also { add(it) }
@@ -56,7 +58,7 @@ class MethodLinksController(
 
             if (cachedMethod.overriddenMethods.isNotEmpty()) {
                 val decorations = method.methodType.overriddenMethodsDecorations
-                componentsService.ephemeralButton(ButtonStyle.SECONDARY, decorations.label, decorations.emoji) {
+                componentsService.ephemeralButton(ButtonStyle.SECONDARY, decorations.getLabel(context), decorations.emoji) {
                     timeout(5.minutes)
                     bindTo { sendMethodLinks(it, originalHook, caller, index, method, method.getOverriddenMethods(), decorations) }
                 }.also { add(it) }
@@ -80,7 +82,7 @@ class MethodLinksController(
 
             if (internalMethods.isNotEmpty()) {
                 embed {
-                    author(name = "${decorations.title} - ${method.className}", iconUrl = decorations.emoji.asCustom().imageUrl)
+                    author(name = "${decorations.getTitle(context)} - ${method.className}", iconUrl = decorations.emoji.asCustom().imageUrl)
                     description = internalMethods
                         .joinLengthyString(
                             separator = ", ",
@@ -104,7 +106,7 @@ class MethodLinksController(
 
                             val firstChar = methodsChunk.first().className.first()
                             val lastChar = methodsChunk.last().className.first()
-                            placeholder = "${decorations.placeholder} ($firstChar-$lastChar)"
+                            placeholder = "${decorations.getPlaceholder(context)} ($firstChar-$lastChar)"
 
                             methodsChunk.forEach {
                                 val simpleQualifiedSignature = "${it.className}#${it.signature}"

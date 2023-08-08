@@ -1,18 +1,20 @@
 package com.freya02.bot.versioning
 
 import com.freya02.bot.utils.HttpUtils
-import com.freya02.bot.utils.Utils.deleteRecursively
 import java.io.IOException
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
+import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createTempFile
+import kotlin.io.path.deleteRecursively
 import kotlin.io.path.extension
 import kotlin.streams.asSequence
 
 object VersionsUtils {
     @Throws(IOException::class)
+    @OptIn(ExperimentalPathApi::class)
     fun replaceWithZipContent(tempZip: Path, targetDocsFolder: Path, extension: String) {
         if (Files.exists(targetDocsFolder)) {
             targetDocsFolder.deleteRecursively()

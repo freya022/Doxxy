@@ -2,8 +2,6 @@ package com.freya02.bot.commands.slash.docs
 
 import com.freya02.bot.commands.controllers.CommonDocsController
 import com.freya02.bot.commands.slash.docs.controllers.SlashDocsController
-import com.freya02.bot.commands.utils.edit
-import com.freya02.bot.commands.utils.toEditData
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.DocResolveChain
 import com.freya02.bot.docs.index.DocIndex
@@ -14,6 +12,8 @@ import com.freya02.botcommands.api.commands.application.slash.autocomplete.annot
 import com.freya02.botcommands.api.components.annotations.JDASelectMenuListener
 import com.freya02.botcommands.api.components.event.StringSelectEvent
 import com.freya02.botcommands.api.core.annotations.Handler
+import com.freya02.botcommands.api.core.utils.edit
+import com.freya02.botcommands.api.core.utils.toEditData
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.data.TargetType
 import dev.minn.jda.ktx.messages.reply_

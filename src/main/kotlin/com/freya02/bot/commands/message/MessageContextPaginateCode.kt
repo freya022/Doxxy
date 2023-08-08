@@ -7,7 +7,6 @@ import com.freya02.bot.pagination.CodePaginatorBuilder
 import com.freya02.bot.utils.ParsingUtils.codeBlockRegex
 import com.freya02.bot.utils.Utils.digitAmount
 import com.freya02.bot.utils.Utils.letIf
-import com.freya02.bot.utils.suppressContentWarning
 import com.freya02.botcommands.api.commands.annotations.Command
 import com.freya02.botcommands.api.commands.application.ApplicationCommand
 import com.freya02.botcommands.api.commands.application.context.annotations.JDAMessageCommand
@@ -15,6 +14,7 @@ import com.freya02.botcommands.api.commands.application.context.message.GuildMes
 import com.freya02.botcommands.api.components.Button
 import com.freya02.botcommands.api.components.Components
 import com.freya02.botcommands.api.components.data.InteractionConstraints
+import com.freya02.botcommands.api.core.utils.suppressContentWarning
 import com.freya02.botcommands.api.pagination.PaginatorComponents
 import com.github.javaparser.ParseProblemException
 import com.github.javaparser.StaticJavaParser

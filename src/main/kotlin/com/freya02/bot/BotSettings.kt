@@ -6,11 +6,9 @@ import com.freya02.botcommands.api.commands.CommandList
 import com.freya02.botcommands.api.commands.CommandPath
 import com.freya02.botcommands.api.core.SettingsProvider
 import com.freya02.botcommands.api.core.service.annotations.BService
-import com.freya02.botcommands.api.core.service.annotations.ServiceType
 import net.dv8tion.jda.api.entities.Guild
 
 @BService
-@ServiceType(SettingsProvider::class)
 object BotSettings : SettingsProvider {
     override fun getGuildCommands(guild: Guild): CommandList {
         return CommandList.filter { commandPath: CommandPath ->
