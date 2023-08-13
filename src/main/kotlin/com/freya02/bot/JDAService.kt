@@ -11,7 +11,7 @@ class JDAService(config: Config, manager: IEventManager) {
     init {
         light(config.token, enableCoroutines = false) {
             setMaxReconnectDelay(128)
-            setActivity(Activity.watching("the docs"))
+            setActivity(Activity.customStatus("Reading the docs"))
             setEventManager(manager)
         }
     }
