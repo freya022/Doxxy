@@ -165,12 +165,11 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             executeQuery(sourceType.id, lastFullIdentifier).readOnce()?.getString("type")
         }
 
-        //Query next methods
-        return chain.lastSignature.let { lastSignature ->
-            when {
-                type != null -> search("$type#${lastSignature}")
-                else -> search(lastSignature)
-            }
+        return when {
+            // Query next methods
+            type != null -> search("$type#${chain.lastSignature}")
+            // Do full search
+            else -> search(chain.lastQualifiedSignature)
         }
     }
 
