@@ -86,7 +86,7 @@ class TagDB(private val database: Database) {
     suspend fun get(guildId: Long, name: String): Tag? {
         database.preparedStatement("select * from Tag where guildid = ? and name = ?", readOnly = true) {
             val result = executeQuery(guildId, name)
-            return result.readOnce()?.let { Tag.fromResult(it) }
+            return result.readOrNull()?.let { Tag.fromResult(it) }
         }
     }
 
@@ -100,8 +100,7 @@ class TagDB(private val database: Database) {
     @Throws(SQLException::class)
     suspend fun getTotalTags(guildId: Long): Int {
         database.preparedStatement("select count(*) as totalTags from Tag where guildid = ?", readOnly = true) {
-            val set = executeQuery(guildId).readOnce() ?: throw IllegalStateException()
-            return set.getInt("totalTags")
+            return executeQuery(guildId).read().getInt("totalTags")
         }
     }
 
@@ -129,8 +128,7 @@ class TagDB(private val database: Database) {
     @Throws(SQLException::class)
     suspend fun getRank(guildId: Long, name: String?): Long {
         database.preparedStatement("select rank from (select name, dense_rank() over (order by uses desc) as rank from Tag where guildid = ?) as ranks where name = ?", readOnly = true) {
-            val set = executeQuery(guildId, name).readOnce() ?: throw IllegalStateException()
-            return set.getLong(1)
+            return executeQuery(guildId, name).read().getLong(1)
         }
     }
 

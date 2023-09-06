@@ -38,7 +38,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                 limit 1
             """.trimIndent(), readOnly = true
         ) {
-            executeQuery(sourceType.id, className).readOnce() != null
+            executeQuery(sourceType.id, className).readOrNull() != null
         }
     }
 
@@ -53,7 +53,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                 limit 1
             """.trimIndent(), readOnly = true
         ) {
-            executeQuery(sourceType.id, className, signature).readOnce() != null
+            executeQuery(sourceType.id, className, signature).readOrNull() != null
         }
     }
 
@@ -162,7 +162,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                 limit 1
             """.trimIndent(), readOnly = true
         ) {
-            executeQuery(sourceType.id, lastFullIdentifier).readOnce()?.getString("type")
+            executeQuery(sourceType.id, lastFullIdentifier).readOrNull()?.getString("type")
         }
 
         return when {
@@ -181,7 +181,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             //If the class name has an exact match
             val className = query.substringBefore('#')
             preparedStatement("select id from doc where source_id = ? and classname = ? limit 1") {
-                executeQuery(sourceType.id, className).readOnce()?.let {
+                executeQuery(sourceType.id, className).readOrNull()?.let {
                     //If there is something found
                     return findSignaturesIn(className, query.substringAfter('#'), DocTypes.IDENTIFIERS, 25)
                 }
@@ -321,7 +321,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                   and quote_nullable(identifier) = quote_nullable(?)
                 limit 1
             """.trimIndent()) {
-            val result = executeQuery(sourceType.id, docType.id, className, identifier).readOnce() ?: return null
+            val result = executeQuery(sourceType.id, docType.id, className, identifier).readOrNull() ?: return null
             return DocFindData(
                 result["id"],
                 DocIndexWriter.GSON.fromJson(result.getString("embed"), MessageEmbed::class.java),

@@ -67,8 +67,8 @@ internal class ImplementationMetadataWriter private constructor(
                     returning id
                 """.trimIndent()
             ) {
-                executeQuery(sourceType.id, it.classType.id, it.packageName, it.name, reindexData.getClassSourceUrl(it)).readOnce()!!
-                    .getInt(1)
+                executeQuery(sourceType.id, it.classType.id, it.packageName, it.name, reindexData.getClassSourceUrl(it))
+                    .read().getInt(1)
             }
         }
     }
@@ -110,7 +110,7 @@ internal class ImplementationMetadataWriter private constructor(
                     method.name,
                     method.signature,
                     methodSourceUrl
-                ).readOnce()!!.getInt(1)
+                ).read().getInt(1)
             }
         }
     }

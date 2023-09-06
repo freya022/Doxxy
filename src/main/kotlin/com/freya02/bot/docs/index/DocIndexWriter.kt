@@ -217,7 +217,7 @@ internal class DocIndexWriter(
                 embedJson,
                 baseDoc.onlineURL,
                 sourceLink
-            ).readOnce()!!["id"]
+            ).read()["id"]
         }
     }
 

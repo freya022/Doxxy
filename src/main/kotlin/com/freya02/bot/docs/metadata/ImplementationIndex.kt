@@ -53,7 +53,7 @@ class ImplementationIndex(val docIndex: DocIndex, private val database: Database
                   and c.class_name = ?
             """.trimIndent(), readOnly = true
         ) {
-            executeQuery(sourceType.id, className).readOnce()?.let { Class(it) }
+            executeQuery(sourceType.id, className).readOrNull()?.let { Class(it) }
         }
     }
 
@@ -73,7 +73,7 @@ class ImplementationIndex(val docIndex: DocIndex, private val database: Database
                   and m.signature = ?
             """.trimIndent(), readOnly = true
         ) {
-            executeQuery(sourceType.id, className, signature).readOnce()?.let { Method(it) }
+            executeQuery(sourceType.id, className, signature).readOrNull()?.let { Method(it) }
         }
     }
 
