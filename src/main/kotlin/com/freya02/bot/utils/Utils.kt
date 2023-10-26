@@ -1,6 +1,6 @@
 package com.freya02.bot.utils
 
-import com.freya02.bot.Config
+import com.freya02.bot.config.Config
 import io.github.freya022.botcommands.api.Logging
 import net.dv8tion.jda.api.entities.Guild
 import org.jetbrains.annotations.Contract
@@ -14,10 +14,10 @@ object Utils {
     const val jdaGuildId: Long = 125227483518861312
 
     @Contract("null -> false")
-    fun Guild?.isBCGuild(): Boolean = this?.idLong == bcGuildId || this?.idLong == Config.config.fakeBCGuildId
+    fun Guild?.isBCGuild(): Boolean = this?.idLong == bcGuildId || this?.idLong == Config.instance.fakeBCGuildId
 
     @Contract("null -> false")
-    fun Guild?.isJDAGuild(): Boolean = this?.idLong == jdaGuildId || this?.idLong == Config.config.fakeJDAGuildId
+    fun Guild?.isJDAGuild(): Boolean = this?.idLong == jdaGuildId || this?.idLong == Config.instance.fakeJDAGuildId
 
     inline fun <R> Path.withTemporaryFile(block: (Path) -> R) {
         try {

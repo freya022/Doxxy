@@ -1,6 +1,6 @@
 package com.freya02.docs
 
-import com.freya02.bot.Data
+import com.freya02.bot.config.Data
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpServer
 import mu.KotlinLogging

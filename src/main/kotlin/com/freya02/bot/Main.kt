@@ -1,6 +1,8 @@
 package com.freya02.bot
 
-import ch.qos.logback.classic.ClassicConstants
+import com.freya02.bot.config.Config
+import com.freya02.bot.config.Data
+import com.freya02.bot.config.Environment
 import com.freya02.docs.DocWebServer
 import dev.minn.jda.ktx.events.CoroutineEventManager
 import dev.reformator.stacktracedecoroutinator.runtime.DecoroutinatorRuntime
@@ -13,10 +15,10 @@ import mu.KotlinLogging
 import net.dv8tion.jda.api.events.session.ShutdownEvent
 import java.lang.management.ManagementFactory
 import kotlin.io.path.absolutePathString
-import kotlin.io.path.exists
 import kotlin.system.exitProcess
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
+import ch.qos.logback.classic.ClassicConstants as LogbackConstants
 
 object Main {
     private val logger by lazy { KotlinLogging.logger {} } // Must not load before system property is set
@@ -25,14 +27,10 @@ object Main {
     @JvmStatic
     fun main(args: Array<String>) {
         try {
-            Data.init()
+            System.setProperty(LogbackConstants.CONFIG_FILE_PROPERTY, Environment.logbackConfigPath.absolutePathString())
+            logger.info("Loading logback configuration at ${Environment.logbackConfigPath.absolutePathString()}")
 
-            if (Data.logbackConfigPath.exists()) {
-                System.setProperty(ClassicConstants.CONFIG_FILE_PROPERTY, Data.logbackConfigPath.absolutePathString())
-                logger.info( "Loading production logback config")
-            } else {
-                logger.info( "Loading test logback config")
-            }
+            Data.init()
 
             //stacktrace-decoroutinator seems to have issues when reloading with hotswap agent
             if ("-XX:HotswapAgent=fatjar" in ManagementFactory.getRuntimeMXBean().inputArguments) {
@@ -55,9 +53,9 @@ object Main {
             DocWebServer.startDocWebServer()
             logger.info("Started docs web server")
 
-            val config = Config.config
+            val config = Config.instance
             BBuilder.newBuilder(manager) {
-                if (Data.isDevEnvironment) {
+                if (Environment.isDev) {
                     disableExceptionsInDMs = true
                     disableAutocompleteCache = true
                 }

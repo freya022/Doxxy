@@ -1,7 +1,7 @@
 package com.freya02.bot.commands.slash.versioning
 
-import com.freya02.bot.Config
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
+import com.freya02.bot.config.Config
 import com.freya02.bot.utils.Emojis
 import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.bot.utils.Utils.truncate

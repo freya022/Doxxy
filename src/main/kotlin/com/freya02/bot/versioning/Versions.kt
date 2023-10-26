@@ -1,7 +1,7 @@
 package com.freya02.bot.versioning
 
-import com.freya02.bot.Data
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers
+import com.freya02.bot.config.Data
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.index.ReindexData
 import com.freya02.bot.utils.Utils.withTemporaryFile

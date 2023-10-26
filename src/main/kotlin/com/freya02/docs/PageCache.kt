@@ -1,6 +1,6 @@
 package com.freya02.docs
 
-import com.freya02.bot.Data
+import com.freya02.bot.config.Data
 import com.freya02.bot.utils.HttpUtils
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Request

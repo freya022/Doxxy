@@ -1,6 +1,6 @@
 package com.freya02.bot.versioning.jitpack
 
-import com.freya02.bot.Config
+import com.freya02.bot.config.Config
 import com.freya02.bot.utils.HttpUtils
 import com.freya02.bot.versioning.LibraryType
 import com.freya02.bot.versioning.github.GithubBranch

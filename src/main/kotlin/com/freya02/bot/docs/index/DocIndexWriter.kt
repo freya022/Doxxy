@@ -1,6 +1,6 @@
 package com.freya02.bot.docs.index
 
-import com.freya02.bot.Data
+import com.freya02.bot.config.Data
 import com.freya02.bot.docs.DocEmbeds.toEmbed
 import com.freya02.bot.docs.metadata.parser.ImplementationMetadataWriter
 import com.freya02.bot.docs.metadata.parser.SourceRootMetadata

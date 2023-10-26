@@ -1,6 +1,6 @@
 package com.freya02.bot.db
 
-import com.freya02.bot.Config
+import com.freya02.bot.config.Config
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.github.freya022.botcommands.api.core.db.HikariSourceSupplier
@@ -12,25 +12,20 @@ import kotlin.time.Duration.Companion.seconds
 @BService
 class DatabaseSource(config: Config) : HikariSourceSupplier {
     private val version = "2.5" //Same version as in CreateDatabase.sql
-    override val source: HikariDataSource
+    override val source: HikariDataSource = HikariDataSource(HikariConfig().apply {
+        val databaseConfig = config.databaseConfig
+        jdbcUrl = databaseConfig.url
+        username = databaseConfig.user
+        password = databaseConfig.password
+
+        maximumPoolSize = 2
+        leakDetectionThreshold = 10.seconds.inWholeMilliseconds
+    })
 
     private val migrationNameRegex = Regex("""v(\d+)\.(\d+)__.+\.sql""")
     private val dbVersionRegex = Regex("""(\d+)\.(\d+)""")
 
     init {
-        val dbConfig = config.dbConfig
-
-        val hikariConfig = HikariConfig().apply {
-            jdbcUrl = dbConfig.dbURL
-            username = dbConfig.user
-            password = dbConfig.password
-
-            maximumPoolSize = 2
-            leakDetectionThreshold = 10.seconds.inWholeMilliseconds
-        }
-
-        source = HikariDataSource(hikariConfig)
-
         checkVersion()
     }
 

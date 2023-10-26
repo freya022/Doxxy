@@ -1,16 +1,17 @@
-package com.freya02.bot
+package com.freya02.bot.config
 
 import com.google.gson.Gson
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import mu.KotlinLogging
+import java.nio.file.Path
+import kotlin.io.path.absolutePathString
 import kotlin.io.path.readText
 
-data class DBConfig(val serverName: String, val portNumber: Int, val user: String, val password: String, val dbName: String) {
-    val dbURL: String
-        get() = "jdbc:postgresql://$serverName:$portNumber/$dbName"
+data class DatabaseConfig(val serverName: String, val port: Int, val name: String, val user: String, val password: String) {
+    val url: String
+        get() = "jdbc:postgresql://$serverName:$port/$name"
 }
 
-@BService
 data class Config(val token: String,
                   val ownerIds: List<Long>,
                   val prefixes: List<String>,
@@ -20,18 +21,18 @@ data class Config(val token: String,
                   val usePullUpdater: Boolean,
                   val pullUpdaterBaseUrl: String,
                   val pullUpdaterToken: String,
-                  val dbConfig: DBConfig) {
+                  val databaseConfig: DatabaseConfig
+) {
     companion object {
         private val logger = KotlinLogging.logger { }
 
-        @get:BService
-        val config: Config by lazy {
-            val configPath = Data.getEffectiveConfigPath()
-            if (Data.isDevEnvironment) {
-                logger.info("Loading test config")
-            }
+        private val configFilePath: Path = Environment.configFolder.resolve("config.json")
 
-            return@lazy Gson().fromJson(configPath.readText(), Config::class.java)
+        @get:BService
+        val instance: Config by lazy {
+            logger.info("Loading configuration at ${configFilePath.absolutePathString()}")
+
+            return@lazy Gson().fromJson(configFilePath.readText(), Config::class.java)
         }
     }
 }

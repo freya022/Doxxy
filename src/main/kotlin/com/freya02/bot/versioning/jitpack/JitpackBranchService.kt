@@ -1,7 +1,7 @@
 package com.freya02.bot.versioning.jitpack
 
-import com.freya02.bot.Data
 import com.freya02.bot.commands.slash.versioning.SlashJitpack
+import com.freya02.bot.config.Data
 import com.freya02.bot.versioning.ArtifactInfo
 import com.freya02.bot.versioning.LibraryType
 import com.freya02.bot.versioning.github.GithubBranch

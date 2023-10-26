@@ -1,0 +1,23 @@
+{
+  "token": "",
+  "ownerIds": [
+
+  ],
+  "prefixes": [
+    "<ping>",
+    "!"
+  ],
+  "testGuildIds": [],
+  "fakeJDAGuildId": 1234,
+  "fakeBCGuildId": 4321,
+  "usePullUpdater": false,
+  "pullUpdaterBaseUrl": "http://127.0.0.1:4545",
+  "pullUpdaterToken": "00000000-0000-0000-0000-000000000000",
+  "databaseConfig": {
+    "serverName": "localhost",
+    "port": 5432,
+    "name": "",
+    "user": "",
+    "password": ""
+  }
+}

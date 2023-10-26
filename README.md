@@ -13,19 +13,16 @@ A Discord bot to display the javadocs of [BotCommands](https://github.com/freya0
 * Reactions on classes recognized in messages
 
 ## Contributing
-Contributions are welcome, here are the prerequisites in order to run the bot, so you can test your stuff.
+Contributions are welcome, here are the prerequisites to run the bot, so you can test your stuff.
 
 ### Requirements
-* Java 17
+* JDK 17+
 * A PostgreSQL database, a recent enough version (11+) should be enough.
 
 ### Setting up
-1. Have a `Doxxy` folder in a `Bots` folder, in your user directory, this is where the bot will put its files. The corresponding `Path` would be: 
-   ```kt
-   Path(System.getProperty("user.home"), "Bots", "Doxxy")
-   ```
-2. Set up the tables with [this script](https://github.com/freya022/BotCommands/blob/3.0.0-dev/src/main/resources/bc_database_scripts/V3.0.0.2023.05.21__Create_database.sql) and [this one](https://github.com/freya022/Doxxy/blob/master/sql/CreateDatabase.sql).
-3. Have a valid `Test_Config.json` in the project root, to which you can find a template [here](Config_template.json).
+1. Copy the `config-template` as `dev-config`.
+2. Delete the "logback.xml" as it is only for production.
+3. Set up the tables with [this script](https://github.com/freya022/BotCommands/blob/3.0.0-dev/src/main/resources/bc_database_scripts/V3.0.0.2023.05.21__Create_database.sql) and [this one](https://github.com/freya022/Doxxy/blob/master/sql/CreateDatabase.sql).
 4. When running the bot, add this to the VM options: `--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED`
 5. ???
 6. Profit

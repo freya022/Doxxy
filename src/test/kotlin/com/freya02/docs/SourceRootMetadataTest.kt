@@ -1,6 +1,6 @@
 package com.freya02.docs
 
-import com.freya02.bot.Data
+import com.freya02.bot.config.Data
 import com.freya02.bot.docs.metadata.parser.SourceRootMetadata
 
 fun main() {
