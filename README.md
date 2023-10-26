@@ -30,6 +30,6 @@ Contributions are welcome, here are the prerequisites to run the bot, so you can
 ### Database changes
 If you change something to the database, 
 please write a migration script [here](src/main/resources/doxxy_database_scripts),
-with [Flyway's naming scheme](https://flywaydb.org/documentation/concepts/migrations.html#naming):
+with [Flyway's naming scheme](https://documentation.red-gate.com/fd/migrations-184127470.html):
 
 `V[Major].[Minor].[YYYY].[MM].[DD]__Extended_Description.sql`.
