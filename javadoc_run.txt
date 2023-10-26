@@ -1,2 +1,0 @@
-cd %userprofile%\Programming\IntelliJ-Workspace\DocsBot
-javadoc -J-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 -docletpath target/test-classes -doclet DocletTest src/test/java/DocletTest.java src/test/java/com/freya02/bot/TestUtils.java

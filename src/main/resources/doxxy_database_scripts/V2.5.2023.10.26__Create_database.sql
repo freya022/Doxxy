@@ -1,16 +1,7 @@
 drop materialized view if exists doc_view cascade;
-drop table if exists doxxy_version, tag, doc, docseealsoreference;
+drop table if exists tag, doc, docseealsoreference, class, subclass, method, implementation;
 
 create extension if not exists pg_trgm;
-
-create table doxxy_version
-(
-    one_row bool primary key default true check (one_row),
-    version text not null
-);
-
-insert into doxxy_version
-values (true, '2.5'); -- Change in DatabaseSource.kt too
 
 create table Tag
 (
