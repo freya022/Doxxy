@@ -1,6 +1,6 @@
 package com.freya02.bot.docs.index
 
-import com.freya02.botcommands.api.core.db.DBResult
+import io.github.freya022.botcommands.api.core.db.DBResult
 
 data class DocSearchResult(val fullIdentifier: String, val humanIdentifier: String, val humanClassIdentifier: String, val returnType: String?) {
     val identifier: String = fullIdentifier.substringAfter('#')

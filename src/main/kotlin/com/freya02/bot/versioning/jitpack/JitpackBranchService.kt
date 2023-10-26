@@ -9,8 +9,8 @@ import com.freya02.bot.versioning.github.GithubBranchMap
 import com.freya02.bot.versioning.github.GithubUtils
 import com.freya02.bot.versioning.github.UpdateCountdown
 import com.freya02.bot.versioning.maven.MavenBranchProjectDependencyVersionChecker
-import com.freya02.botcommands.api.BContext
-import com.freya02.botcommands.api.core.service.annotations.BService
+import io.github.freya022.botcommands.api.core.BContext
+import io.github.freya022.botcommands.api.core.service.annotations.BService
 import java.io.IOException
 import java.util.*
 import kotlin.time.Duration.Companion.minutes

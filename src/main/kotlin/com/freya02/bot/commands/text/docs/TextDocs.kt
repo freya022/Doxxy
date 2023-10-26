@@ -6,12 +6,12 @@ import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.index.DocSuggestion
 import com.freya02.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
 import com.freya02.bot.docs.index.DocTypes
-import com.freya02.botcommands.api.commands.annotations.Command
-import com.freya02.botcommands.api.commands.prefixed.BaseCommandEvent
-import com.freya02.botcommands.api.commands.prefixed.TextCommand
-import com.freya02.botcommands.api.commands.prefixed.annotations.JDATextCommand
-import com.freya02.botcommands.api.commands.prefixed.annotations.TextOption
 import com.freya02.docs.DocSourceType
+import io.github.freya022.botcommands.api.commands.annotations.Command
+import io.github.freya022.botcommands.api.commands.text.BaseCommandEvent
+import io.github.freya022.botcommands.api.commands.text.TextCommand
+import io.github.freya022.botcommands.api.commands.text.annotations.JDATextCommand
+import io.github.freya022.botcommands.api.commands.text.annotations.TextOption
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
 
 @Command
@@ -20,7 +20,7 @@ class TextDocs(
     private val commonDocsController: CommonDocsController,
     private val textDocsController: TextDocsController
 ) : TextCommand() {
-    @JDATextCommand(name = "docs", description = "Shows the documentation for a class, a method or a field")
+    @JDATextCommand(path = ["docs"], generalDescription = "Shows the documentation for a class, a method or a field")
     suspend fun onTextDocs(
         event: BaseCommandEvent,
         @TextOption(name = "docs source", example = "JDA") docSourceType: DocSourceType = DocSourceType.JDA,

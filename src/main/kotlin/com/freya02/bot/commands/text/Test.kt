@@ -1,16 +1,16 @@
 package com.freya02.bot.commands.text
 
-import com.freya02.botcommands.api.commands.annotations.Command
-import com.freya02.botcommands.api.commands.annotations.RequireOwner
-import com.freya02.botcommands.api.commands.prefixed.BaseCommandEvent
-import com.freya02.botcommands.api.commands.prefixed.TextCommand
-import com.freya02.botcommands.api.commands.prefixed.annotations.JDATextCommand
+import io.github.freya022.botcommands.api.commands.annotations.Command
+import io.github.freya022.botcommands.api.commands.annotations.RequireOwner
+import io.github.freya022.botcommands.api.commands.text.BaseCommandEvent
+import io.github.freya022.botcommands.api.commands.text.TextCommand
+import io.github.freya022.botcommands.api.commands.text.annotations.JDATextCommand
 import net.dv8tion.jda.api.entities.ClientType
 
 @Command
 class Test : TextCommand() {
     @RequireOwner
-    @JDATextCommand(name = "test")
+    @JDATextCommand(path = ["test"])
     fun test(event: BaseCommandEvent) {
         println(event.member.onlineStatus)
         println(event.member.getOnlineStatus(ClientType.DESKTOP))

@@ -7,11 +7,11 @@ import com.freya02.bot.docs.cached.CachedDoc
 import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocSuggestion
 import com.freya02.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
-import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
-import com.freya02.botcommands.api.core.service.annotations.BService
-import com.freya02.botcommands.api.core.utils.edit
-import com.freya02.botcommands.api.core.utils.toEditData
 import com.freya02.docs.DocSourceType
+import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
+import io.github.freya022.botcommands.api.core.service.annotations.BService
+import io.github.freya022.botcommands.api.core.utils.edit
+import io.github.freya022.botcommands.api.core.utils.toEditData
 import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.exceptions.ErrorHandler
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback

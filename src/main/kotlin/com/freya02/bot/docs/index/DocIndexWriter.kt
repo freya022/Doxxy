@@ -4,10 +4,6 @@ import com.freya02.bot.Data
 import com.freya02.bot.docs.DocEmbeds.toEmbed
 import com.freya02.bot.docs.metadata.parser.ImplementationMetadataWriter
 import com.freya02.bot.docs.metadata.parser.SourceRootMetadata
-import com.freya02.botcommands.api.core.db.Database
-import com.freya02.botcommands.api.core.db.Transaction
-import com.freya02.botcommands.api.core.db.preparedStatement
-import com.freya02.botcommands.api.core.db.transactional
 import com.freya02.docs.ClassDocs
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.DocUtils.returnTypeNoAnnotations
@@ -17,6 +13,10 @@ import com.freya02.docs.data.ClassDetailType
 import com.freya02.docs.data.ClassDoc
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade
 import com.google.gson.GsonBuilder
+import io.github.freya022.botcommands.api.core.db.Database
+import io.github.freya022.botcommands.api.core.db.Transaction
+import io.github.freya022.botcommands.api.core.db.preparedStatement
+import io.github.freya022.botcommands.api.core.db.transactional
 import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.MessageEmbed
 

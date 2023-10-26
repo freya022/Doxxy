@@ -1,7 +1,7 @@
 package com.freya02.bot
 
-import com.freya02.botcommands.api.core.service.annotations.BService
 import com.google.gson.Gson
+import io.github.freya022.botcommands.api.core.service.annotations.BService
 import mu.KotlinLogging
 import kotlin.io.path.readText
 

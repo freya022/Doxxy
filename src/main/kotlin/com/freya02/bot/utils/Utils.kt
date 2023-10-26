@@ -1,7 +1,7 @@
 package com.freya02.bot.utils
 
 import com.freya02.bot.Config
-import com.freya02.botcommands.api.Logging
+import io.github.freya022.botcommands.api.Logging
 import net.dv8tion.jda.api.entities.Guild
 import org.jetbrains.annotations.Contract
 import java.nio.file.Path

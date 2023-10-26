@@ -2,10 +2,10 @@ package com.freya02.bot.docs.metadata
 
 import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.metadata.parser.FullSimpleClassName
-import com.freya02.botcommands.api.core.db.DBResult
-import com.freya02.botcommands.api.core.db.Database
-import com.freya02.botcommands.api.core.db.preparedStatement
 import com.freya02.docs.DocSourceType
+import io.github.freya022.botcommands.api.core.db.DBResult
+import io.github.freya022.botcommands.api.core.db.Database
+import io.github.freya022.botcommands.api.core.db.preparedStatement
 
 class ImplementationIndex(val docIndex: DocIndex, private val database: Database) {
     val sourceType: DocSourceType

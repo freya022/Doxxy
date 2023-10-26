@@ -1,10 +1,10 @@
 package com.freya02.bot.commands.slash
 
-import com.freya02.botcommands.api.components.Components
-import com.freya02.botcommands.api.components.annotations.JDAButtonListener
-import com.freya02.botcommands.api.components.event.ButtonEvent
-import com.freya02.botcommands.api.core.annotations.Handler
-import com.freya02.botcommands.api.utils.EmojiUtils
+import io.github.freya022.botcommands.api.components.Components
+import io.github.freya022.botcommands.api.components.annotations.JDAButtonListener
+import io.github.freya022.botcommands.api.components.event.ButtonEvent
+import io.github.freya022.botcommands.api.core.annotations.Handler
+import io.github.freya022.botcommands.api.utils.EmojiUtils
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.interactions.components.buttons.Button

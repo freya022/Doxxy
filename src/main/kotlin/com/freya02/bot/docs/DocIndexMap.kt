@@ -2,9 +2,9 @@ package com.freya02.bot.docs
 
 import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.ReindexData
-import com.freya02.botcommands.api.core.db.Database
-import com.freya02.botcommands.api.core.service.annotations.BService
 import com.freya02.docs.DocSourceType
+import io.github.freya022.botcommands.api.core.db.Database
+import io.github.freya022.botcommands.api.core.service.annotations.BService
 import java.io.IOException
 import java.util.*
 

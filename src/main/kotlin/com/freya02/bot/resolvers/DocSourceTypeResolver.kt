@@ -1,17 +1,16 @@
 package com.freya02.bot.resolvers
 
 import com.freya02.bot.utils.Utils.isBCGuild
-import com.freya02.botcommands.api.BContext
-import com.freya02.botcommands.api.commands.prefixed.BaseCommandEvent
-import com.freya02.botcommands.api.core.service.annotations.Resolver
-import com.freya02.botcommands.api.parameters.ComponentParameterResolver
-import com.freya02.botcommands.api.parameters.ParameterResolver
-import com.freya02.botcommands.api.parameters.RegexParameterResolver
-import com.freya02.botcommands.api.parameters.SlashParameterResolver
-import com.freya02.botcommands.internal.commands.application.slash.SlashCommandInfo
-import com.freya02.botcommands.internal.commands.prefixed.TextCommandVariation
-import com.freya02.botcommands.internal.components.ComponentDescriptor
 import com.freya02.docs.DocSourceType
+import io.github.freya022.botcommands.api.commands.text.BaseCommandEvent
+import io.github.freya022.botcommands.api.core.service.annotations.Resolver
+import io.github.freya022.botcommands.api.parameters.ClassParameterResolver
+import io.github.freya022.botcommands.api.parameters.resolvers.ComponentParameterResolver
+import io.github.freya022.botcommands.api.parameters.resolvers.SlashParameterResolver
+import io.github.freya022.botcommands.api.parameters.resolvers.TextParameterResolver
+import io.github.freya022.botcommands.internal.commands.application.slash.SlashCommandInfo
+import io.github.freya022.botcommands.internal.commands.prefixed.TextCommandVariation
+import io.github.freya022.botcommands.internal.components.ComponentDescriptor
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
@@ -23,14 +22,13 @@ import java.util.regex.Pattern
 import kotlin.reflect.KParameter
 
 @Resolver
-class DocSourceTypeResolver : ParameterResolver<DocSourceTypeResolver, DocSourceType>(DocSourceType::class),
+class DocSourceTypeResolver : ClassParameterResolver<DocSourceTypeResolver, DocSourceType>(DocSourceType::class),
     SlashParameterResolver<DocSourceTypeResolver, DocSourceType>,
-    RegexParameterResolver<DocSourceTypeResolver, DocSourceType>,
+    TextParameterResolver<DocSourceTypeResolver, DocSourceType>,
     ComponentParameterResolver<DocSourceTypeResolver, DocSourceType> {
     override val optionType: OptionType = OptionType.STRING
 
     override fun resolve(
-        context: BContext,
         info: SlashCommandInfo,
         event: CommandInteractionPayload,
         optionMapping: OptionMapping
@@ -51,7 +49,6 @@ class DocSourceTypeResolver : ParameterResolver<DocSourceTypeResolver, DocSource
     }
 
     override fun resolve(
-        context: BContext,
         variation: TextCommandVariation,
         event: MessageReceivedEvent,
         args: Array<String?>
@@ -75,7 +72,6 @@ class DocSourceTypeResolver : ParameterResolver<DocSourceTypeResolver, DocSource
     }
 
     override fun resolve(
-        context: BContext,
         descriptor: ComponentDescriptor,
         event: GenericComponentInteractionCreateEvent,
         arg: String

@@ -2,10 +2,10 @@ package com.freya02.bot
 
 import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.bot.utils.Utils.isJDAGuild
-import com.freya02.botcommands.api.commands.CommandList
-import com.freya02.botcommands.api.commands.CommandPath
-import com.freya02.botcommands.api.core.SettingsProvider
-import com.freya02.botcommands.api.core.service.annotations.BService
+import io.github.freya022.botcommands.api.commands.CommandList
+import io.github.freya022.botcommands.api.commands.CommandPath
+import io.github.freya022.botcommands.api.core.SettingsProvider
+import io.github.freya022.botcommands.api.core.service.annotations.BService
 import net.dv8tion.jda.api.entities.Guild
 
 @BService

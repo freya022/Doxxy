@@ -1,6 +1,6 @@
 package com.freya02.bot.utils
 
-import com.freya02.botcommands.api.utils.EmojiUtils
+import io.github.freya022.botcommands.api.utils.EmojiUtils
 import net.dv8tion.jda.api.entities.emoji.Emoji
 
 object Emojis { //TODO find remaining EmojiUtils usages

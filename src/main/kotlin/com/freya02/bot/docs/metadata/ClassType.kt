@@ -1,11 +1,11 @@
 package com.freya02.bot.docs.metadata
 
 import com.freya02.bot.utils.Emojis
-import com.freya02.botcommands.api.BContext
-import com.freya02.botcommands.api.core.service.getService
-import com.freya02.botcommands.api.localization.LocalizationService
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration
+import io.github.freya022.botcommands.api.core.BContext
+import io.github.freya022.botcommands.api.core.service.getService
+import io.github.freya022.botcommands.api.localization.LocalizationService
 import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.entities.emoji.EmojiUnion
 import java.util.*

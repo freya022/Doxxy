@@ -3,8 +3,8 @@ package com.freya02.bot.docs.metadata.parser
 import com.freya02.bot.docs.index.ReindexData
 import com.freya02.bot.utils.createProfiler
 import com.freya02.bot.utils.nextStep
-import com.freya02.botcommands.api.core.db.Transaction
 import com.freya02.docs.DocSourceType
+import io.github.freya022.botcommands.api.core.db.Transaction
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.intellij.lang.annotations.Language

@@ -1,8 +1,8 @@
 package com.freya02.bot.tag
 
-import com.freya02.botcommands.api.core.db.Database
-import com.freya02.botcommands.api.core.db.preparedStatement
-import com.freya02.botcommands.api.core.service.annotations.BService
+import io.github.freya022.botcommands.api.core.db.Database
+import io.github.freya022.botcommands.api.core.db.preparedStatement
+import io.github.freya022.botcommands.api.core.service.annotations.BService
 import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.interactions.commands.build.OptionData

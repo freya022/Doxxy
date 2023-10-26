@@ -1,11 +1,11 @@
 package com.freya02.bot
 
 import ch.qos.logback.classic.ClassicConstants
-import com.freya02.botcommands.api.core.BBuilder
-import com.freya02.botcommands.api.core.utils.namedDefaultScope
 import com.freya02.docs.DocWebServer
 import dev.minn.jda.ktx.events.CoroutineEventManager
 import dev.reformator.stacktracedecoroutinator.runtime.DecoroutinatorRuntime
+import io.github.freya022.botcommands.api.core.BBuilder
+import io.github.freya022.botcommands.api.core.utils.namedDefaultScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.debug.DebugProbes

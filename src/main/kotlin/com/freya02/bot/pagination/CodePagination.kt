@@ -1,12 +1,12 @@
 package com.freya02.bot.pagination
 
-import com.freya02.botcommands.api.components.Components
-import com.freya02.botcommands.api.components.data.InteractionConstraints
-import com.freya02.botcommands.api.pagination.PaginatorSupplier
-import com.freya02.botcommands.api.pagination.TimeoutInfo
-import com.freya02.botcommands.api.pagination.paginator.BasicPaginator
-import com.freya02.botcommands.api.pagination.paginator.BasicPaginatorBuilder
-import com.freya02.botcommands.api.utils.ButtonContent
+import io.github.freya022.botcommands.api.components.Components
+import io.github.freya022.botcommands.api.components.data.InteractionConstraints
+import io.github.freya022.botcommands.api.pagination.PaginatorSupplier
+import io.github.freya022.botcommands.api.pagination.TimeoutInfo
+import io.github.freya022.botcommands.api.pagination.paginator.BasicPaginator
+import io.github.freya022.botcommands.api.pagination.paginator.BasicPaginatorBuilder
+import io.github.freya022.botcommands.api.utils.ButtonContent
 
 class CodePaginatorBuilder(
     componentsService: Components

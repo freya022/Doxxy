@@ -1,6 +1,6 @@
 package com.freya02.bot
 
-import com.freya02.botcommands.api.commands.application.context.message.GuildMessageEvent
+import io.github.freya022.botcommands.api.commands.application.context.message.GuildMessageEvent
 import javassist.ClassPool
 import javassist.CtClass
 import javassist.expr.ExprEditor

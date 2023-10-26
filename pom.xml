@@ -32,7 +32,6 @@
                 <version>${kotlin.version}</version>
                 <configuration>
                     <args>
-                        <arg>-java-parameters</arg>
                         <arg>-opt-in=kotlin.RequiresOptIn</arg>
                         <arg>-opt-in=kotlin.ExperimentalStdlibApi</arg>
                         <arg>-Xcontext-receivers</arg>
@@ -107,14 +106,19 @@
             <version>${kotlin.coroutine.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>kotlinx-coroutines-debug</artifactId>
+            <version>${kotlin.coroutine.version}</version>
+        </dependency>
+        <dependency>
             <groupId>dev.reformator.stacktracedecoroutinator</groupId>
             <artifactId>stacktrace-decoroutinator-jvm</artifactId>
             <version>2.3.6</version>
         </dependency>
         <dependency>
-            <groupId>io.github.JDA-Fork</groupId>
+            <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>69c1027b23</version>
+            <version>5.0.0-beta.16</version>
             <exclusions>
                 <exclusion>
                     <groupId>club.minnced</groupId>
@@ -125,7 +129,7 @@
         <dependency>
             <groupId>io.github.freya022</groupId>
             <artifactId>BotCommands</artifactId>
-            <version>2b6578ebef</version>
+            <version>2e60a389ae</version>
         </dependency>
         <dependency>
             <groupId>io.github.minndevelopment</groupId>

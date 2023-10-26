@@ -1,16 +1,16 @@
 package com.freya02.bot.commands.slash
 
 import com.freya02.bot.versioning.github.UpdateCountdown
-import com.freya02.botcommands.api.BCInfo
-import com.freya02.botcommands.api.BContext
-import com.freya02.botcommands.api.commands.annotations.Command
-import com.freya02.botcommands.api.commands.application.ApplicationCommand
-import com.freya02.botcommands.api.commands.application.CommandScope
-import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
-import com.freya02.botcommands.api.commands.application.slash.annotations.JDASlashCommand
 import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.MessageCreate
+import io.github.freya022.botcommands.api.BCInfo
+import io.github.freya022.botcommands.api.commands.annotations.Command
+import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
+import io.github.freya022.botcommands.api.commands.application.CommandScope
+import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
+import io.github.freya022.botcommands.api.commands.application.slash.annotations.JDASlashCommand
+import io.github.freya022.botcommands.api.core.BContext
 import net.dv8tion.jda.api.JDAInfo
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.requests.RestAction

@@ -1,10 +1,10 @@
 package com.freya02.bot.db
 
 import com.freya02.bot.Config
-import com.freya02.botcommands.api.core.db.HikariSourceSupplier
-import com.freya02.botcommands.api.core.service.annotations.BService
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import io.github.freya022.botcommands.api.core.db.HikariSourceSupplier
+import io.github.freya022.botcommands.api.core.service.annotations.BService
 import java.nio.file.Path
 import kotlin.io.path.*
 import kotlin.time.Duration.Companion.seconds

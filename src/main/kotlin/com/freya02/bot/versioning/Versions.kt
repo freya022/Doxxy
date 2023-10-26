@@ -12,12 +12,12 @@ import com.freya02.bot.versioning.jitpack.JitpackVersionChecker
 import com.freya02.bot.versioning.maven.MavenBranchProjectDependencyVersionChecker
 import com.freya02.bot.versioning.maven.MavenVersionChecker
 import com.freya02.bot.versioning.maven.RepoType
-import com.freya02.botcommands.api.BContext
-import com.freya02.botcommands.api.core.annotations.BEventListener
-import com.freya02.botcommands.api.core.events.InjectedJDAEvent
-import com.freya02.botcommands.api.core.service.annotations.BService
 import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.events.getDefaultScope
+import io.github.freya022.botcommands.api.core.BContext
+import io.github.freya022.botcommands.api.core.annotations.BEventListener
+import io.github.freya022.botcommands.api.core.events.InjectedJDAEvent
+import io.github.freya022.botcommands.api.core.service.annotations.BService
 import kotlinx.coroutines.*
 import mu.KotlinLogging
 import java.util.concurrent.Executors
