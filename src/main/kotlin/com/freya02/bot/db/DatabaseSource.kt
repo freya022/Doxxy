@@ -1,19 +1,18 @@
 package com.freya02.bot.db
 
 import com.freya02.bot.Config
-import com.freya02.botcommands.api.core.db.ConnectionSupplier
+import com.freya02.botcommands.api.core.db.HikariSourceSupplier
 import com.freya02.botcommands.api.core.service.annotations.BService
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import java.nio.file.Path
-import java.sql.Connection
 import kotlin.io.path.*
 import kotlin.time.Duration.Companion.seconds
 
 @BService
-class DatabaseSource(config: Config) : ConnectionSupplier {
+class DatabaseSource(config: Config) : HikariSourceSupplier {
     private val version = "2.5" //Same version as in CreateDatabase.sql
-    private val source: HikariDataSource
+    override val source: HikariDataSource
 
     private val migrationNameRegex = Regex("""v(\d+)\.(\d+)__.+\.sql""")
     private val dbVersionRegex = Regex("""(\d+)\.(\d+)""")
@@ -75,8 +74,4 @@ class DatabaseSource(config: Config) : ConnectionSupplier {
         if (hintFiles.isBlank()) return ""
         return "\nHint: You should run the following migration scripts: $hintFiles"
     }
-
-    override fun getMaxConnections() = source.maximumPoolSize
-
-    override fun getConnection(): Connection = source.connection
 }
