@@ -1,6 +1,5 @@
-package com.freya02.bot.db
+package com.freya02.bot.config
 
-import com.freya02.bot.config.Config
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.github.freya022.botcommands.api.core.db.HikariSourceSupplier

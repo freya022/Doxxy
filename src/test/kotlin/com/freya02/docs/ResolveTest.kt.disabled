@@ -1,7 +1,7 @@
 package com.freya02.docs
 
 import com.freya02.bot.config.Config
-import com.freya02.bot.db.DatabaseSource
+import com.freya02.bot.config.DatabaseSource
 import com.freya02.bot.docs.index.DocIndex
 
 fun main() {
