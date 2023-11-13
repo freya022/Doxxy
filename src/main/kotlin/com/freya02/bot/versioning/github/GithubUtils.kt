@@ -114,7 +114,7 @@ object GithubUtils {
         artifactId: String,
         baseBranchName: String?,
         page: Int = 1,
-        perPage: Int = 30
+        perPage: Int = 100
     ): TIntObjectMap<PullRequest> {
         logger.debug("Retrieving pull requests of {}/{}", ownerName, artifactId)
 
