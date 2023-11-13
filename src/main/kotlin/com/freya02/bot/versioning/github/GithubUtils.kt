@@ -65,11 +65,11 @@ object GithubUtils {
     }
 
     @Throws(IOException::class)
-    fun getBranches(ownerName: String, repoName: String): List<GithubBranch> {
+    fun getBranches(ownerName: String, repoName: String, page: Int = 1, perPage: Int = 100): List<GithubBranch> {
         val url = "https://api.github.com/repos/$ownerName/$repoName/branches".toHttpUrl()
             .newBuilder()
-            .addQueryParameter("page", "1")
-            .addQueryParameter("per_page", "30")
+            .addQueryParameter("page", page.toString())
+            .addQueryParameter("per_page", perPage.toString())
             .build()
         HttpUtils.CLIENT.newCall(newGithubRequest(url).build())
             .execute()
@@ -80,6 +80,12 @@ object GithubUtils {
                 return (0 until branches.length()).map { i ->
                     val branchObject = branches.getObject(i)
                     makeBranch(branchObject, ownerName, repoName)
+                }.let {
+                    if (it.isNotEmpty()) {
+                        it + getBranches(ownerName, repoName, page + 1, perPage)
+                    } else {
+                        it
+                    }
                 }
             }
     }
@@ -106,15 +112,17 @@ object GithubUtils {
     fun retrievePullRequests(
         ownerName: String,
         artifactId: String,
-        baseBranchName: String?
+        baseBranchName: String?,
+        page: Int = 1,
+        perPage: Int = 30
     ): TIntObjectMap<PullRequest> {
         logger.debug("Retrieving pull requests of {}/{}", ownerName, artifactId)
 
         val pullRequests: TIntObjectMap<PullRequest> = TIntObjectHashMap()
         val urlBuilder: URLBuilder = "https://api.github.com/repos/$ownerName/$artifactId/pulls".toHttpUrl()
                 .newBuilder()
-                .addQueryParameter("page", "1")
-                .addQueryParameter("per_page", "30")
+                .addQueryParameter("page", page.toString())
+                .addQueryParameter("per_page", perPage.toString())
 
         if (baseBranchName != null) {
             urlBuilder.addQueryParameter("base", baseBranchName)
@@ -134,7 +142,11 @@ object GithubUtils {
                 }
             }
 
-        return pullRequests
+        return pullRequests.also {
+            if (!it.isEmpty) {
+                it.putAll(retrievePullRequests(ownerName, artifactId, baseBranchName, page + 1, perPage))
+            }
+        }
     }
 
     fun getLatestRelease(ownerName: String, repoName: String): GithubRelease? {
