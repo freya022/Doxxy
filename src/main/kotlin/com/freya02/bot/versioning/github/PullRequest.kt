@@ -1,6 +1,8 @@
 package com.freya02.bot.versioning.github
 
+import com.freya02.bot.utils.Utils.truncate
 import com.freya02.bot.versioning.ArtifactInfo
+import net.dv8tion.jda.api.interactions.commands.Command
 import net.dv8tion.jda.api.utils.data.DataObject
 
 @JvmRecord
@@ -16,7 +18,10 @@ data class PullRequest(
     }
 
     val asHumanDescription: String
-        get() = "$number - $title (${branch.authorName})"
+        get() {
+            val branchAuthorName = " (${branch.authorName})"
+            return "$number - $title".truncate(Command.Choice.MAX_NAME_LENGTH - branchAuthorName.length) + branchAuthorName
+        }
 
     companion object {
         fun fromData(data: DataObject): PullRequest? {
