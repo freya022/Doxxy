@@ -1,7 +1,7 @@
 package com.freya02.bot.utils
 
 import com.freya02.bot.config.Config
-import io.github.freya022.botcommands.api.Logging
+import io.github.freya022.botcommands.api.core.Logging
 import net.dv8tion.jda.api.entities.Guild
 import org.jetbrains.annotations.Contract
 import java.nio.file.Path
@@ -33,7 +33,7 @@ object Utils {
         val diff = System.nanoTime() - start
 
         //Abusing the fact that this method call with expose the real caller class
-        Logging.getLogger().debug("$desc took ${diff / 1000000.0} ms")
+        Logging.currentLogger().info { "$desc took ${diff / 1000000.0} ms" }
 
         return r
     }
