@@ -17,7 +17,7 @@ import io.github.freya022.botcommands.api.components.data.InteractionConstraints
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.freya022.botcommands.api.pagination.menu.ChoiceMenuBuilder
 import io.github.freya022.botcommands.api.utils.ButtonContent
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.interactions.InteractionHook
@@ -115,11 +115,7 @@ class CommonDocsController(
                         if (reference.targetType != TargetType.UNKNOWN) {
                             val optionValue = reference.targetType.name + ":" + reference.fullSignature
                             if (optionValue.length > SelectMenu.ID_MAX_LENGTH) {
-                                logger.warn(
-                                    "Option value was too large ({}) for: '{}'",
-                                    optionValue.length,
-                                    optionValue
-                                )
+                                logger.warn { "Option value was too large (${optionValue.length}) for: '${optionValue}'" }
 
                                 continue
                             }

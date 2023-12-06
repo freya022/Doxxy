@@ -158,11 +158,6 @@
             <artifactId>slf4j-ext</artifactId>
             <version>2.0.9</version>
         </dependency>
-        <dependency> <!-- TODO remove as it is included in BC, will bump to 5.X -->
-            <groupId>io.github.microutils</groupId>
-            <artifactId>kotlin-logging-jvm</artifactId>
-            <version>3.0.5</version>
-        </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>

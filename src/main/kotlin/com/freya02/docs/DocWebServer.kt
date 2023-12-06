@@ -3,7 +3,7 @@ package com.freya02.docs
 import com.freya02.bot.config.Data
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpServer
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import java.io.IOException
 import java.net.InetSocketAddress
 import java.nio.file.Files
@@ -19,7 +19,7 @@ object DocWebServer {
         val server = HttpServer.create(InetSocketAddress(25566), 0)
         server.createContext("/") { exchange: HttpExchange ->
             if (!exchange.remoteAddress.address.isLoopbackAddress) {
-                logger.warn("A non-loopback address tried to connect: {}", exchange.remoteAddress)
+                logger.warn { "A non-loopback address tried to connect: ${exchange.remoteAddress}" }
                 return@createContext
             }
 
@@ -27,12 +27,7 @@ object DocWebServer {
             val javadocsPath = Data.javadocsPath
             val file = javadocsPath.resolve(path.substring(1))
             if (!file.startsWith(javadocsPath)) {
-                logger.warn(
-                    "Tried to access a file outside of the target directory: '{}', from {}",
-                    file,
-                    exchange.remoteAddress
-                )
-                return@createContext
+                return@createContext logger.warn { "Tried to access a file outside of the target directory: '$file', from ${exchange.remoteAddress}" }
             }
 
             exchange.responseBody.bufferedWriter().use { writer ->

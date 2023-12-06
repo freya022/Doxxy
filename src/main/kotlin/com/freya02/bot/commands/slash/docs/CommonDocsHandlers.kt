@@ -17,7 +17,7 @@ import io.github.freya022.botcommands.api.components.event.StringSelectEvent
 import io.github.freya022.botcommands.api.core.annotations.Handler
 import io.github.freya022.botcommands.api.core.utils.edit
 import io.github.freya022.botcommands.api.core.utils.toEditData
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 

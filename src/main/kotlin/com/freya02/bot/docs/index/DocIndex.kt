@@ -15,9 +15,9 @@ import io.github.freya022.botcommands.api.core.db.Database
 import io.github.freya022.botcommands.api.core.db.Transaction
 import io.github.freya022.botcommands.api.core.db.preparedStatement
 import io.github.freya022.botcommands.api.core.db.transactional
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.MessageEmbed
 import org.intellij.lang.annotations.Language
 
@@ -228,19 +228,19 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
 
     suspend fun reindex(reindexData: ReindexData): DocIndex {
         mutex.withLock {
-            logger.info("Re-indexing docs for {}", sourceType.name)
+            logger.info { "Re-indexing docs for ${sourceType.name}" }
 
             if (sourceType != DocSourceType.JAVA) {
-                logger.info("Clearing cache for {}", sourceType.name)
+                logger.info { "Clearing cache for ${sourceType.name}" }
                 PageCache[sourceType].clearCache()
-                logger.info("Cleared cache of {}", sourceType.name)
+                logger.info { "Cleared cache of ${sourceType.name}" }
             }
 
             val docsSession = DocsSession()
 
             DocIndexWriter(database, docsSession, sourceType, reindexData).doReindex()
 
-            logger.info("Re-indexed docs for {}", sourceType.name)
+            logger.info { "Re-indexed docs for ${sourceType.name}" }
         }
 
         System.gc() //Very effective

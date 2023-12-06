@@ -1,6 +1,7 @@
 package com.freya02.bot.utils
 
-import mu.KotlinLogging
+import io.github.freya022.botcommands.api.core.Logging
+import io.github.oshai.kotlinlogging.slf4j.internal.Slf4jLogger
 import org.slf4j.profiler.Profiler
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
@@ -13,7 +14,7 @@ inline fun <R> createProfiler(name: String, block: Profiler.() -> R): R {
     }
 
     return Profiler(name).apply {
-        logger = KotlinLogging.logger { }
+        logger = (Logging.currentLogger() as Slf4jLogger<*>).underlyingLogger
     }.let { profiler ->
         profiler.block().also {
             profiler.stop()

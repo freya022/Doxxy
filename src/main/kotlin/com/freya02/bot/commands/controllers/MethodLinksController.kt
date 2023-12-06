@@ -17,8 +17,8 @@ import io.github.freya022.botcommands.api.core.service.ServiceContainer
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.freya022.botcommands.api.core.service.lazy
 import io.github.freya022.botcommands.api.core.utils.toEditData
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.runBlocking
-import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.exceptions.ErrorHandler
@@ -64,7 +64,7 @@ class MethodLinksController(
                 }.also { add(it) }
             }
         } else {
-            logger.trace("Found no metadata for ${cachedMethod.className}#${cachedMethod.signature}")
+            logger.trace { "Found no metadata for ${cachedMethod.className}#${cachedMethod.signature}" }
         }
     }
 

@@ -1,7 +1,7 @@
 package com.freya02.docs.data
 
 import com.freya02.docs.HTMLElement
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jsoup.nodes.Element
 import java.util.*
 
@@ -17,7 +17,7 @@ class DetailToElementsMap private constructor(detailTarget: Element) {
             @Suppress("LiftReturnOrAssignment")
             if (type == null) {
                 if (warned.add(detailName))
-                    logger.warn("Unknown method detail type: '{}' at {}", detailName, detailTarget.baseUri())
+                    logger.warn { "Unknown method detail type: '$detailName' at ${detailTarget.baseUri()}" }
 
                 list = null
             } else {

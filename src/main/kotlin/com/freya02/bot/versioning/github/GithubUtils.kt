@@ -3,7 +3,7 @@ package com.freya02.bot.versioning.github
 import com.freya02.bot.utils.HttpUtils
 import gnu.trove.map.TIntObjectMap
 import gnu.trove.map.hash.TIntObjectHashMap
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import net.dv8tion.jda.api.utils.data.DataArray
 import net.dv8tion.jda.api.utils.data.DataObject
 import okhttp3.HttpUrl
@@ -116,7 +116,7 @@ object GithubUtils {
         page: Int = 1,
         perPage: Int = 100
     ): TIntObjectMap<PullRequest> {
-        logger.debug("Retrieving pull requests of {}/{}", ownerName, artifactId)
+        logger.debug { "Retrieving pull requests of $ownerName/$artifactId" }
 
         val pullRequests: TIntObjectMap<PullRequest> = TIntObjectHashMap()
         val urlBuilder: URLBuilder = "https://api.github.com/repos/$ownerName/$artifactId/pulls".toHttpUrl()

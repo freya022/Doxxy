@@ -12,7 +12,7 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSol
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver
 import com.github.javaparser.utils.SourceRoot
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import java.nio.file.Path
 
 class SourceRootMetadata(sourceRootPath: Path) {
@@ -38,9 +38,9 @@ class SourceRootMetadata(sourceRootPath: Path) {
                     .tryToParseParallelized("net.dv8tion.jda")
                     .filter { result ->
                         if (result.problems.isNotEmpty()) {
-                            result.problems.forEach { Companion.logger.error(it.toString()) }
+                            result.problems.forEach { Companion.logger.error { it.toString() } }
                         } else if (!result.isSuccessful) {
-                            Companion.logger.error("Unexpected failure while parsing CU")
+                            Companion.logger.error { "Unexpected failure while parsing CU" }
                         }
 
                         result.isSuccessful

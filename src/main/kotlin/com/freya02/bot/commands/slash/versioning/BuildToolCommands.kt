@@ -18,7 +18,7 @@ import io.github.freya022.botcommands.api.commands.application.annotations.AppDe
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import io.github.freya022.botcommands.api.components.Components
 import io.github.freya022.botcommands.api.utils.EmojiUtils
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import net.dv8tion.jda.api.interactions.components.ItemComponent
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.utils.FileUpload

@@ -12,7 +12,7 @@ import dev.minn.jda.ktx.messages.send
 import dev.minn.jda.ktx.util.await
 import io.github.freya022.botcommands.api.components.event.ButtonEvent
 import io.github.freya022.botcommands.api.core.service.annotations.BService
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import net.dv8tion.jda.api.utils.data.DataObject
 import okhttp3.Request
 
@@ -63,7 +63,7 @@ class JitpackPrService(private val config: Config) {
         } else {
             val message = if (responseBody.isNotBlank()) DataObject.fromJson(responseBody).getString("message") else null
             if (response.code != 409)
-                logger.warn("Could not update pull request, code: ${response.code}, response: $message")
+                logger.warn { "Could not update pull request, code: ${response.code}, response: $message" }
 
             val userReply = when (response.code) {
                 409 -> "Could not update pull request as it has merge conflicts"

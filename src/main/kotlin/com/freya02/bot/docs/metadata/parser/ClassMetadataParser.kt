@@ -13,7 +13,7 @@ import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName
 import com.github.javaparser.ast.type.ClassOrInterfaceType
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter
 import com.github.javaparser.utils.SourceRoot
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.slf4j.profiler.Profiler
 import java.util.*
 
@@ -163,7 +163,7 @@ class ClassMetadataParser private constructor(private val sourceRoot: SourceRoot
                 n.findAllImportVariants().forEach {
                     metadataStack.forEach { m ->
                         val old = m.resolvedMap.put(it, fullSimpleName)
-                        if (old != null) logger.warn("Variant '$it' already existed, old value: $old, new value: $fullSimpleName")
+                        if (old != null) logger.warn { "Variant '$it' already existed, old value: $old, new value: $fullSimpleName" }
                     }
                 }
             }

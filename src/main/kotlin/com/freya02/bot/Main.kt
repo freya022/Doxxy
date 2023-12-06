@@ -8,10 +8,10 @@ import dev.minn.jda.ktx.events.CoroutineEventManager
 import dev.reformator.stacktracedecoroutinator.runtime.DecoroutinatorRuntime
 import io.github.freya022.botcommands.api.core.BBuilder
 import io.github.freya022.botcommands.api.core.utils.namedDefaultScope
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.debug.DebugProbes
-import mu.KotlinLogging
 import net.dv8tion.jda.api.events.session.ShutdownEvent
 import java.lang.management.ManagementFactory
 import kotlin.io.path.absolutePathString
@@ -28,15 +28,15 @@ object Main {
     fun main(args: Array<String>) {
         try {
             System.setProperty(LogbackConstants.CONFIG_FILE_PROPERTY, Environment.logbackConfigPath.absolutePathString())
-            logger.info("Loading logback configuration at ${Environment.logbackConfigPath.absolutePathString()}")
+            logger.info { "Loading logback configuration at ${Environment.logbackConfigPath.absolutePathString()}" }
 
             Data.init()
 
             //stacktrace-decoroutinator seems to have issues when reloading with hotswap agent
             if ("-XX:HotswapAgent=fatjar" in ManagementFactory.getRuntimeMXBean().inputArguments) {
-                logger.info("Skipping stacktrace-decoroutinator as HotswapAgent is active")
+                logger.info { "Skipping stacktrace-decoroutinator as HotswapAgent is active" }
             } else if ("--no-decoroutinator" in args) {
-                logger.info("Skipping stacktrace-decoroutinator as --no-decoroutinator is specified")
+                logger.info { "Skipping stacktrace-decoroutinator as --no-decoroutinator is specified" }
             } else {
                 DecoroutinatorRuntime.load()
             }
@@ -49,9 +49,9 @@ object Main {
                 scope.cancel()
             }
 
-            logger.info("Starting docs web server")
+            logger.info { "Starting docs web server" }
             DocWebServer.startDocWebServer()
-            logger.info("Started docs web server")
+            logger.info { "Started docs web server" }
 
             val config = Config.instance
             BBuilder.newBuilder(manager) {
@@ -81,9 +81,9 @@ object Main {
                 }
             }
 
-            logger.info("Loaded commands")
+            logger.info { "Loaded commands" }
         } catch (e: Exception) {
-            logger.error("Unable to start the bot", e)
+            logger.error(e) { "Unable to start the bot" }
             exitProcess(-1)
         }
     }

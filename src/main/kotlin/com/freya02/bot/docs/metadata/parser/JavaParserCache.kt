@@ -7,7 +7,7 @@ import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclar
 import com.github.javaparser.resolution.declarations.ResolvedTypeDeclaration
 import com.github.javaparser.resolution.types.ResolvedReferenceType
 import com.github.javaparser.resolution.types.ResolvedType
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import java.util.*
 import kotlin.math.ceil
 import kotlin.math.log2
@@ -94,12 +94,12 @@ class JavaParserCache {
             = referenceTypeDirectAncestors[declaration]
 
     fun logCaches() {
-        logger.trace("Cache info:")
+        logger.trace { "Cache info:" }
         this::class.declaredMemberProperties
             .filter { it.returnType.jvmErasure == Cache::class }
             .forEach {
                 val cache: Cache<*, *, *> = it.javaField?.get(this) as? Cache<*, *, *>
-                    ?: return logger.warn("Could not get field '${it.name}'")
+                    ?: return logger.warn { "Could not get field '${it.name}'" }
                 logger.trace { "${it.name}: $cache" }
 
                 //Cache's map was expanded

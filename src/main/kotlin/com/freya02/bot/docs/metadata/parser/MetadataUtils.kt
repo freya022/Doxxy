@@ -6,7 +6,7 @@ import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration
 import com.github.javaparser.resolution.types.ResolvedPrimitiveType
 import com.github.javaparser.resolution.types.ResolvedReferenceType
-import mu.KLogger
+import io.github.oshai.kotlinlogging.KLogger
 import org.intellij.lang.annotations.Language
 import org.postgresql.copy.CopyManager
 import org.postgresql.core.BaseConnection
@@ -36,7 +36,7 @@ val ResolvedReferenceType.lightDeclaredMethods: Set<ResolvedMethodDeclaration>
 fun List<CompilationUnit>.forEachCompilationUnit(logger: KLogger, block: (CompilationUnit) -> Unit) {
     forEach { unit ->
         kotlin.runCatching { block(unit) }.onFailure {
-            logger.error("Failed to parse CU ${unit.debugFQCN}", it)
+            logger.error(it) { "Failed to parse CU ${unit.debugFQCN}" }
         }
     }
 }

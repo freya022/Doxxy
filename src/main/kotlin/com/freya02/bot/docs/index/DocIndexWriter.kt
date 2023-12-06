@@ -17,7 +17,7 @@ import io.github.freya022.botcommands.api.core.db.Database
 import io.github.freya022.botcommands.api.core.db.Transaction
 import io.github.freya022.botcommands.api.core.db.preparedStatement
 import io.github.freya022.botcommands.api.core.db.transactional
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import net.dv8tion.jda.api.entities.MessageEmbed
 
 internal class DocIndexWriter(
@@ -54,7 +54,7 @@ internal class DocIndexWriter(
                     val classDoc = docsSession.retrieveDoc(classUrl)
 
                     if (classDoc == null) {
-                        logger.warn("Unable to get docs of '${className}' at '${classUrl}', javadoc version or source type may be incorrect")
+                        logger.warn { "Unable to get docs of '${className}' at '${classUrl}', javadoc version or source type may be incorrect" }
                         continue
                     }
 
@@ -128,7 +128,7 @@ internal class DocIndexWriter(
 
                         if (range != null) return@let range
 
-                        logger.warn("Method not found: ${methodDoc.methodSignature}")
+                        logger.warn { "Method not found: ${methodDoc.methodSignature}" }
 
                         null
                     }
@@ -167,7 +167,7 @@ internal class DocIndexWriter(
 
                         if (range != null) return@let range
 
-                        logger.warn("Field not found: ${fieldDoc.classDocs.className}#${fieldDoc.simpleSignature}")
+                        logger.warn { "Field not found: ${fieldDoc.classDocs.className}#${fieldDoc.simpleSignature}" }
 
                         null
                     }

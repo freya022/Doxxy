@@ -7,7 +7,7 @@ import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration
 import com.github.javaparser.resolution.declarations.ResolvedTypeDeclaration
 import com.github.javaparser.resolution.types.ResolvedReferenceType
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 class ImplementationMetadataParser private constructor() {
     private val cache = JavaParserCache()
@@ -74,7 +74,7 @@ class ImplementationMetadataParser private constructor() {
                     }
                 }
             } catch (e: Exception) {
-                logger.error("An exception occurred while processing overrides of ${subclass.cachedQualifiedName}", e)
+                logger.error(e) {"An exception occurred while processing overrides of ${subclass.cachedQualifiedName}" }
             }
         }
     }

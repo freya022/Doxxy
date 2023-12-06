@@ -3,7 +3,7 @@ package com.freya02.docs
 import com.freya02.bot.utils.DecomposedName
 import com.freya02.bot.utils.HttpUtils
 import com.freya02.docs.utils.DocsURL
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import java.io.IOException
 import java.util.*
 
@@ -29,7 +29,7 @@ class ClassDocs private constructor(private val source: DocSourceType) {
         val indexURL = source.allClassesIndexURL
         val constantValuesURL = source.constantValuesURL
 
-        logger.info("Parsing ClassDocs URLs for: {}", source)
+        logger.info { "Parsing ClassDocs URLs for: $source" }
         val document = PageCache[source].getPage(indexURL)
         val constantsDocument = PageCache[source].getPage(constantValuesURL)
 
@@ -47,14 +47,10 @@ class ClassDocs private constructor(private val source: DocSourceType) {
             if (!source.isValidPackage(decomposition.packageName)) continue
 
             val oldUrl = simpleNameToUrlMap.put(decomposition.className, classUrl)
-            when {
-                oldUrl != null -> logger.warn(
-                    "Detected a duplicate class name '{}' at '{}' and '{}'",
-                    decomposition.className,
-                    classUrl,
-                    oldUrl
-                )
-                else -> urlSet.add(source.toEffectiveURL(classUrl)) //For quick checks
+            if (oldUrl != null) {
+                logger.warn { "Detected a duplicate class name '${decomposition.className}' at '$classUrl' and '$oldUrl'" }
+            } else {
+                urlSet.add(source.toEffectiveURL(classUrl)) //For quick checks
             }
         }
 

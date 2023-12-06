@@ -24,7 +24,7 @@ import io.github.freya022.botcommands.api.modals.paragraphTextInput
 import io.github.freya022.botcommands.api.modals.shortTextInput
 import io.github.freya022.botcommands.api.pagination.paginator.Paginator
 import io.github.freya022.botcommands.api.pagination.paginator.PaginatorBuilder
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import net.dv8tion.jda.api.Permission.MANAGE_ROLES
 import net.dv8tion.jda.api.Permission.MANAGE_SERVER
 import net.dv8tion.jda.api.entities.Member
@@ -284,12 +284,7 @@ class SlashTag(
 
                     return@setPaginatorSupplier embed
                 } catch (e: SQLException) {
-                    logger.error(
-                        "An exception occurred while paginating through tags in guild '{}' ({})",
-                        event.guild.name,
-                        event.guild.idLong,
-                        e
-                    )
+                    logger.error(e) { "An exception occurred while paginating through tags in guild '${event.guild.name}' (${event.guild.id})" }
                     return@setPaginatorSupplier Embed(title = "Unable to get the tags")
                 }
             }

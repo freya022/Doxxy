@@ -5,7 +5,7 @@ import com.freya02.docs.ClassDocs
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.DocUtils
 import com.freya02.docs.JavadocUrl
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jsoup.nodes.Element
 
 class SeeAlso(type: DocSourceType, docDetail: DocDetail) {
@@ -76,7 +76,7 @@ class SeeAlso(type: DocSourceType, docDetail: DocDetail) {
                     tryAddReference(SeeAlsoReference(seeAlsoClassElement.text(), href, TargetType.UNKNOWN, null))
                 }
             } catch (e: Exception) {
-                logger.error("An exception occurred while retrieving a 'See also' detail", e)
+                logger.error(e) { "An exception occurred while retrieving a 'See also' detail" }
             }
         }
     }
