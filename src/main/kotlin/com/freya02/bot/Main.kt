@@ -60,7 +60,9 @@ object Main {
                     disableAutocompleteCache = true
                 }
 
-                queryLogThreshold = 500.milliseconds
+                database {
+                    queryLogThreshold = 500.milliseconds
+                }
 
                 addOwners(*config.ownerIds.toLongArray())
 
