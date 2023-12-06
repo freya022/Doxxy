@@ -5,7 +5,9 @@ import com.freya02.bot.docs.cached.CachedMethod
 import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.metadata.ImplementationIndex
 import com.freya02.bot.docs.metadata.MethodType
+import com.freya02.bot.docs.metadata.simpleQualifiedSignature
 import com.freya02.bot.utils.joinLengthyString
+import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.MessageCreate
 import dev.minn.jda.ktx.messages.reply_
@@ -77,7 +79,7 @@ class MethodLinksController(
         methods: List<ImplementationIndex.Method>,
         decorations: MethodType.Decorations
     ) {
-        MessageCreate {
+        val message = MessageCreate {
             val (apiMethods, internalMethods) = methods.sortedBy { it.className }.partition { it.hasMethodDoc() }
 
             if (internalMethods.isNotEmpty()) {
@@ -108,14 +110,20 @@ class MethodLinksController(
                             val lastChar = methodsChunk.last().className.first()
                             placeholder = "${decorations.getPlaceholder(context)} ($firstChar-$lastChar)"
 
+                            val addedValues = hashSetOf<String>()
                             methodsChunk.forEach {
-                                val simpleQualifiedSignature = "${it.className}#${it.signature}"
-                                addOption(simpleQualifiedSignature, simpleQualifiedSignature, it.methodType.emoji)
+                                val simpleQualifiedSignature = it.simpleQualifiedSignature
+                                if (addedValues.add(simpleQualifiedSignature)) {
+                                    addOption(simpleQualifiedSignature, simpleQualifiedSignature, it.methodType.emoji)
+                                } else {
+                                    logger.warn { "Already added '$simpleQualifiedSignature' from ${method.simpleQualifiedSignature}" }
+                                }
                             }
                         })
                     }
             }
-        }.also { event.reply(it).setEphemeral(true).queue() }
+        }
+        event.reply(message).setEphemeral(true).await()
     }
 
     private suspend fun onMethodLinkSelect(

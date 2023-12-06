@@ -154,3 +154,6 @@ class ImplementationIndex(val docIndex: DocIndex, private val database: Database
         }
     }
 }
+
+val ImplementationIndex.Method.simpleQualifiedSignature: String
+    get() = "$className#$signature"

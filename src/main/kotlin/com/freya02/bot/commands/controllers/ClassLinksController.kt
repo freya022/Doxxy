@@ -77,7 +77,7 @@ class ClassLinksController(
         classes: List<ImplementationIndex.Class>,
         decorations: ClassType.Decorations
     ) {
-        MessageCreate {
+        val message = MessageCreate {
             val (apiClasses, internalClasses) = classes.sortedBy { it.className }.partition { it.hasClassDoc() }
 
             if (internalClasses.isNotEmpty()) {
@@ -120,7 +120,8 @@ class ClassLinksController(
                         })
                     }
             }
-        }.also { event.reply(it).setEphemeral(true).queue() }
+        }
+        event.reply(message).setEphemeral(true).queue()
     }
 
     private suspend fun onClassLinkSelect(
