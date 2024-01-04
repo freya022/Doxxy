@@ -97,13 +97,13 @@ class SlashJitpack(
                     BuildToolType.GRADLE, BuildToolType.GRADLE_KTS -> "```gradle\n$dependencyStr```"
                 }
 
-                if (libraryType == LibraryType.JDA && config.usePullUpdater) {
+                if (jitpackPrService.canUsePullUpdate(libraryType)) {
                     description += "\nYou can also click on the `Update PR` button to merge the latest changes."
                 }
             }
 
             components += buildList<ItemComponent>(3) {
-                if (libraryType == LibraryType.JDA && config.usePullUpdater) {
+                if (jitpackPrService.canUsePullUpdate(libraryType)) {
                     this += componentsService.ephemeralButton(ButtonStyle.PRIMARY, label = "Update PR", emoji = Emojis.sync) {
                         val callerId = event.user.idLong
                         timeout(1.hours)

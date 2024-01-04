@@ -76,4 +76,8 @@ class JitpackPrService(private val config: Config) {
     private fun pullUpdateRequestBuilder(route: String) = Request.Builder()
         .url("${config.pullUpdaterBaseUrl}$route")
         .header("Authorization", "Bearer ${config.pullUpdaterToken}")
+
+    fun canUsePullUpdate(libraryType: LibraryType): Boolean {
+        return libraryType == LibraryType.JDA && config.usePullUpdater
+    }
 }
