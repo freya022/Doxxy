@@ -6,7 +6,8 @@ import com.freya02.bot.config.Environment
 import com.freya02.docs.DocWebServer
 import dev.minn.jda.ktx.events.CoroutineEventManager
 import dev.reformator.stacktracedecoroutinator.runtime.DecoroutinatorRuntime
-import io.github.freya022.botcommands.api.core.BBuilder
+import io.github.freya022.botcommands.api.core.BotCommands
+import io.github.freya022.botcommands.api.core.config.DevConfig
 import io.github.freya022.botcommands.api.core.utils.namedDefaultScope
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -54,9 +55,10 @@ object Main {
             logger.info { "Started docs web server" }
 
             val config = Config.instance
-            BBuilder.newBuilder(manager) {
+            BotCommands.create(manager) {
                 if (Environment.isDev) {
                     disableExceptionsInDMs = true
+                    @OptIn(DevConfig::class)
                     disableAutocompleteCache = true
                 }
 
