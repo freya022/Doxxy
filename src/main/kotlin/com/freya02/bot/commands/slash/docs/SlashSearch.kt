@@ -9,14 +9,14 @@ import io.github.freya022.botcommands.api.commands.application.GuildApplicationC
 import io.github.freya022.botcommands.api.commands.application.annotations.AppDeclaration
 
 @Command
-class SlashSearch(private val slashDocsController: SlashDocsController) {
+class SlashSearch {
     @AppDeclaration
     fun declare(manager: GuildApplicationCommandManager) {
         manager.slashCommand("search", CommandScope.GUILD, null) {
             description = "Searches the documentation for classes, methods and fields"
 
             DocSourceType.typesForGuild(manager.guild).forEach { sourceType ->
-                subcommand(sourceType.cmdName, slashDocsController::onSearchSlashCommand) {
+                subcommand(sourceType.cmdName, SlashDocsController::onSearchSlashCommand) {
                     description = "Searches the documentation for classes, methods and fields"
 
                     generatedOption("sourceType") { sourceType }

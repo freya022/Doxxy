@@ -93,7 +93,7 @@ class BuildToolCommands(private val versions: Versions, private val componentsSe
     @AppDeclaration
     fun declare(manager: GuildApplicationCommandManager) {
         for (buildToolType in BuildToolType.entries) {
-            manager.slashCommand(buildToolType.cmdName, CommandScope.GUILD, ::onSlashBuildTool) {
+            manager.slashCommand(buildToolType.cmdName, CommandScope.GUILD, BuildToolCommands::onSlashBuildTool) {
                 description = "Shows the ${buildToolType.humanName} dependencies for a library (default: ${LibraryType.getDefaultLibrary(manager.guild).displayString})"
 
                 option("scriptType") {
