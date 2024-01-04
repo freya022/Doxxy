@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration>
+<configuration scan="true"> <!-- Reloads every minute -->
     <timestamp key="bySecond" datePattern="yyyyMMdd'T'HHmmss"/>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
@@ -14,23 +14,30 @@
             <!-- daily rollover -->
             <fileNamePattern>logs/logs-%d{yyyy-MM-dd}.log</fileNamePattern>
 
-            <!-- keep 90 days' worth of history capped at 3GB total size -->
+            <!-- keep 90 days worth of history capped at 3GB total size -->
             <maxHistory>90</maxHistory>
             <totalSizeCap>3GB</totalSizeCap>
         </rollingPolicy>
 
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} %-26.-26thread %-36.-36class{36} #%-24.-24method{24} L%-5.-5line %-20.-20logger{0} %-6level %msg%n%throwable</pattern>
+            <pattern>%d{HH:mm:ss.SSS} %-26.-26thread %-20.-20logger{0} %-6level %msg%n%throwable</pattern>
         </encoder>
     </appender>
 
-    <!-- Log JDA on Info while others are on Debug -->
-    <logger name="net.dv8tion.jda" level="info" additivity="false">
+    <!-- JDA logs on INFO -->
+    <logger name="net.dv8tion.jda" level="trace" additivity="false">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FILE"/>
     </logger>
 
-    <root level="debug">
+    <!-- HikariCP logs on INFO -->
+    <logger name="com.zaxxer.hikari" level="info" additivity="false">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- Other logs on DEBUG -->
+    <root level="trace">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FILE"/>
     </root>
