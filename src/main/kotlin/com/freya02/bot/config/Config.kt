@@ -12,15 +12,19 @@ data class DatabaseConfig(val serverName: String, val port: Int, val name: Strin
         get() = "jdbc:postgresql://$serverName:$port/$name"
 }
 
+data class PullUpdaterConfig(
+    val enable: Boolean,
+    val gitToken: String, val gitName: String, val gitEmail: String,
+    val forkBotName: String, val forkRepoName: String
+)
+
 data class Config(val token: String,
                   val ownerIds: List<Long>,
                   val prefixes: List<String>,
                   val testGuildIds: List<Long>,
                   val fakeJDAGuildId: Long,
                   val fakeBCGuildId: Long,
-                  val usePullUpdater: Boolean,
-                  val pullUpdaterBaseUrl: String,
-                  val pullUpdaterToken: String,
+                  val pullUpdater: PullUpdaterConfig,
                   val databaseConfig: DatabaseConfig
 ) {
     companion object {
@@ -34,5 +38,11 @@ data class Config(val token: String,
 
             return@lazy Gson().fromJson(configFilePath.readText(), Config::class.java)
         }
+
+        @get:BService
+        val databaseConfig: DatabaseConfig get() = instance.databaseConfig
+
+        @get:BService
+        val pullUpdateConfig: PullUpdaterConfig get() = instance.pullUpdater
     }
 }

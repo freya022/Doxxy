@@ -34,8 +34,6 @@ import io.github.freya022.botcommands.api.components.Components
 import io.github.freya022.botcommands.api.components.event.ButtonEvent
 import io.github.freya022.botcommands.api.core.utils.toEditData
 import io.github.freya022.botcommands.api.utils.EmojiUtils
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
@@ -139,22 +137,16 @@ class SlashJitpack(
         }.map { r -> r.toChoice() }
     }
 
-    private val mutex = Mutex()
     private suspend fun onUpdatePrClick(event: ButtonEvent, callerId: Long, libraryType: LibraryType, buildToolType: BuildToolType, pullNumber: Int) {
-        if (mutex.isLocked)
-            return event.reply_("A pull request is already being updated", ephemeral = true).queue()
-
         val pullRequest = jitpackPrService.getPullRequest(libraryType, pullNumber)
             ?: return event.reply_("Unknown Pull Request", ephemeral = true).queue()
 
-        mutex.withLock {
-            jitpackPrService.updatePr(event, pullNumber) { branch ->
-                val message = createPrMessage(event, libraryType, buildToolType, pullRequest, branch.toGithubBranch())
-                if (event.user.idLong == callerId) {
-                    event.hook.editOriginal(message.toEditData()).queue()
-                } else {
-                    event.hook.sendMessage(message).setEphemeral(true).queue()
-                }
+        jitpackPrService.updatePr(event, pullNumber) { branch ->
+            val message = createPrMessage(event, libraryType, buildToolType, pullRequest, branch.toGithubBranch())
+            if (event.user.idLong == callerId) {
+                event.hook.editOriginal(message.toEditData()).queue()
+            } else {
+                event.hook.sendMessage(message).setEphemeral(true).queue()
             }
         }
     }

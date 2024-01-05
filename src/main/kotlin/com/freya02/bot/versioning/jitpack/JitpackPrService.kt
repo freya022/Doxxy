@@ -1,23 +1,21 @@
 package com.freya02.bot.versioning.jitpack
 
-import com.freya02.bot.config.Config
-import com.freya02.bot.utils.HttpUtils
+import com.freya02.bot.config.PullUpdaterConfig
 import com.freya02.bot.versioning.LibraryType
 import com.freya02.bot.versioning.github.GithubBranch
 import com.freya02.bot.versioning.github.GithubUtils
 import com.freya02.bot.versioning.github.PullRequest
 import com.freya02.bot.versioning.github.PullRequestCache
+import com.freya02.bot.versioning.jitpack.jdafork.JDAFork
+import com.freya02.bot.versioning.jitpack.jdafork.JDAForkException
 import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.messages.send
-import dev.minn.jda.ktx.util.await
 import io.github.freya022.botcommands.api.components.event.ButtonEvent
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.oshai.kotlinlogging.KotlinLogging
-import net.dv8tion.jda.api.utils.data.DataObject
-import okhttp3.Request
 
 @BService
-class JitpackPrService(private val config: Config) {
+class JitpackPrService(private val pullUpdaterConfig: PullUpdaterConfig) {
     data class PullUpdaterBranch(val forkBotName: String, val forkRepoName: String, val forkedBranchName: String) {
         fun toGithubBranch(): GithubBranch = GithubUtils.getBranch(forkBotName, forkRepoName, forkedBranchName)
     }
@@ -46,38 +44,31 @@ class JitpackPrService(private val config: Config) {
     }
 
     suspend fun updatePr(event: ButtonEvent, pullNumber: Int, block: suspend (branch: PullUpdaterBranch) -> Unit) {
+        //TODO prob move the reply part to the caller, pass only the hook + waiting message id
         event.deferEdit().queue()
-        val waitMessage = event.hook.send("Please wait while the pull request is being updated", ephemeral = true).await()
+        val waitMessage = when {
+            JDAFork.isRunning -> "Please wait while the pull request is being updated, this may be longer than usual"
+            else -> "Please wait while the pull request is being updated"
+        }.let { event.hook.send(it, ephemeral = true).await() }
 
-        val response = HttpUtils.CLIENT.newCall(pullUpdateRequestBuilder("/update/JDA/$pullNumber").build()).await()
+        val result = JDAFork.requestUpdate("JDA", pullNumber)
         event.hook.deleteMessageById(waitMessage.idLong).queue()
 
-        val responseBody = response.body!!.string()
-        if (response.isSuccessful) {
-            val dataObject = DataObject.fromJson(responseBody)
-            block(PullUpdaterBranch(
-                dataObject.getString("forkBotName"),
-                dataObject.getString("forkRepoName"),
-                dataObject.getString("forkedBranchName")
-            ))
+        if (result.isSuccess) {
+            //TODO replace
+            block(result.getOrThrow().let { PullUpdaterBranch(it.forkBotName, it.forkRepoName, it.forkedBranchName) })
         } else {
-            val message = if (responseBody.isNotBlank()) DataObject.fromJson(responseBody).getString("message") else null
-            if (response.code != 409)
-                logger.warn { "Could not update pull request, code: ${response.code}, response: $message" }
-
-            val userReply = when (response.code) {
-                409 -> "Could not update pull request as it has merge conflicts"
-                else -> "Could not update pull request"
+            val exception = result.exceptionOrNull() ?: throw IllegalStateException("Cannot have no exception")
+            if (exception is JDAForkException && exception.type == JDAForkException.ExceptionType.PR_UPDATE_FAILURE) {
+                event.hook.send("Could not update pull request as it has merge conflicts", ephemeral = true).queue()
+            } else {
+                logger.catching(exception)
+                event.hook.send("Could not update pull request", ephemeral = true).queue()
             }
-            event.hook.send(userReply, ephemeral = true).queue()
         }
     }
 
-    private fun pullUpdateRequestBuilder(route: String) = Request.Builder()
-        .url("${config.pullUpdaterBaseUrl}$route")
-        .header("Authorization", "Bearer ${config.pullUpdaterToken}")
-
     fun canUsePullUpdate(libraryType: LibraryType): Boolean {
-        return libraryType == LibraryType.JDA && config.usePullUpdater
+        return libraryType == LibraryType.JDA && pullUpdaterConfig.enable
     }
 }

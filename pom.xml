@@ -22,6 +22,7 @@
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
 
         <flyway.version>10.4.1</flyway.version>
+        <ktor.version>2.3.5</ktor.version>
     </properties>
 
     <build>
@@ -210,6 +211,26 @@
             <groupId>com.vdurmont</groupId>
             <artifactId>semver4j</artifactId>
             <version>3.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-client-core-jvm</artifactId>
+            <version>${ktor.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-client-okhttp-jvm</artifactId>
+            <version>${ktor.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-client-content-negotiation-jvm</artifactId>
+            <version>${ktor.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-serialization-gson-jvm</artifactId>
+            <version>${ktor.version}</version>
         </dependency>
         <dependency>
             <groupId>org.javassist</groupId>
