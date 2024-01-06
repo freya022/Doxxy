@@ -16,4 +16,4 @@ data class PullRequest(val head: Branch, val base: Branch, val merged: Boolean, 
 }
 
 fun PullRequest.Branch.toGithubBranch(): GithubBranch =
-    GithubBranch(user.login, user.login, repo.name, ref, CommitHash(sha))
+    GithubBranch(user.login, repo.name, ref, CommitHash(sha))

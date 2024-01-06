@@ -134,7 +134,7 @@ class SlashJitpack(
             event.focusedOption.value.isBlank() -> pullRequests.sortedByDescending { it.number }
             else -> pullRequests.fuzzyMatching(
                 //Don't autocomplete based on the branch number
-                toStringFunction = { referent: PullRequest -> referent.title + referent.branch.authorName },
+                toStringFunction = { pr: PullRequest -> pr.title + pr.authorName },
                 query = event.focusedOption.value
             ).map { fuzzyResult -> fuzzyResult.item }
         }.map { r -> r.toChoice() }

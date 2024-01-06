@@ -105,7 +105,7 @@ object GithubUtils {
         val name = branchObject.getString("name")
         val sha = branchObject.getObject("commit").getString("sha")
 
-        return GithubBranch(ownerName, ownerName, repoName, name, CommitHash(sha))
+        return GithubBranch(ownerName, repoName, name, CommitHash(sha))
     }
 
     @Throws(IOException::class)
