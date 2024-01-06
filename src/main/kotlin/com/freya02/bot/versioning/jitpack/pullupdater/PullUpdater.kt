@@ -47,7 +47,7 @@ object PullUpdater {
     private val latestBaseSha: MutableMap<BranchLabel, BranchSha> = hashMapOf()
 
     //TODO replace BranchIdentifier with GithubBranch (may save doing an extra request for data we could already have)
-    suspend fun requestUpdate(libraryType: LibraryType, prNumber: Int): Result<BranchIdentifier> = runCatching {
+    suspend fun tryUpdate(libraryType: LibraryType, prNumber: Int): Result<BranchIdentifier> = runCatching {
         if (libraryType != LibraryType.JDA) {
             fail(PullUpdateException.ExceptionType.UNSUPPORTED_LIBRARY, "Only JDA is supported")
         }

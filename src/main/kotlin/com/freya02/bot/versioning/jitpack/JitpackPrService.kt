@@ -43,7 +43,7 @@ class JitpackPrService(private val pullUpdaterConfig: PullUpdaterConfig) {
     }
 
     suspend fun updatePr(libraryType: LibraryType, pullNumber: Int, hook: InteractionHook, waitMessageId: Long, block: suspend (branch: PullUpdaterBranch) -> Unit) {
-        val result = PullUpdater.requestUpdate(libraryType, pullNumber)
+        val result = PullUpdater.tryUpdate(libraryType, pullNumber)
         hook.deleteMessageById(waitMessageId).queue()
 
         result.onSuccess {
