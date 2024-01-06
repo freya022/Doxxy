@@ -150,7 +150,7 @@ class SlashJitpack(
             else -> "Please wait while the pull request is being updated"
         }.let { event.hook.send(it, ephemeral = true).await() }
 
-        jitpackPrService.updatePr(pullNumber, event.hook, waitMessage.idLong) { branch ->
+        jitpackPrService.updatePr(libraryType, pullNumber, event.hook, waitMessage.idLong) { branch ->
             val message = createPrMessage(event, libraryType, buildToolType, pullRequest, branch.toGithubBranch())
             if (event.user.idLong == callerId) {
                 event.hook.editOriginal(message.toEditData()).queue()

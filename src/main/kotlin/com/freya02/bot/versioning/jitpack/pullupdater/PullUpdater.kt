@@ -2,6 +2,7 @@ package com.freya02.bot.versioning.jitpack.pullupdater
 
 import com.freya02.bot.config.Config
 import com.freya02.bot.config.Data
+import com.freya02.bot.versioning.LibraryType
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -45,17 +46,16 @@ object PullUpdater {
     private val latestHeadSha: MutableMap<BranchLabel, BranchSha> = hashMapOf()
     private val latestBaseSha: MutableMap<BranchLabel, BranchSha> = hashMapOf()
 
-    //TODO use LibraryType
     //TODO replace BranchIdentifier with GithubBranch (may save doing an extra request for data we could already have)
-    suspend fun requestUpdate(repository: String, prNumber: Int): Result<BranchIdentifier> = runCatching {
-        if (repository != "JDA") {
+    suspend fun requestUpdate(libraryType: LibraryType, prNumber: Int): Result<BranchIdentifier> = runCatching {
+        if (libraryType != LibraryType.JDA) {
             fail(PullUpdateException.ExceptionType.UNSUPPORTED_LIBRARY, "Only JDA is supported")
         }
 
         mutex.withLock {
             init()
 
-            val pullRequest: PullRequest = client.get("https://api.github.com/repos/discord-jda/JDA/pulls/$prNumber") {
+            val pullRequest: PullRequest = client.get("https://api.github.com/repos/${libraryType.githubOwnerName}/${libraryType.githubRepoName}/pulls/$prNumber") {
                 header("Accept", "applications/vnd.github.v3+json")
             }.also {
                 if (it.status == HttpStatusCode.NotFound) {
