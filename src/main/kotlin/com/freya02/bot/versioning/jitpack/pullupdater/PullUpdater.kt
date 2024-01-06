@@ -3,6 +3,7 @@ package com.freya02.bot.versioning.jitpack.pullupdater
 import com.freya02.bot.config.Config
 import com.freya02.bot.config.Data
 import com.freya02.bot.versioning.LibraryType
+import com.freya02.bot.versioning.github.GithubBranch
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -47,7 +48,7 @@ object PullUpdater {
     private val latestBaseSha: MutableMap<BranchLabel, BranchSha> = hashMapOf()
 
     //TODO replace BranchIdentifier with GithubBranch (may save doing an extra request for data we could already have)
-    suspend fun tryUpdate(libraryType: LibraryType, prNumber: Int): Result<BranchIdentifier> = runCatching {
+    suspend fun tryUpdate(libraryType: LibraryType, prNumber: Int): Result<GithubBranch> = runCatching {
         if (libraryType != LibraryType.JDA) {
             fail(PullUpdateException.ExceptionType.UNSUPPORTED_LIBRARY, "Only JDA is supported")
         }
@@ -67,20 +68,21 @@ object PullUpdater {
 
             if (pullRequest.merged) {
                 //Skip merged PRs
-                pullRequest.toBranchIdentifier()
+                pullRequest.head.toGithubBranch()
             } else if (pullRequest.mergeable == false) {
                 //Skip PRs with conflicts
                 fail(PullUpdateException.ExceptionType.PR_UPDATE_FAILURE, "Head branch cannot be updated")
             } else if (latestHeadSha[pullRequest.head.label] == pullRequest.head.sha && latestBaseSha[pullRequest.base.label] == pullRequest.base.sha) {
                 //Prevent unnecessary updates by checking if the latest SHA is the same on the remote
-                pullRequest.toBranchIdentifier()
+                pullRequest.head.toGithubBranch()
             } else {
-                val branchIdentifier = doUpdate(pullRequest)
+                doUpdate(pullRequest)
 
+                // Success!
                 latestHeadSha[pullRequest.head.label] = pullRequest.head.sha
                 latestBaseSha[pullRequest.base.label] = pullRequest.base.sha
 
-                branchIdentifier
+                pullRequest.head.toGithubBranch()
             }
         }
     }
@@ -92,7 +94,7 @@ object PullUpdater {
         return BranchIdentifier(config.forkBotName, config.forkRepoName, head.toForkedBranchName())
     }
 
-    private suspend fun doUpdate(pullRequest: PullRequest): BranchIdentifier {
+    private suspend fun doUpdate(pullRequest: PullRequest) {
         //JDA repo most likely
         val base = pullRequest.base
         val baseBranchName = base.branchName
@@ -153,8 +155,6 @@ object PullUpdater {
         // Force push is used as the bot takes the remote head branch instead of reusing the local one,
         // meaning the remote branch would always be incompatible on the 2nd update
         runProcess(forkPath, "git", "push", "--force", "origin")
-
-        return pullRequest.toBranchIdentifier()
     }
 
     private suspend fun init() {

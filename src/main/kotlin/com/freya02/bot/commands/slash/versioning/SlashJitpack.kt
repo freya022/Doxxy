@@ -151,7 +151,7 @@ class SlashJitpack(
         }.let { event.hook.send(it, ephemeral = true).await() }
 
         jitpackPrService.updatePr(libraryType, pullNumber, event.hook, waitMessage.idLong) { branch ->
-            val message = createPrMessage(event, libraryType, buildToolType, pullRequest, branch.toGithubBranch())
+            val message = createPrMessage(event, libraryType, buildToolType, pullRequest, branch)
             if (event.user.idLong == callerId) {
                 event.hook.editOriginal(message.toEditData()).queue()
             } else {

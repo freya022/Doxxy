@@ -3,7 +3,6 @@ package com.freya02.bot.versioning.jitpack
 import com.freya02.bot.config.PullUpdaterConfig
 import com.freya02.bot.versioning.LibraryType
 import com.freya02.bot.versioning.github.GithubBranch
-import com.freya02.bot.versioning.github.GithubUtils
 import com.freya02.bot.versioning.github.PullRequest
 import com.freya02.bot.versioning.github.PullRequestCache
 import com.freya02.bot.versioning.jitpack.pullupdater.PullUpdateException
@@ -17,10 +16,6 @@ private val logger = KotlinLogging.logger { }
 
 @BService
 class JitpackPrService(private val pullUpdaterConfig: PullUpdaterConfig) {
-    data class PullUpdaterBranch(val forkBotName: String, val forkRepoName: String, val forkedBranchName: String) {
-        fun toGithubBranch(): GithubBranch = GithubUtils.getBranch(forkBotName, forkRepoName, forkedBranchName)
-    }
-
     private val bcPullRequestCache = PullRequestCache("freya022", "BotCommands", null)
     private val jdaPullRequestCache = PullRequestCache("discord-jda", "JDA", "master")
     private val jdaKtxPullRequestCache = PullRequestCache("MinnDevelopment", "jda-ktx", "master")
@@ -42,13 +37,12 @@ class JitpackPrService(private val pullUpdaterConfig: PullUpdaterConfig) {
         else -> throw IllegalArgumentException()
     }
 
-    suspend fun updatePr(libraryType: LibraryType, pullNumber: Int, hook: InteractionHook, waitMessageId: Long, block: suspend (branch: PullUpdaterBranch) -> Unit) {
+    suspend fun updatePr(libraryType: LibraryType, pullNumber: Int, hook: InteractionHook, waitMessageId: Long, block: suspend (branch: GithubBranch) -> Unit) {
         val result = PullUpdater.tryUpdate(libraryType, pullNumber)
         hook.deleteMessageById(waitMessageId).queue()
 
         result.onSuccess {
-            //TODO replace
-            block(result.getOrThrow().let { PullUpdaterBranch(it.forkBotName, it.forkRepoName, it.forkedBranchName) })
+            block(it)
         }.onFailure { exception ->
             if (exception is PullUpdateException && exception.type == PullUpdateException.ExceptionType.PR_UPDATE_FAILURE) {
                 hook.send("Could not update pull request as it has merge conflicts", ephemeral = true).queue()
