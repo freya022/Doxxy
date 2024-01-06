@@ -54,11 +54,10 @@ class JitpackPrService(private val pullUpdaterConfig: PullUpdaterConfig) {
         val result = JDAFork.requestUpdate("JDA", pullNumber)
         event.hook.deleteMessageById(waitMessage.idLong).queue()
 
-        if (result.isSuccess) {
+        result.onSuccess {
             //TODO replace
             block(result.getOrThrow().let { PullUpdaterBranch(it.forkBotName, it.forkRepoName, it.forkedBranchName) })
-        } else {
-            val exception = result.exceptionOrNull() ?: throw IllegalStateException("Cannot have no exception")
+        }.onFailure { exception ->
             if (exception is JDAForkException && exception.type == JDAForkException.ExceptionType.PR_UPDATE_FAILURE) {
                 event.hook.send("Could not update pull request as it has merge conflicts", ephemeral = true).queue()
             } else {
