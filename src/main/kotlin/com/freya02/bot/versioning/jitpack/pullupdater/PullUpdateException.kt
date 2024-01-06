@@ -1,6 +1,6 @@
-package com.freya02.bot.versioning.jitpack.jdafork
+package com.freya02.bot.versioning.jitpack.pullupdater
 
-class JDAForkException(
+class PullUpdateException(
     val type: ExceptionType,
     message: String
 ) : Exception(

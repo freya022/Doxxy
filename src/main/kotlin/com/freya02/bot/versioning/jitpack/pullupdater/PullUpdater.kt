@@ -1,4 +1,4 @@
-package com.freya02.bot.versioning.jitpack.jdafork
+package com.freya02.bot.versioning.jitpack.pullupdater
 
 import com.freya02.bot.config.Config
 import com.freya02.bot.config.Data
@@ -27,7 +27,7 @@ import kotlin.io.path.notExists
 private typealias BranchLabel = String
 private typealias BranchSha = String
 
-object JDAFork {
+object PullUpdater {
     data class BranchIdentifier(val forkBotName: String, val forkRepoName: String, val forkedBranchName: String)
 
     private val logger = KotlinLogging.logger { }
@@ -49,7 +49,7 @@ object JDAFork {
     //TODO replace BranchIdentifier with GithubBranch (may save doing an extra request for data we could already have)
     suspend fun requestUpdate(repository: String, prNumber: Int): Result<BranchIdentifier> = runCatching {
         if (repository != "JDA") {
-            fail(JDAForkException.ExceptionType.UNSUPPORTED_LIBRARY, "Only JDA is supported")
+            fail(PullUpdateException.ExceptionType.UNSUPPORTED_LIBRARY, "Only JDA is supported")
         }
 
         mutex.withLock {
@@ -59,9 +59,9 @@ object JDAFork {
                 header("Accept", "applications/vnd.github.v3+json")
             }.also {
                 if (it.status == HttpStatusCode.NotFound) {
-                    fail(JDAForkException.ExceptionType.PR_NOT_FOUND, "Pull request not found")
+                    fail(PullUpdateException.ExceptionType.PR_NOT_FOUND, "Pull request not found")
                 } else if (!it.status.isSuccess()) {
-                    fail(JDAForkException.ExceptionType.UNKNOWN_ERROR, "Error while getting pull request")
+                    fail(PullUpdateException.ExceptionType.UNKNOWN_ERROR, "Error while getting pull request")
                 }
             }.body()
 
@@ -70,7 +70,7 @@ object JDAFork {
                 pullRequest.toBranchIdentifier()
             } else if (pullRequest.mergeable == false) {
                 //Skip PRs with conflicts
-                fail(JDAForkException.ExceptionType.PR_UPDATE_FAILURE, "Head branch cannot be updated")
+                fail(PullUpdateException.ExceptionType.PR_UPDATE_FAILURE, "Head branch cannot be updated")
             } else if (latestHeadSha[pullRequest.head.label] == pullRequest.head.sha && latestBaseSha[pullRequest.base.label] == pullRequest.base.sha) {
                 //Prevent unnecessary updates by checking if the latest SHA is the same on the remote
                 pullRequest.toBranchIdentifier()
@@ -85,8 +85,8 @@ object JDAFork {
         }
     }
 
-    private fun fail(type: JDAForkException.ExceptionType, message: String): Nothing =
-        throw JDAForkException(type, message)
+    private fun fail(type: PullUpdateException.ExceptionType, message: String): Nothing =
+        throw PullUpdateException(type, message)
 
     private fun PullRequest.toBranchIdentifier(): BranchIdentifier {
         return BranchIdentifier(config.forkBotName, config.forkRepoName, head.toForkedBranchName())
@@ -133,9 +133,9 @@ object JDAFork {
             )
         } catch (e: ProcessException) {
             if (e.errorOutput.startsWith("fatal: invalid reference")) {
-                fail(JDAForkException.ExceptionType.HEAD_REF_NOT_FOUND, "Head reference '$headRemoteReference' was not found")
+                fail(PullUpdateException.ExceptionType.HEAD_REF_NOT_FOUND, "Head reference '$headRemoteReference' was not found")
             }
-            fail(JDAForkException.ExceptionType.UNKNOWN_ERROR, "Error while switching to head branch")
+            fail(PullUpdateException.ExceptionType.UNKNOWN_ERROR, "Error while switching to head branch")
         }
 
         //Merge base branch into remote branch
@@ -144,9 +144,9 @@ object JDAFork {
             runProcess(forkPath, "git", "merge", baseRemoteReference)
         } catch (e: ProcessException) {
             if (e.errorOutput.startsWith("fatal: invalid reference")) {
-                fail(JDAForkException.ExceptionType.BASE_REF_NOT_FOUND, "Base reference '$baseRemoteReference' was not found")
+                fail(PullUpdateException.ExceptionType.BASE_REF_NOT_FOUND, "Base reference '$baseRemoteReference' was not found")
             }
-            fail(JDAForkException.ExceptionType.UNKNOWN_ERROR, "Error while switching to base branch")
+            fail(PullUpdateException.ExceptionType.UNKNOWN_ERROR, "Error while switching to base branch")
         }
 
         //Publish result on our fork

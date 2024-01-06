@@ -11,7 +11,7 @@ import com.freya02.bot.versioning.github.GithubBranch
 import com.freya02.bot.versioning.github.PullRequest
 import com.freya02.bot.versioning.jitpack.JitpackBranchService
 import com.freya02.bot.versioning.jitpack.JitpackPrService
-import com.freya02.bot.versioning.jitpack.jdafork.JDAFork
+import com.freya02.bot.versioning.jitpack.pullupdater.PullUpdater
 import com.freya02.bot.versioning.supplier.BuildToolType
 import com.freya02.bot.versioning.supplier.DependencySupplier
 import dev.minn.jda.ktx.coroutines.await
@@ -146,7 +146,7 @@ class SlashJitpack(
 
         event.deferEdit().queue()
         val waitMessage = when {
-            JDAFork.isRunning -> "Please wait while the pull request is being updated, this may be longer than usual"
+            PullUpdater.isRunning -> "Please wait while the pull request is being updated, this may be longer than usual"
             else -> "Please wait while the pull request is being updated"
         }.let { event.hook.send(it, ephemeral = true).await() }
 

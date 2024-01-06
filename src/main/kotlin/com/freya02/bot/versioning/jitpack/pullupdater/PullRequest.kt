@@ -1,4 +1,4 @@
-package com.freya02.bot.versioning.jitpack.jdafork
+package com.freya02.bot.versioning.jitpack.pullupdater
 
 data class GithubUser(val login: String) {
     val userName get() = login

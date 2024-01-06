@@ -6,8 +6,8 @@ import com.freya02.bot.versioning.github.GithubBranch
 import com.freya02.bot.versioning.github.GithubUtils
 import com.freya02.bot.versioning.github.PullRequest
 import com.freya02.bot.versioning.github.PullRequestCache
-import com.freya02.bot.versioning.jitpack.jdafork.JDAFork
-import com.freya02.bot.versioning.jitpack.jdafork.JDAForkException
+import com.freya02.bot.versioning.jitpack.pullupdater.PullUpdateException
+import com.freya02.bot.versioning.jitpack.pullupdater.PullUpdater
 import dev.minn.jda.ktx.messages.send
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -43,14 +43,14 @@ class JitpackPrService(private val pullUpdaterConfig: PullUpdaterConfig) {
     }
 
     suspend fun updatePr(pullNumber: Int, hook: InteractionHook, waitMessageId: Long, block: suspend (branch: PullUpdaterBranch) -> Unit) {
-        val result = JDAFork.requestUpdate("JDA", pullNumber)
+        val result = PullUpdater.requestUpdate("JDA", pullNumber)
         hook.deleteMessageById(waitMessageId).queue()
 
         result.onSuccess {
             //TODO replace
             block(result.getOrThrow().let { PullUpdaterBranch(it.forkBotName, it.forkRepoName, it.forkedBranchName) })
         }.onFailure { exception ->
-            if (exception is JDAForkException && exception.type == JDAForkException.ExceptionType.PR_UPDATE_FAILURE) {
+            if (exception is PullUpdateException && exception.type == PullUpdateException.ExceptionType.PR_UPDATE_FAILURE) {
                 hook.send("Could not update pull request as it has merge conflicts", ephemeral = true).queue()
             } else {
                 logger.catching(exception)
