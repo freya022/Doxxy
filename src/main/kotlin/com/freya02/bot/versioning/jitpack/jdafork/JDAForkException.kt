@@ -5,9 +5,9 @@ class JDAForkException(
     message: String
 ) : Exception(
     "[$type]: $message",
-    cause = null,
-    enableSuppression = true,
-    writableStackTrace = false
+    null,
+    true,
+    false
 ) {
     enum class ExceptionType {
         UNKNOWN_ERROR,
