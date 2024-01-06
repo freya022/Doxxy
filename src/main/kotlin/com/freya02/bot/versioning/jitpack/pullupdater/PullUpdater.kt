@@ -30,8 +30,6 @@ private typealias BranchLabel = String
 private typealias BranchSha = String
 
 object PullUpdater {
-    data class BranchIdentifier(val forkBotName: String, val forkRepoName: String, val forkedBranchName: String)
-
     private val logger = KotlinLogging.logger { }
     private val config = Config.instance.pullUpdater
     private val forkPath = Data.jdaForkPath
@@ -47,7 +45,6 @@ object PullUpdater {
     private val latestHeadSha: MutableMap<BranchLabel, BranchSha> = hashMapOf()
     private val latestBaseSha: MutableMap<BranchLabel, BranchSha> = hashMapOf()
 
-    //TODO replace BranchIdentifier with GithubBranch (may save doing an extra request for data we could already have)
     suspend fun tryUpdate(libraryType: LibraryType, prNumber: Int): Result<GithubBranch> = runCatching {
         if (libraryType != LibraryType.JDA) {
             fail(PullUpdateException.ExceptionType.UNSUPPORTED_LIBRARY, "Only JDA is supported")
@@ -85,13 +82,6 @@ object PullUpdater {
                 pullRequest.head.toGithubBranch()
             }
         }
-    }
-
-    private fun fail(type: PullUpdateException.ExceptionType, message: String): Nothing =
-        throw PullUpdateException(type, message)
-
-    private fun PullRequest.toBranchIdentifier(): BranchIdentifier {
-        return BranchIdentifier(config.forkBotName, config.forkRepoName, head.toForkedBranchName())
     }
 
     private suspend fun doUpdate(pullRequest: PullRequest) {
@@ -151,11 +141,14 @@ object PullUpdater {
             fail(PullUpdateException.ExceptionType.UNKNOWN_ERROR, "Error while switching to base branch")
         }
 
-        //Publish result on our fork
+        //Publish the result on our fork
         // Force push is used as the bot takes the remote head branch instead of reusing the local one,
         // meaning the remote branch would always be incompatible on the 2nd update
         runProcess(forkPath, "git", "push", "--force", "origin")
     }
+
+    private fun fail(type: PullUpdateException.ExceptionType, message: String): Nothing =
+        throw PullUpdateException(type, message)
 
     private suspend fun init() {
         if (forkPath.notExists()) {
@@ -219,7 +212,7 @@ object PullUpdater {
             throw ProcessException(exitCode, errorString, "Process exited with code $exitCode: ${command.joinToString(" ") { if (it.contains("github_pat_")) "[bot_repo]" else it }}")
         }
 
-        return@withContext outputStream.toByteArray().decodeToString()
+        outputStream.toByteArray().decodeToString()
     }
 
     private fun redirectStream(arrayStream: ByteArrayOutputStream, processStream: InputStream) {
