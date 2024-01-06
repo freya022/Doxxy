@@ -8,11 +8,10 @@ import com.freya02.bot.versioning.github.PullRequest
 import com.freya02.bot.versioning.github.PullRequestCache
 import com.freya02.bot.versioning.jitpack.jdafork.JDAFork
 import com.freya02.bot.versioning.jitpack.jdafork.JDAForkException
-import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.messages.send
-import io.github.freya022.botcommands.api.components.event.ButtonEvent
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.oshai.kotlinlogging.KotlinLogging
+import net.dv8tion.jda.api.interactions.InteractionHook
 
 @BService
 class JitpackPrService(private val pullUpdaterConfig: PullUpdaterConfig) {
@@ -43,26 +42,19 @@ class JitpackPrService(private val pullUpdaterConfig: PullUpdaterConfig) {
         else -> throw IllegalArgumentException()
     }
 
-    suspend fun updatePr(event: ButtonEvent, pullNumber: Int, block: suspend (branch: PullUpdaterBranch) -> Unit) {
-        //TODO prob move the reply part to the caller, pass only the hook + waiting message id
-        event.deferEdit().queue()
-        val waitMessage = when {
-            JDAFork.isRunning -> "Please wait while the pull request is being updated, this may be longer than usual"
-            else -> "Please wait while the pull request is being updated"
-        }.let { event.hook.send(it, ephemeral = true).await() }
-
+    suspend fun updatePr(pullNumber: Int, hook: InteractionHook, waitMessageId: Long, block: suspend (branch: PullUpdaterBranch) -> Unit) {
         val result = JDAFork.requestUpdate("JDA", pullNumber)
-        event.hook.deleteMessageById(waitMessage.idLong).queue()
+        hook.deleteMessageById(waitMessageId).queue()
 
         result.onSuccess {
             //TODO replace
             block(result.getOrThrow().let { PullUpdaterBranch(it.forkBotName, it.forkRepoName, it.forkedBranchName) })
         }.onFailure { exception ->
             if (exception is JDAForkException && exception.type == JDAForkException.ExceptionType.PR_UPDATE_FAILURE) {
-                event.hook.send("Could not update pull request as it has merge conflicts", ephemeral = true).queue()
+                hook.send("Could not update pull request as it has merge conflicts", ephemeral = true).queue()
             } else {
                 logger.catching(exception)
-                event.hook.send("Could not update pull request", ephemeral = true).queue()
+                hook.send("Could not update pull request", ephemeral = true).queue()
             }
         }
     }

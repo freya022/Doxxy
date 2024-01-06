@@ -11,13 +11,16 @@ import com.freya02.bot.versioning.github.GithubBranch
 import com.freya02.bot.versioning.github.PullRequest
 import com.freya02.bot.versioning.jitpack.JitpackBranchService
 import com.freya02.bot.versioning.jitpack.JitpackPrService
+import com.freya02.bot.versioning.jitpack.jdafork.JDAFork
 import com.freya02.bot.versioning.supplier.BuildToolType
 import com.freya02.bot.versioning.supplier.DependencySupplier
+import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.interactions.components.link
 import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.Embed
 import dev.minn.jda.ktx.messages.MessageCreate
 import dev.minn.jda.ktx.messages.reply_
+import dev.minn.jda.ktx.messages.send
 import io.github.freya022.botcommands.api.annotations.CommandMarker
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
@@ -141,7 +144,13 @@ class SlashJitpack(
         val pullRequest = jitpackPrService.getPullRequest(libraryType, pullNumber)
             ?: return event.reply_("Unknown Pull Request", ephemeral = true).queue()
 
-        jitpackPrService.updatePr(event, pullNumber) { branch ->
+        event.deferEdit().queue()
+        val waitMessage = when {
+            JDAFork.isRunning -> "Please wait while the pull request is being updated, this may be longer than usual"
+            else -> "Please wait while the pull request is being updated"
+        }.let { event.hook.send(it, ephemeral = true).await() }
+
+        jitpackPrService.updatePr(pullNumber, event.hook, waitMessage.idLong) { branch ->
             val message = createPrMessage(event, libraryType, buildToolType, pullRequest, branch.toGithubBranch())
             if (event.user.idLong == callerId) {
                 event.hook.editOriginal(message.toEditData()).queue()
