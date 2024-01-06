@@ -8,7 +8,6 @@ import com.freya02.bot.utils.Utils.withTemporaryFile
 import com.freya02.bot.versioning.VersionsUtils.downloadMavenJavadoc
 import com.freya02.bot.versioning.VersionsUtils.downloadMavenSources
 import com.freya02.bot.versioning.github.GithubUtils
-import com.freya02.bot.versioning.jitpack.JitpackVersionChecker
 import com.freya02.bot.versioning.maven.MavenBranchProjectDependencyVersionChecker
 import com.freya02.bot.versioning.maven.MavenVersionChecker
 import com.freya02.bot.versioning.maven.RepoType
@@ -40,10 +39,10 @@ class Versions(private val context: BContext, private val docIndexMap: DocIndexM
         MavenBranchProjectDependencyVersionChecker(lastKnownJDAFromBCPath, "freya022", "BotCommands", "JDA", "master")
     private val jdaChecker: MavenVersionChecker =
         MavenVersionChecker(lastKnownJDAPath, RepoType.MAVEN, "net.dv8tion", "JDA")
-    private val jdaKtxChecker: JitpackVersionChecker =
-        JitpackVersionChecker(lastKnownJDAKtxPath, "MinnDevelopment", "io.github.MinnDevelopment", "jda-ktx")
-    private val lavaPlayerChecker: JitpackVersionChecker =
-        JitpackVersionChecker(lastKnownLavaPlayerPath, "Walkyst", "io.github.Walkyst", "lavaplayer-fork")
+    private val jdaKtxChecker: MavenVersionChecker =
+        MavenVersionChecker(lastKnownJDAKtxPath, RepoType.MAVEN, "club.minnced", "jda-ktx")
+    private val lavaPlayerChecker: MavenVersionChecker =
+        MavenVersionChecker(lastKnownLavaPlayerPath, RepoType.MAVEN, "dev.arbjerg", "lavaplayer")
 
     @BEventListener(async = true, timeout = -1)
     suspend fun initUpdateLoop(event: InjectedJDAEvent) {

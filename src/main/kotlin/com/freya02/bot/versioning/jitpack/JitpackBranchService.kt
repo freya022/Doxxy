@@ -80,15 +80,8 @@ class JitpackBranchService(private val context: BContext) {
     }
 
     private fun retrieveBranchList(libraryType: LibraryType): GithubBranchMap {
-        val (ownerName: String, repoName: String) = when (libraryType) {
-            LibraryType.JDA -> arrayOf("discord-jda", "JDA")
-            LibraryType.BOT_COMMANDS -> arrayOf("freya022", "BotCommands")
-            LibraryType.JDA_KTX -> arrayOf("MinnDevelopment", "jda-ktx")
-            LibraryType.LAVA_PLAYER -> arrayOf("Walkyst", "lavaplayer-fork")
-        }
-
-        val map: Map<String, GithubBranch> = GithubUtils.getBranches(ownerName, repoName).associateBy { it.branchName }
-        val defaultBranchName = GithubUtils.getDefaultBranchName(ownerName, repoName)
+        val map: Map<String, GithubBranch> = GithubUtils.getBranches(libraryType.githubOwnerName, libraryType.githubRepoName).associateBy { it.branchName }
+        val defaultBranchName = GithubUtils.getDefaultBranchName(libraryType.githubOwnerName, libraryType.githubRepoName)
         val defaultBranch = map[defaultBranchName]!!
         return GithubBranchMap(defaultBranch, map)
     }

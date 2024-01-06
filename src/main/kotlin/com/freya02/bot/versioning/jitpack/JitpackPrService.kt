@@ -19,7 +19,7 @@ class JitpackPrService(private val pullUpdaterConfig: PullUpdaterConfig) {
     private val bcPullRequestCache = PullRequestCache("freya022", "BotCommands", null)
     private val jdaPullRequestCache = PullRequestCache("discord-jda", "JDA", "master")
     private val jdaKtxPullRequestCache = PullRequestCache("MinnDevelopment", "jda-ktx", "master")
-    private val lavaPlayerPullRequestCache = PullRequestCache("Walkyst", "lavaplayer-fork", "original")
+    private val lavaPlayerPullRequestCache = PullRequestCache("lavalink-devs", "lavaplayer", "main")
 
     fun getPullRequest(libraryType: LibraryType, pullNumber: Int): PullRequest? = when (libraryType) {
         LibraryType.BOT_COMMANDS -> bcPullRequestCache.pullRequests[pullNumber]
