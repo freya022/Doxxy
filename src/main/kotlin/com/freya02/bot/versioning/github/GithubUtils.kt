@@ -111,15 +111,15 @@ object GithubUtils {
     @Throws(IOException::class)
     fun retrievePullRequests(
         ownerName: String,
-        artifactId: String,
+        repoName: String,
         baseBranchName: String?,
         page: Int = 1,
         perPage: Int = 100
     ): TIntObjectMap<PullRequest> {
-        logger.debug { "Retrieving pull requests of $ownerName/$artifactId" }
+        logger.debug { "Retrieving pull requests of $ownerName/$repoName" }
 
         val pullRequests: TIntObjectMap<PullRequest> = TIntObjectHashMap()
-        val urlBuilder: URLBuilder = "https://api.github.com/repos/$ownerName/$artifactId/pulls".toHttpUrl()
+        val urlBuilder: URLBuilder = "https://api.github.com/repos/$ownerName/$repoName/pulls".toHttpUrl()
                 .newBuilder()
                 .addQueryParameter("page", page.toString())
                 .addQueryParameter("per_page", perPage.toString())
@@ -144,7 +144,7 @@ object GithubUtils {
 
         return pullRequests.also {
             if (!it.isEmpty) {
-                it.putAll(retrievePullRequests(ownerName, artifactId, baseBranchName, page + 1, perPage))
+                it.putAll(retrievePullRequests(ownerName, repoName, baseBranchName, page + 1, perPage))
             }
         }
     }

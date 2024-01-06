@@ -9,8 +9,8 @@ import java.io.IOException
 
 object MavenUtils {
     @Throws(IOException::class)
-    fun getLatestStableMavenVersion(formatUrl: String, groupId: String, artifactId: String): String {
-        val mavenMetadata = getMavenMetadata(formatUrl, groupId, artifactId)
+    fun getLatestStableMavenVersion(repoType: RepoType, groupId: String, artifactId: String): String {
+        val mavenMetadata = getMavenMetadata(repoType.urlFormat, groupId, artifactId)
         val latest = mavenMetadata
             .select("metadata > versioning > versions > version")
             .lastOrNull { it.text().isStable() } ?: mavenMetadata.selectFirst("metadata > versioning > latest")

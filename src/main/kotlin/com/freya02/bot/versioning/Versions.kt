@@ -10,7 +10,6 @@ import com.freya02.bot.versioning.VersionsUtils.downloadMavenSources
 import com.freya02.bot.versioning.github.GithubUtils
 import com.freya02.bot.versioning.maven.MavenBranchProjectDependencyVersionChecker
 import com.freya02.bot.versioning.maven.MavenVersionChecker
-import com.freya02.bot.versioning.maven.RepoType
 import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.events.getDefaultScope
 import io.github.freya022.botcommands.api.core.BContext
@@ -34,15 +33,15 @@ class Versions(private val context: BContext, private val docIndexMap: DocIndexM
     private val bcDocsFolder = Data.bcDocsFolder
 
     private val bcChecker =
-        MavenVersionChecker(lastKnownBotCommandsPath, RepoType.MAVEN, "io.github.freya022", "BotCommands")
+        MavenVersionChecker(lastKnownBotCommandsPath, LibraryType.BOT_COMMANDS)
     private val jdaVersionFromBCChecker: MavenBranchProjectDependencyVersionChecker =
-        MavenBranchProjectDependencyVersionChecker(lastKnownJDAFromBCPath, "freya022", "BotCommands", "JDA", "master")
+        MavenBranchProjectDependencyVersionChecker(lastKnownJDAFromBCPath, LibraryType.BOT_COMMANDS, "JDA", "master")
     private val jdaChecker: MavenVersionChecker =
-        MavenVersionChecker(lastKnownJDAPath, RepoType.MAVEN, "net.dv8tion", "JDA")
+        MavenVersionChecker(lastKnownJDAPath, LibraryType.JDA)
     private val jdaKtxChecker: MavenVersionChecker =
-        MavenVersionChecker(lastKnownJDAKtxPath, RepoType.MAVEN, "club.minnced", "jda-ktx")
+        MavenVersionChecker(lastKnownJDAKtxPath, LibraryType.JDA_KTX)
     private val lavaPlayerChecker: MavenVersionChecker =
-        MavenVersionChecker(lastKnownLavaPlayerPath, RepoType.MAVEN, "dev.arbjerg", "lavaplayer")
+        MavenVersionChecker(lastKnownLavaPlayerPath, LibraryType.LAVA_PLAYER)
 
     @BEventListener(async = true, timeout = -1)
     suspend fun initUpdateLoop(event: InjectedJDAEvent) {

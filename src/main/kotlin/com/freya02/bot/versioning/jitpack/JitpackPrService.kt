@@ -16,10 +16,10 @@ private val logger = KotlinLogging.logger { }
 
 @BService
 class JitpackPrService(private val pullUpdaterConfig: PullUpdaterConfig) {
-    private val bcPullRequestCache = PullRequestCache("freya022", "BotCommands", null)
-    private val jdaPullRequestCache = PullRequestCache("discord-jda", "JDA", "master")
-    private val jdaKtxPullRequestCache = PullRequestCache("MinnDevelopment", "jda-ktx", "master")
-    private val lavaPlayerPullRequestCache = PullRequestCache("lavalink-devs", "lavaplayer", "main")
+    private val bcPullRequestCache = PullRequestCache(LibraryType.BOT_COMMANDS, null)
+    private val jdaPullRequestCache = PullRequestCache(LibraryType.JDA, "master")
+    private val jdaKtxPullRequestCache = PullRequestCache(LibraryType.JDA_KTX, "master")
+    private val lavaPlayerPullRequestCache = PullRequestCache(LibraryType.LAVA_PLAYER, "main")
 
     fun getPullRequest(libraryType: LibraryType, pullNumber: Int): PullRequest? = when (libraryType) {
         LibraryType.BOT_COMMANDS -> bcPullRequestCache.pullRequests[pullNumber]
