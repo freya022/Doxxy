@@ -10,6 +10,7 @@ data class PullRequest(
     val number: Int,
     val title: String,
     val draft: Boolean,
+    val authorName: String,
     val branch: GithubBranch,
     val pullUrl: String
 ) {
@@ -19,7 +20,7 @@ data class PullRequest(
 
     val asHumanDescription: String
         get() {
-            val branchAuthorName = " (${branch.authorName})"
+            val branchAuthorName = " ($authorName)"
             return "$number - $title".truncate(Command.Choice.MAX_NAME_LENGTH - branchAuthorName.length) + branchAuthorName
         }
 
@@ -45,7 +46,8 @@ data class PullRequest(
                 number,
                 title,
                 draft,
-                GithubBranch(headRepoOwnerName, authorName, headRepoName, headBranchName, CommitHash(latestHash)),
+                authorName,
+                GithubBranch(headRepoOwnerName, headRepoName, headBranchName, CommitHash(latestHash)),
                 pullUrl
             )
         }

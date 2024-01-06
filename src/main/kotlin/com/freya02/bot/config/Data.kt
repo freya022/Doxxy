@@ -17,6 +17,7 @@ object Data {
     val folder: Path = Environment.folder.resolve(if (Environment.isDev) "dev-data" else "data")
 
     val javadocsPath: Path = folder.resolve("javadocs")
+    val jdaForkPath: Path = folder.resolve("JDA-Fork")
     private val lastKnownVersionsFolderPath: Path = folder.resolve("last_versions")
     private val branchVersionsFolderPath: Path = lastKnownVersionsFolderPath.resolve("branch_versions")
     private val pageCacheFolderPath: Path = folder.resolve("page_cache")

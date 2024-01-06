@@ -11,13 +11,16 @@ import com.freya02.bot.versioning.github.GithubBranch
 import com.freya02.bot.versioning.github.PullRequest
 import com.freya02.bot.versioning.jitpack.JitpackBranchService
 import com.freya02.bot.versioning.jitpack.JitpackPrService
+import com.freya02.bot.versioning.jitpack.pullupdater.PullUpdater
 import com.freya02.bot.versioning.supplier.BuildToolType
 import com.freya02.bot.versioning.supplier.DependencySupplier
+import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.interactions.components.link
 import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.Embed
 import dev.minn.jda.ktx.messages.MessageCreate
 import dev.minn.jda.ktx.messages.reply_
+import dev.minn.jda.ktx.messages.send
 import io.github.freya022.botcommands.api.annotations.CommandMarker
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
@@ -34,8 +37,6 @@ import io.github.freya022.botcommands.api.components.Components
 import io.github.freya022.botcommands.api.components.event.ButtonEvent
 import io.github.freya022.botcommands.api.core.utils.toEditData
 import io.github.freya022.botcommands.api.utils.EmojiUtils
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
@@ -133,28 +134,28 @@ class SlashJitpack(
             event.focusedOption.value.isBlank() -> pullRequests.sortedByDescending { it.number }
             else -> pullRequests.fuzzyMatching(
                 //Don't autocomplete based on the branch number
-                toStringFunction = { referent: PullRequest -> referent.title + referent.branch.authorName },
+                toStringFunction = { pr: PullRequest -> pr.title + pr.authorName },
                 query = event.focusedOption.value
             ).map { fuzzyResult -> fuzzyResult.item }
         }.map { r -> r.toChoice() }
     }
 
-    private val mutex = Mutex()
     private suspend fun onUpdatePrClick(event: ButtonEvent, callerId: Long, libraryType: LibraryType, buildToolType: BuildToolType, pullNumber: Int) {
-        if (mutex.isLocked)
-            return event.reply_("A pull request is already being updated", ephemeral = true).queue()
-
         val pullRequest = jitpackPrService.getPullRequest(libraryType, pullNumber)
             ?: return event.reply_("Unknown Pull Request", ephemeral = true).queue()
 
-        mutex.withLock {
-            jitpackPrService.updatePr(event, pullNumber) { branch ->
-                val message = createPrMessage(event, libraryType, buildToolType, pullRequest, branch.toGithubBranch())
-                if (event.user.idLong == callerId) {
-                    event.hook.editOriginal(message.toEditData()).queue()
-                } else {
-                    event.hook.sendMessage(message).setEphemeral(true).queue()
-                }
+        event.deferEdit().queue()
+        val waitMessage = when {
+            PullUpdater.isRunning -> "Please wait while the pull request is being updated, this may be longer than usual"
+            else -> "Please wait while the pull request is being updated"
+        }.let { event.hook.send(it, ephemeral = true).await() }
+
+        jitpackPrService.updatePr(libraryType, pullNumber, event.hook, waitMessage.idLong) { branch ->
+            val message = createPrMessage(event, libraryType, buildToolType, pullRequest, branch)
+            if (event.user.idLong == callerId) {
+                event.hook.editOriginal(message.toEditData()).queue()
+            } else {
+                event.hook.sendMessage(message).setEphemeral(true).queue()
             }
         }
     }
