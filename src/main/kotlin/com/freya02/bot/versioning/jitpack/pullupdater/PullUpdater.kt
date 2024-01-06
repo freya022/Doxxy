@@ -3,6 +3,7 @@ package com.freya02.bot.versioning.jitpack.pullupdater
 import com.freya02.bot.config.Config
 import com.freya02.bot.config.Data
 import com.freya02.bot.versioning.LibraryType
+import com.freya02.bot.versioning.github.CommitHash
 import com.freya02.bot.versioning.github.GithubBranch
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
@@ -26,10 +27,10 @@ import kotlin.io.path.moveTo
 import kotlin.io.path.name
 import kotlin.io.path.notExists
 
-private typealias BranchLabel = String
-private typealias BranchSha = String
-
 object PullUpdater {
+    private data class CacheKey(val headLabel: String, val baseLabel: String)
+    private data class CacheValue(val headSha: String, val baseSha: String, val forkedGithubBranch: GithubBranch)
+
     private val logger = KotlinLogging.logger { }
     private val config = Config.instance.pullUpdater
     private val forkPath = Data.jdaForkPath
@@ -42,8 +43,7 @@ object PullUpdater {
     private val mutex = Mutex()
     val isRunning: Boolean get() = mutex.isLocked
 
-    private val latestHeadSha: MutableMap<BranchLabel, BranchSha> = hashMapOf()
-    private val latestBaseSha: MutableMap<BranchLabel, BranchSha> = hashMapOf()
+    private val cache: MutableMap<CacheKey, CacheValue> = hashMapOf()
 
     suspend fun tryUpdate(libraryType: LibraryType, prNumber: Int): Result<GithubBranch> = runCatching {
         if (libraryType != LibraryType.JDA) {
@@ -64,27 +64,40 @@ object PullUpdater {
             }.body()
 
             if (pullRequest.merged) {
-                //Skip merged PRs
-                pullRequest.head.toGithubBranch()
+                fail(PullUpdateException.ExceptionType.UNKNOWN_ERROR, "Pull request is already merged")
             } else if (pullRequest.mergeable == false) {
                 //Skip PRs with conflicts
                 fail(PullUpdateException.ExceptionType.PR_UPDATE_FAILURE, "Head branch cannot be updated")
-            } else if (latestHeadSha[pullRequest.head.label] == pullRequest.head.sha && latestBaseSha[pullRequest.base.label] == pullRequest.base.sha) {
-                //Prevent unnecessary updates by checking if the latest SHA is the same on the remote
-                pullRequest.head.toGithubBranch()
             } else {
-                doUpdate(pullRequest)
+                val cacheKey = pullRequest.toCacheKey()
+                val cacheValue = cache[cacheKey]
+                if (cacheValue != null) {
+                    //Prevent unnecessary updates by checking if the latest SHA is the same on the remote
+                    cacheValue.forkedGithubBranch
+                } else {
+                    val mergeCommitHash = doUpdate(pullRequest)
 
-                // Success!
-                latestHeadSha[pullRequest.head.label] = pullRequest.head.sha
-                latestBaseSha[pullRequest.base.label] = pullRequest.base.sha
+                    // Success!
+                    val value = CacheValue(
+                        pullRequest.head.sha,
+                        pullRequest.base.sha,
+                        getForkedGithubBranch(pullRequest, mergeCommitHash)
+                    )
+                    cache[cacheKey] = value
 
-                pullRequest.head.toGithubBranch()
+                    value.forkedGithubBranch
+                }
             }
         }
     }
 
-    private suspend fun doUpdate(pullRequest: PullRequest) {
+    private fun PullRequest.toCacheKey(): CacheKey = CacheKey(head.label, base.label)
+
+    private fun getForkedGithubBranch(pr: PullRequest, mergeCommitHash: CommitHash): GithubBranch {
+        return GithubBranch(config.forkBotName, config.forkRepoName, pr.head.toForkedBranchName(), mergeCommitHash)
+    }
+
+    private suspend fun doUpdate(pullRequest: PullRequest): CommitHash {
         //JDA repo most likely
         val base = pullRequest.base
         val baseBranchName = base.branchName
@@ -145,6 +158,8 @@ object PullUpdater {
         // Force push is used as the bot takes the remote head branch instead of reusing the local one,
         // meaning the remote branch would always be incompatible on the 2nd update
         runProcess(forkPath, "git", "push", "--force", "origin")
+
+        return CommitHash(runProcess(forkPath, "git", "rev-parse", "HEAD"))
     }
 
     private fun fail(type: PullUpdateException.ExceptionType, message: String): Nothing =

@@ -1,8 +1,5 @@
 package com.freya02.bot.versioning.jitpack.pullupdater
 
-import com.freya02.bot.versioning.github.CommitHash
-import com.freya02.bot.versioning.github.GithubBranch
-
 data class GithubUser(val login: String) {
     val userName get() = login
 }
@@ -14,6 +11,3 @@ data class PullRequest(val head: Branch, val base: Branch, val merged: Boolean, 
         val branchName get() = ref
     }
 }
-
-fun PullRequest.Branch.toGithubBranch(): GithubBranch =
-    GithubBranch(user.login, repo.name, ref, CommitHash(sha))
