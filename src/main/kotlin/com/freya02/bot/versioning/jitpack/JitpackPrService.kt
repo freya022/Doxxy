@@ -13,13 +13,13 @@ import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.oshai.kotlinlogging.KotlinLogging
 import net.dv8tion.jda.api.interactions.InteractionHook
 
+private val logger = KotlinLogging.logger { }
+
 @BService
 class JitpackPrService(private val pullUpdaterConfig: PullUpdaterConfig) {
     data class PullUpdaterBranch(val forkBotName: String, val forkRepoName: String, val forkedBranchName: String) {
         fun toGithubBranch(): GithubBranch = GithubUtils.getBranch(forkBotName, forkRepoName, forkedBranchName)
     }
-
-    private val logger = KotlinLogging.logger { }
 
     private val bcPullRequestCache = PullRequestCache("freya022", "BotCommands", null)
     private val jdaPullRequestCache = PullRequestCache("discord-jda", "JDA", "master")
