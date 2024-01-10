@@ -44,8 +44,8 @@ class BuildToolCommands(private val versions: Versions, private val componentsSe
                     versions.latestBotCommandsVersion
                 )
                 LibraryType.JDA -> DependencySupplier.formatJDA(scriptType, buildToolType, versions.latestJDAVersion)
-                LibraryType.JDA_KTX -> DependencySupplier.formatJitpack(scriptType, buildToolType, versions.latestJDAKtxVersion)
-                LibraryType.LAVA_PLAYER -> DependencySupplier.formatJitpack(scriptType, buildToolType, versions.latestLavaPlayerVersion)
+                LibraryType.JDA_KTX -> DependencySupplier.formatJDA(scriptType, buildToolType, versions.latestJDAKtxVersion)
+                LibraryType.LAVA_PLAYER -> DependencySupplier.formatJDA(scriptType, buildToolType, versions.latestLavaPlayerVersion)
             }
 
             val messageData = MessageCreate {
