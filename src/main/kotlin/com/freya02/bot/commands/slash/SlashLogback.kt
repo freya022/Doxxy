@@ -39,7 +39,7 @@ class SlashLogback(private val componentsService: Components) : ApplicationComma
         val libraryType = LibraryType.getDefaultLibrary(event.guild!!)
 
         val message = MessageCreate {
-            val basePath = "/logback_configs/${profile.pathFragment}/"
+            val basePath = "/logback_configs/${profile.pathFragment}"
             val logbackXml = when (libraryType) {
                 LibraryType.JDA -> readResourceAsString("$basePath/JDA.xml")
                 LibraryType.BOT_COMMANDS -> readResourceAsString("$basePath/BotCommands.xml")
