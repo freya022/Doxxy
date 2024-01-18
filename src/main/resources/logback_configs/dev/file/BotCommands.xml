@@ -24,20 +24,26 @@
         </encoder>
     </appender>
 
-    <!-- JDA logs on INFO -->
-    <logger name="net.dv8tion.jda" level="trace" additivity="false">
+    <!-- JDA logs -->
+    <logger name="net.dv8tion.jda" level="debug" additivity="false">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FILE"/>
     </logger>
 
-    <!-- HikariCP logs on INFO -->
+    <!-- HikariCP logs -->
     <logger name="com.zaxxer.hikari" level="info" additivity="false">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FILE"/>
     </logger>
 
-    <!-- Other logs on DEBUG -->
-    <root level="trace">
+    <!-- BotCommands logs -->
+    <logger name="io.github.freya022.botcommands" level="debug" additivity="false">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- Other logs -->
+    <root level="debug">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FILE"/>
     </root>

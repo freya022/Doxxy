@@ -6,13 +6,13 @@
         </encoder>
     </appender>
 
-    <!-- JDA logs on INFO -->
-    <logger name="net.dv8tion.jda" level="trace" additivity="false">
+    <!-- JDA logs -->
+    <logger name="net.dv8tion.jda" level="debug" additivity="false">
         <appender-ref ref="STDOUT"/>
     </logger>
 
-    <!-- Other logs on DEBUG -->
-    <root level="trace">
+    <!-- Other logs -->
+    <root level="debug">
         <appender-ref ref="STDOUT"/>
     </root>
 </configuration>

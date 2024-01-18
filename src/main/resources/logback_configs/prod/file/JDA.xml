@@ -24,14 +24,14 @@
         </encoder>
     </appender>
 
-    <!-- JDA logs on INFO -->
+    <!-- JDA logs -->
     <logger name="net.dv8tion.jda" level="info" additivity="false">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FILE"/>
     </logger>
 
-    <!-- Other logs on DEBUG -->
-    <root level="debug">
+    <!-- Other logs -->
+    <root level="info">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FILE"/>
     </root>
