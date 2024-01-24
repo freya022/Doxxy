@@ -11,22 +11,16 @@ import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashE
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.JDASlashCommand
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.SlashOption
 import io.github.freya022.botcommands.api.components.Components
-import io.github.freya022.botcommands.api.core.utils.readResourceAsString
+import io.github.freya022.botcommands.api.core.utils.readResource
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
+import net.dv8tion.jda.api.utils.FileUpload
+import java.io.InputStream
 
 private const val ephemeralDefault = true
 private val profileDefault = LogbackProfile.DEV
 
 @Command
 class SlashLogback(private val componentsService: Components) : ApplicationCommand() {
-    private val contentTemplate = """
-        ```xml
-        %s```
-        Your `logback.xml` should go in the `src/main/resources` folder of your project.
-        
-        More info: %s
-    """.trimIndent()
-
     @JDASlashCommand(name = "logback", description = "Gives a logback.xml")
     fun onSlashLogback(
         event: GuildSlashEvent,
@@ -39,20 +33,13 @@ class SlashLogback(private val componentsService: Components) : ApplicationComma
         val libraryType = LibraryType.getDefaultLibrary(event.guild!!)
 
         val message = MessageCreate {
-            val basePath = "/logback_configs/${profile.pathFragment}"
-            val logbackXml = when (libraryType) {
-                LibraryType.JDA -> readResourceAsString("$basePath/JDA.xml")
-                LibraryType.BOT_COMMANDS -> readResourceAsString("$basePath/BotCommands.xml")
-                else -> throw IllegalArgumentException("Unexpected LibraryType: $libraryType")
-            }
+            content = """
+                Your `logback.xml` should go in the `src/main/resources` folder of your project.
+                
+                More info: ${getWikiLink(libraryType)}
+            """.trimIndent()
 
-            val wikiLink = when (libraryType) {
-                LibraryType.JDA -> "https://jda.wiki/setup/logging/"
-                LibraryType.BOT_COMMANDS -> "https://freya022.github.io/BotCommands/3.X/setup/logging/"
-                else -> throw IllegalArgumentException("Unexpected LibraryType: $libraryType")
-            }
-
-            content = contentTemplate.format(logbackXml, wikiLink)
+            files += FileUpload.fromStreamSupplier("logback.xml") { getLogbackStream(libraryType, profile) }
 
             if (!ephemeral) {
                 components += row(componentsService.messageDeleteButton(event.user))
@@ -60,5 +47,17 @@ class SlashLogback(private val componentsService: Components) : ApplicationComma
         }
 
         event.reply(message).setEphemeral(ephemeral).queue()
+    }
+
+    private fun getWikiLink(libraryType: LibraryType): String = when (libraryType) {
+        LibraryType.JDA -> "https://jda.wiki/setup/logging/"
+        LibraryType.BOT_COMMANDS -> "https://freya022.github.io/BotCommands/3.X/setup/logging/"
+        else -> throw IllegalArgumentException("Unexpected LibraryType: $libraryType")
+    }
+
+    private fun getLogbackStream(libraryType: LibraryType, profile: LogbackProfile): InputStream = when (libraryType) {
+        LibraryType.JDA -> readResource("/logback_configs/${profile.pathFragment}/JDA.xml")
+        LibraryType.BOT_COMMANDS -> readResource("/logback_configs/${profile.pathFragment}/BotCommands.xml")
+        else -> throw IllegalArgumentException("Unexpected LibraryType: $libraryType")
     }
 }
