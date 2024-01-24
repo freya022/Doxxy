@@ -7,7 +7,6 @@ import dev.minn.jda.ktx.messages.MessageCreate
 import io.github.freya022.botcommands.api.BCInfo
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
-import io.github.freya022.botcommands.api.commands.application.CommandScope
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.JDASlashCommand
 import io.github.freya022.botcommands.api.core.BContext
@@ -23,7 +22,7 @@ class SlashInfo(private val context: BContext) : ApplicationCommand() {
     private val combinedMemberCountCountdown = UpdateCountdown(5.minutes)
     private var combinedMemberCount: Int = 0
 
-    @JDASlashCommand(scope = CommandScope.GLOBAL_NO_DM, name = "info", description = "Gives info on the bot")
+    @JDASlashCommand(name = "info", description = "Gives info on the bot")
     suspend fun onSlashInfo(event: GuildSlashEvent) {
         event.deferReply(true).queue()
 
