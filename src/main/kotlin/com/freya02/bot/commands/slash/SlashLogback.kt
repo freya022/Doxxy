@@ -32,7 +32,7 @@ class SlashLogback(private val componentsService: Components) : ApplicationComma
         event: GuildSlashEvent,
         @SlashOption(description = "Default: true, reply as an ephemeral message?") ephemeral: Boolean = ephemeralDefault,
         @SlashOption(description = "Default: Dev, whether to display the reply as an ephemeral message", usePredefinedChoices = true) profile: LogbackProfile = profileDefault
-    ) = onLogbackRequest(event, ephemeral)
+    ) = onLogbackRequest(event, ephemeral, profile)
 
     fun onLogbackRequest(event: IReplyCallback, ephemeral: Boolean = ephemeralDefault, profile: LogbackProfile = profileDefault) {
         // BC/JDA wiki link depending on the guild
