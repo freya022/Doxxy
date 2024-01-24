@@ -122,7 +122,7 @@
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>5.0.0-beta.19</version>
+            <version>5.0.0-beta.20</version>
             <exclusions>
                 <exclusion>
                     <groupId>club.minnced</groupId>
@@ -138,7 +138,7 @@
         <dependency>
             <groupId>club.minnced</groupId>
             <artifactId>jda-ktx</artifactId>
-            <version>0.11.0-beta.19</version>
+            <version>0.11.0-beta.20</version>
         </dependency>
         <dependency>
             <groupId>org.jetbrains</groupId>
