@@ -40,6 +40,7 @@ import kotlin.reflect.KMutableProperty0
 private typealias MessageId = Long
 
 private val logger = KotlinLogging.logger { }
+private const val CODE_BLOCK_LENGTH = "```java\n```".length
 
 @Command
 class MessageContextPaginateCode(private val componentsService: Components) : ApplicationCommand() {
@@ -100,7 +101,7 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
                             appendLine(line)
                         }
 
-                        if (builder.length + toBeAppended.length + codeBlockLength > Message.MAX_CONTENT_LENGTH) {
+                        if (builder.length + toBeAppended.length + CODE_BLOCK_LENGTH > Message.MAX_CONTENT_LENGTH) {
                             add(builder.toString())
                             builder.clear()
                         }
@@ -163,10 +164,6 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
                     }
                 }
             }
-        }
-
-        private companion object {
-            private const val codeBlockLength = "```java\n```".length
         }
     }
 
