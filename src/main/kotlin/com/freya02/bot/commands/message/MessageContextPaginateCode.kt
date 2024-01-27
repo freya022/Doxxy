@@ -7,6 +7,8 @@ import com.freya02.bot.utils.ParsingUtils.codeBlockRegex
 import com.freya02.bot.utils.Utils.digitAmount
 import com.freya02.bot.utils.Utils.letIf
 import com.github.javaparser.ParseProblemException
+import com.github.javaparser.Position
+import com.github.javaparser.Range
 import com.github.javaparser.StaticJavaParser
 import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.expr.StringLiteralExpr
@@ -112,12 +114,39 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
         }
 
         private fun replaceStrings(content: String): String {
-            val strings: List<String> = tryParseCode(content).findAll(StringLiteralExpr::class.java)
-                .map { it.asString() }.distinct()
-
-            return strings.foldIndexed(content) { i, acc, string ->
-                acc.replace(""""$string"""", """"str$i"""")
+            fun Position.toIndexIn(s: String): Int {
+                val offset = s.lineSequence().take(line - 1).sumOf { it.length + 1 }
+                return offset + column - 1
             }
+
+            fun Range.toKotlinRangeIn(s: String): IntRange {
+                return begin.toIndexIn(s) ..< end.toIndexIn(s)
+            }
+
+            // Get ranges from farthest to closest, associate the same index to each range with the same string content
+            var index = 0
+            val indexByContent: MutableMap<String, Int> = hashMapOf()
+            // Reverse order allows us to modify the content of the string without affecting the start positions
+            val indexByRange: MutableMap<IntRange, Int> = sortedMapOf(Comparator.comparing { range: IntRange -> range.first }.reversed())
+
+            tryParseCode(content)
+                .findAll(StringLiteralExpr::class.java)
+                .forEach {
+                    // Get the index of the string literal, same strings get the same index
+                    val contentCount = indexByContent.getOrPut(it.asString()) { index++ }
+                    // Associate the range with the index of the string,
+                    // this way we have the same index at different places
+                    indexByRange[it.range.get().toKotlinRangeIn(content)] = contentCount
+                }
+
+            // Replace the ranges by their index
+            val builder = StringBuilder(content)
+            indexByRange.forEach { (range, index) ->
+                // Small adjustments so we edit the string without the quotes
+                builder.replace(range.first + 1, range.last /* inclusive */ + 1, "str$index")
+            }
+
+            return builder.toString()
         }
 
         private fun tryParseCode(content: String): Node {
