@@ -1,7 +1,6 @@
 package com.freya02.bot.commands.message
 
 import com.freya02.bot.format.Formatter
-import com.freya02.bot.format.FormattingException
 import com.freya02.bot.pagination.CodePaginator
 import com.freya02.bot.pagination.CodePaginatorBuilder
 import com.freya02.bot.utils.ParsingUtils.codeBlockRegex
@@ -21,9 +20,12 @@ import io.github.freya022.botcommands.api.commands.application.context.annotatio
 import io.github.freya022.botcommands.api.commands.application.context.message.GuildMessageEvent
 import io.github.freya022.botcommands.api.components.Button
 import io.github.freya022.botcommands.api.components.Components
+import io.github.freya022.botcommands.api.components.builder.IEphemeralActionableComponent
 import io.github.freya022.botcommands.api.components.data.InteractionConstraints
+import io.github.freya022.botcommands.api.components.event.ButtonEvent
 import io.github.freya022.botcommands.api.core.utils.suppressContentWarning
 import io.github.freya022.botcommands.api.pagination.PaginatorComponents
+import io.github.oshai.kotlinlogging.KotlinLogging
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.interactions.InteractionHook
@@ -31,22 +33,53 @@ import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.utils.messages.MessageEditBuilder
 import java.util.concurrent.TimeUnit
-import kotlin.properties.Delegates
+import kotlin.reflect.KMutableProperty0
 
 private typealias MessageId = Long
+
+private val logger = KotlinLogging.logger { }
 
 @Command
 class MessageContextPaginateCode(private val componentsService: Components) : ApplicationCommand() {
     private class PaginationState(val paginator: CodePaginator, val originalContent: String, val owner: UserSnowflake) {
-        var showLineNumbers: Boolean by Delegates.observable(false) { _, _, _ -> blocks = regenerateBlocks() }
-        var replaceStrings: Boolean by Delegates.observable(false) { _, _, _ -> blocks = regenerateBlocks() }
-        var useFormatting: Boolean by Delegates.observable(false) { _, _, _ -> blocks = regenerateBlocks() }
+        var showLineNumbers: Boolean = false
+            private set
+        var replaceStrings: Boolean = false
+            private set
+        var useFormatting: Boolean = false
+            private set
 
         var canReplaceStrings = true
+            private set
         var canUseFormatting = true
+            private set
 
         var blocks: List<String> = regenerateBlocks()
             private set
+
+        // These returns true if the switch applied correctly
+        fun showLineNumbers(showLineNumbers: Boolean): Boolean =
+            tryUpdateState(::showLineNumbers, null, showLineNumbers)
+        fun replaceStrings(replaceStrings: Boolean): Boolean =
+            tryUpdateState(::replaceStrings, ::canReplaceStrings, replaceStrings)
+        fun useFormatting(useFormatting: Boolean): Boolean =
+            tryUpdateState(::useFormatting, ::canUseFormatting, useFormatting)
+
+        // This is actually different from Delegates.observable,
+        // as an exception happening on the listener would not roll back the property value
+        private fun <T> tryUpdateState(featureProperty: KMutableProperty0<T>, capabilityProperty: KMutableProperty0<Boolean>?, newValue: T): Boolean {
+            val oldValue = featureProperty.get()
+            return try {
+                featureProperty.set(newValue)
+                blocks = regenerateBlocks()
+                true
+            } catch (e: Exception) {
+                logger.debug(e) { "Could not update pagination state '${featureProperty.name}'" }
+                featureProperty.set(oldValue)
+                capabilityProperty?.set(false)
+                false
+            }
+        }
 
         private fun regenerateBlocks() = buildList {
             val builder = StringBuilder()
@@ -160,10 +193,10 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
         val prefix = if (state.showLineNumbers) "Hide" else "Show"
         return componentsService.ephemeralButton(ButtonStyle.SECONDARY, "$prefix line numbers") {
             constraints += state.owner
-            bindTo { buttonEvent ->
-                buttonEvent.editComponents(buttonEvent.message.components.asDisabled()).queue()
-                state.showLineNumbers = !state.showLineNumbers
-                sendCodePaginator(buttonEvent.hook, state)
+            bindToDebounce { _, hook ->
+                state.showLineNumbers(!state.showLineNumbers)
+                sendCodePaginator(hook, state)
+                true
             }
         }
     }
@@ -174,16 +207,13 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
             constraints += state.owner
             if (!state.canUseFormatting) return@ephemeralButton
 
-            bindTo { buttonEvent ->
-                buttonEvent.editComponents(buttonEvent.message.components.asDisabled()).queue()
-                try {
-                    state.useFormatting = !state.useFormatting
-                } catch (e: FormattingException) {
-                    state.canUseFormatting = false
-                    state.useFormatting = false
-                    buttonEvent.hook.send("Sorry, this code could not be formatted", ephemeral = true).queue()
-                } finally {
-                    sendCodePaginator(buttonEvent.hook, state)
+            bindToDebounce { _, hook ->
+                if (state.useFormatting(!state.useFormatting)) {
+                    sendCodePaginator(hook, state)
+                    true
+                } else {
+                    hook.send("Sorry, this code could not be formatted", ephemeral = true).queue()
+                    false
                 }
             }
         }.withDisabled(!state.canUseFormatting)
@@ -195,19 +225,32 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
             constraints += state.owner
             if (!state.canReplaceStrings) return@ephemeralButton
 
-            bindTo { buttonEvent ->
-                buttonEvent.editComponents(buttonEvent.message.components.asDisabled()).queue()
-                try {
-                    state.replaceStrings = !state.replaceStrings
-                } catch (e: ParseProblemException) {
-                    state.canReplaceStrings = false
-                    state.replaceStrings = false
-                    buttonEvent.hook.send("Sorry, this code could not be parsed", ephemeral = true).queue()
-                } finally {
-                    sendCodePaginator(buttonEvent.hook, state)
+            bindToDebounce { _, hook ->
+                if (state.replaceStrings(!state.replaceStrings)) {
+                    sendCodePaginator(hook, state)
+                    true
+                } else {
+                    hook.send("Sorry, this code could not be parsed", ephemeral = true).queue()
+                    false
                 }
             }
         }.withDisabled(!state.canReplaceStrings)
+    }
+
+    /**
+     * [block] returns `true` if the message has been updated,
+     * `false` if the message needs to have its components bounced (enabled) back.
+     */
+    private fun IEphemeralActionableComponent<*, ButtonEvent>.bindToDebounce(block: suspend (ButtonEvent, InteractionHook) -> Boolean) = bindTo {
+        it.editComponents(it.message.components.asDisabled()).queue()
+        try {
+            if (!block(it, it.hook)) {
+                it.hook.editOriginalComponents(it.message.components).queue()
+            }
+        } catch (e: Exception) {
+            it.hook.editOriginalComponents(it.message.components).queue()
+            throw e
+        }
     }
 
     private suspend fun withCodeContent(event: IReplyCallback, message: Message, block: suspend (String) -> Unit) {
