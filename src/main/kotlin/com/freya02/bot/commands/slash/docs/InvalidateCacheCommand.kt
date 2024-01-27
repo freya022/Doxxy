@@ -6,11 +6,13 @@ import io.github.freya022.botcommands.api.commands.application.CommandScope
 import io.github.freya022.botcommands.api.commands.application.annotations.Test
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.JDASlashCommand
+import io.github.freya022.botcommands.api.commands.application.slash.annotations.TopLevelSlashCommandData
 
 @Command
 class InvalidateCacheCommand : ApplicationCommand() {
     @Test
-    @JDASlashCommand(scope = CommandScope.GUILD, name = "invalidate")
+    @TopLevelSlashCommandData(scope = CommandScope.GUILD)
+    @JDASlashCommand(name = "invalidate")
     fun onSlashInvalidate(event: GuildSlashEvent) {
         event.deferReply(true).queue()
 

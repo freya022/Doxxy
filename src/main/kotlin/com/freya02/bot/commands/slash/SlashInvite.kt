@@ -6,11 +6,13 @@ import io.github.freya022.botcommands.api.commands.application.CommandScope
 import io.github.freya022.botcommands.api.commands.application.annotations.Test
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.JDASlashCommand
+import io.github.freya022.botcommands.api.commands.application.slash.annotations.TopLevelSlashCommandData
 
 @Command
 class SlashInvite : ApplicationCommand() {
     @Test
-    @JDASlashCommand(scope = CommandScope.GUILD, name = "invite")
+    @TopLevelSlashCommandData(scope = CommandScope.GUILD)
+    @JDASlashCommand(name = "invite")
     fun onSlashInvite(event: GuildSlashEvent) {
         event.reply(event.jda.getInviteUrl()).queue()
     }

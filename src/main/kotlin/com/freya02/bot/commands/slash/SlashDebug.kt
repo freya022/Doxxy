@@ -8,16 +8,13 @@ import io.github.freya022.botcommands.api.commands.application.CommandScope
 import io.github.freya022.botcommands.api.commands.application.annotations.Test
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.JDASlashCommand
+import io.github.freya022.botcommands.api.commands.application.slash.annotations.TopLevelSlashCommandData
 
 @Command
 class SlashDebug : ApplicationCommand() {
     @Test
-    @JDASlashCommand(
-        scope = CommandScope.GUILD,
-        name = "debug",
-        description = "Enables debugging",
-        defaultLocked = true
-    )
+    @TopLevelSlashCommandData(scope = CommandScope.GUILD, defaultLocked = true)
+    @JDASlashCommand(name = "debug", description = "Enables debugging")
     fun onSlashDebug(event: GuildSlashEvent) {
         try {
             throw DebugException()

@@ -10,6 +10,7 @@ import io.github.freya022.botcommands.api.commands.application.annotations.Test
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.JDASlashCommand
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.SlashOption
+import io.github.freya022.botcommands.api.commands.application.slash.annotations.TopLevelSlashCommandData
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import org.slf4j.LoggerFactory
@@ -19,11 +20,8 @@ class SlashLogging : ApplicationCommand() {
     private val loggerContext = (LoggerFactory.getILoggerFactory() as LoggerContext)
 
     @Test
-    @JDASlashCommand(
-        scope = CommandScope.GUILD,
-        name = "logging",
-        description = "Sets the logging level for a package/class"
-    )
+    @TopLevelSlashCommandData(scope = CommandScope.GUILD)
+    @JDASlashCommand(name = "logging", description = "Sets the logging level for a package/class")
     fun onSlashLogging(
         event: GuildSlashEvent,
         @SlashOption(autocomplete = LOGGER_NAME_AUTOCOMPLETE_NAME) loggerName: String,

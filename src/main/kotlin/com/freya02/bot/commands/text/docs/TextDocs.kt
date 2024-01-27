@@ -10,7 +10,7 @@ import com.freya02.docs.DocSourceType
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.text.BaseCommandEvent
 import io.github.freya022.botcommands.api.commands.text.TextCommand
-import io.github.freya022.botcommands.api.commands.text.annotations.JDATextCommand
+import io.github.freya022.botcommands.api.commands.text.annotations.JDATextCommandVariation
 import io.github.freya022.botcommands.api.commands.text.annotations.TextOption
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
 
@@ -20,7 +20,7 @@ class TextDocs(
     private val commonDocsController: CommonDocsController,
     private val textDocsController: TextDocsController
 ) : TextCommand() {
-    @JDATextCommand(path = ["docs"], generalDescription = "Shows the documentation for a class, a method or a field")
+    @JDATextCommandVariation(path = ["docs"], description = "Shows the documentation for a class, a method or a field")
     suspend fun onTextDocs(
         event: BaseCommandEvent,
         @TextOption(name = "docs source", example = "JDA") docSourceType: DocSourceType = DocSourceType.JDA,
