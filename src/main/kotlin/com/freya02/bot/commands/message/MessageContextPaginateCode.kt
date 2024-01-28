@@ -168,41 +168,38 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
     }
 
     private val emptyEmbed = Embed { description = "dummy" }
-    private val codeMap: MutableMap<MessageId, PaginationState> = hashMapOf()
 
     @JDAMessageCommand(name = "Paginate code")
     suspend fun onMessageContextPaginateCode(event: GuildMessageEvent) {
         event.deferReply(true).queue()
 
         withCodeContent(event, event.target) { content ->
+            lateinit var paginationState: PaginationState
+
             val hook = event.hook
-            val messageId = event.target.idLong
             val paginator = CodePaginatorBuilder(componentsService)
                 .setConstraints(InteractionConstraints.ofUsers(event.user))
                 .setTimeout(10, TimeUnit.MINUTES) { instance, _ ->
-                    codeMap.remove(messageId) //Always executed at some point as there is no delete button
                     hook.editOriginalComponents().queue()
                     instance.cleanup()
                 }
                 .setPaginatorSupplier { _, editBuilder, components, page ->
-                    emptyEmbed.also { onPageChange(messageId, editBuilder, components, page) }
+                    emptyEmbed.also { onPageChange(paginationState, editBuilder, components, page) }
                 }
                 .build()
 
-            val paginationState = PaginationState(paginator, content, event.user)
-            codeMap[messageId] = paginationState
+            paginationState = PaginationState(paginator, content, event.user)
 
             sendCodePaginator(event.hook, paginationState)
         }
     }
 
     private fun onPageChange(
-        messageId: Long,
+        state: PaginationState,
         editBuilder: MessageEditBuilder,
         components: PaginatorComponents,
         page: Int
     ) {
-        val state = codeMap[messageId]!!
         val blocks = state.blocks
 
         components.addComponents(makeLineNumbersButton(state), makeUseFormattingButton(state), makeReplaceStringsButton(state))
