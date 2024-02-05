@@ -1,0 +1,2 @@
+### Update examples
+PUT http://localhost:8080/examples/update
