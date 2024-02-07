@@ -3,3 +3,6 @@ spring.profiles.active=dev
 spring.datasource.url=jdbc:postgresql://host:port/db_name
 spring.datasource.username=postgres
 spring.datasource.password=pwd
+
+bot.http.host=127.0.0.1
+bot.http.port=00000

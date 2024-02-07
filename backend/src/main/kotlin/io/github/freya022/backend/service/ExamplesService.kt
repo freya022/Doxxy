@@ -9,10 +9,23 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.body
+import org.springframework.web.client.bodyWithType
+
+private typealias SimpleClassName = String
+private typealias QualifiedPartialIdentifier = String
+private typealias FullQualifiedIdentifier = String
+
+//TODO use common module with main bot
+private enum class DocSourceType {
+    JDA,
+    BOT_COMMANDS,
+    JAVA
+}
 
 @Service
 class ExamplesService(
     private val docExampleClient: RestClient,
+    private val botClient: RestClient,
     private val exampleRepository: ExampleRepository,
     private val json: Json
 ) {
@@ -29,6 +42,25 @@ class ExamplesService(
             val library: String,
             val title: String,
             val targets: List<String>
+        ) {
+            val sourceType = when (library) {
+                "JDA" -> DocSourceType.JDA
+                "JDK" -> DocSourceType.JAVA
+                "BotCommands" -> DocSourceType.BOT_COMMANDS
+                else -> throw IllegalArgumentException("Unknown library: $library")
+            }
+        }
+
+        @Serializable
+        data class RequestedTargets(
+            val sourceTypeToSimpleClassNames: Map<DocSourceType, List<SimpleClassName>>,
+            val sourceTypeToQualifiedPartialIdentifiers: Map<DocSourceType, List<QualifiedPartialIdentifier>>
+        )
+
+        @Serializable
+        data class MappedTargets(
+            val sourceTypeToSimpleClassNames: Map<DocSourceType, List<SimpleClassName>>,
+            val sourceTypeToMappedIdentifiers: Map<DocSourceType, Map<QualifiedPartialIdentifier, List<FullQualifiedIdentifier>>>
         )
 
         val examples: List<IndexedExample> = docExampleClient.get()
@@ -37,15 +69,29 @@ class ExamplesService(
             .body<String>()!!
             .let(json::decodeFromString)
 
+        // TODO this was not needed, all you could do is check whether the targets are correct, no need to map them
+        //  When an example gets requested by its full identifier,
+        //    the backend db checks for the full identifier *and* the partial identifier
+        //  That way also allows linkage with recently-added overloads
         // Gets actual targets from the bot
-        val allTargets = examples.flatMapTo(hashSetOf()) { it.targets }
-        val targetMap: Map<String, List<String>> = allTargets.associateWith { listOf("$it()") } //TODO
+        val requestedTargets = examples.groupBy { it.sourceType }.let { examplesBySourceType ->
+            RequestedTargets(
+                examplesBySourceType.mapValues { (_, examples) -> examples.flatMap { it.targets }.filterNot { '#' in it } },
+                examplesBySourceType.mapValues { (_, examples) -> examples.flatMap { it.targets }.filter { '#' in it } }
+            )
+        }
+        val mappedTargets: MappedTargets = botClient.post()
+            .uri("/examples/targets")
+            .bodyWithType(requestedTargets)
+            .retrieve()
+            .body<String>()!!
+            .let(json::decodeFromString)
 
         exampleRepository.saveAllAndFlush(buildList {
             examples.forEach { dto ->
                 dto.languages.forEach { language ->
                     val content = getExampleContent(dto.library, dto.name, language)
-                    val targetEntities = dto.targets.flatMap { targetMap[it]!! }.map { ExampleTarget(it) }
+                    val targetEntities = dto.targets.flatMap { mappedTargets.sourceTypeToMappedIdentifiers[dto.sourceType]!![it]!! /*💀*/  }.map { ExampleTarget(it) }
 
                     this += Example(language, dto.title, content, targetEntities)
                 }
