@@ -3,6 +3,7 @@ package io.github.freya022.backend.service
 import io.github.freya022.backend.entity.Example
 import io.github.freya022.backend.entity.ExampleTarget
 import io.github.freya022.backend.repository.ExampleRepository
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.springframework.stereotype.Service
@@ -13,7 +14,6 @@ import org.springframework.web.client.bodyWithType
 
 private typealias SimpleClassName = String
 private typealias QualifiedPartialIdentifier = String
-private typealias FullQualifiedIdentifier = String
 
 //TODO use common module with main bot
 private enum class DocSourceType {
@@ -22,6 +22,11 @@ private enum class DocSourceType {
     JAVA
 }
 
+private val logger = KotlinLogging.logger { }
+
+//TODO when an example gets requested by its full identifier,
+//   check for the full identifier *and* the partial identifier
+// That way also allows linkage with recently-added overloads
 @Service
 class ExamplesService(
     private val docExampleClient: RestClient,
@@ -58,9 +63,9 @@ class ExamplesService(
         )
 
         @Serializable
-        data class MappedTargets(
-            val sourceTypeToSimpleClassNames: Map<DocSourceType, List<SimpleClassName>>,
-            val sourceTypeToMappedIdentifiers: Map<DocSourceType, Map<QualifiedPartialIdentifier, List<FullQualifiedIdentifier>>>
+        data class MissingTargets(
+            val sourceTypeToSimpleClassNames: Map<DocSourceType, Set<SimpleClassName>>,
+            val sourceTypeToPartialIdentifiers: Map<DocSourceType, Set<QualifiedPartialIdentifier>>
         )
 
         val examples: List<IndexedExample> = docExampleClient.get()
@@ -69,10 +74,6 @@ class ExamplesService(
             .body<String>()!!
             .let(json::decodeFromString)
 
-        // TODO this was not needed, all you could do is check whether the targets are correct, no need to map them
-        //  When an example gets requested by its full identifier,
-        //    the backend db checks for the full identifier *and* the partial identifier
-        //  That way also allows linkage with recently-added overloads
         // Gets actual targets from the bot
         val requestedTargets = examples.groupBy { it.sourceType }.let { examplesBySourceType ->
             RequestedTargets(
@@ -80,18 +81,37 @@ class ExamplesService(
                 examplesBySourceType.mapValues { (_, examples) -> examples.flatMap { it.targets }.filter { '#' in it } }
             )
         }
-        val mappedTargets: MappedTargets = botClient.post()
-            .uri("/examples/targets")
+        val missingTargets: MissingTargets = botClient.post()
+            .uri("/examples/targets/check")
             .bodyWithType(requestedTargets)
             .retrieve()
             .body<String>()!!
             .let(json::decodeFromString)
 
+        missingTargets.sourceTypeToSimpleClassNames.forEach { (sourceType, simpleClassNames) ->
+            if (simpleClassNames.isNotEmpty()) {
+                logger.error { "Missing classes in $sourceType:\n${simpleClassNames.joinToString()}" }
+            }
+        }
+        missingTargets.sourceTypeToPartialIdentifiers.forEach { (sourceType, partialIdentifiers) ->
+            if (partialIdentifiers.isNotEmpty()) {
+                logger.error { "Missing (possibly partial) identifiers in $sourceType:\n${partialIdentifiers.joinToString()}" }
+            }
+        }
+
         exampleRepository.saveAllAndFlush(buildList {
             examples.forEach { dto ->
                 dto.languages.forEach { language ->
                     val content = getExampleContent(dto.library, dto.name, language)
-                    val targetEntities = dto.targets.flatMap { mappedTargets.sourceTypeToMappedIdentifiers[dto.sourceType]!![it]!! /*💀*/  }.map { ExampleTarget(it) }
+                    val targetEntities = dto.targets.filter {
+                        if ('#' !in it) {
+                            // Filter out if class is missing
+                            it !in missingTargets.sourceTypeToSimpleClassNames[dto.sourceType]!!
+                        } else {
+                            // Filter out if partial identifier is missing
+                            it !in missingTargets.sourceTypeToPartialIdentifiers[dto.sourceType]!!
+                        }
+                    }.map { ExampleTarget(it) }
 
                     this += Example(language, dto.title, content, targetEntities)
                 }

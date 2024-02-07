@@ -22,9 +22,9 @@ create table example_target
     -- Match:
     -- ClassName
     -- ClassName#FIELD
+    -- ClassName#Method
+    -- But not:
     -- ClassName#Method()
     -- ClassName#Method(Collection<? super OptionData>)
-    -- But not:
-    -- ClassName#Method
-    check (regexp_like(target, '^[A-Z][A-Za-z]+(?:#(?:[[:upper:]]+$|\w+\(.*\))$)?$'))
+    check (regexp_like(target, '^[A-Z][A-Za-z]+(?:#(?:[[:upper:]]+$|\w+)$)?$'))
 );
