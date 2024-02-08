@@ -4,5 +4,4 @@ spring.datasource.url=jdbc:postgresql://host:port/db_name?currentSchema=backend,
 spring.datasource.username=postgres
 spring.datasource.password=pwd
 
-bot.http.host=127.0.0.1
-bot.http.port=00000
+bot.http.url=http://127.0.0.1:00000

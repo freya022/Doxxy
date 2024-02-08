@@ -12,8 +12,6 @@ class RestClientProvider {
         RestClient.create("https://raw.githubusercontent.com/freya022/doc-examples/master")
 
     @Bean
-    fun botClient(
-        @Value("\${bot.http.host}") botHttpHost: String,
-        @Value("\${bot.http.port}") botHttpPort: Int
-    ): RestClient = RestClient.create("http://$botHttpHost:$botHttpPort")
+    fun botClient(@Value("\${bot.http.url}") botHttpUrl: String): RestClient =
+        RestClient.create(botHttpUrl)
 }
