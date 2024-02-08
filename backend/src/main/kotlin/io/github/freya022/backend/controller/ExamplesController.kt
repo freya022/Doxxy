@@ -11,8 +11,8 @@ class ExamplesController(
     private val examplesService: ExamplesService
 ) {
     @GetMapping("/examples")
-    fun findBySignature(@RequestParam signature: String): List<ExampleDTO> = examplesService.findBySignature(signature)
+    fun findByTarget(@RequestParam target: String): List<ExampleDTO> = examplesService.findByTarget(target)
 
     @GetMapping("/examples/search")
-    fun searchByName(@RequestParam query: String): List<ExampleDTO> = examplesService.searchByTitle(query)
+    fun searchByTitle(@RequestParam query: String): List<ExampleDTO> = examplesService.searchByTitle(query)
 }

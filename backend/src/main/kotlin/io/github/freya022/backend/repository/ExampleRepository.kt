@@ -15,9 +15,9 @@ interface ExampleRepository : JpaRepository<Example, Int> {
     @Transactional(propagation = Propagation.MANDATORY)
     fun removeAll()
 
-    @Query("select * from example where title % :name order by similarity(title, :name) desc", nativeQuery = true)
-    fun searchByTitle(name: String): List<Example>
-
     @Query("from Example example join example.targets target where target.target = :target")
     fun findByTarget(target: String): List<Example>
+
+    @Query("select * from example where title % :title order by similarity(title, :title) desc", nativeQuery = true)
+    fun searchByTitle(title: String): List<Example>
 }

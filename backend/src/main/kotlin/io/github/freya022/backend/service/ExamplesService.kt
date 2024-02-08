@@ -126,11 +126,13 @@ class ExamplesService(
         .retrieve()
         .body()!!
 
+    fun findByTarget(target: String): List<ExampleDTO> {
+        return exampleRepository.findByTarget(target).map(::ExampleDTO)
+    }
+
     fun searchByTitle(query: String): List<ExampleDTO> {
         return exampleRepository.searchByTitle(query).map(::ExampleDTO)
     }
 
-    fun findBySignature(signature: String): List<ExampleDTO> {
-        return exampleRepository.findByTarget(signature).map(::ExampleDTO)
     }
 }

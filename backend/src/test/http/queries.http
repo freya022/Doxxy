@@ -1,5 +1,5 @@
 ### Search examples by name
 GET http://localhost:8080/examples/search?query=upsertCommand
 
-### Get examples by signature
-GET http://localhost:8080/examples?signature=JDA#upsertCommand
+### Get examples by target
+GET http://localhost:8080/examples?target=JDA#upsertCommand
