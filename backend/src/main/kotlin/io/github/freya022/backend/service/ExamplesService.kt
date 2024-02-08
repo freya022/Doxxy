@@ -131,8 +131,8 @@ class ExamplesService(
         return exampleRepository.findByTarget(target).map(::ExampleDTO)
     }
 
-    fun searchByTitle(query: String): List<ExampleSearchResultDTO> {
-        if (query.isBlank()) {
+    fun searchByTitle(query: String?): List<ExampleSearchResultDTO> {
+        if (query.isNullOrBlank()) {
             return exampleRepository.findAllAsSearchResults()
         }
 
