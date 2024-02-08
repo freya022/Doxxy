@@ -1,3 +1,5 @@
+create extension if not exists pg_trgm;
+
 create table example
 (
     id    serial not null,
@@ -18,6 +20,8 @@ create table example_content
     foreign key (example_id) references example (id) on delete cascade,
     unique (example_id, language)
 );
+
+create index example_title_gist on example using gist(title gist_trgm_ops);
 
 create table example_target
 (

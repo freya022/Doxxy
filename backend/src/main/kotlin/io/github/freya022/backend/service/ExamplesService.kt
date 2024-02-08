@@ -1,5 +1,6 @@
 package io.github.freya022.backend.service
 
+import io.github.freya022.backend.dto.ExampleDTO
 import io.github.freya022.backend.entity.Example
 import io.github.freya022.backend.entity.ExampleContent
 import io.github.freya022.backend.entity.ExampleTarget
@@ -124,4 +125,12 @@ class ExamplesService(
         .uri("https://raw.githubusercontent.com/freya022/doc-examples/master/examples/{library}/{name}/{language}.md", library, name, language)
         .retrieve()
         .body()!!
+
+    fun searchByTitle(query: String): List<ExampleDTO> {
+        return exampleRepository.searchByTitle(query).map(::ExampleDTO)
+    }
+
+    fun findBySignature(signature: String): List<ExampleDTO> {
+        return exampleRepository.findByTarget(signature).map(::ExampleDTO)
+    }
 }
