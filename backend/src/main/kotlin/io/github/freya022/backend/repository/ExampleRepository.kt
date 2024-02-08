@@ -20,4 +20,6 @@ interface ExampleRepository : JpaRepository<Example, Int> {
 
     @Query("select * from example where title % :title order by similarity(title, :title) desc", nativeQuery = true)
     fun searchByTitle(title: String): List<Example>
+
+    fun findByTitle(title: String): Example?
 }

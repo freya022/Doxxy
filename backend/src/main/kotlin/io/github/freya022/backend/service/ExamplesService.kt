@@ -134,5 +134,7 @@ class ExamplesService(
         return exampleRepository.searchByTitle(query).map(::ExampleDTO)
     }
 
+    fun findByTitle(title: String): ExampleDTO? {
+        return exampleRepository.findByTitle(title)?.let(::ExampleDTO)
     }
 }

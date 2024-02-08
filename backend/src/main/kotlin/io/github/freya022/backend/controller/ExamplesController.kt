@@ -15,4 +15,7 @@ class ExamplesController(
 
     @GetMapping("/examples/search")
     fun searchByTitle(@RequestParam query: String): List<ExampleDTO> = examplesService.searchByTitle(query)
+
+    @GetMapping("/example")
+    fun findByTitle(@RequestParam title: String): ExampleDTO? = examplesService.findByTitle(title)
 }
