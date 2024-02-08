@@ -2,8 +2,9 @@ create extension if not exists pg_trgm;
 
 create table example
 (
-    id    serial not null,
-    title text   not null,
+    id      serial not null,
+    title   text   not null,
+    library text   not null,
 
     primary key (id),
     unique (title)
@@ -21,7 +22,7 @@ create table example_content
     unique (example_id, language)
 );
 
-create index example_title_gist on example using gist(title gist_trgm_ops);
+create index example_title_gist on example using gist (title gist_trgm_ops);
 
 create table example_target
 (

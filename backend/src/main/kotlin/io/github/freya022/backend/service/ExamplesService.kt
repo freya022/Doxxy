@@ -116,7 +116,7 @@ class ExamplesService(
                     }
                 }.map { ExampleTarget(it) }
 
-                this += Example(dto.title, contentEntities, targetEntities)
+                this += Example(dto.title, dto.library, contentEntities, targetEntities)
             }
         })
     }

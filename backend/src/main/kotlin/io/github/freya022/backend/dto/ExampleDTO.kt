@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ExampleDTO(
     val title: String,
+    val library: String,
     val contents: List<ExampleContentDTO>
 ) {
     @Serializable
@@ -16,6 +17,7 @@ data class ExampleDTO(
 
     constructor(example: Example) : this(
         example.title,
+        example.library,
         example.contents.map { ExampleContentDTO(it.language, it.content) }
     )
 }

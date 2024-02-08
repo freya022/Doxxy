@@ -12,6 +12,7 @@ abstract class AbstractEntity {
 @Entity
 class Example(
     val title: String,
+    val library: String,
     @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true)
     @JoinColumn(name = "example_id", nullable = false)
     val contents: List<ExampleContent>,
