@@ -1,6 +1,7 @@
 package io.github.freya022.backend.service
 
 import io.github.freya022.backend.entity.Example
+import io.github.freya022.backend.entity.ExampleContent
 import io.github.freya022.backend.entity.ExampleTarget
 import io.github.freya022.backend.repository.ExampleRepository
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -101,20 +102,20 @@ class ExamplesService(
 
         exampleRepository.saveAllAndFlush(buildList {
             examples.forEach { dto ->
-                dto.languages.forEach { language ->
-                    val content = getExampleContent(dto.library, dto.name, language)
-                    val targetEntities = dto.targets.filter {
-                        if ('#' !in it) {
-                            // Filter out if class is missing
-                            it !in missingTargets.sourceTypeToSimpleClassNames[dto.sourceType]!!
-                        } else {
-                            // Filter out if partial identifier is missing
-                            it !in missingTargets.sourceTypeToPartialIdentifiers[dto.sourceType]!!
-                        }
-                    }.map { ExampleTarget(it) }
-
-                    this += Example(language, dto.title, content, targetEntities)
+                val contentEntities = dto.languages.map { language ->
+                    ExampleContent(language, getExampleContent(dto.library, dto.name, language))
                 }
+                val targetEntities = dto.targets.filter {
+                    if ('#' !in it) {
+                        // Filter out if class is missing
+                        it !in missingTargets.sourceTypeToSimpleClassNames[dto.sourceType]!!
+                    } else {
+                        // Filter out if partial identifier is missing
+                        it !in missingTargets.sourceTypeToPartialIdentifiers[dto.sourceType]!!
+                    }
+                }.map { ExampleTarget(it) }
+
+                this += Example(dto.title, contentEntities, targetEntities)
             }
         })
     }

@@ -1,13 +1,22 @@
 create table example
 (
-    id       serial not null,
-    title    text   not null,
-    language text   not null,
-    content  text   not null,
+    id    serial not null,
+    title text   not null,
 
     primary key (id),
-    -- Title can be duplicated as long as its a diff lang
-    unique (language, title)
+    unique (title)
+);
+
+create table example_content
+(
+    id         serial not null,
+    example_id int    not null,
+    language   text   not null,
+    content    text   not null,
+
+    primary key (id),
+    foreign key (example_id) references example (id) on delete cascade,
+    unique (example_id, language)
 );
 
 create table example_target
