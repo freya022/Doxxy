@@ -18,6 +18,11 @@ data class PullUpdaterConfig(
     val forkBotName: String, val forkRepoName: String
 )
 
+data class BackendConfig(
+    val enable: Boolean,
+    val url: String
+)
+
 data class Config(val token: String,
                   val ownerIds: List<Long>,
                   val prefixes: List<String>,
@@ -25,6 +30,7 @@ data class Config(val token: String,
                   val fakeJDAGuildId: Long,
                   val fakeBCGuildId: Long,
                   val pullUpdater: PullUpdaterConfig,
+                  val backend: BackendConfig,
                   val databaseConfig: DatabaseConfig
 ) {
     companion object {
@@ -44,5 +50,8 @@ data class Config(val token: String,
 
         @get:BService
         val pullUpdateConfig: PullUpdaterConfig get() = instance.pullUpdater
+
+        @get:BService
+        val backendConfig: BackendConfig get() = instance.backend
     }
 }
