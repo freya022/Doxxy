@@ -131,6 +131,10 @@ class ExamplesService(
     }
 
     fun searchByTitle(query: String): List<ExampleDTO> {
+        if (query.isBlank()) {
+            return exampleRepository.findAll().map(::ExampleDTO)
+        }
+
         return exampleRepository.searchByTitle(query).map(::ExampleDTO)
     }
 
