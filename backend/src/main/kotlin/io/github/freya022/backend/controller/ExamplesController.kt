@@ -1,4 +1,4 @@
-package io.github.freya022.backend.resource
+package io.github.freya022.backend.controller
 
 import io.github.freya022.backend.dto.ExampleDTO
 import io.github.freya022.backend.service.ExamplesService
@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-class ExamplesResource(
+class ExamplesController(
     private val examplesService: ExamplesService
 ) {
     @GetMapping("/examples")
