@@ -5,6 +5,7 @@ import io.github.freya022.backend.entity.Example
 import io.github.freya022.backend.entity.ExampleContent
 import io.github.freya022.backend.entity.ExampleTarget
 import io.github.freya022.backend.repository.ExampleRepository
+import io.github.freya022.backend.repository.dto.ExampleSearchResultDTO
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -130,12 +131,12 @@ class ExamplesService(
         return exampleRepository.findByTarget(target).map(::ExampleDTO)
     }
 
-    fun searchByTitle(query: String): List<ExampleDTO> {
+    fun searchByTitle(query: String): List<ExampleSearchResultDTO> {
         if (query.isBlank()) {
-            return exampleRepository.findAll().map(::ExampleDTO)
+            return exampleRepository.findAllAsSearchResults()
         }
 
-        return exampleRepository.searchByTitle(query).map(::ExampleDTO)
+        return exampleRepository.searchByTitle(query)
     }
 
     fun findByTitle(title: String): ExampleDTO? {

@@ -1,6 +1,7 @@
 package io.github.freya022.backend.repository
 
 import io.github.freya022.backend.entity.Example
+import io.github.freya022.backend.repository.dto.ExampleSearchResultDTO
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
@@ -18,8 +19,11 @@ interface ExampleRepository : JpaRepository<Example, Int> {
     @Query("from Example example join example.targets target where target.target = :target")
     fun findByTarget(target: String): List<Example>
 
-    @Query("select * from example where title % :title order by similarity(title, :title) desc", nativeQuery = true)
-    fun searchByTitle(title: String): List<Example>
+    @Query("select title, library from example where title % :title order by similarity(title, :title) desc", nativeQuery = true)
+    fun searchByTitle(title: String): List<ExampleSearchResultDTO>
+
+    @Query("select title, library from example order by title", nativeQuery = true)
+    fun findAllAsSearchResults(): List<ExampleSearchResultDTO>
 
     fun findByTitle(title: String): Example?
 }
