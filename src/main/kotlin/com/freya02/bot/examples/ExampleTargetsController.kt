@@ -1,5 +1,6 @@
 package com.freya02.bot.examples
 
+import com.freya02.bot.switches.RequiresBackend
 import com.freya02.docs.DocSourceType
 import io.github.freya022.botcommands.api.core.db.Database
 import io.github.freya022.botcommands.api.core.db.preparedStatement
@@ -68,6 +69,7 @@ private value class QualifiedPartialIdentifier(val str: String) {
     override fun toString(): String = str
 }
 
+@RequiresBackend
 @BService
 class ExampleTargetsController(private val database: Database) {
     @Serializable
