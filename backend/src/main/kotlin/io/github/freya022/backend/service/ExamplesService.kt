@@ -1,6 +1,8 @@
 package io.github.freya022.backend.service
 
 import io.github.freya022.backend.dto.ExampleDTO
+import io.github.freya022.backend.dto.MissingTargets
+import io.github.freya022.backend.dto.RequestedTargets
 import io.github.freya022.backend.entity.Example
 import io.github.freya022.backend.entity.ExampleContent
 import io.github.freya022.backend.entity.ExampleTarget
@@ -15,11 +17,11 @@ import org.springframework.web.client.RestClient
 import org.springframework.web.client.body
 import org.springframework.web.client.bodyWithType
 
-private typealias SimpleClassName = String
-private typealias QualifiedPartialIdentifier = String
+typealias SimpleClassName = String
+typealias QualifiedPartialIdentifier = String
 
 //TODO use common module with main bot
-private enum class DocSourceType {
+enum class DocSourceType {
     JDA,
     BOT_COMMANDS,
     JAVA
@@ -59,18 +61,6 @@ class ExamplesService(
             }
         }
 
-        @Serializable
-        data class RequestedTargets(
-            val sourceTypeToSimpleClassNames: Map<DocSourceType, List<SimpleClassName>>,
-            val sourceTypeToQualifiedPartialIdentifiers: Map<DocSourceType, List<QualifiedPartialIdentifier>>
-        )
-
-        @Serializable
-        data class MissingTargets(
-            val sourceTypeToSimpleClassNames: Map<DocSourceType, Set<SimpleClassName>>,
-            val sourceTypeToPartialIdentifiers: Map<DocSourceType, Set<QualifiedPartialIdentifier>>
-        )
-
         val examples: List<IndexedExample> = docExampleClient.get()
             .uri("/index.json")
             .retrieve()
@@ -102,23 +92,21 @@ class ExamplesService(
             }
         }
 
-        exampleRepository.saveAllAndFlush(buildList {
-            examples.forEach { dto ->
-                val contentEntities = dto.languages.map { language ->
-                    ExampleContent(language, getExampleContent(dto.library, dto.name, language))
-                }
-                val targetEntities = dto.targets.filter {
-                    if ('#' !in it) {
-                        // Filter out if class is missing
-                        it !in missingTargets.sourceTypeToSimpleClassNames[dto.sourceType]!!
-                    } else {
-                        // Filter out if partial identifier is missing
-                        it !in missingTargets.sourceTypeToPartialIdentifiers[dto.sourceType]!!
-                    }
-                }.map { ExampleTarget(it) }
-
-                this += Example(dto.title, dto.library, contentEntities, targetEntities)
+        exampleRepository.saveAllAndFlush(examples.map { dto ->
+            val contentEntities = dto.languages.map { language ->
+                ExampleContent(language, getExampleContent(dto.library, dto.name, language))
             }
+            val resolvableTargetEntities = dto.targets.filter {
+                if ('#' !in it) {
+                    // Filter out if class is missing
+                    it !in missingTargets.sourceTypeToSimpleClassNames[dto.sourceType]!!
+                } else {
+                    // Filter out if partial identifier is missing
+                    it !in missingTargets.sourceTypeToPartialIdentifiers[dto.sourceType]!!
+                }
+            }.map { ExampleTarget(it) }
+
+            Example(dto.title, dto.library, contentEntities, resolvableTargetEntities)
         })
     }
 

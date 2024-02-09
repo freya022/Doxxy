@@ -35,10 +35,10 @@ class ExampleAPI(
                     parameter("query", title)
                 }
             }
-            .body<List<ExampleSearchResultDTO>>()
+            .body()
     }
 
     suspend fun getExampleByTitle(title: String): ExampleDTO? {
-        return backendClient.get("example?title=$title").body<ExampleDTO?>()
+        return backendClient.get("example?title=$title").body()
     }
 }

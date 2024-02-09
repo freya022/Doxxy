@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ExampleSearchResultDTO(
     val title: String,
-    val library: String
+    val library: String //TODO use enumeration once there's a common module
 )
