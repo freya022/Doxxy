@@ -1,6 +1,5 @@
 package com.freya02.bot.commands.slash
 
-import com.freya02.bot.config.BackendConfig
 import com.freya02.bot.switches.RequiresBackend
 import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.bot.utils.Utils.letIf
@@ -16,14 +15,11 @@ import io.github.freya022.botcommands.api.commands.application.slash.annotations
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.TopLevelSlashCommandData
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.annotations.CacheAutocomplete
+import io.github.freya022.botcommands.api.core.service.annotations.ServiceName
 import io.github.freya022.botcommands.api.core.utils.deleteDelayed
 import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.engine.okhttp.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
-import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.Serializable
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
@@ -34,7 +30,7 @@ private const val titleAutocompleteName = "SlashExample: title"
 @RequiresBackend
 @Command
 class SlashExample(
-    backendConfig: BackendConfig
+    @ServiceName("backendClient") private val backendClient: HttpClient
 ) : ApplicationCommand() {
     //TODO add to common module
     @Serializable
@@ -55,18 +51,6 @@ class SlashExample(
         val title: String,
         val library: String
     )
-
-    //TODO make service factory with the one of PullUpdater (after removing gson)
-    // Use `.config` to configure things specific to that class
-    private val backendClient = HttpClient(OkHttp) {
-        install(ContentNegotiation) {
-            json()
-        }
-
-        defaultRequest {
-            url(backendConfig.url)
-        }
-    }
 
     @JDASlashCommand(name = "example", description = "No description")
     suspend fun onSlashExample(
