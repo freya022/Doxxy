@@ -1,6 +1,7 @@
 package com.freya02.bot.commands.slash.docs
 
 import com.freya02.bot.commands.controllers.CommonDocsController
+import com.freya02.bot.commands.slash.SlashExample.ExampleDTO
 import com.freya02.bot.commands.slash.docs.controllers.SlashDocsController
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.DocResolveChain
@@ -15,14 +16,20 @@ import io.github.freya022.botcommands.api.commands.application.slash.autocomplet
 import io.github.freya022.botcommands.api.components.annotations.JDASelectMenuListener
 import io.github.freya022.botcommands.api.components.event.StringSelectEvent
 import io.github.freya022.botcommands.api.core.annotations.Handler
+import io.github.freya022.botcommands.api.core.service.annotations.ServiceName
 import io.github.freya022.botcommands.api.core.utils.edit
 import io.github.freya022.botcommands.api.core.utils.toEditData
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.request.*
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 
 @Handler
 class CommonDocsHandlers(
+    // null if backend is disabled
+    @ServiceName("backendClient") private val backendClient: HttpClient?,
     private val docIndexMap: DocIndexMap,
     private val commonDocsController: CommonDocsController,
     private val slashDocsController: SlashDocsController
@@ -58,6 +65,17 @@ class CommonDocsHandlers(
                 else -> slashDocsController.sendClass(event, true, doc)
             }
         }
+    }
+
+    @JDASelectMenuListener(name = EXAMPLE_SELECT_LISTENER_NAME)
+    suspend fun onExampleSelect(event: StringSelectEvent) {
+        if (backendClient == null) return
+
+        val title = event.values.single()
+        val example = backendClient.get("example?title=$title").body<ExampleDTO?>()
+            ?: return event.reply_("This example no longer exists", ephemeral = true).queue()
+
+        event.reply_(example.contents.first().content, ephemeral = true).queue()
     }
 
     @CacheAutocomplete
@@ -112,6 +130,7 @@ class CommonDocsHandlers(
         const val RESOLVE_AUTOCOMPLETE_NAME = "CommonDocsHandlers: resolve"
 
         const val SEE_ALSO_SELECT_LISTENER_NAME = "CommonDocsHandlers: seeAlso"
+        const val EXAMPLE_SELECT_LISTENER_NAME = "CommonDocsHandlers: examples"
 
         val AUTOCOMPLETE_NAMES = arrayOf(
             CLASS_NAME_AUTOCOMPLETE_NAME,

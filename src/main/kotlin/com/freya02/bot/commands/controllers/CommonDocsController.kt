@@ -1,6 +1,7 @@
 package com.freya02.bot.commands.controllers
 
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
+import com.freya02.bot.commands.slash.SlashExample.ExampleSearchResultDTO
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers
 import com.freya02.bot.docs.DocResolveChain
 import com.freya02.bot.docs.cached.CachedClass
@@ -11,13 +12,18 @@ import com.freya02.bot.docs.index.DocSuggestion
 import com.freya02.bot.utils.Emojis
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.data.TargetType
+import dev.minn.jda.ktx.interactions.components.SelectOption
 import dev.minn.jda.ktx.messages.Embed
 import io.github.freya022.botcommands.api.components.Components
 import io.github.freya022.botcommands.api.components.data.InteractionConstraints
 import io.github.freya022.botcommands.api.core.service.annotations.BService
+import io.github.freya022.botcommands.api.core.service.annotations.ServiceName
 import io.github.freya022.botcommands.api.pagination.menu.ChoiceMenuBuilder
 import io.github.freya022.botcommands.api.utils.ButtonContent
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.request.*
 import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.interactions.InteractionHook
@@ -31,6 +37,8 @@ import kotlin.time.Duration.Companion.minutes
 
 @BService
 class CommonDocsController(
+    // null if backend is disabled
+    @ServiceName("backendClient") private val backendClient: HttpClient?,
     private val componentsService: Components,
     private val classLinksController: ClassLinksController,
     private val methodLinksController: MethodLinksController
@@ -77,8 +85,30 @@ class CommonDocsController(
                 }
             })
             addDocsSeeAlso(caller, cachedDoc)
+            addExamples(cachedDoc)
             addDocsActionRows(originalHook, ephemeral, cachedDoc, caller)
         }.build()
+    }
+
+    private suspend fun MessageCreateRequest<*>.addExamples(cachedDoc: CachedDoc) {
+        if (backendClient == null) return
+
+        val examples: List<ExampleSearchResultDTO> = backendClient.get("examples") {
+            url {
+                parameter("target", cachedDoc.qualifiedName)
+            }
+        }.body()
+        if (examples.isEmpty()) return
+
+        val selectMenu = componentsService.persistentStringSelectMenu {
+            placeholder = "Examples"
+            options += examples.map { SelectOption(it.title, it.title, emoji = Emojis.testTube) }
+
+            bindTo(CommonDocsHandlers.EXAMPLE_SELECT_LISTENER_NAME)
+            timeout(15.minutes)
+        }
+
+        addActionRow(selectMenu)
     }
 
     private fun MessageCreateRequest<*>.addDocsActionRows(

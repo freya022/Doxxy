@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.entities.emoji.Emoji
 
 object Emojis { //TODO find remaining EmojiUtils usages
     val clipboard = EmojiUtils.resolveJDAEmoji("clipboard")
+    val testTube = EmojiUtils.resolveJDAEmoji("test_tube")
 
     val hasImplementations = Emoji.fromFormatted("<:HasImplementations:1092833993612861481>")
     val hasOverrides = Emoji.fromFormatted("<:HasOverrides:1092833995076685886>")
