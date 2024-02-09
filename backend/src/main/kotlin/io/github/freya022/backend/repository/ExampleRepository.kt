@@ -17,7 +17,7 @@ interface ExampleRepository : JpaRepository<Example, Int> {
     fun removeAll()
 
     @Query("from Example example join example.targets target where target.target = :target")
-    fun findByTarget(target: String): List<Example>
+    fun findByTarget(target: String): List<ExampleSearchResultDTO>
 
     @Query("select title, library from example where title % :title order by similarity(title, :title) desc", nativeQuery = true)
     fun searchByTitle(title: String): List<ExampleSearchResultDTO>

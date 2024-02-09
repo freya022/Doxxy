@@ -12,7 +12,7 @@ class ExamplesController(
     private val examplesService: ExamplesService
 ) {
     @GetMapping("/examples")
-    fun findByTarget(@RequestParam target: String): List<ExampleDTO> = examplesService.findByTarget(target)
+    fun findByTarget(@RequestParam target: String): List<ExampleSearchResultDTO> = examplesService.findByTarget(target)
 
     @GetMapping("/examples/search")
     fun searchByTitle(@RequestParam query: String?): List<ExampleSearchResultDTO> = examplesService.searchByTitle(query)

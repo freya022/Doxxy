@@ -127,8 +127,8 @@ class ExamplesService(
         .retrieve()
         .body()!!
 
-    fun findByTarget(target: String): List<ExampleDTO> {
-        return exampleRepository.findByTarget(target).map(::ExampleDTO)
+    fun findByTarget(target: String): List<ExampleSearchResultDTO> {
+        return exampleRepository.findByTarget(target)
     }
 
     fun searchByTitle(query: String?): List<ExampleSearchResultDTO> {
