@@ -16,7 +16,11 @@ interface ExampleRepository : JpaRepository<Example, Int> {
     @Transactional(propagation = Propagation.MANDATORY)
     fun removeAll()
 
-    @Query("from Example example join example.targets target where target.target = :target")
+    // JDA#updateCommands() like JDA#updateCommand%
+    // Guild#getRoleById(long) like Guild#getRoleById%
+    // Guild#getRoleById(String) like Guild#getRoleById%
+    // Guild#getRoleById(String) like Guild#getRoleById(String)%
+    @Query("from Example example join example.targets target where :target like target.target || '%'")
     fun findByTarget(target: String): List<ExampleSearchResultDTO>
 
     @Query("select title, library from example where title % :title order by similarity(title, :title) desc", nativeQuery = true)
