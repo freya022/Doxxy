@@ -1,5 +1,6 @@
 package com.freya02.bot.commands.slash
 
+import com.freya02.bot.examples.ExampleAPI
 import com.freya02.bot.switches.RequiresBackend
 import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.bot.utils.Utils.letIf
@@ -15,11 +16,7 @@ import io.github.freya022.botcommands.api.commands.application.slash.annotations
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.TopLevelSlashCommandData
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.annotations.CacheAutocomplete
-import io.github.freya022.botcommands.api.core.service.annotations.ServiceName
 import io.github.freya022.botcommands.api.core.utils.deleteDelayed
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.request.*
 import kotlinx.serialization.Serializable
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
@@ -30,7 +27,7 @@ private const val titleAutocompleteName = "SlashExample: title"
 @RequiresBackend
 @Command
 class SlashExample(
-    @ServiceName("backendClient") private val backendClient: HttpClient
+    private val exampleApi: ExampleAPI
 ) : ApplicationCommand() {
     //TODO add to common module
     @Serializable
@@ -60,7 +57,7 @@ class SlashExample(
             autocomplete = titleAutocompleteName
         ) title: String
     ) {
-        val example = backendClient.get("example?title=$title").body<ExampleDTO?>()
+        val example = exampleApi.getExampleByTitle(title)
             ?: return event.reply_("No example found", ephemeral = true).queue()
 
         event.reply_(example.contents.first().content).queue()
@@ -70,9 +67,7 @@ class SlashExample(
     @AutocompleteHandler(titleAutocompleteName, showUserInput = false)
     suspend fun onTitleAutocomplete(event: CommandAutoCompleteInteractionEvent): List<Choice> {
         val titleQuery = event.focusedOption.value
-        val examples = backendClient
-            .get("examples/search?query=$titleQuery")
-            .body<List<ExampleSearchResultDTO>>()
+        val examples = exampleApi.searchExamplesByTitle(titleQuery)
             .letIf(event.guild.isBCGuild()) { it.filter { example -> example.library != "BotCommands" } }
 
         return examples.map { Choice("${it.library} - ${it.title}", it.title) }
@@ -84,7 +79,7 @@ class SlashExample(
     suspend fun onSlashExamplesUpdate(event: GuildSlashEvent) {
         event.deferReply(true).queue()
 
-        backendClient.put("examples/update")
+        exampleApi.updateExamples()
 
         event.hook.send("Done!")
             .deleteDelayed(5.seconds)
