@@ -79,7 +79,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         val (docId, embed, javadocLink, sourceLink) = findDoc(DocType.FIELD, className, fieldName) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
 
-        return CachedField(sourceType, embed, seeAlsoReferences, javadocLink, sourceLink)
+        return CachedField(sourceType, className, fieldName, embed, seeAlsoReferences, javadocLink, sourceLink)
     }
 
     override suspend fun findAnySignatures(query: String, limit: Int, docTypes: DocTypes) =
