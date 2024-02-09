@@ -1,7 +1,7 @@
 package com.freya02.bot.examples
 
-import com.freya02.bot.commands.slash.SlashExample.ExampleDTO
-import com.freya02.bot.commands.slash.SlashExample.ExampleSearchResultDTO
+import com.freya02.bot.examples.dto.ExampleDTO
+import com.freya02.bot.examples.dto.ExampleSearchResultDTO
 import com.freya02.bot.switches.RequiresBackend
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.freya022.botcommands.api.core.service.annotations.ServiceName

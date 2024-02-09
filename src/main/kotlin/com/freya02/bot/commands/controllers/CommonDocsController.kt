@@ -1,7 +1,6 @@
 package com.freya02.bot.commands.controllers
 
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
-import com.freya02.bot.commands.slash.SlashExample.ExampleSearchResultDTO
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers
 import com.freya02.bot.docs.DocResolveChain
 import com.freya02.bot.docs.cached.CachedClass
@@ -90,7 +89,7 @@ class CommonDocsController(
     private suspend fun MessageCreateRequest<*>.addExamples(cachedDoc: CachedDoc) {
         if (exampleApi == null) return
 
-        val examples: List<ExampleSearchResultDTO> = exampleApi.searchExamplesByTarget(cachedDoc.qualifiedName)
+        val examples = exampleApi.searchExamplesByTarget(cachedDoc.qualifiedName)
         if (examples.isEmpty()) return
 
         val selectMenu = componentsService.persistentStringSelectMenu {

@@ -17,7 +17,6 @@ import io.github.freya022.botcommands.api.commands.application.slash.annotations
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.annotations.CacheAutocomplete
 import io.github.freya022.botcommands.api.core.utils.deleteDelayed
-import kotlinx.serialization.Serializable
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import kotlin.time.Duration.Companion.seconds
@@ -29,25 +28,6 @@ private const val titleAutocompleteName = "SlashExample: title"
 class SlashExample(
     private val exampleApi: ExampleAPI
 ) : ApplicationCommand() {
-    //TODO add to common module
-    @Serializable
-    data class ExampleDTO(
-        val title: String,
-        val library: String,
-        val contents: List<ExampleContentDTO>
-    ) {
-        @Serializable
-        data class ExampleContentDTO(
-            val language: String,
-            val content: String
-        )
-    }
-
-    @Serializable
-    data class ExampleSearchResultDTO(
-        val title: String,
-        val library: String
-    )
 
     @JDASlashCommand(name = "example", description = "No description")
     suspend fun onSlashExample(
