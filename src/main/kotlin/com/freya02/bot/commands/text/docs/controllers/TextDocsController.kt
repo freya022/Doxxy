@@ -41,16 +41,20 @@ class TextDocsController(private val commonDocsController: CommonDocsController)
 
                 when (doc) {
                     null -> buttonEvent.reply_("This item is now invalid, try again", ephemeral = true).queue()
-                    else ->
-                        commonDocsController.getDocMessageData(
-                            null,
-                            buttonEvent.member!!,
-                            ephemeral = false,
-                            showCaller = false,
-                            cachedDoc = doc
-                        ).toEditData()
+                    else -> {
+                        val messageCreateData = runBlocking {
+                            commonDocsController.getDocMessageData(
+                                null,
+                                buttonEvent.member!!,
+                                ephemeral = false,
+                                showCaller = false,
+                                cachedDoc = doc
+                            )
+                        }
+                        messageCreateData.toEditData()
                             .edit(buttonEvent)
                             .queue()
+                    }
                 }
             }
         }
