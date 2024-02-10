@@ -6,6 +6,7 @@ import io.github.freya022.botcommands.api.core.db.Database
 import io.github.freya022.botcommands.api.core.db.preparedStatement
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.freya022.botcommands.api.core.utils.enumMapOf
+import io.github.freya022.botcommands.api.core.utils.namedDefaultScope
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
@@ -84,8 +85,10 @@ class ExampleTargetsController(private val database: Database) {
         val sourceTypeToPartialIdentifiers: Map<DocSourceType, Set<QualifiedPartialIdentifier>>
     )
 
+    private val serverScope = namedDefaultScope("Example targets server", 1)
+
     init {
-        embeddedServer(Netty, port = 63156) {
+        serverScope.embeddedServer(Netty, port = 63156) {
             install(ContentNegotiation) {
                 json()
             }
