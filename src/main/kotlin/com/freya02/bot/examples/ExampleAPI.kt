@@ -4,7 +4,6 @@ import com.freya02.bot.examples.dto.ExampleDTO
 import com.freya02.bot.examples.dto.ExampleSearchResultDTO
 import com.freya02.bot.switches.RequiresBackend
 import io.github.freya022.botcommands.api.core.service.annotations.BService
-import io.github.freya022.botcommands.api.core.service.annotations.ServiceName
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -14,7 +13,7 @@ import java.io.IOException
 @RequiresBackend
 @BService
 class ExampleAPI(
-    @ServiceName("backendClient") private val backendClient: HttpClient
+    private val backendClient: HttpClient
 ) {
     suspend fun updateExamples() {
         backendClient.put("examples/update")
