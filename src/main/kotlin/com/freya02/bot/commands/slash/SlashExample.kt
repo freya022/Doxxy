@@ -38,7 +38,7 @@ class SlashExample(
         ) title: String
     ) {
         val example = exampleApi.getExampleByTitle(title)
-            ?: return event.reply_("No example found", ephemeral = true).queue()
+            ?: return event.reply_("This example does not exist", ephemeral = true).queue()
 
         event.reply_(example.contents.first().content).queue()
     }

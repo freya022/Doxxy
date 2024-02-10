@@ -8,6 +8,8 @@ import io.github.freya022.botcommands.api.core.service.annotations.ServiceName
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
+import io.ktor.http.*
+import java.io.IOException
 
 @RequiresBackend
 @BService
@@ -39,6 +41,12 @@ class ExampleAPI(
     }
 
     suspend fun getExampleByTitle(title: String): ExampleDTO? {
-        return backendClient.get("example?title=$title").body()
+        val response = backendClient.get("example?title=$title")
+        return when (response.status) {
+            HttpStatusCode.OK -> response.body()
+            HttpStatusCode.NotFound -> null
+            //TODO replace with error message from API later
+            else -> throw IOException("Status code: ${response.status}")
+        }
     }
 }
