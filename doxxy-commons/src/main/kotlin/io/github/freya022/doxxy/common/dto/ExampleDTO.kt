@@ -1,6 +1,5 @@
-package io.github.freya022.backend.dto
+package io.github.freya022.doxxy.common.dto
 
-import io.github.freya022.backend.entity.Example
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -13,11 +12,5 @@ data class ExampleDTO(
     data class ExampleContentDTO(
         val language: String,
         val content: String
-    )
-
-    constructor(example: Example) : this(
-        example.title,
-        example.library,
-        example.contents.map { ExampleContentDTO(it.language, it.content) }
     )
 }

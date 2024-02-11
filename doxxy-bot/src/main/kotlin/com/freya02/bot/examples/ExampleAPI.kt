@@ -1,9 +1,9 @@
 package com.freya02.bot.examples
 
-import com.freya02.bot.examples.dto.ExampleDTO
-import com.freya02.bot.examples.dto.ExampleSearchResultDTO
 import com.freya02.bot.switches.RequiresBackend
 import io.github.freya022.botcommands.api.core.service.annotations.BService
+import io.github.freya022.doxxy.common.dto.ExampleDTO
+import io.github.freya022.doxxy.common.dto.ExampleSearchResultDTO
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*

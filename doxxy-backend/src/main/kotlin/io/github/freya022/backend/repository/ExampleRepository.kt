@@ -1,7 +1,7 @@
 package io.github.freya022.backend.repository
 
 import io.github.freya022.backend.entity.Example
-import io.github.freya022.backend.repository.dto.ExampleSearchResultDTO
+import io.github.freya022.doxxy.common.dto.ExampleSearchResultDTO
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query

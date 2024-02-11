@@ -1,8 +1,8 @@
 package io.github.freya022.backend.controller
 
-import io.github.freya022.backend.dto.ExampleDTO
-import io.github.freya022.backend.repository.dto.ExampleSearchResultDTO
 import io.github.freya022.backend.service.ExamplesService
+import io.github.freya022.doxxy.common.dto.ExampleDTO
+import io.github.freya022.doxxy.common.dto.ExampleSearchResultDTO
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestParam

@@ -1,13 +1,17 @@
 package io.github.freya022.backend.service
 
-import io.github.freya022.backend.dto.ExampleDTO
-import io.github.freya022.backend.dto.MissingTargets
-import io.github.freya022.backend.dto.RequestedTargets
 import io.github.freya022.backend.entity.Example
 import io.github.freya022.backend.entity.ExampleContent
 import io.github.freya022.backend.entity.ExampleTarget
 import io.github.freya022.backend.repository.ExampleRepository
-import io.github.freya022.backend.repository.dto.ExampleSearchResultDTO
+import io.github.freya022.doxxy.common.ExampleLibrary
+import io.github.freya022.doxxy.common.QualifiedPartialIdentifier
+import io.github.freya022.doxxy.common.SimpleClassName
+import io.github.freya022.doxxy.common.dto.ExampleDTO
+import io.github.freya022.doxxy.common.dto.ExampleDTO.ExampleContentDTO
+import io.github.freya022.doxxy.common.dto.ExampleSearchResultDTO
+import io.github.freya022.doxxy.common.dto.MissingTargetsDTO
+import io.github.freya022.doxxy.common.dto.RequestedTargetsDTO
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -17,21 +21,8 @@ import org.springframework.web.client.RestClient
 import org.springframework.web.client.body
 import org.springframework.web.client.bodyWithType
 
-typealias SimpleClassName = String
-typealias QualifiedPartialIdentifier = String
-
-//TODO use common module with main bot
-enum class DocSourceType {
-    JDA,
-    BOT_COMMANDS,
-    JAVA
-}
-
 private val logger = KotlinLogging.logger { }
 
-//TODO when an example gets requested by its full identifier,
-//   check for the full identifier *and* the partial identifier
-// That way also allows linkage with recently-added overloads
 @Service
 class ExamplesService(
     private val docExampleClient: RestClient,
@@ -53,10 +44,11 @@ class ExamplesService(
             val title: String,
             val targets: List<String>
         ) {
-            val sourceType = when (library) {
-                "JDA" -> DocSourceType.JDA
-                "JDK" -> DocSourceType.JAVA
-                "BotCommands" -> DocSourceType.BOT_COMMANDS
+            //TODO 1:1 mapping with the index json
+            val exampleLibrary = when (library) {
+                "JDA" -> ExampleLibrary.JDA
+                "JDK" -> ExampleLibrary.JDK
+                "BotCommands" -> ExampleLibrary.BOT_COMMANDS
                 else -> throw IllegalArgumentException("Unknown library: $library")
             }
         }
@@ -68,27 +60,34 @@ class ExamplesService(
             .let(json::decodeFromString)
 
         // Gets actual targets from the bot
-        val requestedTargets = examples.groupBy { it.sourceType }.let { examplesBySourceType ->
-            RequestedTargets(
-                examplesBySourceType.mapValues { (_, examples) -> examples.flatMap { it.targets }.filterNot { '#' in it } },
-                examplesBySourceType.mapValues { (_, examples) -> examples.flatMap { it.targets }.filter { '#' in it } }
-            )
-        }
-        val missingTargets: MissingTargets = botClient.post()
+        val requestedTargets = examples
+            .filter { it.exampleLibrary.documentedLibrary != null }
+            .groupBy { it.exampleLibrary.documentedLibrary!! }
+            .let { examplesBySourceType ->
+                RequestedTargetsDTO(
+                    examplesBySourceType.mapValues { (_, examples) ->
+                        examples.flatMap { it.targets }.filterNot { '#' in it }.mapTo(hashSetOf(), ::SimpleClassName)
+                    },
+                    examplesBySourceType.mapValues { (_, examples) ->
+                        examples.flatMap { it.targets }.filter { '#' in it }.mapTo(hashSetOf(), ::QualifiedPartialIdentifier)
+                    }
+                )
+            }
+        val missingTargets: MissingTargetsDTO = botClient.post()
             .uri("/examples/targets/check")
             .bodyWithType(requestedTargets)
             .retrieve()
             .body<String>()!!
             .let(json::decodeFromString)
 
-        missingTargets.sourceTypeToSimpleClassNames.forEach { (sourceType, simpleClassNames) ->
+        missingTargets.sourceTypeToSimpleClassNames.forEach { (documentedExampleLibrary, simpleClassNames) ->
             if (simpleClassNames.isNotEmpty()) {
-                logger.error { "Missing classes in $sourceType:\n${simpleClassNames.joinToString()}" }
+                logger.error { "Missing classes in $documentedExampleLibrary:\n${simpleClassNames.joinToString()}" }
             }
         }
-        missingTargets.sourceTypeToPartialIdentifiers.forEach { (sourceType, partialIdentifiers) ->
+        missingTargets.sourceTypeToPartialIdentifiers.forEach { (documentedExampleLibrary, partialIdentifiers) ->
             if (partialIdentifiers.isNotEmpty()) {
-                logger.error { "Missing (possibly partial) identifiers in $sourceType:\n${partialIdentifiers.joinToString()}" }
+                logger.error { "Missing (possibly partial) identifiers in $documentedExampleLibrary:\n${partialIdentifiers.joinToString()}" }
             }
         }
 
@@ -99,10 +98,10 @@ class ExamplesService(
             val resolvableTargetEntities = dto.targets.filter {
                 if ('#' !in it) {
                     // Filter out if class is missing
-                    it !in missingTargets.sourceTypeToSimpleClassNames[dto.sourceType]!!
+                    SimpleClassName(it) !in missingTargets.sourceTypeToSimpleClassNames[dto.exampleLibrary.documentedLibrary!!]!!
                 } else {
                     // Filter out if partial identifier is missing
-                    it !in missingTargets.sourceTypeToPartialIdentifiers[dto.sourceType]!!
+                    QualifiedPartialIdentifier(it) !in missingTargets.sourceTypeToPartialIdentifiers[dto.exampleLibrary.documentedLibrary!!]!!
                 }
             }.map { ExampleTarget(it) }
 
@@ -128,6 +127,12 @@ class ExamplesService(
     }
 
     fun findByTitle(title: String): ExampleDTO? {
-        return exampleRepository.findByTitle(title)?.let(::ExampleDTO)
+        return exampleRepository.findByTitle(title)?.run {
+            ExampleDTO(
+                title,
+                library,
+                contents.map { ExampleContentDTO(it.language, it.content) }
+            )
+        }
     }
 }

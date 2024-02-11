@@ -1,9 +1,9 @@
-package com.freya02.bot.examples.dto
+package io.github.freya022.doxxy.common.dto
 
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class ExampleSearchResultDTO(
     val title: String,
-    val library: String //TODO use enumeration once there's a common module
+    val library: String //TODO use enumeration
 )

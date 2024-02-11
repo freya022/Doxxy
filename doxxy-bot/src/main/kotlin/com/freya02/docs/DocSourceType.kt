@@ -1,6 +1,7 @@
 package com.freya02.docs
 
 import com.freya02.bot.utils.Utils.isBCGuild
+import io.github.freya022.doxxy.common.DocumentedExampleLibrary
 import net.dv8tion.jda.api.entities.Guild
 
 enum class DocSourceType(
@@ -94,6 +95,12 @@ enum class DocSourceType(
 
         fun fromUrl(url: String): DocSourceType? {
             return entries.find { source -> url.startsWith(source.sourceUrl) || source.onlineURL != null && url.startsWith(source.onlineURL) }
+        }
+
+        fun DocumentedExampleLibrary.toDocSourceType(): DocSourceType = when (this) {
+            DocumentedExampleLibrary.JDA -> JDA
+            DocumentedExampleLibrary.JDK -> JAVA
+            DocumentedExampleLibrary.BOT_COMMANDS -> BOT_COMMANDS
         }
 
         fun typesForGuild(guild: Guild): List<DocSourceType> = when {

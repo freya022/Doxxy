@@ -1,90 +1,31 @@
 package com.freya02.bot.examples
 
 import com.freya02.bot.switches.RequiresBackend
-import com.freya02.docs.DocSourceType
+import com.freya02.docs.DocSourceType.Companion.toDocSourceType
 import io.github.freya022.botcommands.api.core.db.Database
 import io.github.freya022.botcommands.api.core.db.preparedStatement
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.freya022.botcommands.api.core.utils.enumMapOf
 import io.github.freya022.botcommands.api.core.utils.namedDefaultScope
+import io.github.freya022.doxxy.common.DocumentedExampleLibrary
+import io.github.freya022.doxxy.common.PartialIdentifier
+import io.github.freya022.doxxy.common.QualifiedPartialIdentifier
+import io.github.freya022.doxxy.common.SimpleClassName
+import io.github.freya022.doxxy.common.dto.MissingTargetsDTO
+import io.github.freya022.doxxy.common.dto.RequestedTargetsDTO
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import io.ktor.server.plugins.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.serialization.Serializable
 import java.util.*
-
-@JvmInline
-@Serializable
-private value class SimpleClassName(val str: String) {
-    init {
-        if ('#' in str || '.' in str) {
-            throw BadRequestException("Invalid simple class name: $str")
-        }
-    }
-
-    override fun toString(): String = str
-}
-
-@JvmInline
-@Serializable
-private value class PartialIdentifier(val str: String) {
-    val type get() = when {
-        '(' in str -> Type.FULL_METHOD
-        str.all { !it.isLetter() || it.isUpperCase() } -> Type.FIELD
-        else -> Type.OVERLOADS
-    }
-
-    enum class Type {
-        FULL_METHOD,
-        OVERLOADS,
-        FIELD
-    }
-
-    init {
-        if ('#' in str) {
-            throw BadRequestException("Invalid partial identifier: $str")
-        }
-    }
-
-    override fun toString(): String = str
-}
-
-@JvmInline
-@Serializable
-private value class QualifiedPartialIdentifier(val str: String) {
-    val className get() = SimpleClassName(str.substringBefore('#'))
-    val identifier get() = PartialIdentifier(str.substringAfter('#'))
-
-    init {
-        if ('#' !in str) {
-            throw BadRequestException("Invalid qualified partial identifier: $str")
-        }
-    }
-
-    override fun toString(): String = str
-}
 
 @RequiresBackend
 @BService
 class ExampleTargetsController(private val database: Database) {
-    @Serializable
-    private class RequestedTargets(
-        val sourceTypeToSimpleClassNames: Map<DocSourceType, Set<SimpleClassName>>,
-        val sourceTypeToQualifiedPartialIdentifiers: Map<DocSourceType, Set<QualifiedPartialIdentifier>>
-    )
-
-    @Serializable
-    private class MissingTargets(
-        val sourceTypeToSimpleClassNames: Map<DocSourceType, Set<SimpleClassName>>,
-        val sourceTypeToPartialIdentifiers: Map<DocSourceType, Set<QualifiedPartialIdentifier>>
-    )
-
     private val serverScope = namedDefaultScope("Example targets server", 1)
 
     init {
@@ -108,27 +49,27 @@ class ExampleTargetsController(private val database: Database) {
      */
     private fun Routing.checkTargets() {
         post("/examples/targets/check") {
-            val targets: RequestedTargets = call.receive()
+            val targets: RequestedTargetsDTO = call.receive()
 
             val existingClassName = findClassNames(targets.sourceTypeToSimpleClassNames)
             val existingQualifiedPartialIdentifiers = findFullSignatures(targets.sourceTypeToQualifiedPartialIdentifiers)
 
-            val missingClasses = existingClassName.mapValues { (sourceType, existingClassNames) ->
-                val requestedClassNames = targets.sourceTypeToSimpleClassNames[sourceType]!!
+            val missingClasses = existingClassName.mapValues { (documentedExampleLibrary, existingClassNames) ->
+                val requestedClassNames = targets.sourceTypeToSimpleClassNames[documentedExampleLibrary]!!
                 requestedClassNames - existingClassNames
             }
 
-            val missingPartialIdentifiers = existingQualifiedPartialIdentifiers.mapValues { (sourceType, existingQualifiedPartialIdentifiers) ->
-                val requestedQualifiedPartialIdentifiers = targets.sourceTypeToQualifiedPartialIdentifiers[sourceType]!!
+            val missingPartialIdentifiers = existingQualifiedPartialIdentifiers.mapValues { (documentedExampleLibrary, existingQualifiedPartialIdentifiers) ->
+                val requestedQualifiedPartialIdentifiers = targets.sourceTypeToQualifiedPartialIdentifiers[documentedExampleLibrary]!!
                 requestedQualifiedPartialIdentifiers - existingQualifiedPartialIdentifiers
             }
 
-            call.respond(MissingTargets(missingClasses, missingPartialIdentifiers))
+            call.respond(MissingTargetsDTO(missingClasses, missingPartialIdentifiers))
         }
     }
 
-    private suspend fun findClassNames(classes: Map<DocSourceType, Set<SimpleClassName>>): Map<DocSourceType, Set<SimpleClassName>> {
-        return classes.mapValuesTo(enumMapOf()) { (sourceType, targetClasses) ->
+    private suspend fun findClassNames(classes: Map<DocumentedExampleLibrary, Set<SimpleClassName>>): Map<DocumentedExampleLibrary, Set<SimpleClassName>> {
+        return classes.mapValuesTo(enumMapOf()) { (documentedExampleLibrary, targetClasses) ->
             database.preparedStatement(
                 """
                     select d.classname
@@ -137,13 +78,13 @@ class ExampleTargetsController(private val database: Database) {
                       and d.classname = any (?)
                 """.trimIndent(), readOnly = true
             ) {
-                executeQuery(sourceType.id, targetClasses.map { it.str }.toTypedArray()).mapTo(hashSetOf()) { it["classname"] }
+                executeQuery(documentedExampleLibrary.toDocSourceType().id, targetClasses.map { it.str }.toTypedArray()).mapTo(hashSetOf()) { it["classname"] }
             }
         }
     }
 
-    private suspend fun findFullSignatures(sourceMap: Map<DocSourceType, Set<QualifiedPartialIdentifier>>): Map<DocSourceType, Set<QualifiedPartialIdentifier>> {
-        return sourceMap.mapValuesTo(enumMapOf()) { (sourceType, targetReferences) ->
+    private suspend fun findFullSignatures(sourceMap: Map<DocumentedExampleLibrary, Set<QualifiedPartialIdentifier>>): Map<DocumentedExampleLibrary, Set<QualifiedPartialIdentifier>> {
+        return sourceMap.mapValuesTo(enumMapOf()) { (documentedExampleLibrary, targetReferences) ->
             val conditions = StringJoiner(") or (", "(", ")")
             val conditionValues = arrayListOf<String>()
 
@@ -175,7 +116,7 @@ class ExampleTargetsController(private val database: Database) {
                       and ($conditions)
                 """.trimIndent()
             ) {
-                executeQuery(sourceType.id, *conditionValues.toTypedArray()).mapTo(hashSetOf()) {
+                executeQuery(documentedExampleLibrary.toDocSourceType().id, *conditionValues.toTypedArray()).mapTo(hashSetOf()) {
                     QualifiedPartialIdentifier(it.getString("qualified_partial_identifier"))
                 }
             }
