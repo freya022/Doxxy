@@ -8,11 +8,12 @@
 		<version>3.2.2</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
+
 	<groupId>io.github.freya022</groupId>
-	<artifactId>backend</artifactId>
+	<artifactId>doxxy-backend</artifactId>
 	<version>1.0-SNAPSHOT</version>
-	<name>Doxxy-backend</name>
-	<description>backend</description>
+	<name>doxxy-backend</name>
+
 	<properties>
 		<java.version>17</java.version>
 		<kotlin.version>1.9.22</kotlin.version>
