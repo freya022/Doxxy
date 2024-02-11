@@ -23,7 +23,8 @@ Contributions are welcome, here are the prerequisites to run the bot, so you can
 1. Copy the `config-template` as `dev-config`.
 2. Delete the "logback.xml" as it is only for production.
 3. Set the values in `config.json`.
-4. When running the bot, add this to the VM options: `--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED`
+4. Running the bot can be done by running `mvn compile exec:exec`, 
+you can also make a run configuration with the VM options found in `exec-maven-plugin`.
 5. ???
 6. Profit
 
