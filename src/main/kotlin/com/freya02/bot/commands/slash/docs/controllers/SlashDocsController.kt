@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit
 
 @BService
 class SlashDocsController(private val commonDocsController: CommonDocsController, private val docIndexMap: DocIndexMap) {
-    fun sendClass(event: IReplyCallback, ephemeral: Boolean, cachedDoc: CachedDoc) {
+    suspend fun sendClass(event: IReplyCallback, ephemeral: Boolean, cachedDoc: CachedDoc) {
         event.reply(commonDocsController.getDocMessageData(event.hook, event.member!!, ephemeral, false, cachedDoc))
             .setEphemeral(ephemeral)
             .queue()
@@ -113,15 +113,20 @@ class SlashDocsController(private val commonDocsController: CommonDocsController
 
             when (doc) {
                 null -> buttonEvent.editMessage("The docs were updated, please try again").queue()
-                else -> commonDocsController.getDocMessageData(
-                    event.hook,
-                    buttonEvent.member!!,
-                    ephemeral = false,
-                    showCaller = false,
-                    cachedDoc = doc
-                ).toEditData()
-                    .edit(buttonEvent)
-                    .queue()
+                else -> {
+                    val messageCreateData = runBlocking {
+                        commonDocsController.getDocMessageData(
+                            event.hook,
+                            buttonEvent.member!!,
+                            ephemeral = false,
+                            showCaller = false,
+                            cachedDoc = doc
+                        )
+                    }
+                    messageCreateData.toEditData()
+                        .edit(buttonEvent)
+                        .queue()
+                }
             }
         }
     }

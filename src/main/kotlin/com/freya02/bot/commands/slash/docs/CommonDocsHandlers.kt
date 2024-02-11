@@ -6,6 +6,7 @@ import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.DocResolveChain
 import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocSearchResult
+import com.freya02.bot.examples.ExampleAPI
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.data.TargetType
 import dev.minn.jda.ktx.messages.reply_
@@ -23,6 +24,8 @@ import net.dv8tion.jda.api.interactions.commands.Command.Choice
 
 @Handler
 class CommonDocsHandlers(
+    // null if backend is disabled
+    private val exampleApi: ExampleAPI?,
     private val docIndexMap: DocIndexMap,
     private val commonDocsController: CommonDocsController,
     private val slashDocsController: SlashDocsController
@@ -58,6 +61,17 @@ class CommonDocsHandlers(
                 else -> slashDocsController.sendClass(event, true, doc)
             }
         }
+    }
+
+    @JDASelectMenuListener(name = EXAMPLE_SELECT_LISTENER_NAME)
+    suspend fun onExampleSelect(event: StringSelectEvent) {
+        if (exampleApi == null) return
+
+        val title = event.values.single()
+        val example = exampleApi.getExampleByTitle(title)
+            ?: return event.reply_("This example no longer exists", ephemeral = true).queue()
+
+        event.reply_(example.contents.first().content, ephemeral = true).queue()
     }
 
     @CacheAutocomplete
@@ -112,6 +126,7 @@ class CommonDocsHandlers(
         const val RESOLVE_AUTOCOMPLETE_NAME = "CommonDocsHandlers: resolve"
 
         const val SEE_ALSO_SELECT_LISTENER_NAME = "CommonDocsHandlers: seeAlso"
+        const val EXAMPLE_SELECT_LISTENER_NAME = "CommonDocsHandlers: examples"
 
         val AUTOCOMPLETE_NAMES = arrayOf(
             CLASS_NAME_AUTOCOMPLETE_NAME,

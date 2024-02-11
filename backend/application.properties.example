@@ -1,0 +1,7 @@
+spring.profiles.active=dev
+
+spring.datasource.url=jdbc:postgresql://host:port/db_name?currentSchema=backend,public
+spring.datasource.username=postgres
+spring.datasource.password=pwd
+
+bot.http.url=http://127.0.0.1:00000

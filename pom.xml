@@ -23,6 +23,7 @@
 
         <flyway.version>10.4.1</flyway.version>
         <ktor.version>2.3.5</ktor.version>
+        <mainClass>com.freya02.bot.Main</mainClass>
     </properties>
 
     <build>
@@ -34,6 +35,9 @@
                 <artifactId>kotlin-maven-plugin</artifactId>
                 <version>${kotlin.version}</version>
                 <configuration>
+                    <compilerPlugins>
+                        <plugin>kotlinx-serialization</plugin>
+                    </compilerPlugins>
                     <args>
                         <arg>-opt-in=kotlin.RequiresOptIn</arg>
                         <arg>-opt-in=kotlin.ExperimentalStdlibApi</arg>
@@ -43,6 +47,13 @@
  -->
                     </args>
                 </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.jetbrains.kotlin</groupId>
+                        <artifactId>kotlin-maven-serialization</artifactId>
+                        <version>${kotlin.version}</version>
+                    </dependency>
+                </dependencies>
                 <executions>
                     <execution>
                         <id>compile</id>
@@ -72,7 +83,7 @@
                             <transformers>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.freya02.bot.Main</mainClass>
+                                    <mainClass>${mainClass}</mainClass>
                                 </transformer>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                             </transformers>
@@ -82,6 +93,29 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <executable>java</executable>
+                    <arguments>
+                        <argument>--add-exports</argument>
+                        <argument>jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</argument>
+                        <argument>--add-exports</argument>
+                        <argument>jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED</argument>
+                        <argument>--add-exports</argument>
+                        <argument>jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED</argument>
+                        <argument>--add-exports</argument>
+                        <argument>jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED</argument>
+                        <argument>--add-exports</argument>
+                        <argument>jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED</argument>
+                        <argument>-classpath</argument>
+                        <classpath/>
+                        <argument>${mainClass}</argument>
+                    </arguments>
+                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -181,10 +215,15 @@
             <artifactId>flyway-database-postgresql</artifactId>
             <version>${flyway.version}</version>
         </dependency>
-        <dependency>
+        <dependency> <!-- TODO for removal? -->
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.10.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>kotlinx-serialization-json</artifactId>
+            <version>1.6.2</version>
         </dependency>
         <dependency>
             <groupId>org.jsoup</groupId>
@@ -229,7 +268,27 @@
         </dependency>
         <dependency>
             <groupId>io.ktor</groupId>
-            <artifactId>ktor-serialization-gson-jvm</artifactId>
+            <artifactId>ktor-server-core-jvm</artifactId>
+            <version>${ktor.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-server-content-negotiation-jvm</artifactId>
+            <version>${ktor.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-server-netty-jvm</artifactId>
+            <version>${ktor.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-serialization-gson-jvm</artifactId> <!-- TODO remove -->
+            <version>${ktor.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-serialization-kotlinx-json-jvm</artifactId>
             <version>${ktor.version}</version>
         </dependency>
         <dependency>

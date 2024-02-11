@@ -15,4 +15,7 @@ class CachedMethod(
     override val sourceLink: String?,
     val implementations: List<ImplementationIndex.Method>,
     val overriddenMethods: List<ImplementationIndex.Method>
-) : CachedDoc
+) : CachedDoc {
+    override val qualifiedName: String
+        get() = "$className#$signature"
+}

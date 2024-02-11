@@ -1,0 +1,8 @@
+### Search examples by name
+GET http://localhost:8080/examples/search?query=upsertCommand
+
+### Get all examples
+GET http://localhost:8080/examples/search
+
+### Get examples by target
+GET http://localhost:8080/examples?target=JDA#upsertCommand()

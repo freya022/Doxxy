@@ -14,4 +14,7 @@ class CachedClass(
     override val sourceLink: String?,
     val subclasses: List<ImplementationIndex.Class>,
     val superclasses: List<ImplementationIndex.Class>
-) : CachedDoc
+) : CachedDoc {
+    override val qualifiedName: String
+        get() = name
+}

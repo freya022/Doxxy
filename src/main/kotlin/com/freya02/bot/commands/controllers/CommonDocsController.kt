@@ -8,9 +8,11 @@ import com.freya02.bot.docs.cached.CachedDoc
 import com.freya02.bot.docs.cached.CachedMethod
 import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocSuggestion
+import com.freya02.bot.examples.ExampleAPI
 import com.freya02.bot.utils.Emojis
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.data.TargetType
+import dev.minn.jda.ktx.interactions.components.SelectOption
 import dev.minn.jda.ktx.messages.Embed
 import io.github.freya022.botcommands.api.components.Components
 import io.github.freya022.botcommands.api.components.data.InteractionConstraints
@@ -31,6 +33,8 @@ import kotlin.time.Duration.Companion.minutes
 
 @BService
 class CommonDocsController(
+    // null if backend is disabled
+    private val exampleApi: ExampleAPI?,
     private val componentsService: Components,
     private val classLinksController: ClassLinksController,
     private val methodLinksController: MethodLinksController
@@ -62,7 +66,7 @@ class CommonDocsController(
             .apply(block)
             .build()
 
-    fun getDocMessageData(originalHook: InteractionHook?, caller: Member, ephemeral: Boolean, showCaller: Boolean, cachedDoc: CachedDoc, chain: DocResolveChain? = null): MessageCreateData {
+    suspend fun getDocMessageData(originalHook: InteractionHook?, caller: Member, ephemeral: Boolean, showCaller: Boolean, cachedDoc: CachedDoc, chain: DocResolveChain? = null): MessageCreateData {
         return MessageCreateBuilder().apply {
             addEmbeds(cachedDoc.embed.let {
                 when {
@@ -77,8 +81,26 @@ class CommonDocsController(
                 }
             })
             addDocsSeeAlso(caller, cachedDoc)
+            addExamples(cachedDoc)
             addDocsActionRows(originalHook, ephemeral, cachedDoc, caller)
         }.build()
+    }
+
+    private suspend fun MessageCreateRequest<*>.addExamples(cachedDoc: CachedDoc) {
+        if (exampleApi == null) return
+
+        val examples = exampleApi.searchExamplesByTarget(cachedDoc.qualifiedName)
+        if (examples.isEmpty()) return
+
+        val selectMenu = componentsService.persistentStringSelectMenu {
+            placeholder = "Examples"
+            options += examples.map { SelectOption(it.title, it.title, emoji = Emojis.testTube) }
+
+            bindTo(CommonDocsHandlers.EXAMPLE_SELECT_LISTENER_NAME)
+            timeout(15.minutes)
+        }
+
+        addActionRow(selectMenu)
     }
 
     private fun MessageCreateRequest<*>.addDocsActionRows(
