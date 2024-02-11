@@ -14,15 +14,6 @@
 	<version>1.0-SNAPSHOT</version>
 	<name>doxxy-backend</name>
 
-	<properties>
-		<java.version>17</java.version>
-		<kotlin.version>1.9.22</kotlin.version>
-		<serialization.version>1.6.2</serialization.version>
-
-		<kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
-		<kotlin.compiler.incremental>true</kotlin.compiler.incremental>
-	</properties>
-
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -80,8 +71,6 @@
 	</dependencies>
 
 	<build>
-		<sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
-		<testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
 		<plugins>
 			<plugin>
 				<groupId>org.jetbrains.kotlin</groupId>

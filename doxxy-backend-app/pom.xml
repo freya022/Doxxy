@@ -17,7 +17,6 @@
     <name>doxxy-backend-app</name>
 
     <build>
-        <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
         <finalName>Doxxy-backend</finalName>
         <plugins>
             <plugin>
