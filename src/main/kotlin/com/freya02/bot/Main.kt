@@ -11,7 +11,9 @@ import io.github.freya022.botcommands.api.core.config.DevConfig
 import io.github.freya022.botcommands.api.core.utils.namedDefaultScope
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.debug.DebugProbes
+import net.dv8tion.jda.api.events.session.ShutdownEvent
 import java.lang.management.ManagementFactory
 import kotlin.io.path.absolutePathString
 import kotlin.system.exitProcess
@@ -44,6 +46,9 @@ object Main {
 
             val scope = namedDefaultScope("Doxxy coroutine", 4)
             val manager = CoroutineEventManager(scope, 1.minutes)
+            manager.listener<ShutdownEvent> {
+                scope.cancel()
+            }
 
             logger.info { "Starting docs web server" }
             DocWebServer.startDocWebServer()
