@@ -24,7 +24,8 @@ Contributions are welcome, here are the prerequisites to run the bot, so you can
 2. Delete the "logback.xml" as it is only for production.
 3. Set the values in `config.json`.
 4. Running the bot can be done by running `mvn compile exec:exec`, 
-you can also make a run configuration with the VM options found in `exec-maven-plugin`.
+you can also make a run configuration with the VM options found in `exec-maven-plugin`, 
+and with `doxxy-bot` as the working directory.
 5. ???
 6. Profit
 
