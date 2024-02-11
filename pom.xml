@@ -12,5 +12,7 @@
 
     <modules>
         <module>doxxy-bot</module>
+        <module>doxxy-backend</module>
+        <module>doxxy-backend-app</module>
     </modules>
 </project>

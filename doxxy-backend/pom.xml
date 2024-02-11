@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.2.2</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<groupId>com.freya02</groupId>
+		<artifactId>doxxy</artifactId>
+		<version>2.5</version>
 	</parent>
 
 	<groupId>io.github.freya022</groupId>
@@ -18,7 +18,23 @@
 		<java.version>17</java.version>
 		<kotlin.version>1.9.22</kotlin.version>
 		<serialization.version>1.6.2</serialization.version>
+
+		<kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
+		<kotlin.compiler.incremental>true</kotlin.compiler.incremental>
 	</properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <type>pom</type>
+                <version>3.2.2</version>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>
@@ -66,19 +82,15 @@
 	</dependencies>
 
 	<build>
-		<finalName>Doxxy-backend</finalName>
 		<sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
 		<testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
 		<plugins>
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin>
 			<plugin>
 				<groupId>org.jetbrains.kotlin</groupId>
 				<artifactId>kotlin-maven-plugin</artifactId>
 				<version>${kotlin.version}</version>
 				<configuration>
+					<javaParameters>true</javaParameters>
 					<args>
 						<arg>-Xjsr305=strict</arg>
 					</args>
@@ -88,6 +100,20 @@
 						<plugin>kotlinx-serialization</plugin>
 					</compilerPlugins>
 				</configuration>
+				<executions>
+					<execution>
+						<id>compile</id>
+						<goals>
+							<goal>compile</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>test-compile</id>
+						<goals>
+							<goal>test-compile</goal>
+						</goals>
+					</execution>
+				</executions>
 				<dependencies>
 					<dependency>
 						<groupId>org.jetbrains.kotlin</groupId>
