@@ -40,7 +40,11 @@ class ExampleAPI(
     }
 
     suspend fun getExampleByTitle(title: String): ExampleDTO? {
-        val response = backendClient.get("example?title=$title")
+        val response = backendClient.get("example") {
+            url {
+                parameter("title", title)
+            }
+        }
         return when (response.status) {
             HttpStatusCode.OK -> response.body()
             HttpStatusCode.NotFound -> null
