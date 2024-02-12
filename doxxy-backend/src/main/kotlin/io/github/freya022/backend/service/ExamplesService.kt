@@ -115,16 +115,19 @@ class ExamplesService(
         .body()!!
 
     fun findByTarget(target: String): List<ExampleSearchResultDTO> {
-        return exampleRepository.findByTarget(target)
+        return exampleRepository.findByTarget(target).map { it.toExampleSearchResultDTO() }
     }
 
     fun searchByTitle(query: String?): List<ExampleSearchResultDTO> {
         if (query.isNullOrBlank()) {
-            return exampleRepository.findAllAsSearchResults()
+            return exampleRepository.findAll().map { it.toExampleSearchResultDTO() }
         }
 
-        return exampleRepository.searchByTitle(query)
+        return exampleRepository.searchByTitle(query).map { it.toExampleSearchResultDTO() }
     }
+
+    private fun Example.toExampleSearchResultDTO(): ExampleSearchResultDTO =
+        ExampleSearchResultDTO(title, library, contents.map { it.language })
 
     fun findByTitle(title: String): ExampleDTO? {
         return exampleRepository.findByTitle(title)?.run {
