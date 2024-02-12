@@ -26,4 +26,7 @@ interface ExampleRepository : JpaRepository<Example, Int> {
     fun searchByTitle(title: String): List<Example>
 
     fun findByTitle(title: String): Example?
+
+    @Query("select exampleContent.language from ExampleContent exampleContent join exampleContent.example example where example.title = :title")
+    fun findLanguagesByTitle(title: String): List<String>
 }

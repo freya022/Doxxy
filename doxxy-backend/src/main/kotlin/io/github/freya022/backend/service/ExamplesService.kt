@@ -138,4 +138,8 @@ class ExamplesService(
             )
         }
     }
+
+    fun findLanguagesByTitle(title: String): List<String> {
+        return exampleRepository.findLanguagesByTitle(title)
+    }
 }

@@ -52,4 +52,12 @@ class ExampleAPI(
             else -> throw IOException("Status code: ${response.status}")
         }
     }
+
+    suspend fun getLanguagesByTitle(title: String): List<String> {
+        return backendClient.get("example/languages") {
+            url {
+                parameter("title", title)
+            }
+        }.body()
+    }
 }
