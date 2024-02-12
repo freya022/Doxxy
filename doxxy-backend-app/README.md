@@ -12,9 +12,9 @@ this module is only an application which runs the backend library.
 
 ### Setting up
 1. Copy the `application.properties.example` as `application.properties` and set the values.
-2. Run the backend **in the `doxxy-backend-app` working directory**:
-   * Using `mvn spring-boot:run`, or,
-   * Make a Spring Boot run configuration on IntelliJ.
+2. Run the backend:
+   * Using `mvn -pl doxxy-backend-app -am spring-boot:run` **in the root working directory**, or,
+   * Make a Spring Boot run configuration **in the `doxxy-backend-app` working directory** on IntelliJ.
 3. ???
 4. Profit
 

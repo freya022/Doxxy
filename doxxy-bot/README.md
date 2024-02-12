@@ -10,9 +10,9 @@ Maven module of the Discord bot, it may optionally use the backend.
 1. Copy the `config-template` as `dev-config`.
 2. Delete the "logback.xml" as it is only for production.
 3. Set the values in `config.json`.
-4. Run the bot **in the `doxxy-bot` working directory**:
-   * Using `mvn compile exec:exec`, or,
-   * Make a run configuration with the VM options found in `exec-maven-plugin`.
+4. Run the bot:
+   * Using `mvn -pl doxxy-bot -am compile exec:exec` **in the root working directory**, or,
+   * Make a run configuration with the VM options found in `exec-maven-plugin` **in the `doxxy-bot` working directory**.
 5. ???
 6. Profit
 

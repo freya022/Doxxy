@@ -48,8 +48,9 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
-                <configuration>
+                <configuration combine.self="override">
                     <executable>java</executable>
+                    <workingDirectory>${basedir}</workingDirectory>
                     <arguments>
                         <argument>--add-exports</argument>
                         <argument>jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</argument>
