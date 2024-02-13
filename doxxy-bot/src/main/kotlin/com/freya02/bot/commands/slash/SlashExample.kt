@@ -22,6 +22,7 @@ import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import kotlin.time.Duration.Companion.seconds
 
 private const val titleAutocompleteName = "SlashExample: title"
+private const val languageAutocompleteName = "SlashExample: language"
 
 @RequiresBackend
 @Command
@@ -35,12 +36,19 @@ class SlashExample(
         @SlashOption(
             description = "The title of the requested example",
             autocomplete = titleAutocompleteName
-        ) title: String
+        ) title: String,
+        @SlashOption(
+            description = "The language of the requested example",
+            autocomplete = languageAutocompleteName
+        )
+        language: String
     ) {
         val example = exampleApi.getExampleByTitle(title)
             ?: return event.reply_("This example does not exist", ephemeral = true).queue()
+        val contentDTO = example.contents.firstOrNull { it.language == language }
+            ?: return event.reply_("This language is not available", ephemeral = true).queue()
 
-        event.reply_(example.contents.first().content).queue()
+        event.reply_(contentDTO.content).queue()
     }
 
     @CacheAutocomplete
@@ -51,6 +59,12 @@ class SlashExample(
             .letIf(event.guild.isBCGuild()) { it.filter { example -> example.library != "BotCommands" } }
 
         return examples.map { Choice("${it.library} - ${it.title}", it.title) }
+    }
+
+    @CacheAutocomplete(compositeKeys = ["title", "language"])
+    @AutocompleteHandler(languageAutocompleteName, showUserInput = false)
+    suspend fun onLanguageAutocomplete(event: CommandAutoCompleteInteractionEvent, title: String): List<Choice> {
+        return exampleApi.getLanguagesByTitle(title).map { Choice(it, it) }
     }
 
     @Test

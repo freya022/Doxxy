@@ -24,4 +24,7 @@ class ExamplesController(
             ?.let { ResponseEntity.ok(it) }
             ?: ResponseEntity.notFound().build()
     }
+
+    @GetMapping("/example/languages")
+    fun findLanguagesByTitle(@RequestParam title: String): List<String> = examplesService.findLanguagesByTitle(title)
 }

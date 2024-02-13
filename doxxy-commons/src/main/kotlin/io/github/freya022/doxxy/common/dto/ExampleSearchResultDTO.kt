@@ -5,5 +5,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ExampleSearchResultDTO(
     val title: String,
-    val library: String //TODO use enumeration
+    val library: String, //TODO use enumeration
+    val languages: List<String>
 )
