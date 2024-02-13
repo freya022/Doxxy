@@ -75,6 +75,9 @@ class SlashExample(
 
         exampleApi.updateExamples()
 
+        event.context.invalidateAutocompleteCache(titleAutocompleteName)
+        event.context.invalidateAutocompleteCache(languageAutocompleteName)
+
         event.hook.send("Done!")
             .deleteDelayed(5.seconds)
             .queue()
