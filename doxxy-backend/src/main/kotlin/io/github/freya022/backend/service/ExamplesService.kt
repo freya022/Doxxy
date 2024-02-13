@@ -42,7 +42,7 @@ class ExamplesService(
             val languages: List<String>,
             val library: String,
             val title: String,
-            val targets: List<String>
+            val targets: List<String> = emptyList()
         ) {
             //TODO 1:1 mapping with the index json
             val exampleLibrary = when (library) {
