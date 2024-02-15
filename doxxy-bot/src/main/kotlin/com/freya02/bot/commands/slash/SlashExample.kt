@@ -1,6 +1,7 @@
 package com.freya02.bot.commands.slash
 
 import com.freya02.bot.examples.ExampleAPI
+import com.freya02.bot.examples.ExamplePaginatorFactory
 import com.freya02.bot.switches.RequiresBackend
 import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.bot.utils.Utils.letIf
@@ -32,7 +33,8 @@ private const val pullRequestNumberAutocompleteName = "SlashExample: pullRequest
 @RequiresBackend
 @Command
 class SlashExample(
-    private val exampleApi: ExampleAPI
+    private val exampleApi: ExampleAPI,
+    private val paginatorFactory: ExamplePaginatorFactory
 ) : ApplicationCommand() {
 
     @JDASlashCommand(name = "example", description = "No description")
@@ -53,7 +55,8 @@ class SlashExample(
         val contentDTO = example.contents.firstOrNull { it.language == language }
             ?: return event.reply_("This language is not available", ephemeral = true).queue()
 
-        event.reply_(contentDTO.content).queue()
+        val paginator = paginatorFactory.fromInteraction(contentDTO.parts, event.user, ephemeral = false, event.hook)
+        event.reply(paginator.createMessage()).queue()
     }
 
     @CacheAutocomplete
