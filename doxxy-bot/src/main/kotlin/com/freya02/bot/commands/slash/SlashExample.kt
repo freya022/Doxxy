@@ -73,13 +73,15 @@ class SlashExample(
     suspend fun onSlashExamplesUpdate(event: GuildSlashEvent) {
         event.deferReply(true).queue()
 
-        exampleApi.updateExamples()
+        if (exampleApi.updateExamples()) {
+            event.context.invalidateAutocompleteCache(titleAutocompleteName)
+            event.context.invalidateAutocompleteCache(languageAutocompleteName)
 
-        event.context.invalidateAutocompleteCache(titleAutocompleteName)
-        event.context.invalidateAutocompleteCache(languageAutocompleteName)
-
-        event.hook.send("Done!")
-            .deleteDelayed(5.seconds)
-            .queue()
+            event.hook.send("Done!")
+                .deleteDelayed(5.seconds)
+                .queue()
+        } else {
+            event.hook.send("Unable to update examples").queue()
+        }
     }
 }

@@ -15,8 +15,8 @@ import java.io.IOException
 class ExampleAPI(
     private val backendClient: HttpClient
 ) {
-    suspend fun updateExamples() {
-        backendClient.put("examples/update")
+    suspend fun updateExamples(): Boolean {
+        return backendClient.put("examples/update").status.isSuccess()
     }
 
     suspend fun searchExamplesByTarget(target: String): List<ExampleSearchResultDTO> {
