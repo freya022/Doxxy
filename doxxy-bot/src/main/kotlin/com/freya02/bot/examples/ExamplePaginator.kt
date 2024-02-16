@@ -9,6 +9,7 @@ import dev.minn.jda.ktx.messages.into
 import io.github.freya022.botcommands.api.components.Components
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.freya022.botcommands.api.core.utils.toEditData
+import io.github.freya022.botcommands.api.utils.EmojiUtils
 import io.github.freya022.doxxy.common.dto.ExampleDTO.ExampleContentDTO.ExampleContentPartDTO
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.entities.emoji.Emoji
@@ -77,7 +78,10 @@ class ExamplePaginator(
         part.label,
         index.toString(),
         part.description,
-        part.emoji?.let { Emoji.fromFormatted(it) },
+        part.emoji?.let {
+            //TODO Resolving emojis should be done when updating examples, only storing their unicode/mention
+            EmojiUtils.resolveJDAEmojiOrNull(it) ?: Emoji.fromFormatted(it)
+        },
         default = page == index
     )
 }
