@@ -25,15 +25,25 @@ private val logger = KotlinLogging.logger { }
 
 @Service
 class ExamplesService(
-    private val docExampleClient: RestClient,
     private val botClient: RestClient,
     private val exampleRepository: ExampleRepository,
     private val json: Json
 ) {
-    private val client = RestClient.create()
-
     @Transactional
-    fun updateExamples() {
+    fun updateExamples(ownerName: String, repoName: String, branchName: String) {
+        logger.info { "Updating examples from $ownerName/$repoName on $branchName" }
+
+        val repoClient = RestClient.builder()
+            .baseUrl("https://raw.githubusercontent.com/{ownerName}/{repoName}/{branchName}/")
+            .defaultUriVariables(
+                mapOf(
+                    "ownerName" to ownerName,
+                    "repoName" to repoName,
+                    "branchName" to branchName,
+                )
+            )
+            .build()
+
         exampleRepository.removeAll()
 
         @Serializable
@@ -53,7 +63,7 @@ class ExamplesService(
             }
         }
 
-        val examples: List<IndexedExample> = docExampleClient.get()
+        val examples: List<IndexedExample> = repoClient.get()
             .uri("/index.json")
             .retrieve()
             .body<String>()!!
@@ -93,7 +103,7 @@ class ExamplesService(
 
         exampleRepository.saveAllAndFlush(examples.map { dto ->
             val contentEntities = dto.languages.map { language ->
-                ExampleContent(language, getExampleContent(dto.library, dto.name, language))
+                ExampleContent(language, repoClient.getExampleContent(dto.library, dto.name, language))
             }
             val resolvableTargetEntities = dto.targets.filter {
                 if ('#' !in it) {
@@ -105,12 +115,18 @@ class ExamplesService(
                 }
             }.map { ExampleTarget(it) }
 
-            Example(dto.title, dto.library, contentEntities, resolvableTargetEntities)
+            Example(dto.title, dto.library, contentEntities, resolvableTargetEntities).also { example ->
+                contentEntities.forEach { it.example = example }
+            }
         })
     }
 
-    private fun getExampleContent(library: String, name: String, language: String): String = client.get()
-        .uri("https://raw.githubusercontent.com/freya022/doc-examples/master/examples/{library}/{name}/{language}.md", library, name, language)
+    private fun RestClient.getExampleContent(library: String, name: String, language: String): String = get()
+        .uri("examples/{library}/{name}/{language}.md", mapOf(
+            "library" to library,
+            "name" to name,
+            "language" to language,
+        ))
         .retrieve()
         .body()!!
 

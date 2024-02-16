@@ -4,18 +4,22 @@ import com.freya02.bot.examples.ExampleAPI
 import com.freya02.bot.switches.RequiresBackend
 import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.bot.utils.Utils.letIf
+import com.freya02.bot.versioning.github.PullRequest.Companion.toAutocompleteChoices
+import com.freya02.bot.versioning.github.PullRequestCache
 import dev.minn.jda.ktx.messages.reply_
 import dev.minn.jda.ktx.messages.send
+import io.github.freya022.botcommands.api.annotations.CommandMarker
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
 import io.github.freya022.botcommands.api.commands.application.CommandScope
-import io.github.freya022.botcommands.api.commands.application.annotations.Test
+import io.github.freya022.botcommands.api.commands.application.GuildApplicationCommandManager
+import io.github.freya022.botcommands.api.commands.application.annotations.AppDeclaration
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.JDASlashCommand
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.SlashOption
-import io.github.freya022.botcommands.api.commands.application.slash.annotations.TopLevelSlashCommandData
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.annotations.CacheAutocomplete
+import io.github.freya022.botcommands.api.core.config.BApplicationConfig
 import io.github.freya022.botcommands.api.core.utils.deleteDelayed
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
@@ -23,6 +27,7 @@ import kotlin.time.Duration.Companion.seconds
 
 private const val titleAutocompleteName = "SlashExample: title"
 private const val languageAutocompleteName = "SlashExample: language"
+private const val pullRequestNumberAutocompleteName = "SlashExample: pullRequestNumber"
 
 @RequiresBackend
 @Command
@@ -67,13 +72,47 @@ class SlashExample(
         return exampleApi.getLanguagesByTitle(title).map { Choice(it, it) }
     }
 
-    @Test
-    @TopLevelSlashCommandData(scope = CommandScope.GUILD, description = "Manage examples")
-    @JDASlashCommand(name = "examples", subcommand = "update", description = "Fetch latest examples")
-    suspend fun onSlashExamplesUpdate(event: GuildSlashEvent) {
+    @AppDeclaration
+    fun declare(manager: GuildApplicationCommandManager, applicationConfig: BApplicationConfig) {
+        if (manager.guild.idLong !in applicationConfig.testGuildIds) return
+
+        manager.slashCommand("examples", CommandScope.GUILD, function = null) {
+            description = "Manage examples"
+
+            subcommand("update", ::onSlashExamplesUpdateFromPR) {
+                description = "Fetch latest examples"
+
+                option("pullRequestNumber", "pull_request") {
+                    description = "The pull request to load the examples from"
+                    autocompleteReference(pullRequestNumberAutocompleteName)
+                }
+            }
+        }
+    }
+
+    private val pullRequestCache by lazy {
+        PullRequestCache(githubOwnerName = "freya022", githubRepoName = "doc-examples", baseBranchName = "master")
+    }
+
+    @CommandMarker
+    suspend fun onSlashExamplesUpdateFromPR(event: GuildSlashEvent, pullRequestNumber: Int?) {
+        if (pullRequestNumber != null) {
+            val pr = pullRequestCache.pullRequests[pullRequestNumber]
+            onSlashExamplesUpdate(event, pr.branch.ownerName, pr.branch.repoName, pr.branch.branchName)
+        } else {
+            onSlashExamplesUpdate(event)
+        }
+    }
+
+    @AutocompleteHandler(pullRequestNumberAutocompleteName, showUserInput = false)
+    fun onPullRequestNumberAutocomplete(event: CommandAutoCompleteInteractionEvent): List<Choice> {
+        return pullRequestCache.pullRequests.valueCollection().toAutocompleteChoices(event)
+    }
+
+    private suspend fun onSlashExamplesUpdate(event: GuildSlashEvent, ownerName: String = "freya022", repoName: String = "doc-examples", branchName: String = "master") {
         event.deferReply(true).queue()
 
-        if (exampleApi.updateExamples()) {
+        if (exampleApi.updateExamples(ownerName, repoName, branchName)) {
             event.context.invalidateAutocompleteCache(titleAutocompleteName)
             event.context.invalidateAutocompleteCache(languageAutocompleteName)
 
