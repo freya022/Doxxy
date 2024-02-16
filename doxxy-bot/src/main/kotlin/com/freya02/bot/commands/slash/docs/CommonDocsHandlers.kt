@@ -10,10 +10,14 @@ import com.freya02.bot.examples.ExampleAPI
 import com.freya02.bot.examples.ExamplePaginatorFactory
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.data.TargetType
+import dev.minn.jda.ktx.coroutines.await
+import dev.minn.jda.ktx.interactions.components.SelectOption
+import dev.minn.jda.ktx.messages.into
 import dev.minn.jda.ktx.messages.reply_
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.annotations.CacheAutocomplete
+import io.github.freya022.botcommands.api.components.Components
 import io.github.freya022.botcommands.api.components.annotations.JDASelectMenuListener
 import io.github.freya022.botcommands.api.components.event.StringSelectEvent
 import io.github.freya022.botcommands.api.core.annotations.Handler
@@ -22,12 +26,14 @@ import io.github.freya022.botcommands.api.core.utils.toEditData
 import io.github.oshai.kotlinlogging.KotlinLogging
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
+import kotlin.time.Duration.Companion.minutes
 
 @Handler
 class CommonDocsHandlers(
     // null if backend is disabled
     private val exampleApi: ExampleAPI?,
     private val docIndexMap: DocIndexMap,
+    private val componentsService: Components,
     private val commonDocsController: CommonDocsController,
     private val slashDocsController: SlashDocsController,
     private val examplePaginatorFactory: ExamplePaginatorFactory
@@ -72,14 +78,25 @@ class CommonDocsHandlers(
         val title = event.values.single()
         val example = exampleApi.getExampleByTitle(title)
             ?: return event.reply_("This example no longer exists", ephemeral = true).queue()
+        val language = example.contents.map { it.language }.let { languages ->
+            val languageSelectMenu = componentsService.ephemeralStringSelectMenu {
+                timeout(2.minutes)
+
+                placeholder = "Select a language"
+                options += languages.map { SelectOption(it, it) }
+            }
+            event.replyComponents(languageSelectMenu.into()).setEphemeral(true).await()
+
+            languageSelectMenu.await().values.single()
+        }
 
         val paginator = examplePaginatorFactory.fromInteraction(
-            example.contents.single().parts,
+            example.contents.single { it.language == language }.parts,
             event.user,
             ephemeral = true,
             event.hook
         )
-        event.reply(paginator.createMessage()).setEphemeral(true).queue()
+        event.hook.editOriginal(paginator.createMessage().toEditData()).queue()
     }
 
     @CacheAutocomplete
