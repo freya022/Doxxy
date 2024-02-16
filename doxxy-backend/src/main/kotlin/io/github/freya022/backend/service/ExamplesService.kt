@@ -2,13 +2,14 @@ package io.github.freya022.backend.service
 
 import io.github.freya022.backend.entity.Example
 import io.github.freya022.backend.entity.ExampleContent
+import io.github.freya022.backend.entity.ExampleContentPart
 import io.github.freya022.backend.entity.ExampleTarget
 import io.github.freya022.backend.repository.ExampleRepository
+import io.github.freya022.backend.transformer.toDTO
 import io.github.freya022.doxxy.common.ExampleLibrary
 import io.github.freya022.doxxy.common.QualifiedPartialIdentifier
 import io.github.freya022.doxxy.common.SimpleClassName
 import io.github.freya022.doxxy.common.dto.ExampleDTO
-import io.github.freya022.doxxy.common.dto.ExampleDTO.ExampleContentDTO
 import io.github.freya022.doxxy.common.dto.ExampleSearchResultDTO
 import io.github.freya022.doxxy.common.dto.MissingTargetsDTO
 import io.github.freya022.doxxy.common.dto.RequestedTargetsDTO
@@ -29,6 +30,34 @@ class ExamplesService(
     private val exampleRepository: ExampleRepository,
     private val json: Json
 ) {
+    private val client = RestClient.create()
+
+    @Serializable
+    private data class IndexedExample(
+        val name: String,
+        val languages: List<String>,
+        val library: String,
+        val title: String,
+        val parts: List<Part> = emptyList(),
+        val targets: List<String> = emptyList()
+    ) {
+        @Serializable
+        data class Part(
+            val fileName: String,
+            val label: String,
+            val emoji: String?,
+            val description: String?
+        )
+
+        //TODO 1:1 mapping with the index json
+        val exampleLibrary = when (library) {
+            "JDA" -> ExampleLibrary.JDA
+            "JDK" -> ExampleLibrary.JDK
+            "BotCommands" -> ExampleLibrary.BOT_COMMANDS
+            else -> throw IllegalArgumentException("Unknown library: $library")
+        }
+    }
+
     @Transactional
     fun updateExamples(ownerName: String, repoName: String, branchName: String) {
         logger.info { "Updating examples from $ownerName/$repoName on $branchName" }
@@ -45,23 +74,6 @@ class ExamplesService(
             .build()
 
         exampleRepository.removeAll()
-
-        @Serializable
-        data class IndexedExample(
-            val name: String,
-            val languages: List<String>,
-            val library: String,
-            val title: String,
-            val targets: List<String> = emptyList()
-        ) {
-            //TODO 1:1 mapping with the index json
-            val exampleLibrary = when (library) {
-                "JDA" -> ExampleLibrary.JDA
-                "JDK" -> ExampleLibrary.JDK
-                "BotCommands" -> ExampleLibrary.BOT_COMMANDS
-                else -> throw IllegalArgumentException("Unknown library: $library")
-            }
-        }
 
         val examples: List<IndexedExample> = repoClient.get()
             .uri("/index.json")
@@ -103,7 +115,7 @@ class ExamplesService(
 
         exampleRepository.saveAllAndFlush(examples.map { dto ->
             val contentEntities = dto.languages.map { language ->
-                ExampleContent(language, repoClient.getExampleContent(dto.library, dto.name, language))
+                ExampleContent(language, getExampleContentParts(repoClient, dto, language))
             }
             val resolvableTargetEntities = dto.targets.filter {
                 if ('#' !in it) {
@@ -121,11 +133,43 @@ class ExamplesService(
         })
     }
 
+    private fun getExampleContentParts(repoClient: RestClient, dto: IndexedExample, language: String): List<ExampleContentPart> {
+        return if (dto.parts.isEmpty()) {
+            listOf(
+                ExampleContentPart(
+                    dto.title,
+                    emoji = null,
+                    description = null,
+                    repoClient.getExampleContent(dto.library, dto.name, language)
+                )
+            )
+        } else {
+            dto.parts.map {
+                ExampleContentPart(
+                    it.label,
+                    it.emoji,
+                    it.description,
+                    repoClient.getExampleContentPart(dto.library, dto.name, language, it.fileName)
+                )
+            }
+        }
+    }
+
     private fun RestClient.getExampleContent(library: String, name: String, language: String): String = get()
         .uri("examples/{library}/{name}/{language}.md", mapOf(
             "library" to library,
             "name" to name,
             "language" to language,
+        ))
+        .retrieve()
+        .body()!!
+
+    private fun RestClient.getExampleContentPart(library: String, name: String, language: String, partName: String): String = get()
+        .uri("examples/{library}/{name}/{language}/{partName}.md", mapOf(
+            "library" to library,
+            "name" to name,
+            "language" to language,
+            "partName" to partName,
         ))
         .retrieve()
         .body()!!
@@ -146,13 +190,7 @@ class ExamplesService(
         ExampleSearchResultDTO(title, library, contents.map { it.language })
 
     fun findByTitle(title: String): ExampleDTO? {
-        return exampleRepository.findByTitle(title)?.run {
-            ExampleDTO(
-                title,
-                library,
-                contents.map { ExampleContentDTO(it.language, it.content) }
-            )
-        }
+        return exampleRepository.findByTitle(title)?.toDTO()
     }
 
     fun findLanguagesByTitle(title: String): List<String> {

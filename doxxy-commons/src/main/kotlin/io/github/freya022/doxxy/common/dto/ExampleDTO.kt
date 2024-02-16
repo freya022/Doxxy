@@ -11,6 +11,14 @@ data class ExampleDTO(
     @Serializable
     data class ExampleContentDTO(
         val language: String,
-        val content: String
-    )
+        val parts: List<ExampleContentPartDTO>
+    ) {
+        @Serializable
+        data class ExampleContentPartDTO(
+            val content: String,
+            val label: String,
+            val emoji: String?,
+            val description: String?
+        )
+    }
 }

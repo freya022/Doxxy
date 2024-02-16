@@ -6,3 +6,6 @@ GET http://localhost:8080/examples/search
 
 ### Get examples by target
 GET http://localhost:8080/examples?target=JDA#upsertCommand()
+
+### Get example by title
+GET http://localhost:8080/example?title=updateCommands VS upsertCommand

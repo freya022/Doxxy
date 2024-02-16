@@ -23,11 +23,21 @@ class Example(
 @Entity
 class ExampleContent(
     val language: String,
-    val content: String
+    @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true)
+    @JoinColumn(name = "example_content_id", nullable = false)
+    val parts: List<ExampleContentPart>
 ) : AbstractEntity() {
     @ManyToOne
     lateinit var example: Example
 }
+
+@Entity
+class ExampleContentPart(
+    val label: String,
+    val emoji: String?,
+    val description: String?,
+    val content: String
+) : AbstractEntity()
 
 @Entity
 class ExampleTarget(
