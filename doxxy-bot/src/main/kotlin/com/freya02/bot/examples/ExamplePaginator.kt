@@ -23,15 +23,16 @@ class ExamplePaginatorFactory(private val componentsService: Components) {
         parts: List<ExampleContentPartDTO>,
         author: UserSnowflake,
         ephemeral: Boolean,
-        hook: InteractionHook
+        initialHook: InteractionHook
     ) = ExamplePaginator(
         componentsService,
         parts,
         author,
         ephemeral,
-        onTimeout = {
+        initialHook,
+        onTimeout = { paginator, hook ->
             componentsService.deleteComponentsById(hook.retrieveOriginal().await().componentIds)
-            hook.editOriginal(it.createMessage(disabled = true).toEditData()).queue()
+            hook.editOriginal(paginator.createMessage(disabled = true).toEditData()).queue()
         }
     )
 }
@@ -41,7 +42,9 @@ class ExamplePaginator(
     private val parts: List<ExampleContentPartDTO>,
     private val author: UserSnowflake,
     private val ephemeral: Boolean,
-    private val onTimeout: suspend (ExamplePaginator) -> Unit
+    // Keeping an up-to-date hook lets us clean up 15 minutes after each interaction
+    private var hook: InteractionHook,
+    private val onTimeout: suspend (ExamplePaginator, InteractionHook) -> Unit
 ) {
     private var page: Int = 0
 
@@ -58,10 +61,13 @@ class ExamplePaginator(
                 if (disabled) {
                     setDisabled(true)
                 } else {
-                    timeout(10.minutes) { onTimeout(this@ExamplePaginator) }
+                    timeout(10.minutes) { onTimeout(this@ExamplePaginator, hook) }
                     bindTo { selectEvent ->
+                        this@ExamplePaginator.hook = selectEvent.hook
+
                         val selectedIndex = selectEvent.values.single()
                         page = selectedIndex.toInt()
+
                         selectEvent.editMessage(createMessage().toEditData()).queue()
                         // Remember to clean up old components
                         componentsService.deleteComponentsById(selectEvent.message.componentIds)
