@@ -9,6 +9,7 @@ import com.freya02.bot.versioning.LibraryType
 import com.freya02.bot.versioning.ScriptType
 import com.freya02.bot.versioning.github.GithubBranch
 import com.freya02.bot.versioning.github.PullRequest
+import com.freya02.bot.versioning.github.PullRequest.Companion.toAutocompleteChoices
 import com.freya02.bot.versioning.jitpack.JitpackBranchService
 import com.freya02.bot.versioning.jitpack.JitpackPrService
 import com.freya02.bot.versioning.jitpack.pullupdater.PullUpdater
@@ -29,8 +30,6 @@ import io.github.freya022.botcommands.api.commands.application.GuildApplicationC
 import io.github.freya022.botcommands.api.commands.application.annotations.AppDeclaration
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.AutocompleteAlgorithms
-import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.FuzzyResult
-import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.ToStringFunction
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
 import io.github.freya022.botcommands.api.commands.application.slash.builder.SlashCommandBuilder
 import io.github.freya022.botcommands.api.components.Components
@@ -128,16 +127,7 @@ class SlashJitpack(
         event: CommandAutoCompleteInteractionEvent,
         libraryType: LibraryType
     ): Collection<Choice> {
-        val pullRequests = jitpackPrService.getPullRequests(libraryType)
-
-        return when {
-            event.focusedOption.value.isBlank() -> pullRequests.sortedByDescending { it.number }
-            else -> pullRequests.fuzzyMatching(
-                //Don't autocomplete based on the branch number
-                toStringFunction = { pr: PullRequest -> pr.title + pr.authorName },
-                query = event.focusedOption.value
-            ).map { fuzzyResult -> fuzzyResult.item }
-        }.map { r -> r.toChoice() }
+        return jitpackPrService.getPullRequests(libraryType).toAutocompleteChoices(event)
     }
 
     private suspend fun onUpdatePrClick(event: ButtonEvent, callerId: Long, libraryType: LibraryType, buildToolType: BuildToolType, pullNumber: Int) {
@@ -295,25 +285,5 @@ class SlashJitpack(
     companion object {
         const val PR_NUMBER_AUTOCOMPLETE_NAME = "SlashJitpack: prNumber"
         private const val BRANCH_NAME_AUTOCOMPLETE_NAME = "SlashJitpack: branchName"
-
-        private fun PullRequest.toChoice() = Choice(asHumanDescription, number.toLong())
-
-        private fun Collection<PullRequest>.fuzzyMatching(
-            toStringFunction: ToStringFunction<PullRequest>,
-            query: String
-        ): Collection<FuzzyResult<PullRequest>> {
-            if (query.firstOrNull()?.isDigit() == true) {
-                return filter { it.number.toString().startsWith(query) }
-                    .take(OptionData.MAX_CHOICES)
-                    .map { FuzzyResult(it, "", 0.0) }
-            }
-
-            return sortedWith(Comparator.comparingInt { obj: PullRequest -> obj.number }.reversed()).let {
-                when {
-                    query.isBlank() -> take(OptionData.MAX_CHOICES).map { FuzzyResult(it, "", 0.0) }
-                    else -> AutocompleteAlgorithms.fuzzyMatching(this, toStringFunction, query).take(OptionData.MAX_CHOICES)
-                }
-            }
-        }
     }
 }

@@ -2,7 +2,13 @@ package com.freya02.bot.versioning.github
 
 import com.freya02.bot.utils.Utils.truncate
 import com.freya02.bot.versioning.ArtifactInfo
+import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.AutocompleteAlgorithms
+import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.FuzzyResult
+import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.ToStringFunction
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command
+import net.dv8tion.jda.api.interactions.commands.Command.Choice
+import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.utils.data.DataObject
 
 @JvmRecord
@@ -50,6 +56,40 @@ data class PullRequest(
                 GithubBranch(headRepoOwnerName, headRepoName, headBranchName, CommitHash(latestHash)),
                 pullUrl
             )
+        }
+
+        fun Collection<PullRequest>.toAutocompleteChoices(event: CommandAutoCompleteInteractionEvent): List<Choice> {
+            val sortedPullRequests = if (event.focusedOption.value.isBlank()) {
+                sortedByDescending { it.number }
+            } else {
+                fuzzyMatching(
+                    //Don't autocomplete based on the branch number
+                    toStringFunction = { pr: PullRequest -> pr.title + pr.authorName },
+                    query = event.focusedOption.value
+                ).map { fuzzyResult -> fuzzyResult.item }
+            }
+
+            return sortedPullRequests.map { r -> r.toChoice() }
+        }
+
+        private fun PullRequest.toChoice() = Choice(asHumanDescription, number.toLong())
+
+        private fun Collection<PullRequest>.fuzzyMatching(
+            toStringFunction: ToStringFunction<PullRequest>,
+            query: String
+        ): List<FuzzyResult<PullRequest>> {
+            if (query.firstOrNull()?.isDigit() == true) {
+                return filter { it.number.toString().startsWith(query) }
+                    .take(OptionData.MAX_CHOICES)
+                    .map { FuzzyResult(it, "", 0.0) }
+            }
+
+            return sortedWith(Comparator.comparingInt { obj: PullRequest -> obj.number }.reversed()).let {
+                when {
+                    query.isBlank() -> take(OptionData.MAX_CHOICES).map { FuzzyResult(it, "", 0.0) }
+                    else -> AutocompleteAlgorithms.fuzzyMatching(this, toStringFunction, query).take(OptionData.MAX_CHOICES)
+                }
+            }
         }
     }
 }
