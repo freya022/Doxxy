@@ -78,7 +78,7 @@ class ExampleTargetsController(private val database: Database) {
                       and d.classname = any (?)
                 """.trimIndent(), readOnly = true
             ) {
-                executeQuery(documentedExampleLibrary.toDocSourceType().id, targetClasses.map { it.str }.toTypedArray()).mapTo(hashSetOf()) { it["classname"] }
+                executeQuery(documentedExampleLibrary.toDocSourceType().id, targetClasses.map { it.str }.toTypedArray()).mapTo(hashSetOf()) { SimpleClassName(it["classname"]) }
             }
         }
     }
