@@ -13,14 +13,13 @@ import io.github.freya022.botcommands.api.annotations.CommandMarker
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
 import io.github.freya022.botcommands.api.commands.application.CommandScope
-import io.github.freya022.botcommands.api.commands.application.GuildApplicationCommandManager
-import io.github.freya022.botcommands.api.commands.application.annotations.AppDeclaration
+import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandManager
+import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandProvider
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.JDASlashCommand
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.SlashOption
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.annotations.CacheAutocomplete
-import io.github.freya022.botcommands.api.core.config.BApplicationConfig
 import io.github.freya022.botcommands.api.core.utils.deleteDelayed
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
@@ -35,7 +34,7 @@ private const val pullRequestNumberAutocompleteName = "SlashExample: pullRequest
 class SlashExample(
     private val exampleApi: ExampleAPI,
     private val paginatorFactory: ExamplePaginatorFactory
-) : ApplicationCommand() {
+) : ApplicationCommand(), GuildApplicationCommandProvider {
 
     @JDASlashCommand(name = "example", description = "No description")
     suspend fun onSlashExample(
@@ -75,9 +74,8 @@ class SlashExample(
         return exampleApi.getLanguagesByTitle(title).map { Choice(it, it) }
     }
 
-    @AppDeclaration
-    fun declare(manager: GuildApplicationCommandManager, applicationConfig: BApplicationConfig) {
-        if (manager.guild.idLong !in applicationConfig.testGuildIds) return
+    override fun declareGuildApplicationCommands(manager: GuildApplicationCommandManager) {
+        if (manager.guild.idLong !in manager.context.applicationConfig.testGuildIds) return
 
         manager.slashCommand("examples", CommandScope.GUILD, function = null) {
             description = "Manage examples"
@@ -87,7 +85,7 @@ class SlashExample(
 
                 option("pullRequestNumber", "pull_request") {
                     description = "The pull request to load the examples from"
-                    autocompleteReference(pullRequestNumberAutocompleteName)
+                    autocompleteByName(pullRequestNumberAutocompleteName)
                 }
             }
         }

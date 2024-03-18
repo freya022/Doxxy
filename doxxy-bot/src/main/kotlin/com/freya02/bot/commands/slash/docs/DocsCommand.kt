@@ -10,14 +10,13 @@ import com.freya02.docs.DocSourceType
 import io.github.freya022.botcommands.api.annotations.CommandMarker
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.application.CommandScope
-import io.github.freya022.botcommands.api.commands.application.GuildApplicationCommandManager
-import io.github.freya022.botcommands.api.commands.application.annotations.AppDeclaration
+import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandManager
+import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandProvider
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 
 @Command
-class DocsCommand(private val docIndexMap: DocIndexMap, private val slashDocsController: SlashDocsController) {
-    @AppDeclaration
-    fun declare(manager: GuildApplicationCommandManager) {
+class DocsCommand(private val docIndexMap: DocIndexMap, private val slashDocsController: SlashDocsController) : GuildApplicationCommandProvider {
+    override fun declareGuildApplicationCommands(manager: GuildApplicationCommandManager) {
         manager.slashCommand("docs", CommandScope.GUILD, null) {
             description = "Shows the documentation"
 
@@ -29,12 +28,12 @@ class DocsCommand(private val docIndexMap: DocIndexMap, private val slashDocsCon
 
                     option("className") {
                         description = "Name of the Java class"
-                        autocompleteReference(CLASS_NAME_AUTOCOMPLETE_NAME)
+                        autocompleteByName(CLASS_NAME_AUTOCOMPLETE_NAME)
                     }
 
                     option("identifier") {
                         description = "Signature of the method / field name"
-                        autocompleteReference(METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME)
+                        autocompleteByName(METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME)
                     }
                 }
             }

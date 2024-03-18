@@ -8,14 +8,13 @@ import dev.minn.jda.ktx.messages.reply_
 import io.github.freya022.botcommands.api.annotations.CommandMarker
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.application.CommandScope
-import io.github.freya022.botcommands.api.commands.application.GuildApplicationCommandManager
-import io.github.freya022.botcommands.api.commands.application.annotations.AppDeclaration
+import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandManager
+import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandProvider
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 
 @Command
-class SlashResolve(private val docIndexMap: DocIndexMap, private val commonDocsController: CommonDocsController) {
-    @AppDeclaration
-    fun declare(manager: GuildApplicationCommandManager) {
+class SlashResolve(private val docIndexMap: DocIndexMap, private val commonDocsController: CommonDocsController) : GuildApplicationCommandProvider {
+    override fun declareGuildApplicationCommands(manager: GuildApplicationCommandManager) {
         manager.slashCommand("resolve", CommandScope.GUILD, null) {
             description = commandDescription
 
@@ -30,7 +29,7 @@ class SlashResolve(private val docIndexMap: DocIndexMap, private val commonDocsC
                     ) {
                         description = chainArgDescription
 
-                        autocompleteReference(CommonDocsHandlers.RESOLVE_AUTOCOMPLETE_NAME)
+                        autocompleteByName(CommonDocsHandlers.RESOLVE_AUTOCOMPLETE_NAME)
                     }
                 }
             }
