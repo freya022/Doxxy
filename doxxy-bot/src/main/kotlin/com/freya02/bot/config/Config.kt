@@ -39,19 +39,19 @@ data class Config(val token: String,
         private val configFilePath: Path = Environment.configFolder.resolve("config.json")
 
         @get:BService
-        val instance: Config by lazy {
+        val config: Config by lazy {
             logger.info { "Loading configuration at ${configFilePath.absolutePathString()}" }
 
             return@lazy Gson().fromJson(configFilePath.readText(), Config::class.java)
         }
 
         @get:BService
-        val databaseConfig: DatabaseConfig get() = instance.databaseConfig
+        val databaseConfig: DatabaseConfig get() = config.databaseConfig
 
         @get:BService
-        val pullUpdateConfig: PullUpdaterConfig get() = instance.pullUpdater
+        val pullUpdateConfig: PullUpdaterConfig get() = config.pullUpdater
 
         @get:BService
-        val backendConfig: BackendConfig get() = instance.backend
+        val backendConfig: BackendConfig get() = config.backend
     }
 }

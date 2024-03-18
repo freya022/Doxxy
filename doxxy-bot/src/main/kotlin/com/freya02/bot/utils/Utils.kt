@@ -14,10 +14,10 @@ object Utils {
     const val jdaGuildId: Long = 125227483518861312
 
     @Contract("null -> false")
-    fun Guild?.isBCGuild(): Boolean = this?.idLong == bcGuildId || this?.idLong == Config.instance.fakeBCGuildId
+    fun Guild?.isBCGuild(): Boolean = this?.idLong == bcGuildId || this?.idLong == Config.config.fakeBCGuildId
 
     @Contract("null -> false")
-    fun Guild?.isJDAGuild(): Boolean = this?.idLong == jdaGuildId || this?.idLong == Config.instance.fakeJDAGuildId
+    fun Guild?.isJDAGuild(): Boolean = this?.idLong == jdaGuildId || this?.idLong == Config.config.fakeJDAGuildId
 
     inline fun <R> Path.withTemporaryFile(block: (Path) -> R) {
         try {

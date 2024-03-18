@@ -32,7 +32,7 @@ object PullUpdater {
     private data class CacheValue(val headSha: String, val baseSha: String, val forkedGithubBranch: GithubBranch)
 
     private val logger = KotlinLogging.logger { }
-    private val config = Config.instance.pullUpdater
+    private val config = Config.config.pullUpdater
     private val forkPath = Data.jdaForkPath
 
     private val client = HttpClient(OkHttp) {

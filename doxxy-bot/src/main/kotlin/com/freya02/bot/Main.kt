@@ -49,7 +49,7 @@ object Main {
             DocWebServer.startDocWebServer()
             logger.info { "Started docs web server" }
 
-            val config = Config.instance
+            val config = Config.config
             BotCommands.create(manager) {
                 if (Environment.isDev) {
                     disableExceptionsInDMs = true
