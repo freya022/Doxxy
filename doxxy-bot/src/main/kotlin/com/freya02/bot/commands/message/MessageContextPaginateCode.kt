@@ -21,21 +21,22 @@ import io.github.freya022.botcommands.api.commands.application.ApplicationComman
 import io.github.freya022.botcommands.api.commands.application.context.annotations.JDAMessageCommand
 import io.github.freya022.botcommands.api.commands.application.context.message.GuildMessageEvent
 import io.github.freya022.botcommands.api.components.Button
-import io.github.freya022.botcommands.api.components.Components
+import io.github.freya022.botcommands.api.components.Buttons
 import io.github.freya022.botcommands.api.components.builder.IEphemeralActionableComponent
 import io.github.freya022.botcommands.api.components.data.InteractionConstraints
 import io.github.freya022.botcommands.api.components.event.ButtonEvent
+import io.github.freya022.botcommands.api.core.BContext
+import io.github.freya022.botcommands.api.core.utils.edit
 import io.github.freya022.botcommands.api.core.utils.suppressContentWarning
-import io.github.freya022.botcommands.api.pagination.PaginatorComponents
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.interactions.InteractionHook
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
-import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
-import net.dv8tion.jda.api.utils.messages.MessageEditBuilder
-import java.util.concurrent.TimeUnit
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 import kotlin.reflect.KMutableProperty0
+import kotlin.time.Duration.Companion.minutes
 
 private typealias MessageId = Long
 
@@ -43,7 +44,10 @@ private val logger = KotlinLogging.logger { }
 private const val CODE_BLOCK_LENGTH = "```java\n```".length
 
 @Command
-class MessageContextPaginateCode(private val componentsService: Components) : ApplicationCommand() {
+class MessageContextPaginateCode(
+    private val context: BContext,
+    private val buttons: Buttons
+) : ApplicationCommand() {
     private class PaginationState(val paginator: CodePaginator, val originalContent: String, val owner: UserSnowflake) {
         var showLineNumbers: Boolean = false
             private set
@@ -177,14 +181,11 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
             lateinit var paginationState: PaginationState
 
             val hook = event.hook
-            val paginator = CodePaginatorBuilder(componentsService)
+            val paginator = CodePaginatorBuilder(context, messageWriter = { onPageChange(paginationState, it, page) })
                 .setConstraints(InteractionConstraints.ofUsers(event.user))
-                .setTimeout(10, TimeUnit.MINUTES) { instance, _ ->
+                .setTimeout(10.minutes) { instance ->
                     hook.editOriginalComponents().queue()
                     instance.cleanup()
-                }
-                .setPaginatorSupplier { _, editBuilder, components, page ->
-                    emptyEmbed.also { onPageChange(paginationState, editBuilder, components, page) }
                 }
                 .build()
 
@@ -194,27 +195,20 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
         }
     }
 
-    private fun onPageChange(
-        state: PaginationState,
-        editBuilder: MessageEditBuilder,
-        components: PaginatorComponents,
-        page: Int
-    ) {
+    private fun onPageChange(state: PaginationState, builder: MessageCreateBuilder, page: Int) = runBlocking {
         val blocks = state.blocks
-
-        components.addComponents(makeLineNumbersButton(state), makeUseFormattingButton(state), makeReplaceStringsButton(state))
-
-        editBuilder.setContent("```java\n${blocks[page]}```")
+        builder.addActionRow(makeLineNumbersButton(state), makeUseFormattingButton(state), makeReplaceStringsButton(state))
+        builder.setContent("```java\n${blocks[page]}```")
     }
 
     private fun sendCodePaginator(hook: InteractionHook, state: PaginationState) {
-        val paginator = state.paginator
-        hook.editOriginal(paginator.get()).queue()
+        state.paginator.getCurrentMessage().edit(hook).queue()
     }
 
-    private fun makeLineNumbersButton(state: PaginationState): Button {
+    private suspend fun makeLineNumbersButton(state: PaginationState): Button {
         val prefix = if (state.showLineNumbers) "Hide" else "Show"
-        return componentsService.ephemeralButton(ButtonStyle.SECONDARY, "$prefix line numbers") {
+        return buttons.secondary("$prefix line numbers").ephemeral {
+            noTimeout() // Managed by the paginator
             constraints += state.owner
             bindToDebounce { _, hook ->
                 state.showLineNumbers(!state.showLineNumbers)
@@ -224,11 +218,12 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
         }
     }
 
-    private fun makeUseFormattingButton(state: PaginationState): Button {
+    private suspend fun makeUseFormattingButton(state: PaginationState): Button {
         val prefix = if (state.useFormatting) "Disable" else "Enable"
-        return componentsService.ephemeralButton(ButtonStyle.SECONDARY, "$prefix formatting") {
+        return buttons.secondary("$prefix formatting").ephemeral {
+            noTimeout() // Managed by the paginator
             constraints += state.owner
-            if (!state.canUseFormatting) return@ephemeralButton
+            if (!state.canUseFormatting) return@ephemeral
 
             bindToDebounce { _, hook ->
                 if (state.useFormatting(!state.useFormatting)) {
@@ -242,11 +237,12 @@ class MessageContextPaginateCode(private val componentsService: Components) : Ap
         }.withDisabled(!state.canUseFormatting)
     }
 
-    private fun makeReplaceStringsButton(state: PaginationState): Button {
+    private suspend fun makeReplaceStringsButton(state: PaginationState): Button {
         val prefix = if (state.replaceStrings) "Restore" else "Shorten"
-        return componentsService.ephemeralButton(ButtonStyle.SECONDARY, "$prefix strings") {
+        return buttons.secondary("$prefix strings").ephemeral {
+            noTimeout() // Managed by the paginator
             constraints += state.owner
-            if (!state.canReplaceStrings) return@ephemeralButton
+            if (!state.canReplaceStrings) return@ephemeral
 
             bindToDebounce { _, hook ->
                 if (state.replaceStrings(!state.replaceStrings)) {

@@ -1,6 +1,6 @@
 package com.freya02.bot.commands.slash.versioning
 
-import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
+import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDelete
 import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.bot.utils.Utils.isJDAGuild
 import com.freya02.bot.versioning.LibraryType
@@ -10,13 +10,13 @@ import io.github.freya022.botcommands.api.commands.application.ApplicationComman
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.JDASlashCommand
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.SlashOption
-import io.github.freya022.botcommands.api.components.Components
+import io.github.freya022.botcommands.api.components.Buttons
 import net.dv8tion.jda.api.EmbedBuilder
 
 @Command
-class SlashLatest(private val versions: Versions, private val components: Components) : ApplicationCommand() {
+class SlashLatest(private val versions: Versions, private val buttons: Buttons) : ApplicationCommand() {
     @JDASlashCommand(name = "latest", description = "Shows the latest version of the library")
-    fun onSlashLatest(
+    suspend fun onSlashLatest(
         event: GuildSlashEvent,
         @SlashOption(name = "library", description = "The target library", usePredefinedChoices = true) libraryType: LibraryType?
     ) {
@@ -42,7 +42,7 @@ class SlashLatest(private val versions: Versions, private val components: Compon
         }
 
         event.replyEmbeds(builder.build())
-            .addActionRow(components.messageDeleteButton(event.user))
+            .addActionRow(buttons.messageDelete(event.user))
             .queue()
     }
 

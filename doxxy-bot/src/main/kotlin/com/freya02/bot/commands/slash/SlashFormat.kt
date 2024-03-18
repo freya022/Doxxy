@@ -11,24 +11,25 @@ import io.github.freya022.botcommands.api.commands.application.slash.annotations
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.TopLevelSlashCommandData
 import io.github.freya022.botcommands.api.modals.Modals
 import io.github.freya022.botcommands.api.modals.create
+import io.github.freya022.botcommands.api.modals.getValue
 import io.github.freya022.botcommands.api.modals.paragraphTextInput
 import net.dv8tion.jda.api.entities.Message
+import net.dv8tion.jda.api.interactions.components.text.TextInput
 
 @Command
 class SlashFormat : ApplicationCommand() {
     @TopLevelSlashCommandData(scope = CommandScope.GLOBAL)
     @JDASlashCommand(name = "format", description = "Formats your code and sends it back to you as a copy-paste-able block")
     suspend fun onSlashFormat(event: GlobalSlashEvent, modals: Modals) {
+        val codeInput: TextInput
         val modal = modals.create("Format code") {
-            paragraphTextInput("code", "Code to format") {
-                id = "code"
-            }
+            codeInput = paragraphTextInput("code", "Code to format")
         }
 
         event.replyModal(modal).queue()
 
         val modalEvent = modal.await()
-        val code = modalEvent.getValue("code")!!.asString
+        val code = codeInput.getValue(modalEvent).asString
 
         try {
             val formattedSource =

@@ -12,7 +12,7 @@ import io.github.freya022.botcommands.api.commands.text.BaseCommandEvent
 import io.github.freya022.botcommands.api.commands.text.TextCommand
 import io.github.freya022.botcommands.api.commands.text.annotations.JDATextCommandVariation
 import io.github.freya022.botcommands.api.commands.text.annotations.TextOption
-import net.dv8tion.jda.api.utils.messages.MessageCreateData
+import io.github.freya022.botcommands.api.core.utils.send
 
 @Command
 class TextDocs(
@@ -48,8 +48,10 @@ class TextDocs(
             }
         }
 
-        textDocsController.getDocSuggestionMenu(docIndex, suggestions, event.author)
-            .let { MessageCreateData.fromEditData(it.get()) }
-            .also { event.channel.sendMessage(it).queue() }
+        val docSuggestionMenu = textDocsController.getDocSuggestionMenu(docIndex, suggestions, event.author)
+        docSuggestionMenu
+            .getInitialMessage()
+            .send(event.channel)
+            .queue { docSuggestionMenu.message = it }
     }
 }

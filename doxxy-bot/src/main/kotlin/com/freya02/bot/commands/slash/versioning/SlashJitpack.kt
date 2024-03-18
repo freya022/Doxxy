@@ -1,7 +1,6 @@
 package com.freya02.bot.commands.slash.versioning
 
-import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
-import com.freya02.bot.config.Config
+import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDelete
 import com.freya02.bot.utils.Emojis
 import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.bot.utils.Utils.truncate
@@ -26,13 +25,13 @@ import io.github.freya022.botcommands.api.annotations.CommandMarker
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
 import io.github.freya022.botcommands.api.commands.application.CommandScope
-import io.github.freya022.botcommands.api.commands.application.GuildApplicationCommandManager
-import io.github.freya022.botcommands.api.commands.application.annotations.AppDeclaration
+import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandManager
+import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandProvider
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.AutocompleteAlgorithms
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
 import io.github.freya022.botcommands.api.commands.application.slash.builder.SlashCommandBuilder
-import io.github.freya022.botcommands.api.components.Components
+import io.github.freya022.botcommands.api.components.Buttons
 import io.github.freya022.botcommands.api.components.event.ButtonEvent
 import io.github.freya022.botcommands.api.core.utils.toEditData
 import io.github.freya022.botcommands.api.utils.EmojiUtils
@@ -42,19 +41,17 @@ import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInterac
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.ItemComponent
-import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import kotlin.time.Duration.Companion.hours
 
 @Command
 class SlashJitpack(
-    private val componentsService: Components,
+    private val buttons: Buttons,
     private val jitpackPrService: JitpackPrService,
-    private val jitpackBranchService: JitpackBranchService,
-    private val config: Config
-) : ApplicationCommand() {
+    private val jitpackBranchService: JitpackBranchService
+) : ApplicationCommand(), GuildApplicationCommandProvider {
     @CommandMarker
-    fun onSlashJitpackPR(event: GuildSlashEvent, libraryType: LibraryType, buildToolType: BuildToolType, pullNumber: Int) {
+    suspend fun onSlashJitpackPR(event: GuildSlashEvent, libraryType: LibraryType, buildToolType: BuildToolType, pullNumber: Int) {
         val pullRequest = jitpackPrService.getPullRequest(libraryType, pullNumber)
             ?: return event.reply_("Unknown Pull Request", ephemeral = true).queue()
 
@@ -63,7 +60,7 @@ class SlashJitpack(
         event.reply(message).queue()
     }
 
-    private fun createPrMessage(
+    private suspend fun createPrMessage(
         event: GenericInteractionCreateEvent,
         libraryType: LibraryType,
         buildToolType: BuildToolType,
@@ -104,7 +101,7 @@ class SlashJitpack(
 
             components += buildList<ItemComponent>(3) {
                 if (jitpackPrService.canUsePullUpdate(libraryType)) {
-                    this += componentsService.ephemeralButton(ButtonStyle.PRIMARY, label = "Update PR", emoji = Emojis.sync) {
+                    this += buttons.primary(label = "Update PR", emoji = Emojis.sync).ephemeral {
                         val callerId = event.user.idLong
                         timeout(1.hours)
                         bindTo {
@@ -117,7 +114,7 @@ class SlashJitpack(
                     "How? (Wiki)",
                     EmojiUtils.resolveJDAEmoji("face_with_monocle")
                 )
-                this += componentsService.messageDeleteButton(event.user)
+                this += buttons.messageDelete(event.user)
             }.row()
         }
     }
@@ -181,8 +178,7 @@ class SlashJitpack(
             }
     }
 
-    @AppDeclaration
-    fun declare(manager: GuildApplicationCommandManager) {
+    override fun declareGuildApplicationCommands(manager: GuildApplicationCommandManager) {
         manager.slashCommand("jitpack", CommandScope.GUILD, null) {
             description = "Shows you how to use jitpack for your bot"
 
@@ -192,7 +188,7 @@ class SlashJitpack(
                 addCommonJitpackOptions(manager)
                 option("branchName") {
                     description = "The name of the Git branch to build from"
-                    autocompleteReference(BRANCH_NAME_AUTOCOMPLETE_NAME)
+                    autocompleteByName(BRANCH_NAME_AUTOCOMPLETE_NAME)
                 }
             }
 
@@ -202,7 +198,7 @@ class SlashJitpack(
                 addCommonJitpackOptions(manager)
                 option("pullNumber") {
                     description = "The Pull Request number"
-                    autocompleteReference(PR_NUMBER_AUTOCOMPLETE_NAME)
+                    autocompleteByName(PR_NUMBER_AUTOCOMPLETE_NAME)
                 }
             }
         }
@@ -234,7 +230,7 @@ class SlashJitpack(
     }
 
     @CommandMarker
-    fun onSlashJitpackBranch(event: GuildSlashEvent, libraryType: LibraryType, buildToolType: BuildToolType, branchName: String?) {
+    suspend fun onSlashJitpackBranch(event: GuildSlashEvent, libraryType: LibraryType, buildToolType: BuildToolType, branchName: String?) {
         val branch = jitpackBranchService.getBranch(libraryType, branchName) ?: run {
             event.reply("Unknown branch '$branchName'").setEphemeral(true).queue()
             return
@@ -243,7 +239,7 @@ class SlashJitpack(
         onSlashJitpackBranchImpl(event, libraryType, buildToolType, branch)
     }
 
-    private fun onSlashJitpackBranchImpl(
+    private suspend fun onSlashJitpackBranchImpl(
         event: GuildSlashEvent,
         libraryType: LibraryType,
         buildToolType: BuildToolType,
@@ -278,7 +274,7 @@ class SlashJitpack(
         }
 
         event.replyEmbeds(embed)
-            .addActionRow(componentsService.messageDeleteButton(event.user))
+            .addActionRow(buttons.messageDelete(event.user))
             .queue()
     }
 

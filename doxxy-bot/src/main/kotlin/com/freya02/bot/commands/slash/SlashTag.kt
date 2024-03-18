@@ -3,6 +3,8 @@ package com.freya02.bot.commands.slash
 import com.freya02.bot.tag.*
 import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.messages.Embed
+import dev.minn.jda.ktx.messages.InlineEmbed
+import dev.minn.jda.ktx.messages.reply_
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
 import io.github.freya022.botcommands.api.commands.application.CommandScope
@@ -12,10 +14,13 @@ import io.github.freya022.botcommands.api.commands.application.slash.annotations
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.TopLevelSlashCommandData
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.AutocompleteAlgorithms
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
+import io.github.freya022.botcommands.api.components.Buttons
 import io.github.freya022.botcommands.api.components.Components
 import io.github.freya022.botcommands.api.components.data.InteractionConstraints
 import io.github.freya022.botcommands.api.components.event.ButtonEvent
 import io.github.freya022.botcommands.api.core.db.isUniqueViolation
+import io.github.freya022.botcommands.api.core.utils.deleteDelayed
+import io.github.freya022.botcommands.api.core.utils.send
 import io.github.freya022.botcommands.api.modals.Modals
 import io.github.freya022.botcommands.api.modals.annotations.ModalData
 import io.github.freya022.botcommands.api.modals.annotations.ModalHandler
@@ -23,8 +28,9 @@ import io.github.freya022.botcommands.api.modals.annotations.ModalInput
 import io.github.freya022.botcommands.api.modals.create
 import io.github.freya022.botcommands.api.modals.paragraphTextInput
 import io.github.freya022.botcommands.api.modals.shortTextInput
+import io.github.freya022.botcommands.api.pagination.PageEditor
+import io.github.freya022.botcommands.api.pagination.Paginators
 import io.github.freya022.botcommands.api.pagination.paginator.Paginator
-import io.github.freya022.botcommands.api.pagination.paginator.PaginatorBuilder
 import io.github.oshai.kotlinlogging.KotlinLogging
 import net.dv8tion.jda.api.Permission.MANAGE_ROLES
 import net.dv8tion.jda.api.Permission.MANAGE_SERVER
@@ -34,12 +40,9 @@ import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInterac
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
-import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import org.jetbrains.annotations.Contract
 import java.sql.SQLException
-import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.minutes
 
 
@@ -54,7 +57,8 @@ private const val TAGS_EDIT_MODAL_HANDLER = "SlashTag: tagsEdit"
 class SlashTag(
     private val tagDB: TagDB,
     private val modals: Modals,
-    private val components: Components
+    private val buttons: Buttons,
+    private val paginators: Paginators
 ) : ApplicationCommand() {
     @Contract(value = "null -> fail", pure = true)
     private fun <T> checkGuild(obj: T?): T = requireNotNull(obj) { "Event did not happen in a guild" }
@@ -235,19 +239,21 @@ class SlashTag(
         @SlashOption(description = "Name of the tag", autocomplete = USER_TAGS_AUTOCOMPLETE) name: String
     ) {
         withOwnedTag(event, name) { tag: Tag ->
-            val deleteButton = components.ephemeralButton(ButtonStyle.DANGER, "Delete") {
+            val deleteButton = buttons.danger("Delete").ephemeral {
+                noTimeout()
                 bindTo { doDeleteTag(event, name, it) }
             }
-            val noButton = components.ephemeralButton(ButtonStyle.PRIMARY, "No") {
+            val noButton = buttons.primary("No").ephemeral {
+                noTimeout()
                 bindTo { it.editMessage("Cancelled").setComponents().queue() }
             }
-            components.newEphemeralGroup(deleteButton, noButton) {
-                timeout(2.minutes)
+            buttons.group(deleteButton, noButton).ephemeral {
+                // Default timeout
             }
 
-            event.reply("Are you sure you want to delete the tag '${tag.name}'?")
+            event.reply_("Are you sure you want to delete the tag '${tag.name}'?", ephemeral = true)
                 .addActionRow(deleteButton, noButton)
-                .setEphemeral(true)
+                .deleteDelayed(event.hook, Components.defaultTimeout)
                 .queue()
         }
     }
@@ -263,34 +269,34 @@ class SlashTag(
         @SlashOption(name = "sorting", description = "Type of tag sorting", usePredefinedChoices = true) criteria: TagCriteria = TagCriteria.NAME
     ) {
         val totalTags = tagDB.getTotalTags(event.guild.idLong)
-        val paginator = PaginatorBuilder(components)
-            .setConstraints(InteractionConstraints.ofUsers(event.user))
-            .setMaxPages(totalTags / 10)
-            .setTimeout(5, TimeUnit.MINUTES) { p: Paginator, _ ->
-                p.cleanup()
-                event.hook.editOriginalComponents().queue()
-            }
-            .setPaginatorSupplier { _, _, _, page: Int ->
+        val pageEditor = PageEditor<Paginator> { _, _, embedBuilder, page: Int ->
+            InlineEmbed(embedBuilder).apply {
                 try {
                     val tagRange = tagDB.getTagRange(event.guild.idLong, criteria, 10 * page, 20)
 
-                    val embed = Embed {
-                        title = "All tags for " + event.guild.name
+                    title = "All tags for " + event.guild.name
 
-                        description = when {
-                            tagRange.isEmpty() -> "No tags for this guild"
-                            else -> tagRange.joinToString("\n") { t: Tag -> "${t.name} : ${t.description} : <@${t.ownerId}> (${t.uses} uses)" }
-                        }
+                    description = when {
+                        tagRange.isEmpty() -> "No tags for this guild"
+                        else -> tagRange.joinToString("\n") { t: Tag -> "${t.name} : ${t.description} : <@${t.ownerId}> (${t.uses} uses)" }
                     }
-
-                    return@setPaginatorSupplier embed
                 } catch (e: SQLException) {
                     logger.error(e) { "An exception occurred while paginating through tags in guild '${event.guild.name}' (${event.guild.id})" }
-                    return@setPaginatorSupplier Embed(title = "Unable to get the tags")
+                    title = "Unable to get the tags"
                 }
             }
+        }
+
+        paginators.paginator(totalTags / 10, pageEditor)
+            .setConstraints(InteractionConstraints.ofUsers(event.user))
+            .setTimeout(5.minutes) { p: Paginator ->
+                p.cleanup()
+                event.hook.editOriginalComponents().queue()
+            }
             .build()
-        event.reply(MessageCreateData.fromEditData(paginator.get())).setEphemeral(true).queue()
+            .getInitialMessage()
+            .send(event, ephemeral = true)
+            .queue()
     }
 
     @JDASlashCommand(name = "tags", subcommand = "info", description = "Gives information about a tag in this guild")

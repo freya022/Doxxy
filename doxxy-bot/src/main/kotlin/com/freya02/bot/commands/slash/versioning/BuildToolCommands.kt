@@ -1,6 +1,6 @@
 package com.freya02.bot.commands.slash.versioning
 
-import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
+import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDelete
 import com.freya02.bot.commands.slash.SlashLogback
 import com.freya02.bot.versioning.LibraryType
 import com.freya02.bot.versioning.ScriptType
@@ -13,23 +13,22 @@ import dev.minn.jda.ktx.messages.reply_
 import io.github.freya022.botcommands.api.annotations.CommandMarker
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.application.CommandScope
-import io.github.freya022.botcommands.api.commands.application.GuildApplicationCommandManager
-import io.github.freya022.botcommands.api.commands.application.annotations.AppDeclaration
+import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandManager
+import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandProvider
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
-import io.github.freya022.botcommands.api.components.Components
+import io.github.freya022.botcommands.api.components.Buttons
 import io.github.freya022.botcommands.api.utils.EmojiUtils
 import io.github.oshai.kotlinlogging.KotlinLogging
 import net.dv8tion.jda.api.interactions.components.ItemComponent
-import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.utils.FileUpload
 import kotlin.time.Duration.Companion.days
 
 @Command
-class BuildToolCommands(private val versions: Versions, private val componentsService: Components, private val slashLogback: SlashLogback) {
+class BuildToolCommands(private val versions: Versions, private val buttons: Buttons, private val slashLogback: SlashLogback) : GuildApplicationCommandProvider {
     private val logger = KotlinLogging.logger { }
 
     @CommandMarker
-    fun onSlashBuildTool(
+    suspend fun onSlashBuildTool(
         event: GuildSlashEvent,
         scriptType: ScriptType,
         buildToolType: BuildToolType,
@@ -49,7 +48,7 @@ class BuildToolCommands(private val versions: Versions, private val componentsSe
             }
 
             val messageData = MessageCreate {
-                val components: MutableList<ItemComponent> = arrayListOf(componentsService.messageDeleteButton(event.user))
+                val components: MutableList<ItemComponent> = arrayListOf(buttons.messageDelete(event.user))
 
                 when (scriptType) {
                     ScriptType.DEPENDENCIES -> {
@@ -66,11 +65,10 @@ class BuildToolCommands(private val versions: Versions, private val componentsSe
                             files += FileUpload.fromData(script.encodeToByteArray(), "${buildToolType.fileName}.${buildToolType.fileExtension}")
                         }
 
-                        components += componentsService.ephemeralButton(
-                            ButtonStyle.SECONDARY,
+                        components += buttons.secondary(
                             label = "Logback config",
                             emoji = EmojiUtils.resolveJDAEmoji("scroll")
-                        ) {
+                        ).ephemeral {
                             timeout(1.days)
                             bindTo(slashLogback::onLogbackRequest)
                         }
@@ -90,8 +88,7 @@ class BuildToolCommands(private val versions: Versions, private val componentsSe
         }
     }
 
-    @AppDeclaration
-    fun declare(manager: GuildApplicationCommandManager) {
+    override fun declareGuildApplicationCommands(manager: GuildApplicationCommandManager) {
         for (buildToolType in BuildToolType.entries) {
             manager.slashCommand(buildToolType.cmdName, CommandScope.GUILD, BuildToolCommands::onSlashBuildTool) {
                 description = "Shows the ${buildToolType.humanName} dependencies for a library (default: ${LibraryType.getDefaultLibrary(manager.guild).displayString})"

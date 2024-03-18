@@ -11,7 +11,8 @@ import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.MessageCreate
 import dev.minn.jda.ktx.messages.reply_
-import io.github.freya022.botcommands.api.components.Components
+import io.github.freya022.botcommands.api.components.Buttons
+import io.github.freya022.botcommands.api.components.SelectMenus
 import io.github.freya022.botcommands.api.components.event.ButtonEvent
 import io.github.freya022.botcommands.api.components.event.StringSelectEvent
 import io.github.freya022.botcommands.api.core.BContext
@@ -26,7 +27,6 @@ import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.exceptions.ErrorHandler
 import net.dv8tion.jda.api.interactions.InteractionHook
 import net.dv8tion.jda.api.interactions.components.ItemComponent
-import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.requests.ErrorResponse
 import java.util.concurrent.TimeUnit
@@ -36,14 +36,15 @@ import kotlin.time.Duration.Companion.minutes
 class MethodLinksController(
     private val context: BContext,
     serviceContainer: ServiceContainer,
-    private val componentsService: Components,
+    private val buttons: Buttons,
+    private val selectMenus: SelectMenus,
     private val docIndexMap: DocIndexMap
 ) {
     private val logger = KotlinLogging.logger { }
     private val commonDocsController: CommonDocsController by serviceContainer.lazy()
 
     context(MutableList<ItemComponent>)
-    fun addCachedMethodComponents(cachedMethod: CachedMethod, originalHook: InteractionHook?, caller: UserSnowflake) {
+    suspend fun addCachedMethodComponents(cachedMethod: CachedMethod, originalHook: InteractionHook?, caller: UserSnowflake) {
         val index = docIndexMap[cachedMethod.source]!!
         val method = runBlocking {
             index.implementationIndex.getMethod(cachedMethod.className, cachedMethod.signature)
@@ -52,7 +53,7 @@ class MethodLinksController(
         if (method != null) {
             if (cachedMethod.implementations.isNotEmpty()) {
                 val decorations = method.methodType.implementationDecorations
-                componentsService.ephemeralButton(ButtonStyle.SECONDARY, decorations.getLabel(context), decorations.emoji) {
+                buttons.secondary(decorations.getLabel(context), decorations.emoji).ephemeral {
                     timeout(5.minutes)
                     bindTo { sendMethodLinks(it, originalHook, caller, index, method, method.getImplementations(), decorations) }
                 }.also { add(it) }
@@ -60,7 +61,7 @@ class MethodLinksController(
 
             if (cachedMethod.overriddenMethods.isNotEmpty()) {
                 val decorations = method.methodType.overriddenMethodsDecorations
-                componentsService.ephemeralButton(ButtonStyle.SECONDARY, decorations.getLabel(context), decorations.emoji) {
+                buttons.secondary(decorations.getLabel(context), decorations.emoji).ephemeral {
                     timeout(5.minutes)
                     bindTo { sendMethodLinks(it, originalHook, caller, index, method, method.getOverriddenMethods(), decorations) }
                 }.also { add(it) }
@@ -96,8 +97,9 @@ class MethodLinksController(
 
             if (apiMethods.isNotEmpty()) {
                 components += apiMethods.take(SelectMenu.OPTIONS_MAX_AMOUNT * 5)
-                    .chunked(SelectMenu.OPTIONS_MAX_AMOUNT) { methodsChunk ->
-                        row(componentsService.ephemeralStringSelectMenu {
+                    .chunked(SelectMenu.OPTIONS_MAX_AMOUNT)
+                    .map { methodsChunk ->
+                        row(selectMenus.stringSelectMenu().ephemeral {
                             if (originalHook != null) {
                                 timeout(originalHook.expirationTimestamp - System.currentTimeMillis(), TimeUnit.MILLISECONDS)
                             } else {

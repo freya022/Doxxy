@@ -9,7 +9,8 @@ import com.freya02.bot.utils.joinLengthyString
 import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.MessageCreate
 import dev.minn.jda.ktx.messages.reply_
-import io.github.freya022.botcommands.api.components.Components
+import io.github.freya022.botcommands.api.components.Buttons
+import io.github.freya022.botcommands.api.components.SelectMenus
 import io.github.freya022.botcommands.api.components.event.ButtonEvent
 import io.github.freya022.botcommands.api.components.event.StringSelectEvent
 import io.github.freya022.botcommands.api.core.BContext
@@ -24,7 +25,6 @@ import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.exceptions.ErrorHandler
 import net.dv8tion.jda.api.interactions.InteractionHook
 import net.dv8tion.jda.api.interactions.components.ItemComponent
-import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.requests.ErrorResponse
 import java.util.concurrent.TimeUnit
@@ -34,14 +34,15 @@ import kotlin.time.Duration.Companion.minutes
 class ClassLinksController(
     private val context: BContext,
     serviceContainer: ServiceContainer,
-    private val componentsService: Components,
+    private val buttons: Buttons,
+    private val selectMenus: SelectMenus,
     private val docIndexMap: DocIndexMap
 ) {
     private val logger = KotlinLogging.logger { }
     private val commonDocsController: CommonDocsController by serviceContainer.lazy()
 
     context(MutableList<ItemComponent>)
-    fun addCachedClassComponents(cachedDoc: CachedClass, originalHook: InteractionHook?, caller: UserSnowflake) {
+    suspend fun addCachedClassComponents(cachedDoc: CachedClass, originalHook: InteractionHook?, caller: UserSnowflake) {
         val index = docIndexMap[cachedDoc.source]!!
         val clazz = runBlocking {
             index.implementationIndex.getClass(cachedDoc.name)
@@ -50,7 +51,7 @@ class ClassLinksController(
         if (clazz != null) {
             if (cachedDoc.subclasses.isNotEmpty()) {
                 val decorations = clazz.classType.subDecorations
-                componentsService.ephemeralButton(ButtonStyle.SECONDARY, decorations.getLabel(context), decorations.emoji) {
+                buttons.secondary(decorations.getLabel(context), decorations.emoji).ephemeral {
                     timeout(5.minutes)
                     bindTo { sendClassLinks(it, originalHook, caller, index, clazz, clazz.getSubclasses(), decorations) }
                 }.also { add(it) }
@@ -58,7 +59,7 @@ class ClassLinksController(
 
             if (cachedDoc.superclasses.isNotEmpty()) {
                 val decorations = clazz.classType.superDecorations
-                componentsService.ephemeralButton(ButtonStyle.SECONDARY, decorations.getLabel(context), decorations.emoji) {
+                buttons.secondary(decorations.getLabel(context), decorations.emoji).ephemeral {
                     timeout(5.minutes)
                     bindTo { sendClassLinks(it, originalHook, caller, index, clazz, clazz.getSuperclasses(), decorations) }
                 }.also { add(it) }
@@ -94,8 +95,9 @@ class ClassLinksController(
 
             if (apiClasses.isNotEmpty()) {
                 components += apiClasses.take(SelectMenu.OPTIONS_MAX_AMOUNT * 5)
-                    .chunked(SelectMenu.OPTIONS_MAX_AMOUNT) { superclassesChunk ->
-                        row(componentsService.ephemeralStringSelectMenu {
+                    .chunked(SelectMenu.OPTIONS_MAX_AMOUNT)
+                    .map { superclassesChunk ->
+                        row(selectMenus.stringSelectMenu().ephemeral {
                             if (originalHook != null) {
                                 timeout(originalHook.expirationTimestamp - System.currentTimeMillis(), TimeUnit.MILLISECONDS)
                             } else {

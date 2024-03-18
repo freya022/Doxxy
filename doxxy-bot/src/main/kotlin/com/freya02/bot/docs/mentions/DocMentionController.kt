@@ -1,15 +1,17 @@
 package com.freya02.bot.docs.mentions
 
 import com.freya02.bot.commands.controllers.CommonDocsController
-import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
+import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDelete
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.utils.ParsingUtils.codeBlockRegex
 import com.freya02.bot.utils.ParsingUtils.spaceRegex
+import com.freya02.bot.utils.componentIds
 import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.MessageCreate
 import dev.minn.jda.ktx.messages.reply_
-import io.github.freya022.botcommands.api.components.Components
+import io.github.freya022.botcommands.api.components.Buttons
+import io.github.freya022.botcommands.api.components.SelectMenus
 import io.github.freya022.botcommands.api.components.builder.select.ephemeral.EphemeralStringSelectBuilder
 import io.github.freya022.botcommands.api.components.event.StringSelectEvent
 import io.github.freya022.botcommands.api.core.db.Database
@@ -28,7 +30,8 @@ import kotlin.time.Duration.Companion.minutes
 @BService
 class DocMentionController(
     private val database: Database,
-    private val componentsService: Components,
+    private val buttons: Buttons,
+    private val selectMenus: SelectMenus,
     private val docIndexMap: DocIndexMap,
     private val commonDocsController: CommonDocsController
 ) {
@@ -92,7 +95,7 @@ class DocMentionController(
         timeoutCallback: suspend () -> Unit
     ): MessageCreateData {
         return MessageCreate {
-            val docsMenu = componentsService.ephemeralStringSelectMenu {
+            val docsMenu = selectMenus.stringSelectMenu().ephemeral {
                 placeholder = "Select a doc"
                 addMatchOptions(docMatches)
 
@@ -101,7 +104,7 @@ class DocMentionController(
                 bindTo { selectEvent -> onSelectedDoc(selectEvent) }
             }
 
-            val deleteButton = componentsService.messageDeleteButton(caller)
+            val deleteButton = buttons.messageDelete(caller)
 
             components += row(docsMenu)
             components += row(deleteButton)
@@ -177,9 +180,7 @@ class DocMentionController(
             .also {
                 //Delete the components of the current message,
                 // we don't want the timeout to execute
-                selectEvent.message.components.flatMap { it.actionComponents }
-                    .mapNotNull { it.id }
-                    .also { componentsService.deleteComponentsById(it) }
+                buttons.deleteComponentsByIds(selectEvent.message.componentIds)
             }
     }
 }

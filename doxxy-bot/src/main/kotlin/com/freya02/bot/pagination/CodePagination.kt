@@ -1,63 +1,27 @@
 package com.freya02.bot.pagination
 
-import io.github.freya022.botcommands.api.components.Components
-import io.github.freya022.botcommands.api.components.data.InteractionConstraints
-import io.github.freya022.botcommands.api.pagination.PaginatorSupplier
-import io.github.freya022.botcommands.api.pagination.TimeoutInfo
-import io.github.freya022.botcommands.api.pagination.paginator.BasicPaginator
-import io.github.freya022.botcommands.api.pagination.paginator.BasicPaginatorBuilder
-import io.github.freya022.botcommands.api.utils.ButtonContent
+import io.github.freya022.botcommands.api.core.BContext
+import io.github.freya022.botcommands.api.pagination.paginator.AbstractPaginator
+import io.github.freya022.botcommands.api.pagination.paginator.AbstractPaginatorBuilder
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 
 class CodePaginatorBuilder(
-    componentsService: Components
-) : BasicPaginatorBuilder<CodePaginatorBuilder, CodePaginator>(componentsService) {
-    override fun build() =
-        CodePaginator(
-            componentsService,
-            constraints,
-            timeout,
-            _maxPages = 0,
-            paginatorSupplier,
-            hasDeleteButton,
-            firstContent,
-            previousContent,
-            nextContent,
-            lastContent,
-            deleteContent
-        )
+    context: BContext,
+    val messageWriter: CodePaginator.(MessageCreateBuilder) -> Unit
+) : AbstractPaginatorBuilder<CodePaginatorBuilder, CodePaginator>(context) {
+    override fun build() = CodePaginator(context, this)
 }
 
 class CodePaginator(
-    componentsService: Components,
-    constraints: InteractionConstraints?,
-    timeout: TimeoutInfo<CodePaginator>?,
-    _maxPages: Int,
-    supplier: PaginatorSupplier<CodePaginator>?,
-    hasDeleteButton: Boolean,
-    firstContent: ButtonContent?,
-    previousContent: ButtonContent?,
-    nextContent: ButtonContent?,
-    lastContent: ButtonContent?,
-    deleteContent: ButtonContent?
-) : BasicPaginator<CodePaginator>(
-    componentsService,
-    constraints,
-    timeout,
-    _maxPages,
-    supplier,
-    hasDeleteButton,
-    firstContent,
-    previousContent,
-    nextContent,
-    lastContent,
-    deleteContent
-) {
-    public override fun setMaxPages(maxPages: Int) {
-        super.setMaxPages(maxPages)
-    }
+    context: BContext,
+    builder: CodePaginatorBuilder
+) : AbstractPaginator<CodePaginator>(context, builder) {
+    public override var maxPages: Int = 0 // This is set when the code is formatted
 
-    override fun onPostGet() {
-        super.onPostGet()
-        messageBuilder.setEmbeds()
+    private val messageWriter = builder.messageWriter
+
+    override fun writeMessage(builder: MessageCreateBuilder) {
+        super.writeMessage(builder)
+        messageWriter(builder)
     }
 }

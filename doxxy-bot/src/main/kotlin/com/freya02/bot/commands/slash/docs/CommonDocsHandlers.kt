@@ -17,7 +17,7 @@ import dev.minn.jda.ktx.messages.reply_
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.annotations.CacheAutocomplete
-import io.github.freya022.botcommands.api.components.Components
+import io.github.freya022.botcommands.api.components.SelectMenus
 import io.github.freya022.botcommands.api.components.annotations.JDASelectMenuListener
 import io.github.freya022.botcommands.api.components.event.StringSelectEvent
 import io.github.freya022.botcommands.api.core.annotations.Handler
@@ -33,7 +33,7 @@ class CommonDocsHandlers(
     // null if backend is disabled
     private val exampleApi: ExampleAPI?,
     private val docIndexMap: DocIndexMap,
-    private val componentsService: Components,
+    private val selectMenus: SelectMenus,
     private val commonDocsController: CommonDocsController,
     private val slashDocsController: SlashDocsController,
     private val examplePaginatorFactory: ExamplePaginatorFactory
@@ -79,7 +79,7 @@ class CommonDocsHandlers(
         val example = exampleApi.getExampleByTitle(title)
             ?: return event.reply_("This example no longer exists", ephemeral = true).queue()
         val language = example.contents.map { it.language }.let { languages ->
-            val languageSelectMenu = componentsService.ephemeralStringSelectMenu {
+            val languageSelectMenu = selectMenus.stringSelectMenu().ephemeral {
                 timeout(2.minutes)
 
                 placeholder = "Select a language"

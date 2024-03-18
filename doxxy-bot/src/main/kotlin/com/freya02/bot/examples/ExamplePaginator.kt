@@ -1,12 +1,13 @@
 package com.freya02.bot.examples
 
-import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDeleteButton
+import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDelete
 import com.freya02.bot.utils.componentIds
 import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.interactions.components.SelectOption
 import dev.minn.jda.ktx.messages.MessageCreate
 import dev.minn.jda.ktx.messages.into
-import io.github.freya022.botcommands.api.components.Components
+import io.github.freya022.botcommands.api.components.Buttons
+import io.github.freya022.botcommands.api.components.SelectMenus
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.freya022.botcommands.api.core.utils.toEditData
 import io.github.freya022.botcommands.api.utils.EmojiUtils
@@ -18,27 +19,29 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import kotlin.time.Duration.Companion.minutes
 
 @BService
-class ExamplePaginatorFactory(private val componentsService: Components) {
+class ExamplePaginatorFactory(private val buttons: Buttons, private val selectMenus: SelectMenus) {
     fun fromInteraction(
         parts: List<ExampleContentPartDTO>,
         author: UserSnowflake,
         ephemeral: Boolean,
         initialHook: InteractionHook
     ) = ExamplePaginator(
-        componentsService,
+        buttons,
+        selectMenus,
         parts,
         author,
         ephemeral,
         initialHook,
         onTimeout = { paginator, hook ->
-            componentsService.deleteComponentsById(hook.retrieveOriginal().await().componentIds)
+            buttons.deleteComponentsByIds(hook.retrieveOriginal().await().componentIds)
             hook.editOriginal(paginator.createMessage(disabled = true).toEditData()).queue()
         }
     )
 }
 
 class ExamplePaginator(
-    private val componentsService: Components,
+    private val buttons: Buttons,
+    private val selectMenus: SelectMenus,
     private val parts: List<ExampleContentPartDTO>,
     private val author: UserSnowflake,
     private val ephemeral: Boolean,
@@ -48,12 +51,12 @@ class ExamplePaginator(
 ) {
     private var page: Int = 0
 
-    fun createMessage(disabled: Boolean = false): MessageCreateData = MessageCreate {
+    suspend fun createMessage(disabled: Boolean = false): MessageCreateData = MessageCreate {
         val currentPart = parts[page]
 
         content = currentPart.content
         if (parts.size > 1) {
-            components += componentsService.ephemeralStringSelectMenu {
+            components += selectMenus.stringSelectMenu().ephemeral {
                 parts.forEachIndexed { index, part ->
                     options += createSelectOption(part, index)
                 }
@@ -70,13 +73,13 @@ class ExamplePaginator(
 
                         selectEvent.editMessage(createMessage().toEditData()).queue()
                         // Remember to clean up old components
-                        componentsService.deleteComponentsById(selectEvent.message.componentIds)
+                        selectMenus.deleteComponentsByIds(selectEvent.message.componentIds)
                     }
                 }
             }.into()
         }
         if (!ephemeral) {
-            components += componentsService.messageDeleteButton(author).into()
+            components += buttons.messageDelete(author).into()
         }
     }
 
