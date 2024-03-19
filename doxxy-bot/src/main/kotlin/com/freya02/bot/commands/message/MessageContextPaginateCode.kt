@@ -6,6 +6,7 @@ import com.freya02.bot.pagination.CodePaginatorBuilder
 import com.freya02.bot.utils.ParsingUtils.codeBlockRegex
 import com.freya02.bot.utils.Utils.digitAmount
 import com.freya02.bot.utils.Utils.letIf
+import com.freya02.bot.utils.disableIf
 import com.github.javaparser.ParseProblemException
 import com.github.javaparser.Position
 import com.github.javaparser.Range
@@ -264,7 +265,7 @@ class MessageContextPaginateCode(
         it.editComponents(it.message.components.asDisabled()).queue()
         try {
             if (!block(it, it.hook)) {
-                it.hook.editOriginalComponents(it.message.components).queue()
+                it.hook.editOriginalComponents(it.message.components.disableIf { c -> c.id == it.componentId }).queue()
             }
         } catch (e: Exception) {
             it.hook.editOriginalComponents(it.message.components).queue()
