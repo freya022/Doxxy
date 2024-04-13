@@ -33,6 +33,7 @@ import io.github.freya022.botcommands.api.commands.application.slash.autocomplet
 import io.github.freya022.botcommands.api.commands.application.slash.builder.SlashCommandBuilder
 import io.github.freya022.botcommands.api.components.Buttons
 import io.github.freya022.botcommands.api.components.event.ButtonEvent
+import io.github.freya022.botcommands.api.core.utils.runIgnoringResponse
 import io.github.freya022.botcommands.api.core.utils.toEditData
 import io.github.freya022.botcommands.api.utils.EmojiUtils
 import net.dv8tion.jda.api.entities.MessageEmbed
@@ -41,6 +42,7 @@ import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInterac
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.ItemComponent
+import net.dv8tion.jda.api.requests.ErrorResponse
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import kotlin.time.Duration.Companion.hours
 
@@ -137,12 +139,15 @@ class SlashJitpack(
             else -> "Please wait while the pull request is being updated"
         }.let { event.hook.send(it, ephemeral = true).await() }
 
-        jitpackPrService.updatePr(libraryType, pullNumber, event.hook, waitMessage.idLong) { branch ->
-            val message = createPrMessage(event, libraryType, buildToolType, pullRequest, branch)
-            if (event.user.idLong == callerId) {
-                event.hook.editOriginal(message.toEditData()).queue()
-            } else {
-                event.hook.sendMessage(message).setEphemeral(true).queue()
+        // Sometimes funny people delete the /jitpack message before the update has finished
+        runIgnoringResponse(ErrorResponse.UNKNOWN_MESSAGE) {
+            jitpackPrService.updatePr(libraryType, pullNumber, event.hook, waitMessage.idLong) { branch ->
+                val message = createPrMessage(event, libraryType, buildToolType, pullRequest, branch)
+                if (event.user.idLong == callerId) {
+                    event.hook.editOriginal(message.toEditData()).await()
+                } else {
+                    event.hook.sendMessage(message).setEphemeral(true).queue()
+                }
             }
         }
     }
