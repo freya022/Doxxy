@@ -4,11 +4,9 @@ import com.freya02.bot.config.Config
 import com.freya02.bot.config.Data
 import com.freya02.bot.config.Environment
 import com.freya02.docs.DocWebServer
-import dev.minn.jda.ktx.events.CoroutineEventManager
 import dev.reformator.stacktracedecoroutinator.runtime.DecoroutinatorRuntime
 import io.github.freya022.botcommands.api.core.BotCommands
 import io.github.freya022.botcommands.api.core.config.DevConfig
-import io.github.freya022.botcommands.api.core.utils.namedDefaultScope
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.debug.DebugProbes
@@ -16,7 +14,6 @@ import java.lang.management.ManagementFactory
 import kotlin.io.path.absolutePathString
 import kotlin.system.exitProcess
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.minutes
 import ch.qos.logback.classic.ClassicConstants as LogbackConstants
 
 object Main {
@@ -42,15 +39,12 @@ object Main {
 
             DebugProbes.install()
 
-            val scope = namedDefaultScope("Doxxy coroutine", 4)
-            val manager = CoroutineEventManager(scope, 1.minutes)
-
             logger.info { "Starting docs web server" }
             DocWebServer.startDocWebServer()
             logger.info { "Started docs web server" }
 
             val config = Config.config
-            BotCommands.create(manager) {
+            BotCommands.create {
                 if (Environment.isDev) {
                     disableExceptionsInDMs = true
                     @OptIn(DevConfig::class)
