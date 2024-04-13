@@ -1,8 +1,8 @@
 package com.freya02.bot.switches
 
 import com.freya02.bot.config.BackendConfig
-import io.github.freya022.botcommands.api.core.BContext
 import io.github.freya022.botcommands.api.core.service.CustomConditionChecker
+import io.github.freya022.botcommands.api.core.service.ServiceContainer
 import io.github.freya022.botcommands.api.core.service.annotations.Condition
 import io.github.freya022.botcommands.api.core.service.getService
 
@@ -15,11 +15,11 @@ object BackendChecker : CustomConditionChecker<RequiresBackend> {
         get() = RequiresBackend::class.java
 
     override fun checkServiceAvailability(
-        context: BContext,
+        serviceContainer: ServiceContainer,
         checkedClass: Class<*>,
         annotation: RequiresBackend
     ): String? {
-        if (!context.getService<BackendConfig>().enable) {
+        if (!serviceContainer.getService<BackendConfig>().enable) {
             return "Backend is disabled"
         }
 
