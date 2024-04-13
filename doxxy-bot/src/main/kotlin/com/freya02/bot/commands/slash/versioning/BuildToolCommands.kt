@@ -7,6 +7,7 @@ import com.freya02.bot.versioning.ScriptType
 import com.freya02.bot.versioning.Versions
 import com.freya02.bot.versioning.supplier.BuildToolType
 import com.freya02.bot.versioning.supplier.DependencySupplier
+import com.freya02.bot.versioning.supplier.GradleFlavor
 import com.freya02.bot.versioning.supplier.UnsupportedDependencyException
 import dev.minn.jda.ktx.messages.MessageCreate
 import dev.minn.jda.ktx.messages.reply_
@@ -16,6 +17,7 @@ import io.github.freya022.botcommands.api.commands.application.CommandScope
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandManager
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandProvider
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
+import io.github.freya022.botcommands.api.commands.application.slash.builder.TopLevelSlashCommandBuilder
 import io.github.freya022.botcommands.api.components.Buttons
 import io.github.freya022.botcommands.api.utils.EmojiUtils
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -88,25 +90,50 @@ class BuildToolCommands(private val versions: Versions, private val buttons: But
         }
     }
 
+    @CommandMarker
+    suspend fun onSlashGradle(
+        event: GuildSlashEvent,
+        scriptType: ScriptType,
+        flavor: GradleFlavor,
+        libraryType: LibraryType = LibraryType.getDefaultLibrary(event.guild)
+    ) {
+        val buildToolType = when (flavor) {
+            GradleFlavor.KOTLIN -> BuildToolType.GRADLE_KTS
+            GradleFlavor.GROOVY -> BuildToolType.GRADLE
+        }
+        return onSlashBuildTool(event, scriptType, buildToolType, libraryType)
+    }
+
     override fun declareGuildApplicationCommands(manager: GuildApplicationCommandManager) {
-        for (buildToolType in BuildToolType.entries) {
-            manager.slashCommand(buildToolType.cmdName, CommandScope.GUILD, BuildToolCommands::onSlashBuildTool) {
-                description = "Shows the ${buildToolType.humanName} dependencies for a library (default: ${LibraryType.getDefaultLibrary(manager.guild).displayString})"
+        manager.slashCommand("maven", CommandScope.GUILD, BuildToolCommands::onSlashBuildTool) {
+            description = "Shows the Maven dependencies for a library (default: ${LibraryType.getDefaultLibrary(manager.guild).displayString})"
 
-                option("scriptType") {
-                    description = "Whether to show the full build script or only the dependencies"
-                    usePredefinedChoices = true
-                }
+            generatedOption("buildToolType") { BuildToolType.MAVEN }
 
-                generatedOption("buildToolType") {
-                    buildToolType
-                }
+            addCommonOptions()
+        }
 
-                option(declaredName = "libraryType", optionName = "library") {
-                    description = "Type of library"
-                    usePredefinedChoices = true
-                }
+        manager.slashCommand("gradle", CommandScope.GUILD, BuildToolCommands::onSlashGradle) {
+            description = "Shows the Gradle dependencies for a library (default: ${LibraryType.getDefaultLibrary(manager.guild).displayString})"
+
+            option("flavor") {
+                description = "The language the gradle script should be in"
+                usePredefinedChoices = true
             }
+
+            addCommonOptions()
+        }
+    }
+
+    private fun TopLevelSlashCommandBuilder.addCommonOptions() {
+        option("scriptType") {
+            description = "Whether to show the full build script or only the dependencies"
+            usePredefinedChoices = true
+        }
+
+        option(declaredName = "libraryType", optionName = "library") {
+            description = "Type of library"
+            usePredefinedChoices = true
         }
     }
 }
