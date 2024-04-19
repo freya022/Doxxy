@@ -4,13 +4,12 @@ package io.github.freya022.doxxy.common
 enum class ExampleLibrary(val documentedLibrary: DocumentedExampleLibrary?) {
     JDA(DocumentedExampleLibrary.JDA),
     JDK(DocumentedExampleLibrary.JDK),
-    BOT_COMMANDS(DocumentedExampleLibrary.BOT_COMMANDS),
+    BOT_COMMANDS(null),
     JDA_KTX(null),
     LAVA_PLAYER(null)
 }
 
 enum class DocumentedExampleLibrary {
     JDA,
-    JDK,
-    BOT_COMMANDS
+    JDK
 }

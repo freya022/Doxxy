@@ -1,8 +1,6 @@
 package com.freya02.docs
 
-import com.freya02.bot.utils.Utils.isBCGuild
 import io.github.freya022.doxxy.common.DocumentedExampleLibrary
-import net.dv8tion.jda.api.entities.Guild
 
 enum class DocSourceType(
     val id: Int,
@@ -19,14 +17,6 @@ enum class DocSourceType(
         "JDA",
         "https://docs.jda.wiki",
         "net\\.dv8tion\\.jda.*"
-    ),
-    BOT_COMMANDS(
-        2,
-        "botcommands",
-        "http://localhost:25566/BotCommands",
-        null,
-        "https://freya022.github.io/BotCommands",
-        "com\\.freya02\\.botcommands\\.api.*"
     ),
     JAVA(
         3,
@@ -100,12 +90,6 @@ enum class DocSourceType(
         fun DocumentedExampleLibrary.toDocSourceType(): DocSourceType = when (this) {
             DocumentedExampleLibrary.JDA -> JDA
             DocumentedExampleLibrary.JDK -> JAVA
-            DocumentedExampleLibrary.BOT_COMMANDS -> BOT_COMMANDS
-        }
-
-        fun typesForGuild(guild: Guild): List<DocSourceType> = when {
-            guild.isBCGuild() -> entries
-            else -> entries - BOT_COMMANDS
         }
     }
 }

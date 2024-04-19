@@ -66,7 +66,6 @@ class CommonDocsController(
                         name = when (docIndex.sourceType) {
                             DocSourceType.JAVA -> "Java Javadocs"
                             DocSourceType.JDA -> "JDA Javadocs"
-                            DocSourceType.BOT_COMMANDS -> "BotCommands Javadocs"
                         }
                         iconUrl = when (docIndex.sourceType) {
                             DocSourceType.JAVA -> "https://assets.stickpng.com/images/58480979cef1014c0b5e4901.png"

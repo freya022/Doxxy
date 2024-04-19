@@ -14,7 +14,7 @@ class SlashSearch : GuildApplicationCommandProvider {
         manager.slashCommand("search", CommandScope.GUILD, null) {
             description = "Searches the documentation for classes, methods and fields"
 
-            DocSourceType.typesForGuild(manager.guild).forEach { sourceType ->
+            DocSourceType.entries.forEach { sourceType ->
                 subcommand(sourceType.cmdName, SlashDocsController::onSearchSlashCommand) {
                     description = "Searches the documentation for classes, methods and fields"
 

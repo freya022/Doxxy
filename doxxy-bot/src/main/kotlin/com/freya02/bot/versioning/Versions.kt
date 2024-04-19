@@ -30,7 +30,6 @@ class Versions(private val context: BContext, private val docIndexMap: DocIndexM
     private val lastKnownJDAKtxPath = Data.getVersionPath(VersionType.JDAKTX)
     private val lastKnownLavaPlayerPath = Data.getVersionPath(VersionType.LAVAPLAYER)
     private val jdaDocsFolder = Data.jdaDocsFolder
-    private val bcDocsFolder = Data.bcDocsFolder
 
     private val bcChecker =
         MavenVersionChecker(lastKnownBotCommandsPath, LibraryType.BOT_COMMANDS)
@@ -151,25 +150,7 @@ class Versions(private val context: BContext, private val docIndexMap: DocIndexM
 
         if (changed) {
             logger.info { "BotCommands version changed" }
-
-            bcChecker.latest.downloadMavenJavadoc().withTemporaryFile { javadocPath ->
-                logger.trace { "Extracting BC javadocs" }
-                VersionsUtils.replaceWithZipContent(javadocPath, bcDocsFolder, "html")
-            }
-
-            bcChecker.latest.downloadMavenSources().withTemporaryFile { javadocPath ->
-                logger.trace { "Extracting BC sources" }
-                VersionsUtils.extractZip(javadocPath, bcDocsFolder, "java")
-            }
-
-            logger.trace { "Invalidating BotCommands index" }
-            docIndexMap.refreshAndInvalidateIndex(DocSourceType.BOT_COMMANDS, ReindexData())
-            for (handlerName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
-                context.invalidateAutocompleteCache(handlerName)
-            }
-
             bcChecker.saveVersion()
-
             logger.info { "BotCommands version updated to ${bcChecker.latest.version}" }
         }
     }

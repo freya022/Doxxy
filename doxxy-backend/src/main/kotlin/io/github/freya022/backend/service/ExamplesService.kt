@@ -53,7 +53,6 @@ class ExamplesService(
         val exampleLibrary = when (library) {
             "JDA" -> ExampleLibrary.JDA
             "JDK" -> ExampleLibrary.JDK
-            "BotCommands" -> ExampleLibrary.BOT_COMMANDS
             else -> throw IllegalArgumentException("Unknown library: $library")
         }
     }

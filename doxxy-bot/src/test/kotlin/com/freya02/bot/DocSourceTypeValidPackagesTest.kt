@@ -12,12 +12,6 @@ class DocSourceTypeValidPackagesTest {
     }
 
     @Test
-    fun testBotCommands() {
-        Assertions.assertTrue(DocSourceType.BOT_COMMANDS.isValidPackage("com.freya02.botcommands.api"))
-        Assertions.assertFalse(DocSourceType.BOT_COMMANDS.isValidPackage("java.lang"))
-    }
-
-    @Test
     fun testJava() {
         Assertions.assertTrue(DocSourceType.JAVA.isValidPackage("java.lang"))
         Assertions.assertFalse(DocSourceType.JAVA.isValidPackage("com.freya02.botcommands.api"))

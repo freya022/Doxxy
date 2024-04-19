@@ -1,6 +1,5 @@
 package com.freya02.bot.resolvers
 
-import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.docs.DocSourceType
 import io.github.freya022.botcommands.api.commands.text.BaseCommandEvent
 import io.github.freya022.botcommands.api.core.service.annotations.Resolver
@@ -35,17 +34,10 @@ class DocSourceTypeResolver : ClassParameterResolver<DocSourceTypeResolver, DocS
     ): DocSourceType = DocSourceType.valueOf(optionMapping.asString)
 
     override fun getPredefinedChoices(guild: Guild?): Collection<Command.Choice> {
-        return when {
-            guild.isBCGuild() -> listOf(
-                Command.Choice("BotCommands", DocSourceType.BOT_COMMANDS.name),
-                Command.Choice("JDA", DocSourceType.JDA.name),
-                Command.Choice("Java", DocSourceType.JAVA.name)
-            )
-            else -> listOf(
-                Command.Choice("JDA", DocSourceType.JDA.name),
-                Command.Choice("Java", DocSourceType.JAVA.name)
-            )
-        }
+        return listOf(
+            Command.Choice("JDA", DocSourceType.JDA.name),
+            Command.Choice("Java", DocSourceType.JAVA.name)
+        )
     }
 
     override fun resolve(
@@ -57,8 +49,6 @@ class DocSourceTypeResolver : ClassParameterResolver<DocSourceTypeResolver, DocS
         return when {
             typeStr.contentEquals("java", true) -> DocSourceType.JAVA
             typeStr.contentEquals("jda", true) -> DocSourceType.JDA
-            typeStr.contentEquals("botcommands", true) -> DocSourceType.BOT_COMMANDS
-            typeStr.contentEquals("bc", true) -> DocSourceType.BOT_COMMANDS
             else -> null
         }
     }
