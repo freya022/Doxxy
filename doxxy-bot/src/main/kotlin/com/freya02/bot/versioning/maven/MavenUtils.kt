@@ -17,23 +17,6 @@ object MavenUtils {
         return latest?.text() ?: throw ParsingException("Unable to parse latest version")
     }
 
-    fun retrieveGithubDependencyVersion(
-        repoOwnerName: String,
-        repoName: String,
-        branchName: String,
-        targetArtifactId: String
-    ): String {
-        val document = HttpUtils.getDocument(
-            "https://raw.githubusercontent.com/%s/%s/%s/pom.xml".format(
-                repoOwnerName,
-                repoName,
-                branchName
-            )
-        )
-
-        return parseDependencyVersion(document, targetArtifactId)
-    }
-
     fun parseDependencyVersion(
         document: Document,
         targetArtifactId: String,
