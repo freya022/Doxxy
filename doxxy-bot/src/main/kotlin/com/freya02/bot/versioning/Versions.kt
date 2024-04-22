@@ -10,6 +10,7 @@ import com.freya02.bot.versioning.VersionsUtils.downloadMavenSources
 import com.freya02.bot.versioning.github.GithubUtils
 import com.freya02.bot.versioning.maven.MavenBranchProjectDependencyVersionChecker
 import com.freya02.bot.versioning.maven.MavenVersionChecker
+import com.freya02.bot.versioning.maven.RepoType
 import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.events.getDefaultScope
 import io.github.freya022.botcommands.api.core.BContext
@@ -23,24 +24,38 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
 @BService
-class Versions(private val context: BContext, private val docIndexMap: DocIndexMap) {
-    private val lastKnownBotCommandsPath = Data.getVersionPath(VersionType.BotCommands)
-    private val lastKnownJDAFromBCPath = Data.getVersionPath(VersionType.JDAOfBotCommands)
-    private val lastKnownJDAPath = Data.getVersionPath(VersionType.JDA)
-    private val lastKnownJDAKtxPath = Data.getVersionPath(VersionType.JDAKTX)
-    private val lastKnownLavaPlayerPath = Data.getVersionPath(VersionType.LAVAPLAYER)
-    private val jdaDocsFolder = Data.jdaDocsFolder
-
+class Versions(
+    private val context: BContext,
+    private val docIndexMap: DocIndexMap,
+    private val versionsRepository: VersionsRepository,
+) {
     private val bcChecker =
-        MavenVersionChecker(lastKnownBotCommandsPath, LibraryType.BOT_COMMANDS)
+        MavenVersionChecker(getInitialVersion(VersionType.BOT_COMMANDS), RepoType.MAVEN)
     private val jdaVersionFromBCChecker: MavenBranchProjectDependencyVersionChecker =
-        MavenBranchProjectDependencyVersionChecker(lastKnownJDAFromBCPath, LibraryType.BOT_COMMANDS, "JDA", "master")
+        MavenBranchProjectDependencyVersionChecker(
+            getInitialVersion(VersionType.JDA_OF_BOT_COMMANDS)
+                .copy(
+                    groupId = "net.dv8tion-freya02-botcommands-master",
+                    artifactId = "JDA",
+                ),
+            LibraryType.BOT_COMMANDS,
+            targetArtifactId = "JDA",
+            targetBranchName = "master"
+        )
     private val jdaChecker: MavenVersionChecker =
-        MavenVersionChecker(lastKnownJDAPath, LibraryType.JDA)
+        MavenVersionChecker(getInitialVersion(VersionType.JDA), RepoType.MAVEN)
     private val jdaKtxChecker: MavenVersionChecker =
-        MavenVersionChecker(lastKnownJDAKtxPath, LibraryType.JDA_KTX)
+        MavenVersionChecker(getInitialVersion(VersionType.JDA_KTX), RepoType.MAVEN)
     private val lavaPlayerChecker: MavenVersionChecker =
-        MavenVersionChecker(lastKnownLavaPlayerPath, LibraryType.LAVA_PLAYER)
+        MavenVersionChecker(getInitialVersion(VersionType.LAVA_PLAYER), RepoType.MAVEN)
+
+    private fun getInitialVersion(versionType: VersionType): ArtifactInfo = runBlocking {
+        val libraryType = versionType.libraryType
+        versionsRepository
+            .findByName(versionType)
+            ?.artifactInfo
+            ?: ArtifactInfo.emptyVersion(libraryType.mavenGroupId, libraryType.mavenArtifactId)
+    }
 
     @BEventListener(async = true, timeout = -1)
     suspend fun initUpdateLoop(event: InjectedJDAEvent) {
@@ -89,9 +104,16 @@ class Versions(private val context: BContext, private val docIndexMap: DocIndexM
         val changed = jdaChecker.checkVersion()
 
         if (changed) {
+            val sourceUrl = GithubUtils.getLatestReleaseHash("discord-jda", "JDA")
+                ?.let { hash -> "https://github.com/discord-jda/JDA/blob/${hash.hash}/src/main/java/" }
+
+            if (sourceUrl == versionsRepository.findByName(VersionType.JDA)?.sourceUrl)
+                return logger.debug { "Ignoring new JDA version (${jdaChecker.latest}) from Maven Central as the GitHub release hasn't been made" }
+
             logger.info { "JDA version changed" }
 
             logger.trace { "Downloading JDA javadocs" }
+            val jdaDocsFolder = Data.jdaDocsFolder
             jdaChecker.latest.downloadMavenJavadoc().withTemporaryFile { tempZip ->
                 logger.trace { "Extracting JDA javadocs" }
                 VersionsUtils.replaceWithZipContent(tempZip, jdaDocsFolder, "html")
@@ -102,45 +124,42 @@ class Versions(private val context: BContext, private val docIndexMap: DocIndexM
                 VersionsUtils.extractZip(tempZip, jdaDocsFolder, "java")
             }
 
-            val sourceUrl = GithubUtils.getLatestReleaseHash("discord-jda", "JDA")
-                ?.let { hash -> "https://github.com/discord-jda/JDA/blob/${hash.hash}/src/main/java/" }
-
             logger.trace { "Invalidating JDA index" }
             docIndexMap.refreshAndInvalidateIndex(DocSourceType.JDA, ReindexData(sourceUrl))
             for (handlerName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
                 context.invalidateAutocompleteCache(handlerName)
             }
 
-            jdaChecker.saveVersion()
+            jdaChecker.saveVersion(sourceUrl)
 
             logger.info { "JDA version updated to ${jdaChecker.latest.version}" }
         }
     }
 
-    private fun checkLatestJDAKtxVersion() {
+    private suspend fun checkLatestJDAKtxVersion() {
         val changed = jdaKtxChecker.checkVersion()
         if (changed) {
             logger.info { "JDA-KTX version changed" }
-            jdaKtxChecker.saveVersion()
+            jdaKtxChecker.saveVersion(null)
             logger.info { "JDA-KTX version updated to ${jdaKtxChecker.latest.version}" }
         }
     }
 
-    private fun checkLatestLavaPlayerVersion() {
+    private suspend fun checkLatestLavaPlayerVersion() {
         val changed = lavaPlayerChecker.checkVersion()
         if (changed) {
             logger.info { "LavaPlayer version changed" }
-            lavaPlayerChecker.saveVersion()
+            lavaPlayerChecker.saveVersion(null)
             logger.info { "LavaPlayer version updated to ${lavaPlayerChecker.latest.version}" }
         }
     }
 
     //TODO use coroutines in version checkers / HTTP
-    private fun checkLatestJDAVersionFromBC() {
+    private suspend fun checkLatestJDAVersionFromBC() {
         val changed = jdaVersionFromBCChecker.checkVersion()
         if (changed) {
             logger.info { "BotCommands's JDA version changed" }
-            jdaVersionFromBCChecker.saveVersion()
+            jdaVersionFromBCChecker.saveVersion(null)
             logger.info { "BotCommands's JDA version updated to ${jdaVersionFromBCChecker.latest.version}" }
         }
     }
@@ -150,9 +169,13 @@ class Versions(private val context: BContext, private val docIndexMap: DocIndexM
 
         if (changed) {
             logger.info { "BotCommands version changed" }
-            bcChecker.saveVersion()
+            bcChecker.saveVersion(null)
             logger.info { "BotCommands version updated to ${bcChecker.latest.version}" }
         }
+    }
+
+    private suspend fun VersionChecker.saveVersion(sourceUrl: String?) {
+        versionsRepository.save(LibraryVersion(latest, sourceUrl))
     }
 
     val latestBotCommandsVersion: ArtifactInfo

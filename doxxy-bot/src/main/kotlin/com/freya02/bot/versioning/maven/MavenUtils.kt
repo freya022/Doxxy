@@ -1,7 +1,6 @@
 package com.freya02.bot.versioning.maven
 
 import com.freya02.bot.utils.HttpUtils
-import com.freya02.bot.versioning.ArtifactInfo
 import com.vdurmont.semver4j.Semver
 import net.dv8tion.jda.api.exceptions.ParsingException
 import org.jsoup.nodes.Document
@@ -20,15 +19,15 @@ object MavenUtils {
 
     @Throws(IOException::class)
     fun retrieveDependencyVersion(
-        ownerName: String,
-        artifactId: String,
+        repoOwnerName: String,
+        repoName: String,
         branchName: String,
         targetArtifactId: String
-    ): ArtifactInfo {
+    ): String {
         val document = HttpUtils.getDocument(
             "https://raw.githubusercontent.com/%s/%s/%s/pom.xml".format(
-                ownerName,
-                artifactId,
+                repoOwnerName,
+                repoName,
                 branchName
             )
         )
@@ -47,11 +46,7 @@ object MavenUtils {
                     return@forEachIndexed
                 }
 
-                return ArtifactInfo(
-                    groupIdElement.text(),
-                    artifactIdElement.text(),
-                    versionElement.text()
-                )
+                return versionElement.text()
             }
 
         throw IOException("Unable to get dependency version from " + document.baseUri())

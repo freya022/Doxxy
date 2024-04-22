@@ -1,9 +1,10 @@
 package com.freya02.bot.versioning.jitpack
 
 import com.freya02.bot.commands.slash.versioning.SlashJitpack
-import com.freya02.bot.config.Data
 import com.freya02.bot.versioning.ArtifactInfo
 import com.freya02.bot.versioning.LibraryType
+import com.freya02.bot.versioning.LibraryVersion
+import com.freya02.bot.versioning.VersionsRepository
 import com.freya02.bot.versioning.github.GithubBranch
 import com.freya02.bot.versioning.github.GithubBranchMap
 import com.freya02.bot.versioning.github.GithubUtils
@@ -16,7 +17,10 @@ import java.util.*
 import kotlin.time.Duration.Companion.minutes
 
 @BService
-class JitpackBranchService(private val context: BContext) {
+class JitpackBranchService(
+    private val context: BContext,
+    private val versionsRepository: VersionsRepository
+) {
     private val updateMap: MutableMap<LibraryType, UpdateCountdown> = EnumMap(LibraryType::class.java)
     private val branchMap: MutableMap<LibraryType, GithubBranchMap> = EnumMap(LibraryType::class.java)
 
@@ -48,11 +52,11 @@ class JitpackBranchService(private val context: BContext) {
         }
     }
 
-    fun getUsedJDAVersionFromBranch(branch: GithubBranch): ArtifactInfo {
+    suspend fun getUsedJDAVersionFromBranch(branch: GithubBranch): ArtifactInfo {
         val jdaVersionChecker = branchNameToJdaVersionChecker.getOrPut(branch.branchName) {
             try {
                 return@getOrPut MavenBranchProjectDependencyVersionChecker(
-                    Data.getBranchFileName(branch),
+                    ArtifactInfo.emptyVersionFromBranch(branch, "JDA"),
                     branch.ownerName,
                     branch.repoName,
                     "JDA",
@@ -67,7 +71,7 @@ class JitpackBranchService(private val context: BContext) {
         return jdaVersionChecker.latest
     }
 
-    private fun checkGithubBranchUpdates(
+    private suspend fun checkGithubBranchUpdates(
         branch: GithubBranch,
         checker: MavenBranchProjectDependencyVersionChecker
     ) {
@@ -75,7 +79,7 @@ class JitpackBranchService(private val context: BContext) {
         if (updateCountdown.needsUpdate()) {
             checker.checkVersion()
             context.invalidateAutocompleteCache(SlashJitpack.PR_NUMBER_AUTOCOMPLETE_NAME)
-            checker.saveVersion()
+            versionsRepository.save(LibraryVersion(checker.latest, sourceUrl = null))
         }
     }
 

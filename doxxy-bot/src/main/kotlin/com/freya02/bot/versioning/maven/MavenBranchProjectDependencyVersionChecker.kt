@@ -1,19 +1,23 @@
 package com.freya02.bot.versioning.maven
 
+import com.freya02.bot.versioning.ArtifactInfo
 import com.freya02.bot.versioning.LibraryType
-import java.nio.file.Path
 
 class MavenBranchProjectDependencyVersionChecker(
-    lastSavedPath: Path,
+    latest: ArtifactInfo,
     githubOwnerName: String,
     githubRepoName: String,
     targetArtifactId: String,
-    override val targetBranchName: String
-) : MavenProjectDependencyVersionChecker(lastSavedPath, githubOwnerName, githubRepoName, targetArtifactId) {
+    private val targetBranchName: String,
+) : MavenProjectDependencyVersionChecker(latest, githubOwnerName, githubRepoName, targetArtifactId) {
     constructor(
-        lastSavedPath: Path,
-        project: LibraryType,
+        latest: ArtifactInfo,
+        targetLibrary: LibraryType,
         targetArtifactId: String,
-        targetBranchName: String
-    ) : this(lastSavedPath, project.githubOwnerName, project.githubRepoName, targetArtifactId, targetBranchName)
+        targetBranchName: String,
+    ) : this(latest, targetLibrary.githubOwnerName, targetLibrary.githubRepoName, targetArtifactId, targetBranchName)
+
+    override fun getTargetBranchName(): String {
+        return targetBranchName
+    }
 }

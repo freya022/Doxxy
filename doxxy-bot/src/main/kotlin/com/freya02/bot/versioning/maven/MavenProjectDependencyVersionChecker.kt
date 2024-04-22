@@ -1,31 +1,18 @@
 package com.freya02.bot.versioning.maven
 
+import com.freya02.bot.versioning.ArtifactInfo
 import com.freya02.bot.versioning.VersionChecker
 import com.freya02.bot.versioning.github.GithubUtils
-import java.io.IOException
-import java.nio.file.Path
 
 open class MavenProjectDependencyVersionChecker(
-    lastSavedPath: Path,
-    private val ownerName: String,
-    private val artifactId: String,
+    latest: ArtifactInfo,
+    private val repoOwnerName: String,
+    private val repoName: String,
     private val targetArtifactId: String
-) : VersionChecker(
-    lastSavedPath
-) {
-    @Throws(IOException::class)
-    override fun checkVersion(): Boolean {
-        val targetBranchName = targetBranchName
-        val latestDependencyVersion =
-            MavenUtils.retrieveDependencyVersion(ownerName, artifactId, targetBranchName, targetArtifactId)
-        val changed = latestDependencyVersion != diskLatest
-
-        latest = latestDependencyVersion
-
-        return changed
+) : VersionChecker(latest) {
+    override fun retrieveLatest(): ArtifactInfo {
+        return latest.copy(version = MavenUtils.retrieveDependencyVersion(repoOwnerName, repoName, getTargetBranchName(), targetArtifactId))
     }
 
-    @get:Throws(IOException::class)
-    protected open val targetBranchName: String
-        get() = GithubUtils.getLatestBranch(ownerName, artifactId).branchName
+    protected open fun getTargetBranchName(): String = GithubUtils.getLatestBranch(repoOwnerName, repoName).branchName
 }
