@@ -56,7 +56,7 @@ class JitpackBranchService(
         val jdaVersionChecker = branchNameToJdaVersionChecker.getOrPut(branch.branchName) {
             try {
                 return@getOrPut MavenBranchProjectDependencyVersionChecker(
-                    ArtifactInfo.emptyVersionFromBranch(branch, "JDA"),
+                    ArtifactInfo.emptyVersion("net.dv8tion", "JDA"),
                     branch.ownerName,
                     branch.repoName,
                     "JDA",
