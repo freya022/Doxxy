@@ -17,8 +17,7 @@ object MavenUtils {
         return latest?.text() ?: throw ParsingException("Unable to parse latest version")
     }
 
-    @Throws(IOException::class)
-    fun retrieveDependencyVersion(
+    fun retrieveGithubDependencyVersion(
         repoOwnerName: String,
         repoName: String,
         branchName: String,
@@ -32,6 +31,13 @@ object MavenUtils {
             )
         )
 
+        return parseDependencyVersion(document, targetArtifactId)
+    }
+
+    fun parseDependencyVersion(
+        document: Document,
+        targetArtifactId: String,
+    ): String {
         document.select("project > dependencies > dependency")
             .forEachIndexed { i, element ->
                 val groupIdElement = element.selectFirst("groupId")

@@ -11,7 +11,7 @@ open class MavenProjectDependencyVersionChecker(
     private val targetArtifactId: String
 ) : VersionChecker(latest) {
     override fun retrieveLatest(): ArtifactInfo {
-        return latest.copy(version = MavenUtils.retrieveDependencyVersion(repoOwnerName, repoName, getTargetBranchName(), targetArtifactId))
+        return latest.copy(version = MavenUtils.retrieveGithubDependencyVersion(repoOwnerName, repoName, getTargetBranchName(), targetArtifactId))
     }
 
     protected open fun getTargetBranchName(): String = GithubUtils.getLatestBranch(repoOwnerName, repoName).branchName
