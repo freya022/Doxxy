@@ -29,7 +29,6 @@ object Data {
     }
 
     val jdaDocsFolder: Path = javadocsPath.resolve("JDA")
-    val bcDocsFolder: Path = javadocsPath.resolve("BotCommands")
 
     fun getCacheFolder(docSourceType: DocSourceType): Path = pageCacheFolderPath.resolve(docSourceType.name)
 

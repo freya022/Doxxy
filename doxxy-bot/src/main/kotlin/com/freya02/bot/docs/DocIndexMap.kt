@@ -11,7 +11,6 @@ import java.util.*
 @BService
 class DocIndexMap(database: Database) : EnumMap<DocSourceType, DocIndex>(DocSourceType::class.java) {
     init {
-        this[DocSourceType.BOT_COMMANDS] = DocIndex(DocSourceType.BOT_COMMANDS, database)
         this[DocSourceType.JDA] = DocIndex(DocSourceType.JDA, database)
         this[DocSourceType.JAVA] = DocIndex(DocSourceType.JAVA, database)
     }

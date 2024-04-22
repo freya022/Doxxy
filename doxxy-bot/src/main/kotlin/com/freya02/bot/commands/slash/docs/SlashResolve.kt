@@ -18,7 +18,7 @@ class SlashResolve(private val docIndexMap: DocIndexMap, private val commonDocsC
         manager.slashCommand("resolve", CommandScope.GUILD, null) {
             description = commandDescription
 
-            DocSourceType.typesForGuild(manager.guild).forEach { sourceType ->
+            DocSourceType.entries.forEach { sourceType ->
                 subcommand(sourceType.cmdName, SlashResolve::onSlashResolve) {
                     description = commandDescription
 

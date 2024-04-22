@@ -20,7 +20,7 @@ class DocsCommand(private val docIndexMap: DocIndexMap, private val slashDocsCon
         manager.slashCommand("docs", CommandScope.GUILD, null) {
             description = "Shows the documentation"
 
-            DocSourceType.typesForGuild(manager.guild).forEach { sourceType ->
+            DocSourceType.entries.forEach { sourceType ->
                 subcommand(sourceType.cmdName, DocsCommand::onSlashDocs) {
                     description = "Shows the documentation for a class, a method or a field"
 
