@@ -1,9 +1,12 @@
 create table library_version
 (
-    group_id    text not null,
-    artifact_id text not null,
-    version     text not null,
-    source_url  text null,
+    id          SERIAL NOT NULL,
+    group_id    TEXT   NOT NULL,
+    artifact_id TEXT   NOT NULL,
+    classifier  TEXT   NULL,
+    version     TEXT   NOT NULL,
+    source_url  TEXT   NULL,
 
-    primary key (group_id, artifact_id)
+    PRIMARY KEY (id),
+    UNIQUE NULLS NOT DISTINCT (group_id, artifact_id, classifier)
 )

@@ -6,18 +6,20 @@ import io.github.freya022.botcommands.api.core.service.annotations.BService
 
 @BService
 class VersionsRepository(private val database: Database) {
-    suspend fun findByName(versionType: VersionType): LibraryVersion? {
+    suspend fun findByName(libraryType: LibraryType, classifier: String?): LibraryVersion? {
         return database.preparedStatement(
             sql = """
-                SELECT group_id, artifact_id, version, source_url
+                SELECT group_id, artifact_id, classifier, version, source_url
                 FROM library_version
                 WHERE group_id = ?
                   AND artifact_id = ?
+                  AND classifier = ?
             """.trimIndent(),
             readOnly = true
         ) {
-            executeQuery(versionType.libraryType.mavenGroupId, versionType.libraryType.mavenArtifactId).readOrNull()?.let {
+            executeQuery(libraryType.mavenGroupId, libraryType.mavenArtifactId, classifier).readOrNull()?.let {
                 LibraryVersion(
+                    it.getOrNull("classifier"),
                     ArtifactInfo(it["group_id"], it["artifact_id"], it["version"]),
                     it.getOrNull("source_url"),
                 )
@@ -27,13 +29,13 @@ class VersionsRepository(private val database: Database) {
 
     suspend fun save(libraryVersion: LibraryVersion) {
         database.preparedStatement("""
-            INSERT INTO library_version (group_id, artifact_id, version, source_url)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO library_version (group_id, artifact_id, classifier, version, source_url)
+            VALUES (?, ?, ?, ?, ?)
             ON CONFLICT ON CONSTRAINT library_version_pkey DO UPDATE SET version    = EXCLUDED.version,
                                                                          source_url = EXCLUDED.source_url
         """.trimIndent()) {
             val (groupId, artifactId, version) = libraryVersion.artifactInfo
-            executeUpdate(groupId, artifactId, version, libraryVersion.sourceUrl)
+            executeUpdate(groupId, artifactId, libraryVersion.classifier, version, libraryVersion.sourceUrl)
         }
     }
 }
