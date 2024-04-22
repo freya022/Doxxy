@@ -1,9 +1,10 @@
 package com.freya02.bot.versioning
 
-abstract class VersionChecker protected constructor(latest: ArtifactInfo) {
-    var latest: ArtifactInfo = latest
+abstract class VersionChecker protected constructor(latest: LibraryVersion) {
+    val classifier: String? = latest.classifier
+    var latest: ArtifactInfo = latest.artifactInfo
         private set
-    private var diskLatest: ArtifactInfo = latest
+    private var diskLatest: ArtifactInfo = this.latest
 
     protected abstract fun retrieveLatest(): ArtifactInfo
 

@@ -164,13 +164,13 @@ class Versions(
 
             bcChecker.saveVersion()
             bcJdaVersionChecker.checkVersion()
-            bcJdaVersionChecker.saveVersion(classifier = "freya022-botcommands-release")
+            bcJdaVersionChecker.saveVersion()
 
             logger.info { "BotCommands version updated to ${bcChecker.latest.version}" }
         }
     }
 
-    private suspend fun VersionChecker.saveVersion(classifier: String? = null, sourceUrl: String? = null) {
+    private suspend fun VersionChecker.saveVersion(sourceUrl: String? = null) {
         versionsRepository.save(LibraryVersion(classifier, latest, sourceUrl))
     }
 }

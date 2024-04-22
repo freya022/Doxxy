@@ -41,8 +41,7 @@ class VersionsRepository(private val database: Database) {
     }
 }
 
-fun VersionsRepository.getInitialVersion(libraryType: LibraryType, classifier: String? = null): ArtifactInfo = runBlocking {
+fun VersionsRepository.getInitialVersion(libraryType: LibraryType, classifier: String? = null): LibraryVersion = runBlocking {
     findByName(libraryType, classifier)
-        ?.artifactInfo
-        ?: ArtifactInfo.emptyVersion(libraryType.mavenGroupId, libraryType.mavenArtifactId)
+        ?: LibraryVersion(classifier, ArtifactInfo.emptyVersion(libraryType.mavenGroupId, libraryType.mavenArtifactId))
 }

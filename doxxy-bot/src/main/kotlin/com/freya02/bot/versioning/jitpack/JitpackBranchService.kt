@@ -69,7 +69,7 @@ class JitpackBranchService(
         if (updateCountdown.needsUpdate()) {
             checker.checkVersion()
             context.invalidateAutocompleteCache(SlashJitpack.PR_NUMBER_AUTOCOMPLETE_NAME)
-            versionsRepository.save(LibraryVersion(branch.toVersionClassifier(), checker.latest, sourceUrl = null))
+            versionsRepository.save(LibraryVersion(branch.toVersionClassifier(), checker.latest))
         }
     }
 
