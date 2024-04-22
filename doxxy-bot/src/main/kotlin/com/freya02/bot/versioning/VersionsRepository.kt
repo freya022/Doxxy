@@ -5,6 +5,16 @@ import io.github.freya022.botcommands.api.core.db.preparedStatement
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import kotlinx.coroutines.runBlocking
 
+/**
+ * Repository for library versions.
+ *
+ * Each row is composed of the Maven artifact coordinates,
+ * a classifier is used to differentiate the rows which correspond to a version in a different context.
+ *
+ * For example, JDA's latest version has a group id and artifact id, but no classifier.
+ * Another example is the JDA version used in BotCommands,
+ * it has a group id, artifact id, and a classifier which tells that this version is from BC.
+ */
 @BService
 class VersionsRepository(private val database: Database) {
     suspend fun findByName(libraryType: LibraryType, classifier: String?): LibraryVersion? {
