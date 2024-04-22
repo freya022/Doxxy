@@ -3,6 +3,7 @@ package com.freya02.bot.versioning
 import io.github.freya022.botcommands.api.core.db.Database
 import io.github.freya022.botcommands.api.core.db.preparedStatement
 import io.github.freya022.botcommands.api.core.service.annotations.BService
+import kotlinx.coroutines.runBlocking
 
 @BService
 class VersionsRepository(private val database: Database) {
@@ -38,4 +39,10 @@ class VersionsRepository(private val database: Database) {
             executeUpdate(groupId, artifactId, libraryVersion.classifier, version, libraryVersion.sourceUrl)
         }
     }
+}
+
+fun VersionsRepository.getInitialVersion(libraryType: LibraryType, classifier: String? = null): ArtifactInfo = runBlocking {
+    findByName(libraryType, classifier)
+        ?.artifactInfo
+        ?: ArtifactInfo.emptyVersion(libraryType.mavenGroupId, libraryType.mavenArtifactId)
 }

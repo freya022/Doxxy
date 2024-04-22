@@ -32,39 +32,32 @@ class Versions(
     private val versionsRepository: VersionsRepository,
 ) {
     private val bcChecker =
-        MavenVersionChecker(getInitialVersion(LibraryType.BOT_COMMANDS), RepoType.MAVEN)
+        MavenVersionChecker(versionsRepository.getInitialVersion(LibraryType.BOT_COMMANDS), RepoType.MAVEN)
     val latestBotCommandsVersion: ArtifactInfo
         get() = bcChecker.latest
 
     private val bcJdaVersionChecker =
         DependencyVersionChecker(
-            getInitialVersion(LibraryType.JDA, "freya022-botcommands-release"),
+            versionsRepository.getInitialVersion(LibraryType.JDA, "freya022-botcommands-release"),
             targetArtifactId = "JDA"
         ) { bcChecker.latest.toMavenUrl(FileType.POM) }
     val jdaVersionFromBotCommands: ArtifactInfo
         get() = bcJdaVersionChecker.latest
 
     private val jdaChecker: MavenVersionChecker =
-        MavenVersionChecker(getInitialVersion(LibraryType.JDA), RepoType.MAVEN)
+        MavenVersionChecker(versionsRepository.getInitialVersion(LibraryType.JDA), RepoType.MAVEN)
     val latestJDAVersion: ArtifactInfo
         get() = jdaChecker.latest
 
     private val jdaKtxChecker: MavenVersionChecker =
-        MavenVersionChecker(getInitialVersion(LibraryType.JDA_KTX), RepoType.MAVEN)
+        MavenVersionChecker(versionsRepository.getInitialVersion(LibraryType.JDA_KTX), RepoType.MAVEN)
     val latestJDAKtxVersion: ArtifactInfo
         get() = jdaKtxChecker.latest
 
     private val lavaPlayerChecker: MavenVersionChecker =
-        MavenVersionChecker(getInitialVersion(LibraryType.LAVA_PLAYER), RepoType.MAVEN)
+        MavenVersionChecker(versionsRepository.getInitialVersion(LibraryType.LAVA_PLAYER), RepoType.MAVEN)
     val latestLavaPlayerVersion: ArtifactInfo
         get() = lavaPlayerChecker.latest
-
-    private fun getInitialVersion(libraryType: LibraryType, classifier: String? = null): ArtifactInfo = runBlocking {
-        versionsRepository
-            .findByName(libraryType, classifier)
-            ?.artifactInfo
-            ?: ArtifactInfo.emptyVersion(libraryType.mavenGroupId, libraryType.mavenArtifactId)
-    }
 
     @BEventListener(async = true, timeout = -1)
     suspend fun initUpdateLoop(event: InjectedJDAEvent) {
