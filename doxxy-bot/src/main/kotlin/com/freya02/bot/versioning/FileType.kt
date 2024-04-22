@@ -1,7 +1,8 @@
 package com.freya02.bot.versioning
 
 enum class FileType(val fileSuffix: String) {
-    CLASSES(""),
-    JAVADOC("-javadoc"),
-    SOURCES("-sources")
+    POM(".pom"),
+    CLASSES(".jar"),
+    JAVADOC("-javadoc.jar"),
+    SOURCES("-sources.jar"),
 }
