@@ -33,8 +33,4 @@ data class ArtifactInfo(val groupId: String, val artifactId: String, val version
                 "artifactId=" + artifactId + ", " +
                 "version=" + version + ']'
     }
-
-    companion object {
-        fun emptyVersion(groupId: String, artifactId: String) = ArtifactInfo(groupId, artifactId, "Unknown")
-    }
 }
