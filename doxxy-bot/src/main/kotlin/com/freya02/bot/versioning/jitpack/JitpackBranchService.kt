@@ -61,7 +61,7 @@ class JitpackBranchService(
         }
         checkGithubBranchUpdates(branch, jdaVersionChecker)
 
-        return jdaVersionChecker.latest
+        return jdaVersionChecker.latest.artifactInfo
     }
 
     private suspend fun checkGithubBranchUpdates(branch: GithubBranch, checker: VersionChecker) {
@@ -69,7 +69,7 @@ class JitpackBranchService(
         if (updateCountdown.needsUpdate()) {
             checker.checkVersion()
             context.invalidateAutocompleteCache(SlashJitpack.PR_NUMBER_AUTOCOMPLETE_NAME)
-            versionsRepository.save(LibraryVersion(branch.toVersionClassifier(), checker.latest))
+            checker.save(versionsRepository)
         }
     }
 

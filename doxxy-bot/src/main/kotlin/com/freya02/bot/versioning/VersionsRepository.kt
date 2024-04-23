@@ -31,7 +31,7 @@ class VersionsRepository(private val database: Database) {
             executeQuery(libraryType.mavenGroupId, libraryType.mavenArtifactId, classifier).readOrNull()?.let {
                 LibraryVersion(
                     it.getOrNull("classifier"),
-                    ArtifactInfo(it["group_id"], it["artifact_id"], it["version"]),
+                    it["group_id"], it["artifact_id"], it["version"],
                     it.getOrNull("source_url"),
                 )
             }
@@ -45,13 +45,13 @@ class VersionsRepository(private val database: Database) {
             ON CONFLICT ON CONSTRAINT library_version_pkey DO UPDATE SET version    = EXCLUDED.version,
                                                                          source_url = EXCLUDED.source_url
         """.trimIndent()) {
-            val (groupId, artifactId, version) = libraryVersion.artifactInfo
-            executeUpdate(groupId, artifactId, libraryVersion.classifier, version, libraryVersion.sourceUrl)
+            val (classifier, groupId, artifactId, version, sourceUrl) = libraryVersion
+            executeUpdate(groupId, artifactId, classifier, version, sourceUrl)
         }
     }
 }
 
 fun VersionsRepository.getInitialVersion(libraryType: LibraryType, classifier: String? = null): LibraryVersion = runBlocking {
     findByName(libraryType, classifier)
-        ?: LibraryVersion(classifier, ArtifactInfo.emptyVersion(libraryType.mavenGroupId, libraryType.mavenArtifactId))
+        ?: LibraryVersion(classifier, libraryType.mavenGroupId, libraryType.mavenArtifactId, "Unknown")
 }

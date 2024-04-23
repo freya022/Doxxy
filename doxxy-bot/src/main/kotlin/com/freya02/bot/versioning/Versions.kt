@@ -34,30 +34,30 @@ class Versions(
     private val bcChecker =
         MavenVersionChecker(versionsRepository.getInitialVersion(LibraryType.BOT_COMMANDS), RepoType.MAVEN)
     val latestBotCommandsVersion: ArtifactInfo
-        get() = bcChecker.latest
+        get() = bcChecker.latest.artifactInfo
 
     private val bcJdaVersionChecker =
         DependencyVersionChecker(
             versionsRepository.getInitialVersion(LibraryType.JDA, "freya022-botcommands-release"),
             targetArtifactId = "JDA"
-        ) { bcChecker.latest.toMavenUrl(FileType.POM) }
+        ) { bcChecker.latest.artifactInfo.toMavenUrl(FileType.POM) }
     val jdaVersionFromBotCommands: ArtifactInfo
-        get() = bcJdaVersionChecker.latest
+        get() = bcJdaVersionChecker.latest.artifactInfo
 
     private val jdaChecker: MavenVersionChecker =
         MavenVersionChecker(versionsRepository.getInitialVersion(LibraryType.JDA), RepoType.MAVEN)
     val latestJDAVersion: ArtifactInfo
-        get() = jdaChecker.latest
+        get() = jdaChecker.latest.artifactInfo
 
     private val jdaKtxChecker: MavenVersionChecker =
         MavenVersionChecker(versionsRepository.getInitialVersion(LibraryType.JDA_KTX), RepoType.MAVEN)
     val latestJDAKtxVersion: ArtifactInfo
-        get() = jdaKtxChecker.latest
+        get() = jdaKtxChecker.latest.artifactInfo
 
     private val lavaPlayerChecker: MavenVersionChecker =
         MavenVersionChecker(versionsRepository.getInitialVersion(LibraryType.LAVA_PLAYER), RepoType.MAVEN)
     val latestLavaPlayerVersion: ArtifactInfo
-        get() = lavaPlayerChecker.latest
+        get() = lavaPlayerChecker.latest.artifactInfo
 
     @BEventListener(async = true, timeout = -1)
     suspend fun initUpdateLoop(event: InjectedJDAEvent) {
@@ -116,12 +116,12 @@ class Versions(
 
             logger.trace { "Downloading JDA javadocs" }
             val jdaDocsFolder = Data.jdaDocsFolder
-            jdaChecker.latest.downloadMavenJavadoc().withTemporaryFile { tempZip ->
+            jdaChecker.latest.artifactInfo.downloadMavenJavadoc().withTemporaryFile { tempZip ->
                 logger.trace { "Extracting JDA javadocs" }
                 VersionsUtils.replaceWithZipContent(tempZip, jdaDocsFolder, "html")
             }
 
-            jdaChecker.latest.downloadMavenSources().withTemporaryFile { tempZip ->
+            jdaChecker.latest.artifactInfo.downloadMavenSources().withTemporaryFile { tempZip ->
                 logger.trace { "Extracting JDA sources" }
                 VersionsUtils.extractZip(tempZip, jdaDocsFolder, "java")
             }
@@ -132,7 +132,7 @@ class Versions(
                 context.invalidateAutocompleteCache(handlerName)
             }
 
-            jdaChecker.saveVersion(sourceUrl = sourceUrl)
+            jdaChecker.save(versionsRepository, sourceUrl = sourceUrl)
 
             logger.info { "JDA version updated to ${jdaChecker.latest.version}" }
         }
@@ -142,7 +142,7 @@ class Versions(
         val changed = jdaKtxChecker.checkVersion()
         if (changed) {
             logger.info { "JDA-KTX version changed" }
-            jdaKtxChecker.saveVersion()
+            jdaKtxChecker.save(versionsRepository)
             logger.info { "JDA-KTX version updated to ${jdaKtxChecker.latest.version}" }
         }
     }
@@ -151,7 +151,7 @@ class Versions(
         val changed = lavaPlayerChecker.checkVersion()
         if (changed) {
             logger.info { "LavaPlayer version changed" }
-            lavaPlayerChecker.saveVersion()
+            lavaPlayerChecker.save(versionsRepository)
             logger.info { "LavaPlayer version updated to ${lavaPlayerChecker.latest.version}" }
         }
     }
@@ -162,15 +162,11 @@ class Versions(
         if (changed) {
             logger.info { "BotCommands version changed" }
 
-            bcChecker.saveVersion()
+            bcChecker.save(versionsRepository)
             bcJdaVersionChecker.checkVersion()
-            bcJdaVersionChecker.saveVersion()
+            bcJdaVersionChecker.save(versionsRepository)
 
             logger.info { "BotCommands version updated to ${bcChecker.latest.version}" }
         }
-    }
-
-    private suspend fun VersionChecker.saveVersion(sourceUrl: String? = null) {
-        versionsRepository.save(LibraryVersion(classifier, latest, sourceUrl))
     }
 }
