@@ -1,4 +1,4 @@
-create table library_version
+CREATE TABLE library_version
 (
     id          SERIAL NOT NULL,
     group_id    TEXT   NOT NULL,
@@ -8,5 +8,5 @@ create table library_version
     source_url  TEXT   NULL,
 
     PRIMARY KEY (id),
-    UNIQUE NULLS NOT DISTINCT (group_id, artifact_id, classifier)
+    CONSTRAINT library_coordinates_key UNIQUE NULLS NOT DISTINCT (group_id, artifact_id, classifier)
 )

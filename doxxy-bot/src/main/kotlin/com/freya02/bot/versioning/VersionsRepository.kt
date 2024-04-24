@@ -42,8 +42,8 @@ class VersionsRepository(private val database: Database) {
         database.preparedStatement("""
             INSERT INTO library_version (group_id, artifact_id, classifier, version, source_url)
             VALUES (?, ?, ?, ?, ?)
-            ON CONFLICT ON CONSTRAINT library_version_pkey DO UPDATE SET version    = EXCLUDED.version,
-                                                                         source_url = EXCLUDED.source_url
+            ON CONFLICT ON CONSTRAINT library_coordinates_key DO UPDATE SET version    = EXCLUDED.version,
+                                                                            source_url = EXCLUDED.source_url
         """.trimIndent()) {
             val (classifier, groupId, artifactId, version, sourceUrl) = libraryVersion
             executeUpdate(groupId, artifactId, classifier, version, sourceUrl)
