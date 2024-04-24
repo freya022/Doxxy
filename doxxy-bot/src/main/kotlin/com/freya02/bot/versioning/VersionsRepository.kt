@@ -24,7 +24,7 @@ class VersionsRepository(private val database: Database) {
                 FROM library_version
                 WHERE group_id = ?
                   AND artifact_id = ?
-                  AND classifier = ?
+                  AND classifier IS NOT DISTINCT FROM ?
             """.trimIndent(),
             readOnly = true
         ) {
