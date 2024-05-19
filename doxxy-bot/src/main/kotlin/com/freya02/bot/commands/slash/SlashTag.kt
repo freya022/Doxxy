@@ -21,13 +21,10 @@ import io.github.freya022.botcommands.api.components.event.ButtonEvent
 import io.github.freya022.botcommands.api.core.db.isUniqueViolation
 import io.github.freya022.botcommands.api.core.utils.deleteDelayed
 import io.github.freya022.botcommands.api.core.utils.send
-import io.github.freya022.botcommands.api.modals.Modals
+import io.github.freya022.botcommands.api.modals.*
 import io.github.freya022.botcommands.api.modals.annotations.ModalData
 import io.github.freya022.botcommands.api.modals.annotations.ModalHandler
 import io.github.freya022.botcommands.api.modals.annotations.ModalInput
-import io.github.freya022.botcommands.api.modals.create
-import io.github.freya022.botcommands.api.modals.paragraphTextInput
-import io.github.freya022.botcommands.api.modals.shortTextInput
 import io.github.freya022.botcommands.api.pagination.PageEditor
 import io.github.freya022.botcommands.api.pagination.Paginators
 import io.github.freya022.botcommands.api.pagination.paginator.Paginator
@@ -35,7 +32,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import net.dv8tion.jda.api.Permission.MANAGE_ROLES
 import net.dv8tion.jda.api.Permission.MANAGE_SERVER
 import net.dv8tion.jda.api.entities.Member
-import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
@@ -142,7 +138,7 @@ class SlashTag(
 
     @ModalHandler(name = TAGS_CREATE_MODAL_HANDLER)
     suspend fun createTag(
-        event: ModalInteractionEvent,
+        event: ModalEvent,
         @ModalInput(name = "tagName") name: String,
         @ModalInput(name = "tagDescription") description: String,
         @ModalInput(name = "tagContent") content: String
@@ -189,7 +185,7 @@ class SlashTag(
 
     @ModalHandler(name = TAGS_EDIT_MODAL_HANDLER)
     suspend fun editTag(
-        event: ModalInteractionEvent,
+        event: ModalEvent,
         @ModalData name: String,
         @ModalInput(name = "tagName") newName: String,
         @ModalInput(name = "tagDescription") newDescription: String,

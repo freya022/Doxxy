@@ -186,7 +186,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             preparedStatement("select id from doc where source_id = ? and classname = ? limit 1") {
                 executeQuery(sourceType.id, className).readOrNull()?.let {
                     //If there is something found
-                    return findSignaturesIn(className, query.substringAfter('#'), DocTypes.IDENTIFIERS, 25)
+                    return@transactional findSignaturesIn(className, query.substringAfter('#'), DocTypes.IDENTIFIERS, 25)
                 }
             }
         }
@@ -201,7 +201,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             else -> DocTypes(DocType.CLASS, DocType.METHOD)
         }
 
-        return withSimilarityScoreMethod(query) { similarityScoreQuery, similarityScoreQueryParams ->
+        withSimilarityScoreMethod(query) { similarityScoreQuery, similarityScoreQueryParams ->
             results + preparedStatement("""
                 select *
                 from (select full_identifier,

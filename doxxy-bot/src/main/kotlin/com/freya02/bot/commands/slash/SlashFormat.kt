@@ -11,7 +11,6 @@ import io.github.freya022.botcommands.api.commands.application.slash.annotations
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.TopLevelSlashCommandData
 import io.github.freya022.botcommands.api.modals.Modals
 import io.github.freya022.botcommands.api.modals.create
-import io.github.freya022.botcommands.api.modals.getValue
 import io.github.freya022.botcommands.api.modals.paragraphTextInput
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.interactions.components.text.TextInput
@@ -29,7 +28,7 @@ class SlashFormat : ApplicationCommand() {
         event.replyModal(modal).queue()
 
         val modalEvent = modal.await()
-        val code = codeInput.getValue(modalEvent).asString
+        val code = modalEvent[codeInput].asString
 
         try {
             val formattedSource =

@@ -39,7 +39,7 @@ class CommonDocsHandlers(
     private val examplePaginatorFactory: ExamplePaginatorFactory
 ) : ApplicationCommand() {
     @JDASelectMenuListener(name = SEE_ALSO_SELECT_LISTENER_NAME)
-    suspend fun onSeeAlsoSelect(event: StringSelectEvent, ownerId: Long, docSourceType: DocSourceType) {
+    suspend fun onSeeAlsoSelect(event: StringSelectEvent, @ComponentData ownerId: Long, @ComponentData docSourceType: DocSourceType) {
         val values = event.selectedOptions.single().value.split(":")
         val targetType = TargetType.valueOf(values[0])
         val fullSignature = values[1]

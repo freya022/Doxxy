@@ -86,7 +86,7 @@ class DocMentionController(
                     }
                 }
 
-        return DocMatches(mentionedClasses, similarIdentifiers)
+        DocMatches(mentionedClasses, similarIdentifiers)
     }
 
     suspend fun createDocsMenuMessage(
