@@ -173,10 +173,6 @@
             <artifactId>palantir-java-format</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.vdurmont</groupId>
-            <artifactId>semver4j</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.ktor</groupId>
             <artifactId>ktor-client-core-jvm</artifactId>
         </dependency>

@@ -1,7 +1,6 @@
 package com.freya02.bot.versioning.maven
 
 import com.freya02.bot.utils.HttpUtils
-import com.vdurmont.semver4j.Semver
 import net.dv8tion.jda.api.exceptions.ParsingException
 import org.jsoup.nodes.Document
 import java.io.IOException
@@ -10,10 +9,7 @@ object MavenUtils {
     @Throws(IOException::class)
     fun getLatestStableMavenVersion(repoType: RepoType, groupId: String, artifactId: String): String {
         val mavenMetadata = getMavenMetadata(repoType.urlFormat, groupId, artifactId)
-        val latest = mavenMetadata
-            .select("metadata > versioning > versions > version")
-            .lastOrNull { it.text().isStable() } ?: mavenMetadata.selectFirst("metadata > versioning > latest")
-
+        val latest = mavenMetadata.selectFirst("metadata > versioning > latest")
         return latest?.text() ?: throw ParsingException("Unable to parse latest version")
     }
 
@@ -39,12 +35,6 @@ object MavenUtils {
             }
 
         throw IOException("Unable to get dependency version from " + document.baseUri())
-    }
-
-    private fun String.isStable(): Boolean {
-        return runCatching {
-            Semver(this).isStable
-        }.getOrNull() ?: false // If the version cannot be parsed, then just return false
     }
 
     @Throws(IOException::class)
