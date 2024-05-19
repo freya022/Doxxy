@@ -4,14 +4,13 @@ abstract class VersionChecker protected constructor(latest: LibraryVersion) {
     var latest: LibraryVersion = latest
         private set
 
-    private var latestVersion: String = latest.artifactInfo.version
-    private var diskLatestVersion: String = latestVersion
+    private var savedVersion: String = latest.artifactInfo.version
 
     protected abstract fun retrieveLatest(): String
 
     fun checkVersion(): Boolean {
         val latestVersion = retrieveLatest()
-        val changed = latestVersion != diskLatestVersion
+        val changed = latestVersion != savedVersion
 
         this.latest.version = latestVersion
         return changed
@@ -20,6 +19,6 @@ abstract class VersionChecker protected constructor(latest: LibraryVersion) {
     suspend fun save(versionsRepository: VersionsRepository, sourceUrl: String? = null) {
         latest.sourceUrl = sourceUrl
         versionsRepository.save(latest)
-        diskLatestVersion = latestVersion
+        savedVersion = latest.version
     }
 }
