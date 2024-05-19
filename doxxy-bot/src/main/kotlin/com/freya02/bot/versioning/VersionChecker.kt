@@ -1,27 +1,25 @@
 package com.freya02.bot.versioning
 
-import com.freya02.bot.versioning.ArtifactInfo.Companion.fromFileString
-import java.io.IOException
-import java.nio.file.Files
-import java.nio.file.Path
+abstract class VersionChecker protected constructor(latest: LibraryVersion) {
+    var latest: LibraryVersion = latest
+        private set
 
-abstract class VersionChecker protected constructor(private val lastSavedPath: Path) {
-    var latest: ArtifactInfo
-        protected set
-    protected var diskLatest: ArtifactInfo
+    private var latestVersion: String = latest.artifactInfo.version
+    private var diskLatestVersion: String = latestVersion
 
-    init {
-        diskLatest = fromFileString(lastSavedPath)
-        latest = diskLatest
+    protected abstract fun retrieveLatest(): String
+
+    fun checkVersion(): Boolean {
+        val latestVersion = retrieveLatest()
+        val changed = latestVersion != diskLatestVersion
+
+        this.latest.version = latestVersion
+        return changed
     }
 
-    @Throws(IOException::class)
-    abstract fun checkVersion(): Boolean
-
-    @Throws(IOException::class)
-    fun saveVersion() {
-        Files.writeString(lastSavedPath, latest.toFileString())
-
-        diskLatest = latest
+    suspend fun save(versionsRepository: VersionsRepository, sourceUrl: String? = null) {
+        latest.sourceUrl = sourceUrl
+        versionsRepository.save(latest)
+        diskLatestVersion = latestVersion
     }
 }

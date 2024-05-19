@@ -1,7 +1,6 @@
 package com.freya02.bot.versioning.maven
 
 import com.freya02.bot.utils.HttpUtils
-import com.freya02.bot.versioning.ArtifactInfo
 import com.vdurmont.semver4j.Semver
 import net.dv8tion.jda.api.exceptions.ParsingException
 import org.jsoup.nodes.Document
@@ -18,21 +17,10 @@ object MavenUtils {
         return latest?.text() ?: throw ParsingException("Unable to parse latest version")
     }
 
-    @Throws(IOException::class)
-    fun retrieveDependencyVersion(
-        ownerName: String,
-        artifactId: String,
-        branchName: String,
-        targetArtifactId: String
-    ): ArtifactInfo {
-        val document = HttpUtils.getDocument(
-            "https://raw.githubusercontent.com/%s/%s/%s/pom.xml".format(
-                ownerName,
-                artifactId,
-                branchName
-            )
-        )
-
+    fun parseDependencyVersion(
+        document: Document,
+        targetArtifactId: String,
+    ): String {
         document.select("project > dependencies > dependency")
             .forEachIndexed { i, element ->
                 val groupIdElement = element.selectFirst("groupId")
@@ -47,11 +35,7 @@ object MavenUtils {
                     return@forEachIndexed
                 }
 
-                return ArtifactInfo(
-                    groupIdElement.text(),
-                    artifactIdElement.text(),
-                    versionElement.text()
-                )
+                return versionElement.text()
             }
 
         throw IOException("Unable to get dependency version from " + document.baseUri())
