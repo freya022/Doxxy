@@ -72,8 +72,8 @@ class Versions(
         scope.scheduleWithFixedDelay(30.minutes, "LavaPlayer", ::checkLatestLavaPlayerVersion)
 
         //First index for Java's docs, may take some time
-        if (docIndexMap[DocSourceType.JAVA]!!.getClassDoc("Object") == null) {
-            docIndexMap[DocSourceType.JAVA]!!.reindex(ReindexData())
+        if (docIndexMap[DocSourceType.JAVA].getClassDoc("Object") == null) {
+            docIndexMap[DocSourceType.JAVA].reindex(ReindexData())
 
             //Once java's docs are indexed, invalidate caches if the user had time to use the commands before docs were loaded
             for (autocompleteName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
@@ -127,7 +127,7 @@ class Versions(
             }
 
             logger.trace { "Invalidating JDA index" }
-            docIndexMap.refreshAndInvalidateIndex(DocSourceType.JDA, ReindexData(sourceUrl))
+            docIndexMap[DocSourceType.JDA].reindex(ReindexData(sourceUrl))
             for (handlerName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
                 context.invalidateAutocompleteCache(handlerName)
             }

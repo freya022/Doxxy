@@ -57,7 +57,7 @@ class SlashDocsController(private val commonDocsController: CommonDocsController
 
     //Used by DocsCommand and SlashSearch
     suspend fun onSearchSlashCommand(event: GuildSlashEvent, sourceType: DocSourceType, query: String) {
-        val docIndex = docIndexMap[sourceType]!!
+        val docIndex = docIndexMap[sourceType]
         when {
             '(' in query && '#' in query -> {
                 val (className, identifier) = query.split("#")

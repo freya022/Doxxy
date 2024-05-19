@@ -45,7 +45,7 @@ class MethodLinksController(
 
     context(MutableList<ItemComponent>)
     suspend fun addCachedMethodComponents(cachedMethod: CachedMethod, originalHook: InteractionHook?, caller: UserSnowflake) {
-        val index = docIndexMap[cachedMethod.source]!!
+        val index = docIndexMap[cachedMethod.source]
         val method = runBlocking {
             index.implementationIndex.getMethod(cachedMethod.className, cachedMethod.signature)
         }

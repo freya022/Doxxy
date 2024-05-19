@@ -21,6 +21,9 @@ import kotlinx.coroutines.sync.withLock
 import net.dv8tion.jda.api.entities.MessageEmbed
 import org.intellij.lang.annotations.Language
 
+private val logger = KotlinLogging.logger { }
+private val queryRegex = Regex("""^(\w*)#?(\w*)""")
+
 //Initial construct just allows database access
 // Further updates must be invoked by external methods such as version checkers
 class DocIndex(val sourceType: DocSourceType, private val database: Database) : IDocIndex {
@@ -84,7 +87,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
 
     override suspend fun findAnySignatures(query: String, limit: Int, docTypes: DocTypes) =
         database.transactional(readOnly = true) {
-            preparedStatement("set pg_trgm.similarity_threshold = 0.1;") { executeUpdate(*emptyArray()) }
+            preparedStatement("set pg_trgm.similarity_threshold = 0.1;") { executeUpdate() }
             findAnySignatures0(query, limit, docTypes)
         }
 
@@ -188,7 +191,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             }
         }
 
-        preparedStatement("set pg_trgm.similarity_threshold = 0.1;") { executeUpdate(*emptyArray()) }
+        preparedStatement("set pg_trgm.similarity_threshold = 0.1;") { executeUpdate() }
 
         val results = findAnySignatures0(query, limit = 5, DocTypes.ANY)
 
@@ -347,11 +350,5 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                 )
             }
         }
-    }
-
-    companion object {
-        private val logger = KotlinLogging.logger { }
-
-        private val queryRegex = Regex("""^(\w*)#?(\w*)""")
     }
 }

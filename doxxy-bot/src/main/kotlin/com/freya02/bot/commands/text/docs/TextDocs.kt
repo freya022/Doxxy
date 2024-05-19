@@ -26,7 +26,7 @@ class TextDocs(
         @TextOption(name = "docs source", example = "JDA") docSourceType: DocSourceType = DocSourceType.JDA,
         @TextOption(name = "query", example = "Guild#ban") query: String
     ) {
-        val docIndex = docIndexMap[docSourceType]!!
+        val docIndex = docIndexMap[docSourceType]
 
         val suggestions = when {
             '#' in query || '.' in query -> { // Method or field

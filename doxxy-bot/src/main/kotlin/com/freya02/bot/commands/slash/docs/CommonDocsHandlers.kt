@@ -4,7 +4,6 @@ import com.freya02.bot.commands.controllers.CommonDocsController
 import com.freya02.bot.commands.slash.docs.controllers.SlashDocsController
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.docs.DocResolveChain
-import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocSearchResult
 import com.freya02.bot.examples.ExampleAPI
 import com.freya02.bot.examples.ExamplePaginatorFactory
@@ -18,6 +17,7 @@ import io.github.freya022.botcommands.api.commands.application.ApplicationComman
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.annotations.CacheAutocomplete
 import io.github.freya022.botcommands.api.components.SelectMenus
+import io.github.freya022.botcommands.api.components.annotations.ComponentData
 import io.github.freya022.botcommands.api.components.annotations.JDASelectMenuListener
 import io.github.freya022.botcommands.api.components.event.StringSelectEvent
 import io.github.freya022.botcommands.api.core.annotations.Handler
@@ -43,7 +43,7 @@ class CommonDocsHandlers(
         val values = event.selectedOptions.single().value.split(":")
         val targetType = TargetType.valueOf(values[0])
         val fullSignature = values[1]
-        val doc = docIndexMap[docSourceType]?.let { index ->
+        val doc = docIndexMap[docSourceType].let { index ->
             when (targetType) {
                 TargetType.CLASS -> index.getClassDoc(fullSignature)
                 TargetType.METHOD -> index.getMethodDoc(fullSignature)
@@ -104,7 +104,7 @@ class CommonDocsHandlers(
     suspend fun onClassNameAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         sourceType: DocSourceType
-    ): List<Choice> = withDocIndex(sourceType) {
+    ): List<Choice> = docIndexMap.withDocIndex(sourceType) {
         classNameAutocomplete(this, event.focusedOption.value).toChoices()
     }
 
@@ -114,7 +114,7 @@ class CommonDocsHandlers(
         event: CommandAutoCompleteInteractionEvent,
         sourceType: DocSourceType,
         className: String
-    ): List<Choice> = withDocIndex(sourceType) {
+    ): List<Choice> = docIndexMap.withDocIndex(sourceType) {
         methodOrFieldByClassAutocomplete(this, className, event.focusedOption.value).searchResultToIdentifierChoices()
     }
 
@@ -123,7 +123,7 @@ class CommonDocsHandlers(
     suspend fun onSearchAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         sourceType: DocSourceType
-    ): List<Choice> = withDocIndex(sourceType) {
+    ): List<Choice> = docIndexMap.withDocIndex(sourceType) {
         searchAutocomplete(this, event.focusedOption.value).searchResultToFullIdentifierChoices()
     }
 
@@ -133,13 +133,8 @@ class CommonDocsHandlers(
         event: CommandAutoCompleteInteractionEvent,
         sourceType: DocSourceType,
         chain: DocResolveChain
-    ): List<Choice> = withDocIndex(sourceType) {
+    ): List<Choice> = docIndexMap.withDocIndex(sourceType) {
         resolveDocAutocomplete(chain).searchResultToFullIdentifierChoices()
-    }
-
-    private inline fun withDocIndex(sourceType: DocSourceType, block: DocIndex.() -> List<Choice>): List<Choice> {
-        val map = docIndexMap[sourceType] ?: return emptyList()
-        return block(map)
     }
 
     companion object {

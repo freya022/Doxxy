@@ -43,7 +43,7 @@ class ClassLinksController(
 
     context(MutableList<ItemComponent>)
     suspend fun addCachedClassComponents(cachedDoc: CachedClass, originalHook: InteractionHook?, caller: UserSnowflake) {
-        val index = docIndexMap[cachedDoc.source]!!
+        val index = docIndexMap[cachedDoc.source]
         val clazz = runBlocking {
             index.implementationIndex.getClass(cachedDoc.name)
         }

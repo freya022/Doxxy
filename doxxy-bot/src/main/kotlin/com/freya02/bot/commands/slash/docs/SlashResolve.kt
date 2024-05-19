@@ -42,7 +42,7 @@ class SlashResolve(private val docIndexMap: DocIndexMap, private val commonDocsC
         sourceType: DocSourceType,
         chain: DocResolveChain
     ) {
-        val docIndex = docIndexMap[sourceType]!!
+        val docIndex = docIndexMap[sourceType]
         val doc = docIndex.resolveDoc(chain) ?: let {
             event.reply_("Could not find documentation for `$chain`", ephemeral = true).queue()
             return

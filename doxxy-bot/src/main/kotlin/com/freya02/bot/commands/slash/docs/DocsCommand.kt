@@ -47,7 +47,7 @@ class DocsCommand(private val docIndexMap: DocIndexMap, private val slashDocsCon
         className: String,
         identifier: String?
     ) {
-        val docIndex = docIndexMap[sourceType]!!
+        val docIndex = docIndexMap[sourceType]
         if (identifier == null) {
             slashDocsController.handleClass(event, className, docIndex) {
                 return@handleClass classNameAutocomplete(docIndex, className, 100)
