@@ -103,7 +103,8 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             else -> arrayOf(query)
         }
 
-        database.preparedStatement("""
+        database.preparedStatement(
+            """
                 select full_identifier, human_identifier, human_class_identifier, return_type
                 from doc natural join doc_view
                 where source_id = ?
@@ -111,7 +112,8 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                   and classname = ?
                 $sort
                 limit ?
-                """.trimIndent()
+            """.trimIndent(),
+            readOnly = true
         ) {
             return executeQuery(sourceType.id, docTypes.map { it.id }.toTypedArray(), className, *sortArgs, limit)
                 .map { DocSearchResult(it) }
@@ -183,11 +185,11 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         if ('#' in query) {
             //If the class name has an exact match
             val className = query.substringBefore('#')
-            preparedStatement("select id from doc where source_id = ? and classname = ? limit 1") {
-                executeQuery(sourceType.id, className).readOrNull()?.let {
-                    //If there is something found
-                    return@transactional findSignaturesIn(className, query.substringAfter('#'), DocTypes.IDENTIFIERS, 25)
-                }
+            val isExactClassName = preparedStatement("select id from doc where source_id = ? and classname = ? limit 1") {
+                executeQuery(sourceType.id, className).any()
+            }
+            if (isExactClassName) {
+                return@transactional findSignaturesIn(className, query.substringAfter('#'), DocTypes.IDENTIFIERS, limit = 25)
             }
         }
 
