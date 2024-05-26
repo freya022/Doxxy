@@ -22,7 +22,7 @@ repositories {
 
 dependencies {
     //Logging implementation, you can remove the comments if you have a warning related to loggers
-    //implementation("ch.qos.logback:logback-classic:1.2.11")
+    //implementation("ch.qos.logback:logback-classic:1.5.6")
 
     implementation("%s:%s:%s")
 }
