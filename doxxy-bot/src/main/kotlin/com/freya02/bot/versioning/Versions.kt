@@ -12,14 +12,16 @@ import com.freya02.bot.versioning.maven.DependencyVersionChecker
 import com.freya02.bot.versioning.maven.MavenVersionChecker
 import com.freya02.bot.versioning.maven.RepoType
 import com.freya02.docs.DocSourceType
-import dev.minn.jda.ktx.events.getDefaultScope
 import io.github.freya022.botcommands.api.core.BContext
 import io.github.freya022.botcommands.api.core.annotations.BEventListener
 import io.github.freya022.botcommands.api.core.events.InjectedJDAEvent
 import io.github.freya022.botcommands.api.core.service.annotations.BService
+import io.github.freya022.botcommands.api.core.utils.namedDefaultScope
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.*
-import java.util.concurrent.Executors
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
@@ -61,11 +63,7 @@ class Versions(
 
     @BEventListener(async = true, timeout = -1)
     suspend fun initUpdateLoop(event: InjectedJDAEvent) {
-        val scope = getDefaultScope(
-            pool = Executors.newSingleThreadScheduledExecutor { Thread(it, "Version check coroutine") },
-            context = CoroutineName("Version check coroutine")
-        )
-
+        val scope = namedDefaultScope("Version checker", 1)
         scope.scheduleWithFixedDelay(30.minutes, "BC", ::checkLatestBCVersion)
         scope.scheduleWithFixedDelay(30.minutes, "JDA", ::checkLatestJDAVersion)
         scope.scheduleWithFixedDelay(30.minutes, "JDA-KTX", ::checkLatestJDAKtxVersion)
