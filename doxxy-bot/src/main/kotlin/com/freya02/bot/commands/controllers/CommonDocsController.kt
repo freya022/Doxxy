@@ -17,8 +17,10 @@ import dev.minn.jda.ktx.messages.Embed
 import dev.minn.jda.ktx.messages.InlineEmbed
 import io.github.freya022.botcommands.api.components.Buttons
 import io.github.freya022.botcommands.api.components.SelectMenus
+import io.github.freya022.botcommands.api.components.builder.bindTo
 import io.github.freya022.botcommands.api.components.data.InteractionConstraints
 import io.github.freya022.botcommands.api.components.utils.ButtonContent
+import io.github.freya022.botcommands.api.core.service.LazyService
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.freya022.botcommands.api.pagination.Paginators
 import io.github.freya022.botcommands.api.pagination.menu.buttonized.ButtonMenu
@@ -38,8 +40,11 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateRequest
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.minutes
 
+private val logger = KotlinLogging.logger { }
+
 @BService
 class CommonDocsController(
+    commonDocsHandlers: LazyService<CommonDocsHandlers>,
     // null if backend is disabled
     private val exampleApi: ExampleAPI?,
     private val buttons: Buttons,
@@ -48,12 +53,12 @@ class CommonDocsController(
     private val classLinksController: ClassLinksController,
     private val methodLinksController: MethodLinksController
 ) {
-    private val logger = KotlinLogging.logger { }
-
     private object DocSuggestionButtonContentSupplier : ButtonMenu.ButtonContentSupplier<DocSuggestion> {
         override fun apply(item: DocSuggestion, index: Int): ButtonContent =
             ButtonContent.fromLabel(ButtonStyle.PRIMARY, "${index + 1}")
     }
+
+    private val commonDocsHandlers: CommonDocsHandlers by commonDocsHandlers
 
     fun buildDocSuggestionsMenu(docIndex: DocIndex, suggestions: List<DocSuggestion>, user: UserSnowflake, callback: SuspendingChoiceCallback<DocSuggestion>, block: ButtonMenuBuilder<DocSuggestion>.() -> Unit) =
         paginators.buttonMenu(suggestions, DocSuggestionButtonContentSupplier, callback)
@@ -141,7 +146,7 @@ class CommonDocsController(
         cachedDoc.seeAlsoReferences.let { referenceList ->
             if (referenceList.any { it.targetType != TargetType.UNKNOWN }) {
                 val selectMenu = selectMenus.stringSelectMenu().persistent {
-                    bindTo(CommonDocsHandlers.SEE_ALSO_SELECT_LISTENER_NAME, caller.idLong, cachedDoc.source.id)
+                    bindTo(commonDocsHandlers::onSeeAlsoSelect, caller.idLong, cachedDoc.source)
                     timeout(15.minutes)
                     placeholder = "See also"
 
