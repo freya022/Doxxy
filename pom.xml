@@ -23,7 +23,7 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
 
-        <kotlin.version>2.0.0-RC3</kotlin.version>
+        <kotlin.version>2.0.0</kotlin.version>
         <kotlin.coroutine.version>1.8.0</kotlin.coroutine.version>
 
         <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
@@ -75,7 +75,7 @@
             <dependency>
                 <groupId>io.github.freya022</groupId>
                 <artifactId>BotCommands</artifactId>
-                <version>3.0.0-alpha.14_DEV</version>
+                <version>3.0.0-alpha.15</version>
             </dependency>
             <dependency>
                 <groupId>club.minnced</groupId>
