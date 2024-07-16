@@ -13,7 +13,6 @@ import com.github.javaparser.Range
 import com.github.javaparser.StaticJavaParser
 import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.expr.StringLiteralExpr
-import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.interactions.components.asDisabled
 import dev.minn.jda.ktx.messages.Embed
 import dev.minn.jda.ktx.messages.send
@@ -30,6 +29,7 @@ import io.github.freya022.botcommands.api.core.BContext
 import io.github.freya022.botcommands.api.core.utils.edit
 import io.github.freya022.botcommands.api.core.utils.suppressContentWarning
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.future.await
 import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.UserSnowflake
