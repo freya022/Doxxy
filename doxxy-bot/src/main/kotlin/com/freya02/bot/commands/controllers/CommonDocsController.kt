@@ -17,10 +17,9 @@ import dev.minn.jda.ktx.messages.Embed
 import dev.minn.jda.ktx.messages.InlineEmbed
 import io.github.freya022.botcommands.api.components.Buttons
 import io.github.freya022.botcommands.api.components.SelectMenus
-import io.github.freya022.botcommands.api.components.builder.bindTo
+import io.github.freya022.botcommands.api.components.builder.bindWith
 import io.github.freya022.botcommands.api.components.data.InteractionConstraints
 import io.github.freya022.botcommands.api.components.utils.ButtonContent
-import io.github.freya022.botcommands.api.core.service.LazyService
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.freya022.botcommands.api.pagination.Paginators
 import io.github.freya022.botcommands.api.pagination.menu.buttonized.ButtonMenu
@@ -44,7 +43,6 @@ private val logger = KotlinLogging.logger { }
 
 @BService
 class CommonDocsController(
-    commonDocsHandlers: LazyService<CommonDocsHandlers>,
     // null if backend is disabled
     private val exampleApi: ExampleAPI?,
     private val buttons: Buttons,
@@ -57,8 +55,6 @@ class CommonDocsController(
         override fun apply(item: DocSuggestion, index: Int): ButtonContent =
             ButtonContent.fromLabel(ButtonStyle.PRIMARY, "${index + 1}")
     }
-
-    private val commonDocsHandlers: CommonDocsHandlers by commonDocsHandlers
 
     fun buildDocSuggestionsMenu(docIndex: DocIndex, suggestions: List<DocSuggestion>, user: UserSnowflake, callback: SuspendingChoiceCallback<DocSuggestion>, block: ButtonMenuBuilder<DocSuggestion>.() -> Unit) =
         paginators.buttonMenu(suggestions, DocSuggestionButtonContentSupplier, callback)
@@ -143,29 +139,25 @@ class CommonDocsController(
     }
 
     private suspend fun MessageCreateRequest<*>.addDocsSeeAlso(caller: UserSnowflake, cachedDoc: CachedDoc) {
-        cachedDoc.seeAlsoReferences.let { referenceList ->
-            if (referenceList.any { it.targetType != TargetType.UNKNOWN }) {
-                val selectMenu = selectMenus.stringSelectMenu().persistent {
-                    bindTo(commonDocsHandlers::onSeeAlsoSelect, caller.idLong, cachedDoc.source)
-                    timeout(15.minutes)
-                    placeholder = "See also"
+        val docReferences = cachedDoc.seeAlsoReferences.filter { it.targetType != TargetType.UNKNOWN }
+        if (docReferences.isEmpty()) return
 
-                    for (reference in referenceList) {
-                        if (reference.targetType != TargetType.UNKNOWN) {
-                            val optionValue = reference.targetType.name + ":" + reference.fullSignature
-                            if (optionValue.length > SelectMenu.ID_MAX_LENGTH) {
-                                logger.warn { "Option value was too large (${optionValue.length}) for: '${optionValue}'" }
+        val selectMenu = selectMenus.stringSelectMenu().persistent {
+            bindWith(CommonDocsHandlers::onSeeAlsoSelect, caller, cachedDoc.source)
+            timeout(15.minutes)
+            placeholder = "See also"
 
-                                continue
-                            }
-
-                            addOption(reference.text, optionValue, Emojis.clipboard)
-                        }
-                    }
+            for (reference in docReferences) {
+                val optionValue = reference.targetType.name + ":" + reference.fullSignature
+                if (optionValue.length > SelectMenu.ID_MAX_LENGTH) {
+                    logger.warn { "Option value was too large (${optionValue.length}) for: '${optionValue}'" }
+                    continue
                 }
 
-                addActionRow(selectMenu)
+                addOption(reference.text, optionValue, Emojis.clipboard)
             }
         }
+
+        addActionRow(selectMenu)
     }
 }
