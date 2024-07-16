@@ -5,6 +5,7 @@ import io.github.freya022.doxxy.common.DocumentedExampleLibrary
 enum class DocSourceType(
     val id: Int,
     val cmdName: String,
+    val textArg: String,
     val sourceUrl: String,
     val sourceFolderName: String?,
     private val onlineURL: String?,
@@ -13,6 +14,7 @@ enum class DocSourceType(
     JDA(
         1,
         "jda",
+        "jda",
         "http://localhost:25566/JDA",
         "JDA",
         "https://docs.jda.wiki",
@@ -20,6 +22,7 @@ enum class DocSourceType(
     ),
     JAVA(
         3,
+        "java",
         "java",
         "https://docs.oracle.com/en/java/javase/17/docs/api",
         null,
