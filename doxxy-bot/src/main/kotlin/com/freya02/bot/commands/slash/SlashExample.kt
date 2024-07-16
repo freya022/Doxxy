@@ -114,8 +114,8 @@ class SlashExample(
         event.deferReply(true).queue()
 
         if (exampleApi.updateExamples(ownerName, repoName, branchName)) {
-            event.context.invalidateAutocompleteCache(titleAutocompleteName)
-            event.context.invalidateAutocompleteCache(languageAutocompleteName)
+            event.context.applicationCommandsContext.invalidateAutocompleteCache(titleAutocompleteName)
+            event.context.applicationCommandsContext.invalidateAutocompleteCache(languageAutocompleteName)
 
             event.hook.send("Done!")
                 .deleteDelayed(5.seconds)

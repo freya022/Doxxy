@@ -17,7 +17,7 @@ class InvalidateCacheCommand : ApplicationCommand() {
         event.deferReply(true).queue()
 
         for (autocompleteName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
-            event.context.invalidateAutocompleteCache(autocompleteName)
+            event.context.applicationCommandsContext.invalidateAutocompleteCache(autocompleteName)
         }
         event.hook.sendMessage("Done").queue()
     }

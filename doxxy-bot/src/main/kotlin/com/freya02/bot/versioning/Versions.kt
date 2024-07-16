@@ -12,7 +12,7 @@ import com.freya02.bot.versioning.maven.DependencyVersionChecker
 import com.freya02.bot.versioning.maven.MavenVersionChecker
 import com.freya02.bot.versioning.maven.RepoType
 import com.freya02.docs.DocSourceType
-import io.github.freya022.botcommands.api.core.BContext
+import io.github.freya022.botcommands.api.commands.application.ApplicationCommandsContext
 import io.github.freya022.botcommands.api.core.annotations.BEventListener
 import io.github.freya022.botcommands.api.core.events.InjectedJDAEvent
 import io.github.freya022.botcommands.api.core.service.annotations.BService
@@ -29,7 +29,7 @@ private val logger = KotlinLogging.logger { }
 
 @BService
 class Versions(
-    private val context: BContext,
+    private val applicationCommandsContext: ApplicationCommandsContext,
     private val docIndexMap: DocIndexMap,
     private val versionsRepository: VersionsRepository,
 ) {
@@ -75,7 +75,7 @@ class Versions(
 
             //Once java's docs are indexed, invalidate caches if the user had time to use the commands before docs were loaded
             for (autocompleteName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
-                context.invalidateAutocompleteCache(autocompleteName)
+                applicationCommandsContext.invalidateAutocompleteCache(autocompleteName)
             }
         }
     }
@@ -127,7 +127,7 @@ class Versions(
             logger.trace { "Invalidating JDA index" }
             docIndexMap[DocSourceType.JDA].reindex(ReindexData(sourceUrl))
             for (handlerName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
-                context.invalidateAutocompleteCache(handlerName)
+                applicationCommandsContext.invalidateAutocompleteCache(handlerName)
             }
 
             jdaChecker.save(versionsRepository, sourceUrl = sourceUrl)
