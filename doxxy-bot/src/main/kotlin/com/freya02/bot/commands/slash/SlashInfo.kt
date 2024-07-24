@@ -112,7 +112,7 @@ class SlashInfo(private val context: BContext) : ApplicationCommand() {
     }
 
     private suspend fun getCombinedMemberCount(): Int {
-        if (combinedMemberCountCountdown.needsUpdate()) {
+        combinedMemberCountCountdown.onUpdate {
             combinedMemberCount = context.jda.guilds
                 .map { it.retrieveMetaData() }
                 .let { RestAction.allOf(it) }

@@ -153,7 +153,7 @@ class SlashJitpack(
     }
 
     @AutocompleteHandler(name = BRANCH_NAME_AUTOCOMPLETE_NAME, showUserInput = false)
-    fun onBranchNameAutocomplete(
+    suspend fun onBranchNameAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         libraryType: LibraryType
     ): Collection<Choice> {

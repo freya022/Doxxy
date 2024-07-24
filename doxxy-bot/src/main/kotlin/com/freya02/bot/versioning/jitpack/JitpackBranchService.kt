@@ -9,39 +9,62 @@ import com.freya02.bot.versioning.github.UpdateCountdown
 import com.freya02.bot.versioning.maven.DependencyVersionChecker
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommandsContext
 import io.github.freya022.botcommands.api.core.service.annotations.BService
-import java.io.IOException
-import java.util.*
+import io.github.freya022.botcommands.api.core.utils.enumMapOf
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlin.time.Duration.Companion.minutes
+
+private typealias BranchName = String
 
 @BService
 class JitpackBranchService(
     private val applicationCommandsContext: ApplicationCommandsContext,
     private val versionsRepository: VersionsRepository
 ) {
-    private val updateMap: MutableMap<LibraryType, UpdateCountdown> = EnumMap(LibraryType::class.java)
-    private val branchMap: MutableMap<LibraryType, GithubBranchMap> = EnumMap(LibraryType::class.java)
+    private sealed class UpdatedValue<T : Any> {
+        private val updateCountdown = UpdateCountdown(1.minutes)
 
-    private val branchNameToJdaVersionChecker: MutableMap<String, DependencyVersionChecker> =
-        Collections.synchronizedMap(hashMapOf())
-    private val updateCountdownMap: MutableMap<String, UpdateCountdown> = HashMap()
+        private lateinit var value: T
 
-    fun getBranchMap(libraryType: LibraryType): GithubBranchMap {
-        val updateCountdown =
-            updateMap.computeIfAbsent(libraryType) { UpdateCountdown(1.minutes) }
+        abstract suspend fun update(): T
 
-        synchronized(branchMap) {
-            branchMap[libraryType].let { githubBranchMap: GithubBranchMap? ->
-                if (githubBranchMap == null || updateCountdown.needsUpdate()) {
-                    return retrieveBranchList(libraryType)
-                        .also { updatedMap -> branchMap[libraryType] = updatedMap }
-                }
-
-                return githubBranchMap
+        suspend fun get(): T {
+            updateCountdown.onUpdate {
+                value = update()
             }
+            return value
         }
     }
 
-    fun getBranch(libraryType: LibraryType, branchName: String?): GithubBranch? {
+    private inner class UpdatedBranchMap(private val libraryType: LibraryType) : UpdatedValue<GithubBranchMap>() {
+        override suspend fun update(): GithubBranchMap {
+            val map: Map<String, GithubBranch> = GithubUtils.getBranches(libraryType.githubOwnerName, libraryType.githubRepoName).associateBy { it.branchName }
+            val defaultBranchName = GithubUtils.getDefaultBranchName(libraryType.githubOwnerName, libraryType.githubRepoName)
+            val defaultBranch = map[defaultBranchName]!!
+            return GithubBranchMap(defaultBranch, map)
+        }
+    }
+
+    private inner class UpdatedDependencyVersionChecker(private val checker: DependencyVersionChecker) : UpdatedValue<LibraryVersion>() {
+        override suspend fun update(): LibraryVersion {
+            checker.checkVersion()
+            applicationCommandsContext.invalidateAutocompleteCache(SlashJitpack.PR_NUMBER_AUTOCOMPLETE_NAME)
+            checker.save(versionsRepository)
+            return checker.latest
+        }
+    }
+
+    private val updatedBranchesMapMutex = Mutex()
+    private val updatedBranchesMap: MutableMap<LibraryType, UpdatedBranchMap> = enumMapOf()
+    private val versionCheckerMapMutex = Mutex()
+    private val versionCheckerMap: MutableMap<BranchName, UpdatedDependencyVersionChecker> = hashMapOf()
+
+    suspend fun getBranchMap(libraryType: LibraryType): GithubBranchMap = updatedBranchesMapMutex.withLock {
+        val updatedBranchMap = updatedBranchesMap.computeIfAbsent(libraryType, ::UpdatedBranchMap)
+        updatedBranchMap.get()
+    }
+
+    suspend fun getBranch(libraryType: LibraryType, branchName: String?): GithubBranch? {
         val githubBranchMap = getBranchMap(libraryType)
         return when (branchName) {
             null -> githubBranchMap.defaultBranch
@@ -49,36 +72,17 @@ class JitpackBranchService(
         }
     }
 
-    suspend fun getUsedJDAVersionFromBranch(libraryType: LibraryType, branch: GithubBranch): ArtifactInfo {
-        val jdaVersionChecker = branchNameToJdaVersionChecker.getOrPut(branch.branchName) {
-            try {
-                DependencyVersionChecker(versionsRepository.getInitialVersion(libraryType, branch.toVersionClassifier()), "JDA") {
-                    "https://raw.githubusercontent.com/${branch.ownerName}/${branch.repoName}/${branch.branchName}/pom.xml"
-                }
-            } catch (e: IOException) {
-                throw RuntimeException("Unable to create branch specific JDA version checker", e)
+    suspend fun getUsedJDAVersionFromBranch(libraryType: LibraryType, branch: GithubBranch): ArtifactInfo = versionCheckerMapMutex.withLock {
+        val jdaVersionChecker = versionCheckerMap.getOrPut(branch.branchName) {
+            val latest = versionsRepository.getInitialVersion(libraryType, branch.toVersionClassifier())
+            val checker = DependencyVersionChecker(latest, "JDA") {
+                "https://raw.githubusercontent.com/${branch.ownerName}/${branch.repoName}/${branch.branchName}/pom.xml"
             }
+            UpdatedDependencyVersionChecker(checker)
         }
-        checkGithubBranchUpdates(branch, jdaVersionChecker)
 
-        return jdaVersionChecker.latest.artifactInfo
-    }
-
-    private suspend fun checkGithubBranchUpdates(branch: GithubBranch, checker: VersionChecker) {
-        val updateCountdown = updateCountdownMap.getOrPut(branch.branchName) { UpdateCountdown(1.minutes) }
-        if (updateCountdown.needsUpdate()) {
-            checker.checkVersion()
-            applicationCommandsContext.invalidateAutocompleteCache(SlashJitpack.PR_NUMBER_AUTOCOMPLETE_NAME)
-            checker.save(versionsRepository)
-        }
+        jdaVersionChecker.get().artifactInfo
     }
 
     private fun GithubBranch.toVersionClassifier() = "$ownerName-$repoName-$branchName"
-
-    private fun retrieveBranchList(libraryType: LibraryType): GithubBranchMap {
-        val map: Map<String, GithubBranch> = GithubUtils.getBranches(libraryType.githubOwnerName, libraryType.githubRepoName).associateBy { it.branchName }
-        val defaultBranchName = GithubUtils.getDefaultBranchName(libraryType.githubOwnerName, libraryType.githubRepoName)
-        val defaultBranch = map[defaultBranchName]!!
-        return GithubBranchMap(defaultBranch, map)
-    }
 }
