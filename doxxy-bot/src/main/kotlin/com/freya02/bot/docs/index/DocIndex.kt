@@ -6,6 +6,7 @@ import com.freya02.bot.docs.cached.CachedDoc
 import com.freya02.bot.docs.cached.CachedField
 import com.freya02.bot.docs.cached.CachedMethod
 import com.freya02.bot.docs.metadata.ImplementationIndex
+import com.freya02.bot.utils.startSpan
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.DocsSession
 import com.freya02.docs.PageCache
@@ -16,6 +17,7 @@ import io.github.freya022.botcommands.api.core.db.Transaction
 import io.github.freya022.botcommands.api.core.db.preparedStatement
 import io.github.freya022.botcommands.api.core.db.transactional
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import net.dv8tion.jda.api.EmbedBuilder
@@ -27,8 +29,9 @@ private val queryRegex = Regex("""^(\w*)#?(\w*)""")
 
 //Initial construct just allows database access
 // Further updates must be invoked by external methods such as version checkers
-class DocIndex(val sourceType: DocSourceType, private val database: Database) : IDocIndex {
+class DocIndex(val sourceType: DocSourceType, private val database: Database, openTelemetry: OpenTelemetry) : IDocIndex {
     private val mutex = Mutex()
+    private val tracer = openTelemetry.getTracer("DocIndex", "1.0.0")
 
     val implementationIndex = ImplementationIndex(this, database)
 
@@ -61,29 +64,46 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         }
     }
 
-    override suspend fun getClassDoc(className: String): CachedClass? {
-        val (docId, embed, javadocLink, sourceLink) = findDoc(DocType.CLASS, className) ?: return null
+    override suspend fun getClassDoc(className: String): CachedClass? = tracer.startSpan(
+        spanName = "getClassDoc",
+        parameters = {
+            setAttribute("Class name", className)
+        }
+    ) {
+        val (docId, embed, javadocLink, sourceLink) = findDoc(DocType.CLASS, className) ?: return@startSpan null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
         val subclasses = implementationIndex.getSubclasses(className)
         val superclasses = implementationIndex.getSuperclasses(className)
 
-        return CachedClass(this, className, embed, seeAlsoReferences, javadocLink, sourceLink, subclasses, superclasses)
+        CachedClass(this, className, embed, seeAlsoReferences, javadocLink, sourceLink, subclasses, superclasses)
     }
 
-    override suspend fun getMethodDoc(className: String, identifier: String): CachedMethod? {
-        val (docId, embed, javadocLink, sourceLink) = findDoc(DocType.METHOD, className, identifier) ?: return null
+    override suspend fun getMethodDoc(className: String, identifier: String): CachedMethod? = tracer.startSpan(
+        spanName = "getMethodDoc",
+        parameters = {
+            setAttribute("Class name", className)
+            setAttribute("Identifier", identifier)
+        }
+    ) {
+        val (docId, embed, javadocLink, sourceLink) = findDoc(DocType.METHOD, className, identifier) ?: return@startSpan null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
         val implementations = implementationIndex.getImplementations(className, identifier)
         val overriddenMethods = implementationIndex.getOverriddenMethods(className, identifier)
 
-        return CachedMethod(this, className, identifier, embed, seeAlsoReferences, javadocLink, sourceLink, implementations, overriddenMethods)
+        CachedMethod(this, className, identifier, embed, seeAlsoReferences, javadocLink, sourceLink, implementations, overriddenMethods)
     }
 
-    override suspend fun getFieldDoc(className: String, fieldName: String): CachedField? {
-        val (docId, embed, javadocLink, sourceLink) = findDoc(DocType.FIELD, className, fieldName) ?: return null
+    override suspend fun getFieldDoc(className: String, fieldName: String): CachedField? = tracer.startSpan(
+        spanName = "getFieldDoc",
+        parameters = {
+            setAttribute("Class name", className)
+            setAttribute("Field name", fieldName)
+        }
+    ) {
+        val (docId, embed, javadocLink, sourceLink) = findDoc(DocType.FIELD, className, fieldName) ?: return@startSpan null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
 
-        return CachedField(this, className, fieldName, embed, seeAlsoReferences, javadocLink, sourceLink)
+        CachedField(this, className, fieldName, embed, seeAlsoReferences, javadocLink, sourceLink)
     }
 
     override suspend fun findAnySignatures(query: String, limit: Int, docTypes: DocTypes) =
@@ -316,7 +336,13 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         docType: DocType,
         className: String,
         identifier: String? = null
-    ): DocFindData? {
+    ): DocFindData? = tracer.startSpan(
+        spanName = "findDoc",
+        parameters = {
+            setAttribute("Class name", className)
+            setAttribute("Identifier", identifier.toString())
+        }
+    ) {
         database.preparedStatement(
             """
                 select id, embed, javadoc_link, source_link
@@ -326,9 +352,10 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                   and lower(classname) = lower(?)
                   and quote_nullable(identifier) = quote_nullable(?)
                 limit 1
-            """.trimIndent()) {
-            val result = executeQuery(sourceType.id, docType.id, className, identifier).readOrNull() ?: return null
-            return DocFindData(
+            """.trimIndent()
+        ) {
+            val result = executeQuery(sourceType.id, docType.id, className, identifier).readOrNull() ?: return@preparedStatement null
+            DocFindData(
                 result["id"],
                 result.getString("embed").let(DataObject::fromJson).let(EmbedBuilder::fromData).build(),
                 result["javadoc_link"],

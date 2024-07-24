@@ -11,6 +11,7 @@ import com.freya02.bot.docs.index.DocSuggestion
 import com.freya02.bot.examples.ExampleAPI
 import com.freya02.bot.utils.Emojis
 import com.freya02.bot.utils.joinLengthyString
+import com.freya02.bot.utils.startSpan
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.data.TargetType
 import dev.minn.jda.ktx.interactions.components.SelectOption
@@ -27,6 +28,7 @@ import io.github.freya022.botcommands.api.pagination.menu.buttonized.ButtonMenu
 import io.github.freya022.botcommands.api.pagination.menu.buttonized.ButtonMenuBuilder
 import io.github.freya022.botcommands.api.pagination.menu.buttonized.SuspendingChoiceCallback
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.opentelemetry.api.OpenTelemetry
 import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.UserSnowflake
@@ -51,12 +53,15 @@ class CommonDocsController(
     private val selectMenus: SelectMenus,
     private val paginators: Paginators,
     private val classLinksController: ClassLinksController,
-    private val methodLinksController: MethodLinksController
+    private val methodLinksController: MethodLinksController,
+    openTelemetry: OpenTelemetry
 ) {
     private object DocSuggestionButtonContentSupplier : ButtonMenu.ButtonContentSupplier<DocSuggestion> {
         override fun apply(item: DocSuggestion, index: Int): ButtonContent =
             ButtonContent.fromLabel(ButtonStyle.PRIMARY, "${index + 1}")
     }
+
+    private val tracer = openTelemetry.getTracer("CommonDocsController", "1.0.0")
 
     fun buildDocSuggestionsMenu(docIndex: DocIndex, suggestions: List<DocSuggestion>, user: UserSnowflake, callback: SuspendingChoiceCallback<DocSuggestion>, block: ButtonMenuBuilder<DocSuggestion>.() -> Unit) =
         paginators.buttonMenu(suggestions, DocSuggestionButtonContentSupplier, callback)
@@ -81,8 +86,15 @@ class CommonDocsController(
             .apply(block)
             .build()
 
-    suspend fun getDocMessageData(originalHook: InteractionHook?, caller: Member, ephemeral: Boolean, showCaller: Boolean, cachedDoc: CachedDoc, chain: DocResolveChain? = null): MessageCreateData {
-        return MessageCreateBuilder().apply {
+    suspend fun getDocMessageData(
+        originalHook: InteractionHook?,
+        caller: Member,
+        ephemeral: Boolean,
+        showCaller: Boolean,
+        cachedDoc: CachedDoc,
+        chain: DocResolveChain? = null
+    ): MessageCreateData = tracer.startSpan("getDocMessageData") {
+        MessageCreateBuilder().apply {
             addEmbeds(cachedDoc.embed.let {
                 when {
                     showCaller || chain != null -> Embed {

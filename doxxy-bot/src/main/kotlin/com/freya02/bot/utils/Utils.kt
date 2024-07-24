@@ -2,12 +2,44 @@ package com.freya02.bot.utils
 
 import com.freya02.bot.config.Config
 import io.github.freya022.botcommands.api.core.Logging
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanBuilder
+import io.opentelemetry.api.trace.StatusCode
+import io.opentelemetry.api.trace.Tracer
+import io.opentelemetry.extension.kotlin.asContextElement
+import kotlinx.coroutines.withContext
 import net.dv8tion.jda.api.entities.Guild
 import org.jetbrains.annotations.Contract
 import java.nio.file.Path
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.io.path.deleteIfExists
 import kotlin.math.log10
 import kotlin.text.Typography.ellipsis
+
+suspend fun <T> Tracer.startSpan(
+    spanName: String,
+    parameters: (SpanBuilder.() -> Unit)? = null,
+    coroutineContext: CoroutineContext = EmptyCoroutineContext,
+    block: suspend (span: Span) -> T
+): T {
+    val span: Span = this.spanBuilder(spanName).run {
+        if (parameters != null) parameters()
+        startSpan()
+    }
+
+    return withContext(coroutineContext + span.asContextElement()) {
+        try {
+            block(span)
+        } catch (throwable: Throwable) {
+            span.setStatus(StatusCode.ERROR)
+            span.recordException(throwable)
+            throw throwable
+        } finally {
+            span.end()
+        }
+    }
+}
 
 object Utils {
     const val bcGuildId: Long = 848502702731165738
