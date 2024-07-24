@@ -7,7 +7,7 @@ import com.freya02.bot.versioning.github.GithubBranchMap
 import com.freya02.bot.versioning.github.GithubUtils
 import com.freya02.bot.versioning.github.UpdateCountdown
 import com.freya02.bot.versioning.maven.DependencyVersionChecker
-import io.github.freya022.botcommands.api.core.BContext
+import io.github.freya022.botcommands.api.commands.application.ApplicationCommandsContext
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import java.io.IOException
 import java.util.*
@@ -15,7 +15,7 @@ import kotlin.time.Duration.Companion.minutes
 
 @BService
 class JitpackBranchService(
-    private val context: BContext,
+    private val applicationCommandsContext: ApplicationCommandsContext,
     private val versionsRepository: VersionsRepository
 ) {
     private val updateMap: MutableMap<LibraryType, UpdateCountdown> = EnumMap(LibraryType::class.java)
@@ -68,7 +68,7 @@ class JitpackBranchService(
         val updateCountdown = updateCountdownMap.getOrPut(branch.branchName) { UpdateCountdown(1.minutes) }
         if (updateCountdown.needsUpdate()) {
             checker.checkVersion()
-            context.invalidateAutocompleteCache(SlashJitpack.PR_NUMBER_AUTOCOMPLETE_NAME)
+            applicationCommandsContext.invalidateAutocompleteCache(SlashJitpack.PR_NUMBER_AUTOCOMPLETE_NAME)
             checker.save(versionsRepository)
         }
     }

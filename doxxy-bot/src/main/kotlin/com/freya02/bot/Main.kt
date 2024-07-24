@@ -45,17 +45,13 @@ object Main {
 
             val config = Config.config
             BotCommands.create {
-                if (Environment.isDev) {
-                    disableExceptionsInDMs = true
-                    @OptIn(DevConfig::class)
-                    disableAutocompleteCache = true
-                }
+                disableExceptionsInDMs = Environment.isDev
 
                 database {
                     queryLogThreshold = 500.milliseconds
                 }
 
-                addOwners(*config.ownerIds.toLongArray())
+                addPredefinedOwners(*config.ownerIds.toLongArray())
 
                 addSearchPath("com.freya02.bot")
 
@@ -64,6 +60,9 @@ object Main {
                 }
 
                 applicationCommands {
+                    @OptIn(DevConfig::class)
+                    disableAutocompleteCache = Environment.isDev
+
                     testGuildIds += config.testGuildIds
                 }
 

@@ -24,6 +24,7 @@ import io.github.freya022.botcommands.api.core.annotations.Handler
 import io.github.freya022.botcommands.api.core.utils.edit
 import io.github.freya022.botcommands.api.core.utils.toEditData
 import io.github.oshai.kotlinlogging.KotlinLogging
+import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import kotlin.time.Duration.Companion.minutes
@@ -39,7 +40,7 @@ class CommonDocsHandlers(
     private val examplePaginatorFactory: ExamplePaginatorFactory
 ) : ApplicationCommand() {
     @JDASelectMenuListener(name = SEE_ALSO_SELECT_LISTENER_NAME)
-    suspend fun onSeeAlsoSelect(event: StringSelectEvent, @ComponentData ownerId: Long, @ComponentData docSourceType: DocSourceType) {
+    suspend fun onSeeAlsoSelect(event: StringSelectEvent, @ComponentData owner: UserSnowflake, @ComponentData docSourceType: DocSourceType) {
         val values = event.selectedOptions.single().value.split(":")
         val targetType = TargetType.valueOf(values[0])
         val fullSignature = values[1]
@@ -54,9 +55,9 @@ class CommonDocsHandlers(
 
         when (doc) {
             null -> event.reply_("This reference is not available anymore", ephemeral = true).queue()
-            else -> when (ownerId) {
+            else -> when (owner) {
                 //Caller is the same as original command caller, edit
-                event.user.idLong -> commonDocsController.getDocMessageData(
+                event.user -> commonDocsController.getDocMessageData(
                     event.hook,
                     event.member!!,
                     ephemeral = false,

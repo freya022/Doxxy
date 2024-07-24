@@ -1,5 +1,6 @@
 package com.freya02.bot.commands.slash
 
+import com.freya02.bot.commands.filters.decl.NotJDACommandDeclarationFilter
 import com.freya02.bot.tag.*
 import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.messages.Embed
@@ -8,6 +9,7 @@ import dev.minn.jda.ktx.messages.reply_
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
 import io.github.freya022.botcommands.api.commands.application.CommandScope
+import io.github.freya022.botcommands.api.commands.application.annotations.DeclarationFilter
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.JDASlashCommand
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.SlashOption
@@ -88,6 +90,7 @@ class SlashTag(
     }
 
     @TopLevelSlashCommandData(scope = CommandScope.GUILD)
+    @DeclarationFilter(NotJDACommandDeclarationFilter::class)
     @JDASlashCommand(name = "tag", description = "Sends a predefined tag")
     suspend fun sendTag(
         event: GuildSlashEvent,
@@ -100,6 +103,7 @@ class SlashTag(
     }
 
     @TopLevelSlashCommandData(scope = CommandScope.GUILD, description = "Manage tags")
+    @DeclarationFilter(NotJDACommandDeclarationFilter::class)
     @JDASlashCommand(
         name = "tags",
         subcommand = "raw",
@@ -112,6 +116,7 @@ class SlashTag(
         withTag(event, name) { tag: Tag -> event.reply(MarkdownSanitizer.escape(tag.content)).queue() }
     }
 
+    @DeclarationFilter(NotJDACommandDeclarationFilter::class)
     @JDASlashCommand(name = "tags", subcommand = "create", description = "Creates a tag in this guild")
     fun createTag(event: GuildSlashEvent) {
         val modal = modals.create("Create a tag") {
@@ -157,6 +162,7 @@ class SlashTag(
         }
     }
 
+    @DeclarationFilter(NotJDACommandDeclarationFilter::class)
     @JDASlashCommand(name = "tags", subcommand = "edit", description = "Edits a tag in this guild")
     suspend fun editTag(
         event: GuildSlashEvent,
@@ -201,6 +207,7 @@ class SlashTag(
         }
     }
 
+    @DeclarationFilter(NotJDACommandDeclarationFilter::class)
     @JDASlashCommand(
         name = "tags",
         subcommand = "transfer",
@@ -229,6 +236,7 @@ class SlashTag(
         }
     }
 
+    @DeclarationFilter(NotJDACommandDeclarationFilter::class)
     @JDASlashCommand(name = "tags", subcommand = "delete", description = "Deletes a tag you own in this guild")
     suspend fun deleteTag(
         event: GuildSlashEvent,
@@ -259,6 +267,7 @@ class SlashTag(
         btnEvt.editMessageFormat("Tag '%s' deleted successfully", name).setComponents().queue()
     }
 
+    @DeclarationFilter(NotJDACommandDeclarationFilter::class)
     @JDASlashCommand(name = "tags", subcommand = "list", description = "Creates a tag in this guild")
     suspend fun listTags(
         event: GuildSlashEvent,
@@ -295,6 +304,7 @@ class SlashTag(
             .queue()
     }
 
+    @DeclarationFilter(NotJDACommandDeclarationFilter::class)
     @JDASlashCommand(name = "tags", subcommand = "info", description = "Gives information about a tag in this guild")
     suspend fun infoTags(
         event: GuildSlashEvent,
