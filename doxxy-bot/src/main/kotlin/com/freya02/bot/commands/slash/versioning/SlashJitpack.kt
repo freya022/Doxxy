@@ -73,7 +73,7 @@ class SlashJitpack(
             LibraryType.BOT_COMMANDS -> DependencySupplier.formatBCJitpack(
                 ScriptType.DEPENDENCIES,
                 buildToolType,
-                jitpackBranchService.getUsedJDAVersionFromBranch(LibraryType.BOT_COMMANDS, targetBranch),
+                jitpackBranchService.getUsedJDAVersionFromBranch(targetBranch),
                 targetBranch.toJitpackArtifact()
             )
             LibraryType.JDA, LibraryType.JDA_KTX, LibraryType.LAVA_PLAYER -> DependencySupplier.formatJitpack(
@@ -261,7 +261,7 @@ class SlashJitpack(
             LibraryType.BOT_COMMANDS -> DependencySupplier.formatBCJitpack(
                 ScriptType.DEPENDENCIES,
                 buildToolType,
-                jitpackBranchService.getUsedJDAVersionFromBranch(LibraryType.BOT_COMMANDS, branch),
+                jitpackBranchService.getUsedJDAVersionFromBranch(branch),
                 branch.toJitpackArtifact()
             )
         }

@@ -72,9 +72,10 @@ class JitpackBranchService(
         }
     }
 
-    suspend fun getUsedJDAVersionFromBranch(libraryType: LibraryType, branch: GithubBranch): ArtifactInfo = versionCheckerMapMutex.withLock {
+    suspend fun getUsedJDAVersionFromBranch(branch: GithubBranch): ArtifactInfo = versionCheckerMapMutex.withLock {
         val jdaVersionChecker = versionCheckerMap.getOrPut(branch.branchName) {
-            val latest = versionsRepository.getInitialVersion(libraryType, branch.toVersionClassifier())
+            // Get back from DB the saved JDA version with the branch classifier (i.e., JDA from BC)
+            val latest = versionsRepository.getInitialVersion(LibraryType.JDA, branch.toVersionClassifier())
             val checker = DependencyVersionChecker(latest, "JDA") {
                 "https://raw.githubusercontent.com/${branch.ownerName}/${branch.repoName}/${branch.branchName}/pom.xml"
             }
