@@ -67,7 +67,7 @@ object Main {
                 }
 
                 components {
-                    useComponents = true
+                    enable = true
                 }
             }
 
