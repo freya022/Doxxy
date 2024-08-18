@@ -5,9 +5,9 @@ import com.freya02.bot.versioning.VersionChecker
 import com.freya02.bot.versioning.github.GithubUtils
 
 class JitpackVersionChecker(latest: LibraryVersion) : VersionChecker(latest) {
-    override fun retrieveLatest(): String {
+    override fun retrieveLatest(): LibraryVersion {
         val (_, groupId, artifactId) = latest
         val latestBranch = GithubUtils.getLatestBranch(groupId.substringAfter(".github."), artifactId)
-        return latestBranch.latestCommitSha.asSha10
+        return latest.copy(version = latestBranch.latestCommitSha.asSha10)
     }
 }

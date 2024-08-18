@@ -1,6 +1,7 @@
 package com.freya02.bot.versioning.maven
 
 import com.freya02.bot.utils.HttpUtils
+import com.freya02.bot.versioning.ArtifactInfo
 import net.dv8tion.jda.api.exceptions.ParsingException
 import org.jsoup.nodes.Document
 import java.io.IOException
@@ -16,7 +17,7 @@ object MavenUtils {
     fun parseDependencyVersion(
         document: Document,
         targetArtifactId: String,
-    ): String {
+    ): ArtifactInfo {
         document.select("project > dependencies > dependency")
             .forEachIndexed { i, element ->
                 val groupIdElement = element.selectFirst("groupId")
@@ -31,7 +32,7 @@ object MavenUtils {
                     return@forEachIndexed
                 }
 
-                return versionElement.text()
+                return ArtifactInfo(groupIdElement.text(), artifactIdElement.text(), versionElement.text())
             }
 
         throw IOException("Unable to get dependency version from " + document.baseUri())

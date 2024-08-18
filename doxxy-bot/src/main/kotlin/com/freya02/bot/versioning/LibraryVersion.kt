@@ -4,8 +4,8 @@ data class LibraryVersion(
     val classifier: String?,
     val groupId: String,
     val artifactId: String,
-    var version: String,
-    var sourceUrl: String? = null
+    val version: String,
+    var sourceUrl: String? = null //TODO move to LibraryVersionMetadata, setMetadata(LibraryType, String, ...)
 )
 
 val LibraryVersion.artifactInfo get() = ArtifactInfo(groupId, artifactId, version)
