@@ -14,7 +14,6 @@ import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.freya022.botcommands.api.core.utils.edit
 import io.github.freya022.botcommands.api.core.utils.toEditData
 import io.github.freya022.botcommands.api.pagination.menu.buttonized.ButtonMenu
-import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.exceptions.ErrorHandler
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 import net.dv8tion.jda.api.requests.ErrorResponse
@@ -86,12 +85,10 @@ class SlashDocsController(private val commonDocsController: CommonDocsController
     ): ButtonMenu<DocSuggestion> {
         suspend fun callback(buttonEvent: ButtonEvent, entry: DocSuggestion) {
             val identifier = entry.fullIdentifier
-            val doc = runBlocking {
-                when {
-                    '(' in identifier -> docIndex.getMethodDoc(identifier)
-                    '#' in identifier -> docIndex.getFieldDoc(identifier)
-                    else -> docIndex.getClassDoc(identifier)
-                }
+            val doc = when {
+                '(' in identifier -> docIndex.getMethodDoc(identifier)
+                '#' in identifier -> docIndex.getFieldDoc(identifier)
+                else -> docIndex.getClassDoc(identifier)
             }
 
             when (doc) {

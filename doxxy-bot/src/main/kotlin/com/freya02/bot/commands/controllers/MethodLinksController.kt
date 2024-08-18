@@ -21,7 +21,6 @@ import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.freya022.botcommands.api.core.service.lazy
 import io.github.freya022.botcommands.api.core.utils.toEditData
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.exceptions.ErrorHandler
@@ -46,9 +45,7 @@ class MethodLinksController(
     context(MutableList<ItemComponent>)
     suspend fun addCachedMethodComponents(cachedMethod: CachedMethod, originalHook: InteractionHook?, caller: UserSnowflake) {
         val index = docIndexMap[cachedMethod.source]
-        val method = runBlocking {
-            index.implementationIndex.getMethod(cachedMethod.className, cachedMethod.signature)
-        }
+        val method = index.implementationIndex.getMethod(cachedMethod.className, cachedMethod.signature)
 
         if (method != null) {
             if (cachedMethod.implementations.isNotEmpty()) {

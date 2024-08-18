@@ -19,7 +19,6 @@ import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.freya022.botcommands.api.core.service.lazy
 import io.github.freya022.botcommands.api.core.utils.toEditData
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.exceptions.ErrorHandler
@@ -44,9 +43,7 @@ class ClassLinksController(
     context(MutableList<ItemComponent>)
     suspend fun addCachedClassComponents(cachedDoc: CachedClass, originalHook: InteractionHook?, caller: UserSnowflake) {
         val index = docIndexMap[cachedDoc.source]
-        val clazz = runBlocking {
-            index.implementationIndex.getClass(cachedDoc.name)
-        }
+        val clazz = index.implementationIndex.getClass(cachedDoc.name)
 
         if (clazz != null) {
             if (cachedDoc.subclasses.isNotEmpty()) {

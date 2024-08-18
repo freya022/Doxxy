@@ -9,7 +9,6 @@ import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.freya022.botcommands.api.core.utils.edit
 import io.github.freya022.botcommands.api.core.utils.toEditData
 import io.github.freya022.botcommands.api.pagination.menu.buttonized.ButtonMenu
-import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.exceptions.ErrorHandler
 import net.dv8tion.jda.api.requests.ErrorResponse
@@ -20,26 +19,22 @@ class TextDocsController(private val commonDocsController: CommonDocsController)
     suspend fun getDocSuggestionMenu(docIndex: DocIndex, suggestions: List<DocSuggestion>, user: UserSnowflake): ButtonMenu<DocSuggestion> {
         suspend fun callback(buttonEvent: ButtonEvent, entry: DocSuggestion) {
             val identifier = entry.fullIdentifier
-            val doc = runBlocking {
-                when {
-                    '(' in identifier -> docIndex.getMethodDoc(identifier)
-                    '#' in identifier -> docIndex.getFieldDoc(identifier)
-                    else -> docIndex.getClassDoc(identifier)
-                }
+            val doc = when {
+                '(' in identifier -> docIndex.getMethodDoc(identifier)
+                '#' in identifier -> docIndex.getFieldDoc(identifier)
+                else -> docIndex.getClassDoc(identifier)
             }
 
             when (doc) {
                 null -> buttonEvent.reply_("This item is now invalid, try again", ephemeral = true).queue()
                 else -> {
-                    val messageCreateData = runBlocking {
-                        commonDocsController.getDocMessageData(
-                            null,
-                            buttonEvent.member!!,
-                            ephemeral = false,
-                            showCaller = false,
-                            cachedDoc = doc
-                        )
-                    }
+                    val messageCreateData = commonDocsController.getDocMessageData(
+                        originalHook = null,
+                        caller = buttonEvent.member!!,
+                        ephemeral = false,
+                        showCaller = false,
+                        cachedDoc = doc
+                    )
                     messageCreateData.toEditData()
                         .edit(buttonEvent)
                         .queue()
