@@ -86,7 +86,7 @@
             <dependency>
                 <groupId>io.github.freya022</groupId>
                 <artifactId>BotCommands</artifactId>
-                <version>3.0.0-alpha.18</version>
+                <version>3.0.0-alpha.18_DEV</version>
             </dependency>
             <dependency>
                 <groupId>club.minnced</groupId>
