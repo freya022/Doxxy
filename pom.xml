@@ -34,6 +34,7 @@
         <flyway.version>10.11.0</flyway.version>
         <ktor.version>2.3.12</ktor.version>
         <serialization.version>1.6.3</serialization.version>
+        <opentelemetry.instrumentation.version>1.33.5-alpha</opentelemetry.instrumentation.version>
     </properties>
 
     <dependencyManagement>
@@ -117,6 +118,26 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-ext</artifactId>
                 <version>2.0.13</version>
+            </dependency>
+            <dependency>
+                <groupId>io.opentelemetry</groupId>
+                <artifactId>opentelemetry-exporter-prometheus</artifactId>
+                <version>1.40.0-alpha</version>
+            </dependency>
+            <dependency>
+                <groupId>io.opentelemetry.semconv</groupId>
+                <artifactId>opentelemetry-semconv</artifactId>
+                <version>1.26.0-alpha</version>
+            </dependency>
+            <dependency>
+                <groupId>io.opentelemetry.instrumentation</groupId>
+                <artifactId>opentelemetry-jdbc</artifactId>
+                <version>${opentelemetry.instrumentation.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.opentelemetry.instrumentation</groupId>
+                <artifactId>opentelemetry-ktor-2.0</artifactId>
+                <version>${opentelemetry.instrumentation.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.postgresql</groupId>

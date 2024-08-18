@@ -93,26 +93,37 @@ class CommonDocsController(
         showCaller: Boolean,
         cachedDoc: CachedDoc,
         chain: DocResolveChain? = null
-    ): MessageCreateData = tracer.startSpan("getDocMessageData") {
+    ): MessageCreateData = tracer.startSpan("getDocMessageData", parameters = {
+        setAttribute("cachedDoc.qualifiedName", cachedDoc.qualifiedName)
+    }) {
         MessageCreateBuilder().apply {
-            addEmbeds(cachedDoc.embed.let {
-                when {
-                    showCaller || chain != null -> Embed {
-                        builder.copyFrom(it)
-                        if (showCaller)
-                            author(caller.effectiveName, iconUrl = caller.effectiveAvatarUrl)
-                        if (chain != null)
-                            field("Resolved from", "`$chain`", true)
-
-                        addUsableIn(cachedDoc)
-                    }
-                    else -> it
-                }
-            })
+            addEmbeds(getDocEmbed(cachedDoc, chain, caller, showCaller))
             addDocsSeeAlso(caller, cachedDoc)
             addExamples(cachedDoc)
             addDocsActionRows(originalHook, ephemeral, cachedDoc, caller)
         }.build()
+    }
+
+    private suspend fun getDocEmbed(
+        cachedDoc: CachedDoc,
+        chain: DocResolveChain?,
+        caller: Member,
+        showCaller: Boolean
+    ): MessageEmbed {
+        // Technically creates a new embed even if nothing changes, but whatever tbh
+        return cachedDoc.embed.edit {
+            if (showCaller)
+                author(caller.effectiveName, iconUrl = caller.effectiveAvatarUrl)
+            if (chain != null)
+                field("Resolved from", "`$chain`", true)
+
+            addUsableIn(cachedDoc)
+        }
+    }
+
+    private inline fun MessageEmbed.edit(block: InlineEmbed.() -> Unit) = Embed {
+        builder.copyFrom(this@edit)
+        apply(block)
     }
 
     private suspend fun InlineEmbed.addUsableIn(cachedDoc: CachedDoc) {
@@ -131,18 +142,20 @@ class CommonDocsController(
     private suspend fun MessageCreateRequest<*>.addExamples(cachedDoc: CachedDoc) {
         if (exampleApi == null) return
 
-        val examples = exampleApi.searchExamplesByTarget(cachedDoc.qualifiedName)
-        if (examples.isEmpty()) return
+        tracer.startSpan("addExamples") {
+            val examples = exampleApi.searchExamplesByTarget(cachedDoc.qualifiedName)
+            if (examples.isEmpty()) return@startSpan
 
-        val selectMenu = selectMenus.stringSelectMenu().persistent {
-            placeholder = "Examples"
-            options += examples.map { SelectOption(it.title, it.title, emoji = Emojis.testTube) }
+            val selectMenu = selectMenus.stringSelectMenu().persistent {
+                placeholder = "Examples"
+                options += examples.map { SelectOption(it.title, it.title, emoji = Emojis.testTube) }
 
-            bindTo(CommonDocsHandlers.EXAMPLE_SELECT_LISTENER_NAME)
-            timeout(14.days)
+                bindTo(CommonDocsHandlers.EXAMPLE_SELECT_LISTENER_NAME)
+                timeout(14.days)
+            }
+
+            addActionRow(selectMenu)
         }
-
-        addActionRow(selectMenu)
     }
 
     private suspend fun MessageCreateRequest<*>.addDocsActionRows(
@@ -150,7 +163,7 @@ class CommonDocsController(
         ephemeral: Boolean,
         cachedDoc: CachedDoc,
         caller: UserSnowflake
-    ) {
+    ) = tracer.startSpan("addDocsActionRows") {
         val list: List<ItemComponent> = buildList {
             cachedDoc.sourceLink?.let { sourceLink -> add(Button.link(sourceLink, "Source")) }
 
@@ -171,22 +184,24 @@ class CommonDocsController(
         val docReferences = cachedDoc.seeAlsoReferences.filter { it.targetType != TargetType.UNKNOWN }
         if (docReferences.isEmpty()) return
 
-        val selectMenu = selectMenus.stringSelectMenu().persistent {
-            bindWith(CommonDocsHandlers::onSeeAlsoSelect, caller, cachedDoc.source)
-            timeout(15.minutes)
-            placeholder = "See also"
+        tracer.startSpan("addDocsSeeAlso") {
+            val selectMenu = selectMenus.stringSelectMenu().persistent {
+                bindWith(CommonDocsHandlers::onSeeAlsoSelect, caller, cachedDoc.source)
+                timeout(15.minutes)
+                placeholder = "See also"
 
-            for (reference in docReferences) {
-                val optionValue = reference.targetType.name + ":" + reference.fullSignature
-                if (optionValue.length > SelectMenu.ID_MAX_LENGTH) {
-                    logger.warn { "Option value was too large (${optionValue.length}) for: '${optionValue}'" }
-                    continue
+                for (reference in docReferences) {
+                    val optionValue = reference.targetType.name + ":" + reference.fullSignature
+                    if (optionValue.length > SelectMenu.ID_MAX_LENGTH) {
+                        logger.warn { "Option value was too large (${optionValue.length}) for: '${optionValue}'" }
+                        continue
+                    }
+
+                    addOption(reference.text, optionValue, Emojis.clipboard)
                 }
-
-                addOption(reference.text, optionValue, Emojis.clipboard)
             }
-        }
 
-        addActionRow(selectMenu)
+            addActionRow(selectMenu)
+        }
     }
 }

@@ -13,6 +13,8 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.gson.*
+import io.opentelemetry.api.GlobalOpenTelemetry
+import io.opentelemetry.instrumentation.ktor.v2_0.client.KtorClientTracing
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -38,6 +40,11 @@ object PullUpdater {
     private val client = HttpClient(OkHttp) {
         install(ContentNegotiation) {
             gson {  }
+        }
+
+        install(KtorClientTracing) {
+            //TODO bad
+            setOpenTelemetry(GlobalOpenTelemetry.get()!!)
         }
     }
     private val mutex = Mutex()

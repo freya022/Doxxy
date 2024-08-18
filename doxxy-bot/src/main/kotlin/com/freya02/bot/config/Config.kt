@@ -23,15 +23,32 @@ data class BackendConfig(
     val url: String
 )
 
-data class Config(val token: String,
-                  val ownerIds: List<Long>,
-                  val prefixes: List<String>,
-                  val testGuildIds: List<Long>,
-                  val fakeJDAGuildId: Long,
-                  val fakeBCGuildId: Long,
-                  val pullUpdater: PullUpdaterConfig,
-                  val backend: BackendConfig,
-                  val databaseConfig: DatabaseConfig
+data class OpenTelemetryConfig(
+    val enable: Boolean,
+    val spanProcessor: SpanProcessorConfig,
+    val metricReader: MetricReaderConfig,
+)
+
+data class SpanProcessorConfig(
+    val endpoint: String,
+)
+
+data class MetricReaderConfig(
+    val port: Int,
+)
+
+data class Config(
+    val token: String,
+    val ownerIds: List<Long>,
+    val prefixes: List<String>,
+    val testGuildIds: List<Long>,
+    val fakeJDAGuildId: Long,
+    val fakeBCGuildId: Long,
+    val pullUpdater: PullUpdaterConfig,
+    val backend: BackendConfig,
+    val databaseConfig: DatabaseConfig,
+    @get:BService(name = "openTelemetryConfig")
+    val openTelemetry: OpenTelemetryConfig,
 ) {
     companion object {
         private val logger = KotlinLogging.logger { }

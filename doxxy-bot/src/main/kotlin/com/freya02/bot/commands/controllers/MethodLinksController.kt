@@ -7,6 +7,7 @@ import com.freya02.bot.docs.metadata.ImplementationIndex
 import com.freya02.bot.docs.metadata.MethodType
 import com.freya02.bot.docs.metadata.simpleQualifiedSignature
 import com.freya02.bot.utils.joinLengthyString
+import com.freya02.bot.utils.startSpan
 import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.MessageCreate
@@ -21,6 +22,7 @@ import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.freya022.botcommands.api.core.service.lazy
 import io.github.freya022.botcommands.api.core.utils.toEditData
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.opentelemetry.api.OpenTelemetry
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.exceptions.ErrorHandler
@@ -31,19 +33,22 @@ import net.dv8tion.jda.api.requests.ErrorResponse
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.minutes
 
+private val logger = KotlinLogging.logger { }
+
 @BService
 class MethodLinksController(
     private val context: BContext,
     serviceContainer: ServiceContainer,
     private val buttons: Buttons,
     private val selectMenus: SelectMenus,
-    private val docIndexMap: DocIndexMap
+    private val docIndexMap: DocIndexMap,
+    openTelemetry: OpenTelemetry,
 ) {
-    private val logger = KotlinLogging.logger { }
     private val commonDocsController: CommonDocsController by serviceContainer.lazy()
+    private val tracer = openTelemetry.getTracer("ClassLinksController", "1.0.0")
 
     context(MutableList<ItemComponent>)
-    suspend fun addCachedMethodComponents(cachedMethod: CachedMethod, originalHook: InteractionHook?, caller: UserSnowflake) {
+    suspend fun addCachedMethodComponents(cachedMethod: CachedMethod, originalHook: InteractionHook?, caller: UserSnowflake) = tracer.startSpan("addCachedMethodComponents") {
         val index = docIndexMap[cachedMethod.source]
         val method = index.implementationIndex.getMethod(cachedMethod.className, cachedMethod.signature)
 

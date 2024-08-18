@@ -9,14 +9,20 @@ import io.ktor.client.engine.okhttp.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
+import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.instrumentation.ktor.v2_0.client.KtorClientTracing
 
 @BConfiguration
 object HttpClientProvider {
     //TODO use in PullUpdater after removing gson
     @BService
-    fun defaultClient(): HttpClient = HttpClient(OkHttp) {
+    fun defaultClient(openTelemetry: OpenTelemetry): HttpClient = HttpClient(OkHttp) {
         install(ContentNegotiation) {
             json()
+        }
+
+        install(KtorClientTracing) {
+            setOpenTelemetry(openTelemetry)
         }
     }
 

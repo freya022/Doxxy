@@ -28,5 +28,14 @@
   "backend": {
     "enable": false,
     "url": "http://127.0.0.1:8080"
+  },
+  "openTelemetry": {
+    "enable": false,
+    "spanProcessor": {
+      "endpoint": "http://127.0.0.1:4317"
+    },
+    "metricReader": {
+      "port": 9464
+    }
   }
 }
