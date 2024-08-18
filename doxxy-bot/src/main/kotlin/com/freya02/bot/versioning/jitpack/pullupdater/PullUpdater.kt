@@ -71,7 +71,7 @@ object PullUpdater {
             } else {
                 val cacheKey = pullRequest.toCacheKey()
                 val cacheValue = cache[cacheKey]
-                if (cacheValue != null) {
+                if (cacheValue != null && cacheValue.baseSha == pullRequest.base.sha && cacheValue.headSha == pullRequest.head.sha) {
                     //Prevent unnecessary updates by checking if the latest SHA is the same on the remote
                     cacheValue.forkedGithubBranch
                 } else {
