@@ -12,13 +12,14 @@ import com.freya02.docs.data.BaseDoc
 import com.freya02.docs.data.ClassDetailType
 import com.freya02.docs.data.ClassDoc
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade
-import com.google.gson.GsonBuilder
 import io.github.freya022.botcommands.api.core.db.Database
 import io.github.freya022.botcommands.api.core.db.Transaction
 import io.github.freya022.botcommands.api.core.db.preparedStatement
 import io.github.freya022.botcommands.api.core.db.transactional
 import io.github.oshai.kotlinlogging.KotlinLogging
-import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.utils.data.DataObject
+
+private val logger = KotlinLogging.logger { }
 
 internal class DocIndexWriter(
     private val database: Database,
@@ -59,7 +60,7 @@ internal class DocIndexWriter(
                     }
 
                     val classEmbed = toEmbed(classDoc).build()
-                    val classEmbedJson = GSON.toJson(classEmbed)
+                    val classEmbedJson = classEmbed.toData()
                     val sourceLink = reindexData.getClassSourceUrlOrNull(classDoc)
 
                     val classDocId = insertDoc(DocType.CLASS, classDoc.className, classDoc, classEmbedJson, sourceLink)
@@ -87,7 +88,7 @@ internal class DocIndexWriter(
         for (methodDoc in classDoc.getMethodDocs().values) {
             try {
                 val methodEmbed = toEmbed(classDoc, methodDoc).build()
-                val methodEmbedJson = GSON.toJson(methodEmbed)
+                val methodEmbedJson = methodEmbed.toData()
 
                 val methodRange: IntRange? = when (sourceLink) {
                     null -> null
@@ -156,7 +157,7 @@ internal class DocIndexWriter(
         for (fieldDoc in classDoc.getFieldDocs().values) {
             try {
                 val fieldEmbed = toEmbed(classDoc, fieldDoc).build()
-                val fieldEmbedJson = GSON.toJson(fieldEmbed)
+                val fieldEmbedJson = fieldEmbed.toData()
 
                 val fieldRange: IntRange? = when (sourceLink) {
                     null -> null
@@ -195,7 +196,7 @@ internal class DocIndexWriter(
         docType: DocType,
         className: String,
         baseDoc: BaseDoc,
-        embedJson: String,
+        embedJson: DataObject,
         sourceLink: String?
     ): Int {
         return preparedStatement(
@@ -214,7 +215,7 @@ internal class DocIndexWriter(
                 baseDoc.humanIdentifier,
                 baseDoc.toHumanClassIdentifier(className),
                 baseDoc.returnTypeNoAnnotations,
-                embedJson,
+                embedJson.toString(),
                 baseDoc.onlineURL,
                 sourceLink
             ).read()["id"]
@@ -234,13 +235,5 @@ internal class DocIndexWriter(
                 )
             }
         }
-    }
-
-    companion object {
-        private val logger = KotlinLogging.logger { }
-
-        internal val GSON = GsonBuilder()
-            .registerTypeAdapter(MessageEmbed::class.java, MessageEmbedAdapter)
-            .create()
     }
 }

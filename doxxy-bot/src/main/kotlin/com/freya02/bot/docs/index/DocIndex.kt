@@ -18,7 +18,8 @@ import io.github.freya022.botcommands.api.core.db.transactional
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.EmbedBuilder
+import net.dv8tion.jda.api.utils.data.DataObject
 import org.intellij.lang.annotations.Language
 
 private val logger = KotlinLogging.logger { }
@@ -329,7 +330,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             val result = executeQuery(sourceType.id, docType.id, className, identifier).readOrNull() ?: return null
             return DocFindData(
                 result["id"],
-                DocIndexWriter.GSON.fromJson(result.getString("embed"), MessageEmbed::class.java),
+                result.getString("embed").let(DataObject::fromJson).let(EmbedBuilder::fromData).build(),
                 result["javadoc_link"],
                 result["source_link"]
             )
