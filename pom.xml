@@ -24,7 +24,7 @@
         <maven.compiler.target>17</maven.compiler.target>
 
         <kotlin.version>2.0.0</kotlin.version>
-        <kotlin.coroutine.version>1.8.0</kotlin.coroutine.version>
+        <kotlin.coroutine.version>1.9.0-RC.2</kotlin.coroutine.version>
 
         <kotlin.compiler.languageVersion>2.0</kotlin.compiler.languageVersion>
         <kotlin.compiler.apiVersion>2.0</kotlin.compiler.apiVersion>
@@ -32,7 +32,7 @@
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
 
         <flyway.version>10.11.0</flyway.version>
-        <ktor.version>2.3.10</ktor.version>
+        <ktor.version>2.3.12</ktor.version>
         <serialization.version>1.6.3</serialization.version>
     </properties>
 
