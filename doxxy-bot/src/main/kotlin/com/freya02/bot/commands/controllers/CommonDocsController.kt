@@ -129,14 +129,16 @@ class CommonDocsController(
     private suspend fun InlineEmbed.addUsableIn(cachedDoc: CachedDoc) {
         if (cachedDoc !is CachedMethod) return
 
-        val className = cachedDoc.className
-        val apiSubclasses = cachedDoc.docIndex.implementationIndex.getApiSubclasses(className)
-        if (apiSubclasses.isNotEmpty())
-            field("Usable in", apiSubclasses.joinLengthyString(
-                separator = ", ",
-                truncated = " and more...",
-                lengthLimit = MessageEmbed.VALUE_MAX_LENGTH
-            ) { subClass -> "[`${subClass.className}`](${subClass.sourceLink})" })
+        tracer.startSpan("addUsableIn") {
+            val className = cachedDoc.className
+            val apiSubclasses = cachedDoc.docIndex.implementationIndex.getApiSubclasses(className)
+            if (apiSubclasses.isNotEmpty())
+                field("Usable in", apiSubclasses.joinLengthyString(
+                    separator = ", ",
+                    truncated = " and more...",
+                    lengthLimit = MessageEmbed.VALUE_MAX_LENGTH
+                ) { subClass -> "[`${subClass.className}`](${subClass.sourceLink})" })
+        }
     }
 
     private suspend fun MessageCreateRequest<*>.addExamples(cachedDoc: CachedDoc) {
