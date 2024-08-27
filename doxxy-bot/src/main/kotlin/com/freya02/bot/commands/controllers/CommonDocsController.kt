@@ -10,6 +10,7 @@ import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocSuggestion
 import com.freya02.bot.examples.ExampleAPI
 import com.freya02.bot.utils.Emojis
+import com.freya02.bot.utils.joinLengthyString
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.data.TargetType
 import dev.minn.jda.ktx.interactions.components.SelectOption
@@ -27,6 +28,7 @@ import io.github.freya022.botcommands.api.pagination.menu.buttonized.ButtonMenuB
 import io.github.freya022.botcommands.api.pagination.menu.buttonized.SuspendingChoiceCallback
 import io.github.oshai.kotlinlogging.KotlinLogging
 import net.dv8tion.jda.api.entities.Member
+import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.interactions.InteractionHook
 import net.dv8tion.jda.api.interactions.components.ItemComponent
@@ -89,6 +91,8 @@ class CommonDocsController(
                             author(caller.effectiveName, iconUrl = caller.effectiveAvatarUrl)
                         if (chain != null)
                             field("Resolved from", "`$chain`", true)
+
+                        addUsableIn(cachedDoc)
                     }
                     else -> it
                 }
@@ -97,6 +101,19 @@ class CommonDocsController(
             addExamples(cachedDoc)
             addDocsActionRows(originalHook, ephemeral, cachedDoc, caller)
         }.build()
+    }
+
+    private suspend fun InlineEmbed.addUsableIn(cachedDoc: CachedDoc) {
+        if (cachedDoc !is CachedMethod) return
+
+        val className = cachedDoc.className
+        val apiSubclasses = cachedDoc.docIndex.implementationIndex.getApiSubclasses(className)
+        if (apiSubclasses.isNotEmpty())
+            field("Usable in", apiSubclasses.joinLengthyString(
+                separator = ", ",
+                truncated = " and more...",
+                lengthLimit = MessageEmbed.VALUE_MAX_LENGTH
+            ) { subClass -> "[`${subClass.className}`](${subClass.sourceLink})" })
     }
 
     private suspend fun MessageCreateRequest<*>.addExamples(cachedDoc: CachedDoc) {

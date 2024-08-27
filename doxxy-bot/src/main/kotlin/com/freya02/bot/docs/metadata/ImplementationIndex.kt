@@ -107,6 +107,26 @@ class ImplementationIndex(val docIndex: DocIndex, private val database: Database
         }
     }
 
+    suspend fun getApiSubclasses(className: FullSimpleClassName): List<Class> {
+        return database.preparedStatement(
+            """
+                with subclass as (select subclass.*
+                                  from class superclass
+                                           join subclass class_hierarchy on class_hierarchy.superclass_id = superclass.id
+                                           join class subclass on class_hierarchy.subclass_id = subclass.id
+                                  where superclass.source_id = ?
+                                    and superclass.class_name = ?)
+                select subclass.class_name, subclass.class_type, subclass.source_link
+                from subclass
+                         join doc on doc.classname = subclass.class_name -- Join on documented subclasses
+                group by subclass.class_name, subclass.class_type, subclass.source_link
+                order by length(subclass.class_name), subclass.class_name;
+            """.trimIndent(), readOnly = true
+        ) {
+            executeQuery(sourceType.id, className).map { Class(it) }
+        }
+    }
+
     suspend fun getImplementations(className: FullSimpleClassName, methodSignature: String): List<Method> {
         return database.preparedStatement(
             """

@@ -1,12 +1,12 @@
 package com.freya02.bot.docs.cached
 
+import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.metadata.ImplementationIndex
-import com.freya02.docs.DocSourceType
 import com.freya02.docs.data.SeeAlso.SeeAlsoReference
 import net.dv8tion.jda.api.entities.MessageEmbed
 
 class CachedMethod(
-    override val source: DocSourceType,
+    override val docIndex: DocIndex,
     val className: String,
     val signature: String,
     override val embed: MessageEmbed,
