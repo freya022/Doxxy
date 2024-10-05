@@ -32,7 +32,7 @@ object GithubUtils {
     }
 
     @Throws(IOException::class)
-    fun getLatestHash(ownerName: String, repoName: String, branchName: String): String {
+    fun getLatestHash(ownerName: String, repoName: String, branchName: String): CommitHash {
         val url = "https://api.github.com/repos/$ownerName/$repoName/commits".toHttpUrl()
             .newBuilder()
             .addQueryParameter("page", "1")
@@ -44,7 +44,7 @@ object GithubUtils {
             .execute()
             .use { response ->
                 val json = response.body!!.string()
-                return DataArray.fromJson(json).getObject(0).getString("sha").substring(0, 10)
+                return CommitHash(DataArray.fromJson(json).getObject(0).getString("sha"))
             }
     }
 

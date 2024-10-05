@@ -5,6 +5,7 @@ import com.freya02.bot.config.Data
 import com.freya02.bot.versioning.LibraryType
 import com.freya02.bot.versioning.github.CommitHash
 import com.freya02.bot.versioning.github.GithubBranch
+import com.freya02.bot.versioning.github.GithubUtils
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -44,6 +45,7 @@ object PullUpdater {
     val isRunning: Boolean get() = mutex.isLocked
 
     private val cache: MutableMap<CacheKey, CacheValue> = hashMapOf()
+    private var latestCommitHash: CommitHash? = null
 
     suspend fun tryUpdate(libraryType: LibraryType, prNumber: Int): Result<GithubBranch> = runCatching {
         if (libraryType != LibraryType.JDA) {
@@ -69,29 +71,38 @@ object PullUpdater {
                 //Skip PRs with conflicts
                 fail(PullUpdateException.ExceptionType.PR_UPDATE_FAILURE, "Head branch cannot be updated")
             } else {
-                val cacheKey = pullRequest.toCacheKey()
-                val cacheValue = cache[cacheKey]
-                if (cacheValue != null && cacheValue.baseSha == pullRequest.base.sha && cacheValue.headSha == pullRequest.head.sha) {
-                    //Prevent unnecessary updates by checking if the latest SHA is the same on the remote
-                    cacheValue.forkedGithubBranch
-                } else {
+                whenUpdateRequired(libraryType, pullRequest) {
                     val mergeCommitHash = doUpdate(pullRequest)
-
-                    // Success!
-                    val value = CacheValue(
-                        pullRequest.head.sha,
-                        pullRequest.base.sha,
-                        getForkedGithubBranch(pullRequest, mergeCommitHash)
-                    )
-                    cache[cacheKey] = value
-
-                    value.forkedGithubBranch
+                    getForkedGithubBranch(pullRequest, mergeCommitHash)
                 }
             }
         }
     }
 
-    private fun PullRequest.toCacheKey(): CacheKey = CacheKey(head.label, base.label)
+    private suspend fun whenUpdateRequired(libraryType: LibraryType, pullRequest: PullRequest, onUpdate: suspend () -> GithubBranch): GithubBranch {
+        val latestHash = GithubUtils.getLatestHash(libraryType.githubOwnerName, libraryType.githubRepoName, "")
+
+        suspend fun update(): GithubBranch {
+            val newBranch = onUpdate()
+            this.latestCommitHash = latestHash
+            return newBranch
+        }
+
+        // If JDA main branch has been updated
+        if (this.latestCommitHash != latestHash)
+            return update()
+
+        // Check if the base sha (where the PR starts from) and head sha (latest PR commit) correspond
+        val cacheKey = CacheKey(pullRequest.head.label, pullRequest.base.label)
+        val cacheValue = cache[cacheKey] ?: return update()
+
+        val isCacheValid = cacheValue.baseSha == pullRequest.base.sha
+                && cacheValue.headSha == pullRequest.head.sha
+        return when {
+            isCacheValid -> cacheValue.forkedGithubBranch
+            else -> update()
+        }
+    }
 
     private fun getForkedGithubBranch(pr: PullRequest, mergeCommitHash: CommitHash): GithubBranch {
         return GithubBranch(config.forkBotName, config.forkRepoName, pr.head.toForkedBranchName(), mergeCommitHash)
