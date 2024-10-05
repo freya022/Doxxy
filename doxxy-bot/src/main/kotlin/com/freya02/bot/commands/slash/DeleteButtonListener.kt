@@ -1,6 +1,5 @@
 package com.freya02.bot.commands.slash
 
-import com.freya02.bot.utils.componentIds
 import io.github.freya022.botcommands.api.components.Buttons
 import io.github.freya022.botcommands.api.components.Components
 import io.github.freya022.botcommands.api.components.annotations.JDAButtonListener
@@ -17,7 +16,7 @@ class DeleteButtonListener {
     suspend fun onDeleteMessageClick(event: ButtonEvent, components: Components) {
         event.deferEdit().queue()
         event.hook.deleteOriginal().queue()
-        components.deleteComponentsByIds(event.message.componentIds)
+        components.deleteRows(event.message.components)
     }
 
     companion object {
@@ -26,7 +25,7 @@ class DeleteButtonListener {
 
         suspend fun Buttons.messageDelete(allowedUser: UserSnowflake): Button {
             return danger(WASTEBASKET).persistent {
-                oneUse = true
+                singleUse = true
                 bindTo(DELETE_MESSAGE_BUTTON_LISTENER_NAME)
 
                 constraints += allowedUser

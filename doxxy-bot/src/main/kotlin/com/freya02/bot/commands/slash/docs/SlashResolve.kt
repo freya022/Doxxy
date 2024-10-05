@@ -11,6 +11,7 @@ import io.github.freya022.botcommands.api.commands.application.CommandScope
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandManager
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandProvider
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
+import io.github.freya022.botcommands.api.commands.application.slash.options.builder.inlineClassOptionVararg
 
 @Command
 class SlashResolve(private val docIndexMap: DocIndexMap, private val commonDocsController: CommonDocsController) : GuildApplicationCommandProvider {

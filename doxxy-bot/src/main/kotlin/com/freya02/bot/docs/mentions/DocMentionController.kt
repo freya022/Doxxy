@@ -5,7 +5,6 @@ import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDele
 import com.freya02.bot.docs.DocIndexMap
 import com.freya02.bot.utils.ParsingUtils.codeBlockRegex
 import com.freya02.bot.utils.ParsingUtils.spaceRegex
-import com.freya02.bot.utils.componentIds
 import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.MessageCreate
@@ -180,7 +179,7 @@ class DocMentionController(
             .also {
                 //Delete the components of the current message,
                 // we don't want the timeout to execute
-                buttons.deleteComponentsByIds(selectEvent.message.componentIds)
+                buttons.deleteRows(selectEvent.message.components)
             }
     }
 }

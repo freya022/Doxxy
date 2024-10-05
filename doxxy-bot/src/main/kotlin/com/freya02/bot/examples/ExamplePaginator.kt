@@ -1,7 +1,6 @@
 package com.freya02.bot.examples
 
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDelete
-import com.freya02.bot.utils.componentIds
 import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.interactions.components.SelectOption
 import dev.minn.jda.ktx.messages.MessageCreate
@@ -33,7 +32,7 @@ class ExamplePaginatorFactory(private val buttons: Buttons, private val selectMe
         ephemeral,
         initialHook,
         onTimeout = { paginator, hook ->
-            buttons.deleteComponentsByIds(hook.retrieveOriginal().await().componentIds)
+            buttons.deleteRows(hook.retrieveOriginal().await().components)
             hook.editOriginal(paginator.createMessage(disabled = true).toEditData()).queue()
         }
     )
@@ -73,7 +72,7 @@ class ExamplePaginator(
 
                         selectEvent.editMessage(createMessage().toEditData()).queue()
                         // Remember to clean up old components
-                        selectMenus.deleteComponentsByIds(selectEvent.message.componentIds)
+                        selectMenus.deleteRows(selectEvent.message.components)
                     }
                 }
             }.into()

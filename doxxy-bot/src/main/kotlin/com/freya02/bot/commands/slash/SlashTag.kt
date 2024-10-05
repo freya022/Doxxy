@@ -2,6 +2,7 @@ package com.freya02.bot.commands.slash
 
 import com.freya02.bot.commands.filters.decl.NotJDACommandDeclarationFilter
 import com.freya02.bot.tag.*
+import com.freya02.bot.utils.isUniqueViolation
 import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.messages.Embed
 import dev.minn.jda.ktx.messages.InlineEmbed
@@ -20,7 +21,6 @@ import io.github.freya022.botcommands.api.components.Buttons
 import io.github.freya022.botcommands.api.components.Components
 import io.github.freya022.botcommands.api.components.data.InteractionConstraints
 import io.github.freya022.botcommands.api.components.event.ButtonEvent
-import io.github.freya022.botcommands.api.core.db.isUniqueViolation
 import io.github.freya022.botcommands.api.core.utils.deleteDelayed
 import io.github.freya022.botcommands.api.core.utils.send
 import io.github.freya022.botcommands.api.modals.*
@@ -42,7 +42,6 @@ import net.dv8tion.jda.api.utils.MarkdownSanitizer
 import org.jetbrains.annotations.Contract
 import java.sql.SQLException
 import kotlin.time.Duration.Companion.minutes
-
 
 private typealias TagConsumer = suspend (Tag) -> Unit
 
