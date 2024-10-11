@@ -1,7 +1,7 @@
 package com.freya02.bot.resolvers
 
 import ch.qos.logback.classic.Level
-import io.github.freya022.botcommands.api.commands.application.slash.SlashCommandInfo
+import io.github.freya022.botcommands.api.commands.application.slash.options.SlashCommandOption
 import io.github.freya022.botcommands.api.core.service.annotations.Resolver
 import io.github.freya022.botcommands.api.parameters.ClassParameterResolver
 import io.github.freya022.botcommands.api.parameters.resolvers.SlashParameterResolver
@@ -21,8 +21,8 @@ class LogLevelResolver : ClassParameterResolver<LogLevelResolver, Level>(Level::
             .map { it.levelStr }
             .map { Choice(it, it) }
 
-    override fun resolve(
-        info: SlashCommandInfo,
+    override suspend fun resolveSuspend(
+        option: SlashCommandOption,
         event: CommandInteractionPayload,
         optionMapping: OptionMapping
     ): Level = Level.valueOf(optionMapping.asString)

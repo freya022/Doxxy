@@ -1,7 +1,7 @@
 package com.freya02.bot.resolvers
 
 import com.freya02.bot.docs.index.DocTypes
-import io.github.freya022.botcommands.api.commands.application.slash.SlashCommandInfo
+import io.github.freya022.botcommands.api.commands.application.slash.options.SlashCommandOption
 import io.github.freya022.botcommands.api.core.service.annotations.Resolver
 import io.github.freya022.botcommands.api.parameters.ClassParameterResolver
 import io.github.freya022.botcommands.api.parameters.resolvers.SlashParameterResolver
@@ -25,7 +25,7 @@ class DocTypesResolver : ClassParameterResolver<DocTypesResolver, DocTypes>(DocT
         )
     }
 
-    override suspend fun resolveSuspend(info: SlashCommandInfo, event: CommandInteractionPayload, optionMapping: OptionMapping): DocTypes {
+    override suspend fun resolveSuspend(option: SlashCommandOption, event: CommandInteractionPayload, optionMapping: OptionMapping): DocTypes {
         return DocTypes.fromRaw(optionMapping.asLong)
     }
 }

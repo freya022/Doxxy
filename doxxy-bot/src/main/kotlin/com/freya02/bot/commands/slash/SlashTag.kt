@@ -256,7 +256,7 @@ class SlashTag(
 
             event.reply_("Are you sure you want to delete the tag '${tag.name}'?", ephemeral = true)
                 .addActionRow(deleteButton, noButton)
-                .deleteDelayed(event.hook, Components.defaultTimeout)
+                .deleteDelayed(event.hook, Components.defaultEphemeralTimeout!!)
                 .queue()
         }
     }
