@@ -31,9 +31,10 @@
         <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
 
-        <flyway.version>10.11.0</flyway.version>
-        <ktor.version>2.3.12</ktor.version>
-        <serialization.version>1.6.3</serialization.version>
+        <flyway.version>10.20.1</flyway.version>
+        <ktor.version>3.0.0</ktor.version>
+        <serialization.version>1.7.3</serialization.version>
+        <slf4j.version>2.0.16</slf4j.version>
     </properties>
 
     <dependencyManagement>
@@ -61,7 +62,7 @@
             <dependency>
                 <groupId>dev.reformator.stacktracedecoroutinator</groupId>
                 <artifactId>stacktrace-decoroutinator-jvm</artifactId>
-                <version>2.3.8</version>
+                <version>2.4.6</version>
             </dependency>
             <dependency>
                 <groupId>net.dv8tion</groupId>
@@ -77,7 +78,7 @@
             <dependency>
                 <groupId>io.github.freya022</groupId>
                 <artifactId>BotCommands</artifactId>
-                <version>3.0.0-alpha.20</version>
+                <version>3.0.0-alpha.20_DEV</version>
             </dependency>
             <dependency>
                 <groupId>club.minnced</groupId>
@@ -93,12 +94,12 @@
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
-                <version>2.0.13</version>
+                <version>${slf4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
-                <version>1.5.6</version>
+                <version>1.5.12</version>
             </dependency>
             <dependency>
                 <groupId>io.github.oshai</groupId>
@@ -108,17 +109,17 @@
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-ext</artifactId>
-                <version>2.0.13</version>
+                <version>${slf4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.postgresql</groupId>
                 <artifactId>postgresql</artifactId>
-                <version>42.7.3</version>
+                <version>42.7.4</version>
             </dependency>
             <dependency>
                 <groupId>com.zaxxer</groupId>
                 <artifactId>HikariCP</artifactId>
-                <version>5.1.0</version>
+                <version>6.0.0</version>
             </dependency>
             <dependency>
                 <groupId>org.flywaydb</groupId>
@@ -153,12 +154,12 @@
             <dependency>
                 <groupId>com.github.javaparser</groupId>
                 <artifactId>javaparser-symbol-solver-core</artifactId>
-                <version>3.26.1</version>
+                <version>3.26.2</version>
             </dependency>
             <dependency>
                 <groupId>com.palantir.javaformat</groupId>
                 <artifactId>palantir-java-format</artifactId>
-                <version>2.47.0</version>
+                <version>2.50.0</version>
             </dependency>
             <dependency>
                 <groupId>io.ktor</groupId>
@@ -194,6 +195,11 @@
                 <groupId>io.ktor</groupId>
                 <artifactId>ktor-serialization-gson-jvm</artifactId>
                 <version>${ktor.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlinx</groupId>
+                <artifactId>kotlinx-io-core-jvm</artifactId>
+                <version>0.5.4</version>
             </dependency>
             <dependency>
                 <groupId>io.ktor</groupId>

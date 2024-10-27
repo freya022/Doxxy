@@ -4,7 +4,7 @@ import com.freya02.bot.config.Config
 import com.freya02.bot.config.Data
 import com.freya02.bot.config.Environment
 import com.freya02.docs.DocWebServer
-import dev.reformator.stacktracedecoroutinator.runtime.DecoroutinatorRuntime
+import dev.reformator.stacktracedecoroutinator.jvm.DecoroutinatorJvmApi
 import io.github.freya022.botcommands.api.core.BotCommands
 import io.github.freya022.botcommands.api.core.config.DevConfig
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -34,7 +34,7 @@ object Main {
             } else if ("--no-decoroutinator" in args) {
                 logger.info { "Skipping stacktrace-decoroutinator as --no-decoroutinator is specified" }
             } else {
-                DecoroutinatorRuntime.load()
+                DecoroutinatorJvmApi.install()
             }
 
             DebugProbes.install()

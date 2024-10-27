@@ -17,7 +17,7 @@ class LogLevelResolver : ClassParameterResolver<LogLevelResolver, Level>(Level::
     override val optionType: OptionType = OptionType.STRING
 
     override fun getPredefinedChoices(guild: Guild?): Collection<Choice> =
-        listOf(Level.TRACE, Level.DEBUG, Level.INFO, Level.WARN, Level.ERROR, Level.OFF, Level.ALL)
+        listOf(Level.TRACE, Level.DEBUG, Level.INFO, Level.WARN, Level.ERROR, Level.OFF)
             .map { it.levelStr }
             .map { Choice(it, it) }
 
