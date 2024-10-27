@@ -82,9 +82,12 @@ object PullUpdater {
     private suspend fun whenUpdateRequired(libraryType: LibraryType, pullRequest: PullRequest, onUpdate: suspend () -> GithubBranch): GithubBranch {
         val latestHash = GithubUtils.getLatestHash(libraryType.githubOwnerName, libraryType.githubRepoName, "")
 
+        fun createCacheKey(): CacheKey = CacheKey(pullRequest.head.label, pullRequest.base.label)
+
         suspend fun update(): GithubBranch {
             val newBranch = onUpdate()
             this.latestCommitHash = latestHash
+            cache[createCacheKey()] = CacheValue(pullRequest.head.sha, pullRequest.base.sha, newBranch)
             return newBranch
         }
 
@@ -93,7 +96,7 @@ object PullUpdater {
             return update()
 
         // Check if the base sha (where the PR starts from) and head sha (latest PR commit) correspond
-        val cacheKey = CacheKey(pullRequest.head.label, pullRequest.base.label)
+        val cacheKey = createCacheKey()
         val cacheValue = cache[cacheKey] ?: return update()
 
         val isCacheValid = cacheValue.baseSha == pullRequest.base.sha
