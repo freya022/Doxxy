@@ -2,6 +2,7 @@ package com.freya02.bot.commands.controllers
 
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDelete
 import com.freya02.bot.commands.slash.docs.CommonDocsHandlers
+import com.freya02.bot.config.BackendConfig
 import com.freya02.bot.docs.DocResolveChain
 import com.freya02.bot.docs.cached.CachedClass
 import com.freya02.bot.docs.cached.CachedDoc
@@ -45,6 +46,7 @@ private val logger = KotlinLogging.logger { }
 
 @BService
 class CommonDocsController(
+    private val backendConfig: BackendConfig,
     // null if backend is disabled
     private val exampleApi: ExampleAPI?,
     private val buttons: Buttons,
@@ -98,7 +100,9 @@ class CommonDocsController(
                 }
             })
             addDocsSeeAlso(caller, cachedDoc)
-            addExamples(cachedDoc)
+            if (backendConfig.examples.fromDocs) {
+                addExamples(cachedDoc)
+            }
             addDocsActionRows(originalHook, ephemeral, cachedDoc, caller)
         }.build()
     }

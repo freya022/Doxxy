@@ -20,8 +20,15 @@ data class PullUpdaterConfig(
 
 data class BackendConfig(
     val enable: Boolean,
-    val url: String
-)
+    val url: String,
+    val examples: Examples
+) {
+
+    data class Examples(
+        /** Enables linking examples under docs */
+        val fromDocs: Boolean,
+    )
+}
 
 data class Config(val token: String,
                   val ownerIds: List<Long>,
