@@ -33,9 +33,9 @@ import io.github.freya022.botcommands.api.commands.application.slash.autocomplet
 import io.github.freya022.botcommands.api.commands.application.slash.builder.SlashCommandBuilder
 import io.github.freya022.botcommands.api.components.Buttons
 import io.github.freya022.botcommands.api.components.event.ButtonEvent
+import io.github.freya022.botcommands.api.core.utils.asUnicodeEmoji
 import io.github.freya022.botcommands.api.core.utils.runIgnoringResponse
 import io.github.freya022.botcommands.api.core.utils.toEditData
-import io.github.freya022.botcommands.api.utils.EmojiUtils
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
@@ -114,7 +114,7 @@ class SlashJitpack(
                 this += link(
                     "https://jda.wiki/using-jda/using-new-features/",
                     "How? (Wiki)",
-                    EmojiUtils.resolveJDAEmoji("face_with_monocle")
+                    net.fellbaum.jemoji.Emojis.FACE_WITH_MONOCLE.asUnicodeEmoji()
                 )
                 this += buttons.messageDelete(event.user)
             }.row()

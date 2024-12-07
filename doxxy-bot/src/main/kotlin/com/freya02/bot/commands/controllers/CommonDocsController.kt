@@ -10,7 +10,6 @@ import com.freya02.bot.docs.cached.CachedMethod
 import com.freya02.bot.docs.index.DocIndex
 import com.freya02.bot.docs.index.DocSuggestion
 import com.freya02.bot.examples.ExampleAPI
-import com.freya02.bot.utils.Emojis
 import com.freya02.bot.utils.joinLengthyString
 import com.freya02.docs.DocSourceType
 import com.freya02.docs.data.TargetType
@@ -23,6 +22,7 @@ import io.github.freya022.botcommands.api.components.builder.bindWith
 import io.github.freya022.botcommands.api.components.data.InteractionConstraints
 import io.github.freya022.botcommands.api.components.utils.ButtonContent
 import io.github.freya022.botcommands.api.core.service.annotations.BService
+import io.github.freya022.botcommands.api.core.utils.asUnicodeEmoji
 import io.github.freya022.botcommands.api.pagination.Paginators
 import io.github.freya022.botcommands.api.pagination.menu.buttonized.ButtonMenu
 import io.github.freya022.botcommands.api.pagination.menu.buttonized.ButtonMenuBuilder
@@ -39,6 +39,7 @@ import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import net.dv8tion.jda.api.utils.messages.MessageCreateRequest
+import net.fellbaum.jemoji.Emojis
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.minutes
 
@@ -128,7 +129,7 @@ class CommonDocsController(
 
         val selectMenu = selectMenus.stringSelectMenu().persistent {
             placeholder = "Examples"
-            options += examples.map { SelectOption(it.title, it.title, emoji = Emojis.testTube) }
+            options += examples.map { SelectOption(it.title, it.title, emoji = Emojis.TEST_TUBE.asUnicodeEmoji()) }
 
             bindTo(CommonDocsHandlers.EXAMPLE_SELECT_LISTENER_NAME)
             timeout(14.days)
@@ -175,7 +176,7 @@ class CommonDocsController(
                     continue
                 }
 
-                addOption(reference.text, optionValue, Emojis.clipboard)
+                addOption(reference.text, optionValue, Emojis.CLIPBOARD.asUnicodeEmoji())
             }
         }
 

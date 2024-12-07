@@ -5,10 +5,11 @@ import io.github.freya022.botcommands.api.components.Components
 import io.github.freya022.botcommands.api.components.annotations.JDAButtonListener
 import io.github.freya022.botcommands.api.components.event.ButtonEvent
 import io.github.freya022.botcommands.api.core.annotations.Handler
-import io.github.freya022.botcommands.api.utils.EmojiUtils
+import io.github.freya022.botcommands.api.core.utils.asUnicodeEmoji
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.interactions.components.buttons.Button
+import net.fellbaum.jemoji.Emojis
 
 @Handler
 class DeleteButtonListener {
@@ -21,10 +22,9 @@ class DeleteButtonListener {
 
     companion object {
         private const val DELETE_MESSAGE_BUTTON_LISTENER_NAME = "DeleteButtonListener: deleteMessage"
-        private val WASTEBASKET = EmojiUtils.resolveJDAEmoji("wastebasket")
 
         suspend fun Buttons.messageDelete(allowedUser: UserSnowflake): Button {
-            return danger(WASTEBASKET).persistent {
+            return danger(Emojis.WASTEBASKET.asUnicodeEmoji()).persistent {
                 singleUse = true
                 bindTo(DELETE_MESSAGE_BUTTON_LISTENER_NAME)
 

@@ -19,10 +19,11 @@ import io.github.freya022.botcommands.api.commands.application.provider.GuildApp
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import io.github.freya022.botcommands.api.commands.application.slash.builder.TopLevelSlashCommandBuilder
 import io.github.freya022.botcommands.api.components.Buttons
-import io.github.freya022.botcommands.api.utils.EmojiUtils
+import io.github.freya022.botcommands.api.core.utils.asUnicodeEmoji
 import io.github.oshai.kotlinlogging.KotlinLogging
 import net.dv8tion.jda.api.interactions.components.ItemComponent
 import net.dv8tion.jda.api.utils.FileUpload
+import net.fellbaum.jemoji.Emojis
 import kotlin.time.Duration.Companion.days
 
 @Command
@@ -69,7 +70,7 @@ class BuildToolCommands(private val versions: Versions, private val buttons: But
 
                         components += buttons.secondary(
                             label = "Logback config",
-                            emoji = EmojiUtils.resolveJDAEmoji("scroll")
+                            emoji = Emojis.SCROLL.asUnicodeEmoji()
                         ).ephemeral {
                             timeout(1.days)
                             bindTo(slashLogback::onLogbackRequest)
