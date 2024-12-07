@@ -1,6 +1,6 @@
 package com.freya02.bot.docs.metadata
 
-import com.freya02.bot.utils.Emojis
+import com.freya02.bot.utils.AppEmojis
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration
 import io.github.freya022.botcommands.api.core.BContext
@@ -19,24 +19,24 @@ enum class ClassType(
 ) {
     CLASS(
         1,
-        Emojis.`class`,
-        Decorations.fromLocalizations(Emojis.hasSuperclasses, "class", "super"),
-        Decorations.fromLocalizations(Emojis.hasOverrides, "class", "sub")
+        AppEmojis.`class`,
+        Decorations.fromLocalizations(AppEmojis.hasSuperclasses, "class", "super"),
+        Decorations.fromLocalizations(AppEmojis.hasOverrides, "class", "sub")
     ),
     ABSTRACT_CLASS(
         2,
-        Emojis.abstractClass,
-        Decorations.fromLocalizations(Emojis.hasSuperclasses, "class", "super"),
-        Decorations.fromLocalizations(Emojis.hasOverrides, "class", "sub")
+        AppEmojis.abstractClass,
+        Decorations.fromLocalizations(AppEmojis.hasSuperclasses, "class", "super"),
+        Decorations.fromLocalizations(AppEmojis.hasOverrides, "class", "sub")
     ),
     INTERFACE(
         3,
-        Emojis.`interface`,
-        Decorations.fromLocalizations(Emojis.hasSuperinterfaces, "interface", "super"),
-        Decorations.fromLocalizations(Emojis.hasImplementations, "interface", "sub")
+        AppEmojis.`interface`,
+        Decorations.fromLocalizations(AppEmojis.hasSuperinterfaces, "interface", "super"),
+        Decorations.fromLocalizations(AppEmojis.hasImplementations, "interface", "sub")
     ),
-    ENUM(4, Emojis.enum, null, null),
-    ANNOTATION(5, Emojis.annotation, null, null);
+    ENUM(4, AppEmojis.enum, null, null),
+    ANNOTATION(5, AppEmojis.annotation, null, null);
 
     class Decorations private constructor(
         val emoji: CustomEmoji,

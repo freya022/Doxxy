@@ -1,7 +1,7 @@
 package com.freya02.bot.docs.metadata
 
 import com.freya02.bot.docs.metadata.MethodType.entries
-import com.freya02.bot.utils.Emojis
+import com.freya02.bot.utils.AppEmojis
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration
 import io.github.freya022.botcommands.api.core.BContext
 import io.github.freya022.botcommands.api.core.service.getService
@@ -18,15 +18,15 @@ enum class MethodType(
 ) {
     DECLARATION(
         1,
-        Emojis.methodDeclaration,
-        Decorations.fromLocalizations(Emojis.hasImplementations, "declaration", "impl"),
-        Decorations.fromLocalizations(Emojis.hasOverriddenMethods, "declaration", "overriddenMethods")
+        AppEmojis.methodDeclaration,
+        Decorations.fromLocalizations(AppEmojis.hasImplementations, "declaration", "impl"),
+        Decorations.fromLocalizations(AppEmojis.hasOverriddenMethods, "declaration", "overriddenMethods")
     ),
     DEFINITION(
         2,
-        Emojis.methodDefinition,
-        Decorations.fromLocalizations(Emojis.hasOverrides, "definition", "impl"),
-        Decorations.fromLocalizations(Emojis.hasOverriddenMethods, "definition", "overriddenMethods")
+        AppEmojis.methodDefinition,
+        Decorations.fromLocalizations(AppEmojis.hasOverrides, "definition", "impl"),
+        Decorations.fromLocalizations(AppEmojis.hasOverriddenMethods, "definition", "overriddenMethods")
     );
 
     class Decorations private constructor(

@@ -1,7 +1,7 @@
 package com.freya02.bot.commands.slash.versioning
 
 import com.freya02.bot.commands.slash.DeleteButtonListener.Companion.messageDelete
-import com.freya02.bot.utils.Emojis
+import com.freya02.bot.utils.AppEmojis
 import com.freya02.bot.utils.Utils.isBCGuild
 import com.freya02.bot.utils.Utils.truncate
 import com.freya02.bot.versioning.LibraryType
@@ -44,6 +44,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.ItemComponent
 import net.dv8tion.jda.api.requests.ErrorResponse
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
+import net.fellbaum.jemoji.Emojis
 import kotlin.time.Duration.Companion.hours
 
 @Command
@@ -103,7 +104,7 @@ class SlashJitpack(
 
             components += buildList<ItemComponent>(3) {
                 if (jitpackPrService.canUsePullUpdate(libraryType)) {
-                    this += buttons.primary(label = "Update PR", emoji = Emojis.sync).ephemeral {
+                    this += buttons.primary(label = "Update PR", emoji = AppEmojis.sync).ephemeral {
                         val callerId = event.user.idLong
                         timeout(1.hours)
                         bindTo {
@@ -114,7 +115,7 @@ class SlashJitpack(
                 this += link(
                     "https://jda.wiki/using-jda/using-new-features/",
                     "How? (Wiki)",
-                    net.fellbaum.jemoji.Emojis.FACE_WITH_MONOCLE.asUnicodeEmoji()
+                    Emojis.FACE_WITH_MONOCLE.asUnicodeEmoji()
                 )
                 this += buttons.messageDelete(event.user)
             }.row()

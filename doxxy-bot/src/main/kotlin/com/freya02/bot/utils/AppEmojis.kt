@@ -8,8 +8,7 @@ import io.github.freya022.botcommands.api.core.utils.withResource
 import net.dv8tion.jda.api.entities.Icon
 import net.dv8tion.jda.api.entities.emoji.ApplicationEmoji
 
-//TODO rename to AppEmojis
-object Emojis {
+object AppEmojis {
     private val toLoad = arrayListOf<LoadRequest>()
     private val loaded = hashMapOf<String, ApplicationEmoji>()
 
@@ -41,7 +40,7 @@ object Emojis {
     private data class LoadRequest(val assetName: String, val emojiName: String)
 
     @BService
-    class EmojiLoader {
+    class AppEmojiLoader {
 
         @BEventListener(mode = RunMode.BLOCKING)
         fun onPreGatewayConnect(event: PreFirstGatewayConnectEvent) {
