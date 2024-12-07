@@ -1,26 +1,58 @@
 package com.freya02.bot.utils
 
-import io.github.freya022.botcommands.api.utils.EmojiUtils
-import net.dv8tion.jda.api.entities.emoji.Emoji
+import io.github.freya022.botcommands.api.core.annotations.BEventListener
+import io.github.freya022.botcommands.api.core.annotations.BEventListener.RunMode
+import io.github.freya022.botcommands.api.core.events.PreFirstGatewayConnectEvent
+import io.github.freya022.botcommands.api.core.service.annotations.BService
+import io.github.freya022.botcommands.api.core.utils.withResource
+import net.dv8tion.jda.api.entities.Icon
+import net.dv8tion.jda.api.entities.emoji.ApplicationEmoji
 
-object Emojis { //TODO find remaining EmojiUtils usages
-    val clipboard = EmojiUtils.resolveJDAEmoji("clipboard")
-    val testTube = EmojiUtils.resolveJDAEmoji("test_tube")
+//TODO rename to AppEmojis
+object Emojis {
+    private val toLoad = arrayListOf<LoadRequest>()
+    private val loaded = hashMapOf<String, ApplicationEmoji>()
 
-    val hasImplementations = Emoji.fromFormatted("<:HasImplementations:1092833993612861481>")
-    val hasOverrides = Emoji.fromFormatted("<:HasOverrides:1092833995076685886>")
-    val hasOverriddenMethods = Emoji.fromFormatted("<:implementingMethod:1093913243329773679>")
-    val hasSuperclasses = Emoji.fromFormatted("<:HasSuper:1092833997517758506>")
-    val hasSuperinterfaces = Emoji.fromFormatted("<:HasSuperinterfaces:1092846933980225596>")
+    val hasImplementations by   registerEmoji("HasImplementations.png",   emojiName = "has_implementations")
+    val hasOverrides by         registerEmoji("HasOverrides.png",         emojiName = "has_overrides")
+    val hasOverriddenMethods by registerEmoji("implementingMethod.png",   emojiName = "has_overridden_methods")
+    val hasSuperclasses by      registerEmoji("HasSuper.png",             emojiName = "has_superclasses")
+    val hasSuperinterfaces by   registerEmoji("HasSuperinterfaces.png",   emojiName = "has_superinterfaces")
 
-    val abstractClass = Emoji.fromFormatted("<:abstractClass_dark:1092833986583216279>")
-    val annotation = Emoji.fromFormatted("<:annotationtype:1092833987950547014>")
-    val `class` = Emoji.fromFormatted("<:class:1092833990085464175>")
-    val enum = Emoji.fromFormatted("<:enum:1092833991272448130>")
-    val `interface` = Emoji.fromFormatted("<:interface_dark:1092833999111602206>")
+    val abstractClass by        registerEmoji("abstractClass_dark.png",   emojiName = "abstract_class")
+    val annotation by           registerEmoji("annotationtype.png",       emojiName = "annotation")
+    val `class` by              registerEmoji("class.png")
+    val enum by                 registerEmoji("enum.png")
+    val `interface` by          registerEmoji("interface_dark.png",       emojiName = "interface")
 
-    val methodDeclaration = Emoji.fromFormatted("<:abstractMethod:1093654914435137657>")
-    val methodDefinition = Emoji.fromFormatted("<:method:1093654912958726316>")
+    val methodDeclaration by    registerEmoji("abstractMethod.png",       emojiName = "abstract_method")
+    val methodDefinition by     registerEmoji("method.png")
 
-    val sync = Emoji.fromFormatted("<:sync:1110297711778988193>")
+    val sync by                 registerEmoji("sync.png",                 emojiName = "sync")
+
+    private fun registerEmoji(assetName: String, emojiName: String = assetName.substringBefore('.')): Lazy<ApplicationEmoji> {
+        toLoad += LoadRequest(assetName, emojiName)
+        return lazy {
+            // Can't be null, the bot would not start up if one wasn't found
+            loaded.remove(emojiName)!!
+        }
+    }
+
+    private data class LoadRequest(val assetName: String, val emojiName: String)
+
+    @BService
+    class EmojiLoader {
+
+        @BEventListener(mode = RunMode.BLOCKING)
+        fun onPreGatewayConnect(event: PreFirstGatewayConnectEvent) {
+            val appEmojis = event.jda.retrieveApplicationEmojis().complete()
+
+            for ((assetName, emojiName) in toLoad) {
+                loaded[emojiName] = appEmojis.find { it.name == emojiName } ?: run {
+                    val icon = withResource("/emojis/$assetName", Icon::from)
+                    event.jda.createApplicationEmoji(emojiName, icon).complete()
+                }
+            }
+        }
+    }
 }

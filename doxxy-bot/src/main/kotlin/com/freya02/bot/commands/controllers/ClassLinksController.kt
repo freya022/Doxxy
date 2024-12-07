@@ -80,7 +80,7 @@ class ClassLinksController(
 
             if (internalClasses.isNotEmpty()) {
                 embed {
-                    author(name = "${decorations.getTitle(context)} - ${clazz.className}", iconUrl = decorations.emoji.asCustom().imageUrl)
+                    author(name = "${decorations.getTitle(context)} - ${clazz.className}", iconUrl = decorations.emoji.imageUrl)
                     description = internalClasses
                         .joinLengthyString(
                             separator = ", ",

@@ -6,8 +6,8 @@ import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclar
 import io.github.freya022.botcommands.api.core.BContext
 import io.github.freya022.botcommands.api.core.service.getService
 import io.github.freya022.botcommands.api.localization.LocalizationService
+import net.dv8tion.jda.api.entities.emoji.CustomEmoji
 import net.dv8tion.jda.api.entities.emoji.Emoji
-import net.dv8tion.jda.api.entities.emoji.EmojiUnion
 import java.util.*
 import kotlin.jvm.optionals.getOrNull
 
@@ -39,7 +39,7 @@ enum class ClassType(
     ANNOTATION(5, Emojis.annotation, null, null);
 
     class Decorations private constructor(
-        val emoji: EmojiUnion,
+        val emoji: CustomEmoji,
         private val labelKey: String,
         private val titleKey: String,
         private val placeholderKey: String
@@ -60,7 +60,7 @@ enum class ClassType(
              * @param classTypeKey class/interface
              * @param hierarchicalName super/sub
              */
-            fun fromLocalizations(emoji: EmojiUnion, classTypeKey: String, hierarchicalName: String): Decorations {
+            fun fromLocalizations(emoji: CustomEmoji, classTypeKey: String, hierarchicalName: String): Decorations {
                 return Decorations(
                     emoji,
                     "class_type_decorations.$classTypeKey.$hierarchicalName.${"links_button_label"}",
@@ -93,6 +93,6 @@ enum class ClassType(
             throw IllegalArgumentException("Unknown class type: $declaration")
         }
 
-        fun fromId(id: Int): ClassType = entries.first { it.id == id }
+        fun fromId(id: Int): ClassType = ClassType.entries.first { it.id == id }
     }
 }

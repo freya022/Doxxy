@@ -82,7 +82,7 @@ class MethodLinksController(
 
             if (internalMethods.isNotEmpty()) {
                 embed {
-                    author(name = "${decorations.getTitle(context)} - ${method.className}", iconUrl = decorations.emoji.asCustom().imageUrl)
+                    author(name = "${decorations.getTitle(context)} - ${method.className}", iconUrl = decorations.emoji.imageUrl)
                     description = internalMethods
                         .joinLengthyString(
                             separator = ", ",
