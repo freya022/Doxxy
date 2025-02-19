@@ -27,7 +27,7 @@ object HttpClientProvider {
         backendConfig: BackendConfig
     ): HttpClient = defaultClient.config {
         defaultRequest {
-            url("http://${backendConfig.host}/${backendConfig.port}")
+            url("http://${backendConfig.host}:${backendConfig.port}")
         }
     }
 }
