@@ -13,7 +13,6 @@ import dev.minn.jda.ktx.messages.MessageCreate
 import dev.minn.jda.ktx.messages.reply_
 import io.github.freya022.botcommands.api.annotations.CommandMarker
 import io.github.freya022.botcommands.api.commands.annotations.Command
-import io.github.freya022.botcommands.api.commands.application.CommandScope
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandManager
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandProvider
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
@@ -106,7 +105,7 @@ class BuildToolCommands(private val versions: Versions, private val buttons: But
     }
 
     override fun declareGuildApplicationCommands(manager: GuildApplicationCommandManager) {
-        manager.slashCommand("maven", CommandScope.GUILD, BuildToolCommands::onSlashBuildTool) {
+        manager.slashCommand("maven", function = BuildToolCommands::onSlashBuildTool) {
             description = "Shows the Maven dependencies for a library (default: ${LibraryType.getDefaultLibrary(manager.guild).displayString})"
 
             generatedOption("buildToolType") { BuildToolType.MAVEN }
@@ -114,7 +113,7 @@ class BuildToolCommands(private val versions: Versions, private val buttons: But
             addCommonOptions()
         }
 
-        manager.slashCommand("gradle", CommandScope.GUILD, BuildToolCommands::onSlashGradle) {
+        manager.slashCommand("gradle", function = BuildToolCommands::onSlashGradle) {
             description = "Shows the Gradle dependencies for a library (default: ${LibraryType.getDefaultLibrary(manager.guild).displayString})"
 
             option("flavor") {

@@ -24,7 +24,6 @@ import dev.minn.jda.ktx.messages.send
 import io.github.freya022.botcommands.api.annotations.CommandMarker
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
-import io.github.freya022.botcommands.api.commands.application.CommandScope
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandManager
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandProvider
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
@@ -185,7 +184,7 @@ class SlashJitpack(
     }
 
     override fun declareGuildApplicationCommands(manager: GuildApplicationCommandManager) {
-        manager.slashCommand("jitpack", CommandScope.GUILD, null) {
+        manager.slashCommand("jitpack", function = null) {
             description = "Shows you how to use jitpack for your bot"
 
             subcommand("branch", SlashJitpack::onSlashJitpackBranch) {

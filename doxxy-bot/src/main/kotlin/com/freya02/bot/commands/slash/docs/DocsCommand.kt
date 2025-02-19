@@ -9,7 +9,6 @@ import com.freya02.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
 import com.freya02.docs.DocSourceType
 import io.github.freya022.botcommands.api.annotations.CommandMarker
 import io.github.freya022.botcommands.api.commands.annotations.Command
-import io.github.freya022.botcommands.api.commands.application.CommandScope
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandManager
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandProvider
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
@@ -17,7 +16,7 @@ import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashE
 @Command
 class DocsCommand(private val docIndexMap: DocIndexMap, private val slashDocsController: SlashDocsController) : GuildApplicationCommandProvider {
     override fun declareGuildApplicationCommands(manager: GuildApplicationCommandManager) {
-        manager.slashCommand("docs", CommandScope.GUILD, null) {
+        manager.slashCommand("docs", function = null) {
             description = "Shows the documentation"
 
             DocSourceType.entries.forEach { sourceType ->

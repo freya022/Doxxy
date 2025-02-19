@@ -4,14 +4,13 @@ import com.freya02.bot.commands.slash.docs.CommonDocsHandlers.Companion.SEARCH_A
 import com.freya02.bot.commands.slash.docs.controllers.SlashDocsController
 import com.freya02.docs.DocSourceType
 import io.github.freya022.botcommands.api.commands.annotations.Command
-import io.github.freya022.botcommands.api.commands.application.CommandScope
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandManager
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandProvider
 
 @Command
 class SlashSearch : GuildApplicationCommandProvider {
     override fun declareGuildApplicationCommands(manager: GuildApplicationCommandManager) {
-        manager.slashCommand("search", CommandScope.GUILD, null) {
+        manager.slashCommand("search", function = null) {
             description = "Searches the documentation for classes, methods and fields"
 
             DocSourceType.entries.forEach { sourceType ->

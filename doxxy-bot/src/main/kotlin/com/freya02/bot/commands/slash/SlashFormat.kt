@@ -13,11 +13,12 @@ import io.github.freya022.botcommands.api.modals.Modals
 import io.github.freya022.botcommands.api.modals.create
 import io.github.freya022.botcommands.api.modals.paragraphTextInput
 import net.dv8tion.jda.api.entities.Message
+import net.dv8tion.jda.api.interactions.InteractionContextType
 import net.dv8tion.jda.api.interactions.components.text.TextInput
 
 @Command
 class SlashFormat : ApplicationCommand() {
-    @TopLevelSlashCommandData(scope = CommandScope.GLOBAL)
+    @TopLevelSlashCommandData(scope = CommandScope.GLOBAL, contexts = [InteractionContextType.GUILD, InteractionContextType.BOT_DM])
     @JDASlashCommand(name = "format", description = "Formats your code and sends it back to you as a copy-paste-able block")
     suspend fun onSlashFormat(event: GlobalSlashEvent, modals: Modals) {
         val codeInput: TextInput

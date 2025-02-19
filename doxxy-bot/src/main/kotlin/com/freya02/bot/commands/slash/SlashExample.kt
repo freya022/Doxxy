@@ -12,7 +12,6 @@ import dev.minn.jda.ktx.messages.send
 import io.github.freya022.botcommands.api.annotations.CommandMarker
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
-import io.github.freya022.botcommands.api.commands.application.CommandScope
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandManager
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandProvider
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
@@ -77,7 +76,7 @@ class SlashExample(
     override fun declareGuildApplicationCommands(manager: GuildApplicationCommandManager) {
         if (manager.guild.idLong !in manager.context.applicationConfig.testGuildIds) return
 
-        manager.slashCommand("examples", CommandScope.GUILD, function = null) {
+        manager.slashCommand("examples", function = null) {
             description = "Manage examples"
 
             subcommand("update", ::onSlashExamplesUpdateFromPR) {

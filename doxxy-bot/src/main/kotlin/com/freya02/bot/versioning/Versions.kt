@@ -61,7 +61,7 @@ class Versions(
     val latestLavaPlayerVersion: ArtifactInfo
         get() = lavaPlayerChecker.latest.artifactInfo
 
-    @BEventListener(async = true, timeout = -1)
+    @BEventListener(mode = BEventListener.RunMode.ASYNC, timeout = -1)
     suspend fun initUpdateLoop(event: InjectedJDAEvent) {
         val scope = namedDefaultScope("Version checker", 1)
         scope.scheduleWithFixedDelay(30.minutes, "BC", ::checkLatestBCVersion)

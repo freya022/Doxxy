@@ -7,7 +7,6 @@ import com.freya02.docs.DocSourceType
 import dev.minn.jda.ktx.messages.reply_
 import io.github.freya022.botcommands.api.annotations.CommandMarker
 import io.github.freya022.botcommands.api.commands.annotations.Command
-import io.github.freya022.botcommands.api.commands.application.CommandScope
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandManager
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandProvider
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
@@ -16,7 +15,7 @@ import io.github.freya022.botcommands.api.commands.application.slash.options.bui
 @Command
 class SlashResolve(private val docIndexMap: DocIndexMap, private val commonDocsController: CommonDocsController) : GuildApplicationCommandProvider {
     override fun declareGuildApplicationCommands(manager: GuildApplicationCommandManager) {
-        manager.slashCommand("resolve", CommandScope.GUILD, null) {
+        manager.slashCommand("resolve", function = null) {
             description = commandDescription
 
             DocSourceType.entries.forEach { sourceType ->
