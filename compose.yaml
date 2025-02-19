@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    env_file: ./config/.env
+    volumes:
+      - type: volume
+        source: db-data
+        target: /var/lib/postgresql/data
+  backend:
+    image: doxxy-backend:latest
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: ./config
+        target: /config
+      - type: bind
+        source: ./backend/logs
+        target: /logs
+  bot:
+    image: doxxy-bot:latest
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: ./config
+        target: /config
+      - type: bind
+        source: ./bot/logs
+        target: /logs
+
+volumes:
+  db-data:
