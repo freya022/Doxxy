@@ -1,3 +1,6 @@
+server:
+  port: ${BACKEND_PORT}
+
 spring:
   main:
     banner-mode: off

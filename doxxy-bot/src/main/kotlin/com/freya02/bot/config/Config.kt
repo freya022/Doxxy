@@ -23,7 +23,8 @@ data class PullUpdaterConfig(
 
 data class BackendConfig(
     val enable: Boolean,
-    val url: String,
+    val host: String,
+    val port: Int,
     val examples: Examples
 ) {
 
@@ -76,7 +77,8 @@ data class Config(
                 ),
                 BackendConfig(
                     env["BACKEND_ENABLE"].toBooleanStrict(),
-                    env["BACKEND_URL"],
+                    env["BACKEND_HOST"],
+                    env["BACKEND_PORT"].toInt(),
                     BackendConfig.Examples(
                         env["BACKEND_EXAMPLES_FROM_DOCS"].toBooleanStrict(),
                     ),
