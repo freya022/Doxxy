@@ -128,7 +128,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             else -> "order by similarity(classname, ?) desc limit ?"
         }
 
-        val sortArgs = when {
+        val sortArgs: Array<*> = when {
             query.isNullOrEmpty() -> arrayOf(limit)
             else -> arrayOf(query, limit)
         }
