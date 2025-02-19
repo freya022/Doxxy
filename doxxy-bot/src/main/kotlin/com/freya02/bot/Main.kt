@@ -1,8 +1,7 @@
 package com.freya02.bot
 
+import ch.qos.logback.classic.ClassicConstants
 import com.freya02.bot.config.Config
-import com.freya02.bot.config.Data
-import com.freya02.bot.config.Environment
 import com.freya02.docs.DocWebServer
 import dev.reformator.stacktracedecoroutinator.jvm.DecoroutinatorJvmApi
 import io.github.freya022.botcommands.api.core.BotCommands
@@ -11,10 +10,9 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.debug.DebugProbes
 import java.lang.management.ManagementFactory
-import kotlin.io.path.absolutePathString
+import kotlin.io.path.*
 import kotlin.system.exitProcess
 import kotlin.time.Duration.Companion.milliseconds
-import ch.qos.logback.classic.ClassicConstants as LogbackConstants
 
 object Main {
     private val logger by lazy { KotlinLogging.logger {} } // Must not load before system property is set
@@ -23,10 +21,13 @@ object Main {
     @JvmStatic
     fun main(args: Array<String>) {
         try {
-            System.setProperty(LogbackConstants.CONFIG_FILE_PROPERTY, Environment.logbackConfigPath.absolutePathString())
-            logger.info { "Loading logback configuration at ${Environment.logbackConfigPath.absolutePathString()}" }
-
-            Data.init()
+            val logbackPath = Path("config", "logback.xml")
+            if (logbackPath.exists()) {
+                System.setProperty(ClassicConstants.CONFIG_FILE_PROPERTY, logbackPath.absolutePathString())
+                logger.info { "Loading logback configuration from current directory (${logbackPath.absolute().parent.pathString})" }
+            } else {
+                logger.info { "Using packaged logback configuration as there is no logback.xml in ${logbackPath.absolute().parent.pathString}" }
+            }
 
             //stacktrace-decoroutinator seems to have issues when reloading with hotswap agent
             if ("-XX:HotswapAgent=fatjar" in ManagementFactory.getRuntimeMXBean().inputArguments) {
@@ -45,7 +46,7 @@ object Main {
 
             val config = Config.config
             BotCommands.create {
-                disableExceptionsInDMs = Environment.isDev
+                disableExceptionsInDMs = config.dev
 
                 database {
                     queryLogThreshold = 500.milliseconds
@@ -61,7 +62,7 @@ object Main {
 
                 applicationCommands {
                     @OptIn(DevConfig::class)
-                    disableAutocompleteCache = Environment.isDev
+                    disableAutocompleteCache = config.dev
 
                     testGuildIds += config.testGuildIds
                 }

@@ -1,0 +1,4 @@
+logging:
+  file:
+    name: logs/latest.log
+    path: logs

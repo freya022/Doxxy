@@ -105,6 +105,10 @@
             <artifactId>stacktrace-decoroutinator-jvm</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.github.cdimascio</groupId>
+            <artifactId>dotenv-kotlin</artifactId>
+        </dependency>
+        <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
         </dependency>
