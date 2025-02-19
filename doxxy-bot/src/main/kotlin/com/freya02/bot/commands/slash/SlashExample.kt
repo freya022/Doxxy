@@ -35,7 +35,7 @@ class SlashExample(
     private val paginatorFactory: ExamplePaginatorFactory
 ) : ApplicationCommand(), GuildApplicationCommandProvider {
 
-    @JDASlashCommand(name = "example", description = "No description")
+    @JDASlashCommand(name = "example", description = "Sends an example")
     suspend fun onSlashExample(
         event: GuildSlashEvent,
         @SlashOption(
