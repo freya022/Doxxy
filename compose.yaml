@@ -21,12 +21,8 @@ services:
     restart: unless-stopped
     volumes:
       - ./.env:/.env
-      - type: bind
-        source: ./config
-        target: /config
-      - type: bind
-        source: ./backend/logs
-        target: /logs
+      - ./config:/config
+      - ./backend/logs:/logs
   bot:
     image: doxxy-bot:latest
     container_name: doxxy-bot
@@ -35,12 +31,8 @@ services:
     restart: unless-stopped
     volumes:
       - ./.env:/.env
-      - type: bind
-        source: ./config
-        target: /config
-      - type: bind
-        source: ./bot/logs
-        target: /logs
+      - ./config:/config
+      - ./bot/logs:/logs
 
 volumes:
   db-data:
