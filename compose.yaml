@@ -28,6 +28,7 @@ services:
       - db
     restart: unless-stopped
     volumes:
+      - ./.env:/.env
       - type: bind
         source: ./config
         target: /config
@@ -41,6 +42,7 @@ services:
       - db
     restart: unless-stopped
     volumes:
+      - ./.env:/.env
       - type: bind
         source: ./config
         target: /config

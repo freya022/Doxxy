@@ -54,9 +54,7 @@ data class Config(
 
         @get:BService
         val config: Config by lazy {
-            val env = dotenv {
-                directory = "./config"
-            }
+            val env = dotenv()
 
             Config(
                 env["DEV"].toBooleanStrict(),
