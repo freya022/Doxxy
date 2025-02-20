@@ -10,15 +10,17 @@ services:
       retries: 5
       start_period: 5s
       timeout: 10s
-#    ports:
-#      - "10.9.2.2:${DB_PORT:?error}:5432"
+    ports:
+      - "10.9.2.2:${DB_PORT:?error}:5432"
     volumes:
       - type: volume
         source: db-data
         target: /var/lib/postgresql/data
-#    networks:
-#      doxxy:
-#        ipv4_address: 10.9.2.2
+    networks:
+      doxxy:
+        aliases:
+          - db
+        ipv4_address: 10.9.2.2
   backend:
     image: doxxy-backend:latest
     container_name: doxxy-backend
