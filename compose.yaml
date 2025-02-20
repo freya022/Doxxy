@@ -11,7 +11,7 @@ services:
       start_period: 5s
       timeout: 10s
     ports:
-      - "${DB_PORT:?error}:5432"
+      - "127.0.0.1:${DB_PORT:?error}:5432"
     volumes:
       - type: volume
         source: db-data
