@@ -29,7 +29,7 @@ A Discord bot to help guide users of the JDA library.
 1. Clone repo
 2. Copy `config-template` as `config`
 3. Delete `logback.xml` as it's configured for production
-4. Set values in `config/.env`, values are required unless commented otherwise
+4. Copy `.env.example` as `.env` and set the values, values are required unless commented otherwise
 
 ### Running
 #### Backend
@@ -53,6 +53,6 @@ with Flyway's naming scheme `V[Major].[Minor].[YYYY].[MM].[DD]__Extended_Descrip
 1. Clone repo
 2. Copy `config-template` as `config`
 3. Change profile from `dev` to `prod` in `config/application.yaml`
-4. Set values in `config/.env`, values are required unless commented otherwise
+4. Copy `.env.example` as `.env` and set the values, values are required unless commented otherwise
 5. Run `mvn clean package jib:dockerBuild` to create the docker image
 6. Run `docker compose up -d` to start the application stack
