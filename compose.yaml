@@ -16,9 +16,9 @@ services:
       - type: volume
         source: db-data
         target: /var/lib/postgresql/data
-    networks:
-      doxxy:
-        ipv4_address: 10.9.2.2
+#    networks:
+#      doxxy:
+#        ipv4_address: 10.9.2.2
   backend:
     image: doxxy-backend:latest
     container_name: doxxy-backend
