@@ -4,6 +4,12 @@ services:
     container_name: doxxy-db
     restart: unless-stopped
     env_file: ./config/.env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      retries: 5
+      start_period: 5s
+      timeout: 10s
     volumes:
       - type: volume
         source: db-data
@@ -11,6 +17,8 @@ services:
   backend:
     image: doxxy-backend:latest
     container_name: doxxy-backend
+    depends_on:
+      - db
     restart: unless-stopped
     volumes:
       - type: bind
@@ -22,6 +30,8 @@ services:
   bot:
     image: doxxy-bot:latest
     container_name: doxxy-bot
+    depends_on:
+      - db
     restart: unless-stopped
     volumes:
       - type: bind
