@@ -65,6 +65,10 @@ object Main {
                     disableAutocompleteCache = config.dev
 
                     testGuildIds += config.testGuildIds
+
+                    databaseCache {
+
+                    }
                 }
 
                 components {
