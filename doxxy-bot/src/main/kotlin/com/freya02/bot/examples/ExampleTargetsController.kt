@@ -1,5 +1,6 @@
 package com.freya02.bot.examples
 
+import com.freya02.bot.config.Config
 import com.freya02.bot.switches.RequiresBackend
 import com.freya02.docs.DocSourceType.Companion.toDocSourceType
 import io.github.freya022.botcommands.api.core.db.Database
@@ -25,11 +26,11 @@ import java.util.*
 
 @RequiresBackend
 @BService
-class ExampleTargetsController(private val database: Database) {
+class ExampleTargetsController(private val database: Database, config: Config) {
     private val serverScope = namedDefaultScope("Example targets server", 1)
 
     init {
-        serverScope.embeddedServer(Netty, port = 63156) {
+        serverScope.embeddedServer(Netty, port = config.examplesHttpPort) {
             install(ContentNegotiation) {
                 json()
             }
