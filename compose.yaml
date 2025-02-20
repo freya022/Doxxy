@@ -10,16 +10,9 @@ services:
       start_period: 5s
       timeout: 10s
     ports:
-      - "127.0.0.1:${DB_PORT}:5432"
+      - "127.0.0.1:5431:5432" # So we can connect to it using an SSH tunnel via localhost:5431
     volumes:
-      - type: volume
-        source: db-data
-        target: /var/lib/postgresql/data
-    networks:
-      default:
-        aliases:
-          - db
-        ipv4_address: 10.9.2.2
+      - db-data:/var/lib/postgresql/data
   backend:
     image: doxxy-backend:latest
     container_name: doxxy-backend
@@ -51,8 +44,3 @@ services:
 
 volumes:
   db-data:
-networks:
-  default:
-    ipam:
-      config:
-        - subnet: 10.9.2.0/24
