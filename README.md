@@ -46,8 +46,8 @@ You can run it by:
 When changing the schema, please write a migration script,
 with Flyway's naming scheme `V[Major].[Minor].[YYYY].[MM].[DD]__Extended_Description.sql`.
 
-Backend migrations can be found in [`doxxy-backend/src/main/resources/db/migration`](./doxxy-backend/src/main/resources/db/migration).
-Bot migrations can be found in [`doxxy-bot/src/main/resources/doxxy_database_scripts`](./doxxy-bot/src/main/resources/doxxy_database_scripts).
+- Backend migrations can be found in [`doxxy-backend/src/main/resources/db/migration`](./doxxy-backend/src/main/resources/db/migration).
+- Bot migrations can be found in [`doxxy-bot/src/main/resources/doxxy_database_scripts`](./doxxy-bot/src/main/resources/doxxy_database_scripts).
 
 ## Deployment
 1. Clone repo
