@@ -1,6 +1,7 @@
 services:
   db:
     image: postgres:17
+    container_name: doxxy-db
     restart: unless-stopped
     env_file: ./config/.env
     volumes:
@@ -9,6 +10,7 @@ services:
         target: /var/lib/postgresql/data
   backend:
     image: doxxy-backend:latest
+    container_name: doxxy-backend
     restart: unless-stopped
     volumes:
       - type: bind
@@ -19,6 +21,7 @@ services:
         target: /logs
   bot:
     image: doxxy-bot:latest
+    container_name: doxxy-bot
     restart: unless-stopped
     volumes:
       - type: bind
