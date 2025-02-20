@@ -3,23 +3,20 @@ services:
     image: postgres:17
     container_name: doxxy-db
     restart: unless-stopped
-    env_file: ./config/.env
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       retries: 5
       start_period: 5s
       timeout: 10s
     ports:
-      - "127.0.0.1:${DB_PORT:?error}:5432"
+      - "127.0.0.1:${DB_PORT}:5432"
     volumes:
       - type: volume
         source: db-data
         target: /var/lib/postgresql/data
     networks:
-      doxxy:
-        aliases:
-          - db
+      default:
         ipv4_address: 10.9.2.2
   backend:
     image: doxxy-backend:latest
@@ -53,8 +50,7 @@ services:
 volumes:
   db-data:
 networks:
-  doxxy:
-    name: doxxy
+  default:
     ipam:
       config:
         - subnet: 10.9.2.0/24
