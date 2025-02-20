@@ -10,10 +10,15 @@ services:
       retries: 5
       start_period: 5s
       timeout: 10s
+    ports:
+      - "10.9.2.1:${DB_PORT}:${DB_PORT}"
     volumes:
       - type: volume
         source: db-data
         target: /var/lib/postgresql/data
+    networks:
+      doxxy:
+        - ipv4_address: 10.9.2.1
   backend:
     image: doxxy-backend:latest
     container_name: doxxy-backend
@@ -43,3 +48,9 @@ services:
 
 volumes:
   db-data:
+networks:
+  doxxy:
+    name: doxxy
+    ipam:
+      config:
+        - subnet: 10.9.2.0/24
