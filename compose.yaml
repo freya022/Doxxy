@@ -5,13 +5,13 @@ services:
     restart: unless-stopped
     env_file: ./config/.env
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       retries: 5
       start_period: 5s
       timeout: 10s
     ports:
-      - "10.9.2.1:${DB_PORT}:${DB_PORT}"
+      - "10.9.2.1:${DB_PORT:?error}:5432"
     volumes:
       - type: volume
         source: db-data
