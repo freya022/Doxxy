@@ -36,7 +36,7 @@
                 <artifactId>jib-maven-plugin</artifactId>
                 <configuration>
                     <from>
-                        <image>eclipse-temurin:23-jdk</image>
+                        <image>doxxy-bot-eclipse-temurin:24-jdk</image>
                     </from>
                     <to>
                         <image>doxxy-bot</image>

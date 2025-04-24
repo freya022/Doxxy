@@ -54,5 +54,6 @@ with Flyway's naming scheme `V[Major].[Minor].[YYYY].[MM].[DD]__Extended_Descrip
 2. Copy `config-template` as `config`
 3. Change profile from `dev` to `prod` in `config/application.yaml`
 4. Copy `.env.example` as `.env` and set the values, values are required unless commented otherwise
-5. Run `mvn clean package jib:dockerBuild` to create the docker image
-6. Run `docker compose up -d` to start the application stack
+5. Generate the base docker image with `docker build --tag doxxy-bot-eclipse-temurin:jdk-24 ./doxxy-bot`
+6. Run `mvn clean package jib:dockerBuild` to create the docker image
+7. Run `docker compose up -d` to start the application stack
