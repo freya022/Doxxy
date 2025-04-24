@@ -74,6 +74,10 @@ object Main {
                 components {
                     enable = true
                 }
+
+                appEmojis {
+                    enable = true
+                }
             }
 
             logger.info { "Loaded commands" }

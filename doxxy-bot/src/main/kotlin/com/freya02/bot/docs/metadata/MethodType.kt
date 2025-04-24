@@ -1,6 +1,5 @@
 package com.freya02.bot.docs.metadata
 
-import com.freya02.bot.docs.metadata.MethodType.entries
 import com.freya02.bot.utils.AppEmojis
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration
 import io.github.freya022.botcommands.api.core.BContext
@@ -18,13 +17,13 @@ enum class MethodType(
 ) {
     DECLARATION(
         1,
-        AppEmojis.methodDeclaration,
+        AppEmojis.abstractMethod,
         Decorations.fromLocalizations(AppEmojis.hasImplementations, "declaration", "impl"),
         Decorations.fromLocalizations(AppEmojis.hasOverriddenMethods, "declaration", "overriddenMethods")
     ),
     DEFINITION(
         2,
-        AppEmojis.methodDefinition,
+        AppEmojis.method,
         Decorations.fromLocalizations(AppEmojis.hasOverrides, "definition", "impl"),
         Decorations.fromLocalizations(AppEmojis.hasOverriddenMethods, "definition", "overriddenMethods")
     );
