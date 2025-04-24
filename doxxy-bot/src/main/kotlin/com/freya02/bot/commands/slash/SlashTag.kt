@@ -243,10 +243,12 @@ class SlashTag(
     ) {
         withOwnedTag(event, name) { tag: Tag ->
             val deleteButton = buttons.danger("Delete").ephemeral {
+                singleUse = true
                 noTimeout()
                 bindTo { doDeleteTag(event, name, it) }
             }
             val noButton = buttons.primary("No").ephemeral {
+                singleUse = true
                 noTimeout()
                 bindTo { it.editMessage("Cancelled").setComponents().queue() }
             }
@@ -256,7 +258,7 @@ class SlashTag(
 
             event.reply_("Are you sure you want to delete the tag '${tag.name}'?", ephemeral = true)
                 .addActionRow(deleteButton, noButton)
-                .deleteDelayed(event.hook, Components.defaultEphemeralTimeout!!)
+                .deleteDelayed(event.hook, Components.defaultEphemeralTimeout)
                 .queue()
         }
     }
