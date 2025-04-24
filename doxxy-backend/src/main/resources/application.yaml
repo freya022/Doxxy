@@ -1,0 +1,17 @@
+server:
+  port: ${BACKEND_PORT}
+
+spring:
+  main:
+    banner-mode: off
+  config:
+    import: file:./.env[.properties]
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${POSTGRES_DB}?currentSchema=backend,public
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    schemas: backend

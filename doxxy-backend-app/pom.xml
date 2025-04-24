@@ -25,6 +25,22 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
             <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <version>3.4.4</version>
+                <configuration>
+                    <from>
+                        <image>eclipse-temurin:24-jre</image>
+                    </from>
+                    <to>
+                        <image>doxxy-backend</image>
+                    </to>
+                    <container>
+                        <mainClass>io.github.freya022.backend.BackendApplicationKt</mainClass>
+                    </container>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
                 <version>${kotlin.version}</version>

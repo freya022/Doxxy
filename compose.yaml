@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:17
+    container_name: doxxy-db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      retries: 5
+      start_period: 5s
+      timeout: 10s
+    ports:
+      - "127.0.0.1:5431:5432" # So we can connect to it using an SSH tunnel via localhost:5431
+    volumes:
+      - db-data:/var/lib/postgresql/data
+  backend:
+    image: doxxy-backend:latest
+    container_name: doxxy-backend
+    depends_on:
+      - db
+    restart: unless-stopped
+    volumes:
+      - ./.env:/.env
+      - ./config:/config
+      - ./backend/logs:/logs
+  bot:
+    image: doxxy-bot:latest
+    container_name: doxxy-bot
+    depends_on:
+      - db
+    restart: unless-stopped
+    volumes:
+      - ./.env:/.env
+      - ./config:/config
+      - ./bot/logs:/logs
+      - ./bot/data:/data
+
+volumes:
+  db-data:

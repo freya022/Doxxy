@@ -1,13 +1,16 @@
 package com.freya02.bot.config
 
-import com.google.gson.Gson
+import io.github.cdimascio.dotenv.Dotenv
+import io.github.cdimascio.dotenv.dotenv
 import io.github.freya022.botcommands.api.core.service.annotations.BService
-import io.github.oshai.kotlinlogging.KotlinLogging
-import java.nio.file.Path
-import kotlin.io.path.absolutePathString
-import kotlin.io.path.readText
 
-data class DatabaseConfig(val serverName: String, val port: Int, val name: String, val user: String, val password: String) {
+data class DatabaseConfig(
+    val serverName: String,
+    val port: Int,
+    val name: String,
+    val user: String,
+    val password: String
+) {
     val url: String
         get() = "jdbc:postgresql://$serverName:$port/$name"
 }
@@ -20,7 +23,8 @@ data class PullUpdaterConfig(
 
 data class BackendConfig(
     val enable: Boolean,
-    val url: String,
+    val host: String,
+    val port: Int,
     val examples: Examples
 ) {
 
@@ -30,35 +34,67 @@ data class BackendConfig(
     )
 }
 
-data class Config(val token: String,
-                  val ownerIds: List<Long>,
-                  val prefixes: List<String>,
-                  val testGuildIds: List<Long>,
-                  val fakeJDAGuildId: Long,
-                  val fakeBCGuildId: Long,
-                  val pullUpdater: PullUpdaterConfig,
-                  val backend: BackendConfig,
-                  val databaseConfig: DatabaseConfig
+data class Config(
+    val dev: Boolean,
+    val token: String,
+    val ownerIds: List<Long>,
+    val prefixes: List<String>,
+    val testGuildIds: List<Long>,
+    val fakeJDAGuildId: Long,
+    val fakeBCGuildId: Long,
+    val examplesHttpPort: Int,
+    @get:BService
+    val pullUpdater: PullUpdaterConfig,
+    @get:BService
+    val backend: BackendConfig,
+    @get:BService
+    val databaseConfig: DatabaseConfig
 ) {
     companion object {
-        private val logger = KotlinLogging.logger { }
-
-        private val configFilePath: Path = Environment.configFolder.resolve("config.json")
 
         @get:BService
         val config: Config by lazy {
-            logger.info { "Loading configuration at ${configFilePath.absolutePathString()}" }
+            val env = dotenv()
 
-            return@lazy Gson().fromJson(configFilePath.readText(), Config::class.java)
+            Config(
+                env["DEV"].toBooleanStrict(),
+                env["BOT_TOKEN"],
+                env.getList("BOT_OWNER_IDS") { it.toLong() },
+                env.getList("BOT_PREFIXES"),
+                env.getList("BOT_TEST_GUILD_IDS") { it.toLong() },
+                env["BOT_FAKE_JDA_GUILD_ID"].toLong(),
+                env["BOT_FAKE_BC_GUILD_ID"].toLong(),
+                env["BOT_EXAMPLES_HTTP_PORT"].toInt(),
+                PullUpdaterConfig(
+                    env["PULL_UPDATER_ENABLE"].toBooleanStrict(),
+                    env["PULL_UPDATER_GIT_TOKEN"],
+                    env["PULL_UPDATER_GIT_NAME"],
+                    env["PULL_UPDATER_GIT_EMAIL"],
+                    env["PULL_UPDATER_FORK_BOT_NAME"],
+                    env["PULL_UPDATER_FORK_REPO_NAME"],
+                ),
+                BackendConfig(
+                    env["BACKEND_ENABLE"].toBooleanStrict(),
+                    env["BACKEND_HOST"],
+                    env["BACKEND_PORT"].toInt(),
+                    BackendConfig.Examples(
+                        env["BACKEND_EXAMPLES_FROM_DOCS"].toBooleanStrict(),
+                    ),
+                ),
+                DatabaseConfig(
+                    env["DB_HOST"],
+                    env["DB_PORT"].toInt(),
+                    env["POSTGRES_DB"],
+                    env["POSTGRES_USER"],
+                    env["POSTGRES_PASSWORD"],
+                )
+            )
         }
 
-        @get:BService
-        val databaseConfig: DatabaseConfig get() = config.databaseConfig
+        private fun Dotenv.getList(name: String): List<String> = getList(name) { it }
 
-        @get:BService
-        val pullUpdateConfig: PullUpdaterConfig get() = config.pullUpdater
-
-        @get:BService
-        val backendConfig: BackendConfig get() = config.backend
+        private fun <R> Dotenv.getList(name: String, transform: (String) -> R): List<R> {
+            return get(name).split(",").map { it.trim().let(transform) }
+        }
     }
 }

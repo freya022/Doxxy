@@ -32,17 +32,18 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
                 <configuration>
-                    <transformers>
-                        <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                            <mainClass>${mainClass}</mainClass>
-                        </transformer>
-                        <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
-                    </transformers>
-
-                    <createDependencyReducedPom>false</createDependencyReducedPom>
+                    <from>
+                        <image>docker://doxxy-bot-eclipse-temurin:24-jdk</image>
+                    </from>
+                    <to>
+                        <image>doxxy-bot</image>
+                    </to>
+                    <container>
+                        <mainClass>${mainClass}</mainClass>
+                    </container>
                 </configuration>
             </plugin>
             <plugin>
@@ -103,6 +104,10 @@
         <dependency>
             <groupId>dev.reformator.stacktracedecoroutinator</groupId>
             <artifactId>stacktrace-decoroutinator-jvm</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.github.cdimascio</groupId>
+            <artifactId>dotenv-kotlin</artifactId>
         </dependency>
         <dependency>
             <groupId>net.dv8tion</groupId>
