@@ -7,7 +7,6 @@ plugins {
     id("com.github.ben-manes.versions")
 }
 
-//group = "com.freya02"
 version = "2.5"
 
 repositories {
