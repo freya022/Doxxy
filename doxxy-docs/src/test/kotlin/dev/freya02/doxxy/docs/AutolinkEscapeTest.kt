@@ -1,6 +1,6 @@
 package dev.freya02.doxxy.docs
 
-import dev.freya02.doxxy.bot.utils.JDocUtil
+import dev.freya02.doxxy.docs.utils.JDocUtil
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 

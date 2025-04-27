@@ -1,12 +1,10 @@
 plugins {
     id("doxxy-conventions")
-    id("doxxy-app-conventions")
 }
 
 dependencies {
     // TODO reduce deps
     implementation(projects.doxxy.doxxyCommons)
-    implementation(projects.doxxy.doxxyDocs)
 
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.debug)

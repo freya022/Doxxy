@@ -1,10 +1,10 @@
 package dev.freya02.doxxy.docs.data
 
-import dev.freya02.doxxy.bot.utils.HttpUtils
 import dev.freya02.doxxy.docs.ClassDocs
 import dev.freya02.doxxy.docs.DocSourceType
 import dev.freya02.doxxy.docs.DocUtils
 import dev.freya02.doxxy.docs.JavadocUrl
+import dev.freya02.doxxy.docs.utils.HttpUtils
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jsoup.nodes.Element
 

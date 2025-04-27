@@ -1,7 +1,7 @@
 package dev.freya02.doxxy.docs
 
 import dev.freya02.doxxy.bot.config.Data
-import dev.freya02.doxxy.bot.utils.HttpUtils
+import dev.freya02.doxxy.docs.utils.HttpUtils
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Request
 import org.jsoup.nodes.Document

@@ -1,4 +1,4 @@
-package dev.freya02.doxxy.docs
+package dev.freya02.doxxy.bot
 
 import dev.freya02.doxxy.bot.config.Data
 import dev.freya02.doxxy.bot.docs.metadata.parser.SourceRootMetadata
