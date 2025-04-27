@@ -12,14 +12,14 @@ dependencies {
     api(libs.kotlinx.coroutines.debug)
     api(libs.stacktrace.decoroutinator)
 
+    api(libs.bundles.slf4j)
+    api(libs.logback.classic)
+
     api(libs.dotenv.kotlin)
 
     api(libs.jda)
     api(libs.botcommands)
     api(libs.jda.ktx)
-
-    api(libs.bundles.slf4j)
-    api(libs.logback.classic)
 
     api(libs.postgresql)
     api(libs.hikaricp)
@@ -27,14 +27,6 @@ dependencies {
 
     api(libs.gson)
     api(libs.kotlinx.serialization.json)
-
-    api(libs.jsoup)
-
-    api(libs.remark.java)
-
-    api(libs.javaparser.symbol.solver.core)
-
-    api(libs.palantir.java.format)
 
     api(libs.ktor.client.core)
     api(libs.ktor.client.okhttp)
@@ -47,6 +39,14 @@ dependencies {
     api(libs.ktor.server.netty)
 
     api(libs.ktor.serialization.gson)
+
+    api(libs.jsoup)
+
+    api(libs.remark.java)
+
+    api(libs.javaparser.symbol.solver.core)
+
+    api(libs.palantir.java.format)
 
     testImplementation(libs.javassist)
     testImplementation(libs.junit.jupiter)
