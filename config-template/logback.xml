@@ -40,7 +40,7 @@
     <logger name="io.netty" level="info"/>
 
     <!-- Bot -->
-    <logger name="com.freya02" level="debug"/>
+    <logger name="dev.freya02.doxxy" level="debug"/>
 
     <!-- All the remaining loggers -->
     <root level="info">

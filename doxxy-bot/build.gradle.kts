@@ -3,9 +3,6 @@ plugins {
     id("doxxy-app-conventions")
 }
 
-// TODO update to dev.freya02
-group = "com.freya02"
-
 dependencies {
     implementation(projects.doxxy.doxxyCommons)
 

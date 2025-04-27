@@ -1,0 +1,49 @@
+package dev.freya02.doxxy.docs
+
+import dev.freya02.doxxy.bot.config.Config
+import dev.freya02.doxxy.bot.config.DatabaseSource
+import dev.freya02.doxxy.bot.docs.index.DocIndex
+import dev.freya02.doxxy.bot.docs.index.ReindexData
+import dev.freya02.doxxy.bot.versioning.github.GithubUtils
+import io.github.freya022.botcommands.api.core.db.Database
+import dev.freya02.doxxy.docs.DocWebServer.startDocWebServer
+import dev.minn.jda.ktx.events.getDefaultScope
+import kotlinx.coroutines.launch
+import kotlin.system.exitProcess
+
+suspend fun main() {
+    getDefaultScope().launch {
+        startDocWebServer()
+
+        val config = Config.config
+        val database = DatabaseSource(config)
+
+        val bcIndex = DocIndex(DocSourceType.BOT_COMMANDS, database)
+        val jdaIndex = DocIndex(DocSourceType.JDA, database)
+        val javaIndex = DocIndex(DocSourceType.JAVA, database)
+
+        bcIndex.reindex(ReindexData())
+        val sourceUrl = GithubUtils.getLatestReleaseHash("discord-jda", "JDA")
+            ?.let { hash -> "https://github.com/discord-jda/JDA/blob/${hash.hash}/src/main/java/" }
+        jdaIndex.reindex(ReindexData(sourceUrl))
+        javaIndex.reindex(ReindexData())
+
+        for (index in listOf(bcIndex, jdaIndex, javaIndex)) {
+            val cachedClass = index.getClassDoc("AppOption")
+            val cachedMethod = index.getMethodDoc("AppOption#autocomplete()")
+            val cachedField = index.getFieldDoc("AppendMode#SET")
+            val methodSignatures = index.findMethodSignaturesIn("AppOption")
+            val allMethodSignatures = index.findAnyMethodSignatures()
+            val fieldSignatures = index.findFieldSignaturesIn("AppendMode")
+            val allFieldSignatures = index.findAnyFieldSignatures()
+            val methodAndFieldSignatures = index.findMethodAndFieldSignaturesIn("ApplicationCommandInfoMapView")
+            val simpleNameList = index.getClasses()
+            val classesWithMethods = index.getClassesWithMethods()
+            val classesWithFields = index.getClassesWithFields()
+
+            println()
+        }
+
+        exitProcess(0)
+    }.join()
+}
