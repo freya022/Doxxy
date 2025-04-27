@@ -6,47 +6,47 @@ plugins {
 group = "io.github.freya022"
 
 dependencies {
-    api(projects.doxxy.doxxyCommons)
+    implementation(projects.doxxy.doxxyCommons)
 
-    api(libs.kotlinx.coroutines.core)
-    api(libs.kotlinx.coroutines.debug)
-    api(libs.stacktrace.decoroutinator)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.debug)
+    implementation(libs.stacktrace.decoroutinator)
 
-    api(libs.bundles.slf4j)
-    api(libs.logback.classic)
+    implementation(libs.bundles.slf4j)
+    implementation(libs.logback.classic)
 
-    api(libs.dotenv.kotlin)
+    implementation(libs.dotenv.kotlin)
 
-    api(libs.jda)
-    api(libs.botcommands)
-    api(libs.jda.ktx)
+    implementation(libs.jda)
+    implementation(libs.botcommands)
+    implementation(libs.jda.ktx)
 
-    api(libs.postgresql)
-    api(libs.hikaricp)
-    api(libs.bundles.flyway)
+    implementation(libs.postgresql)
+    implementation(libs.hikaricp)
+    implementation(libs.bundles.flyway)
 
-    api(libs.gson)
-    api(libs.kotlinx.serialization.json)
+    implementation(libs.gson)
+    implementation(libs.kotlinx.serialization.json)
 
-    api(libs.ktor.client.core)
-    api(libs.ktor.client.okhttp)
-    api(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.ktor.client.content.negotiation)
 
-    api(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.serialization.kotlinx.json)
 
-    api(libs.ktor.server.core)
-    api(libs.ktor.server.content.negotiation)
-    api(libs.ktor.server.netty)
+    implementation(libs.ktor.server.core)
+    implementation(libs.ktor.server.content.negotiation)
+    implementation(libs.ktor.server.netty)
 
-    api(libs.ktor.serialization.gson)
+    implementation(libs.ktor.serialization.gson)
 
-    api(libs.jsoup)
+    implementation(libs.jsoup)
 
-    api(libs.remark.java)
+    implementation(libs.remark.java)
 
-    api(libs.javaparser.symbol.solver.core)
+    implementation(libs.javaparser.symbol.solver.core)
 
-    api(libs.palantir.java.format)
+    implementation(libs.palantir.java.format)
 
     testImplementation(libs.javassist)
     testImplementation(libs.junit.jupiter)
