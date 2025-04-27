@@ -5,6 +5,8 @@ plugins {
     alias(libs.plugins.spring)
     alias(libs.plugins.jpa)
     alias(libs.plugins.spring.boot)
+
+    alias(libs.plugins.kotlinx.serialization)
 }
 
 group = "io.github.freya022"
