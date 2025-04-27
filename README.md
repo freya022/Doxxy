@@ -1,3 +1,5 @@
+[//]: # (TODO Update instructions for Gradle)
+
 # Doxxy
 A Discord bot to help guide users of the JDA library.
 
