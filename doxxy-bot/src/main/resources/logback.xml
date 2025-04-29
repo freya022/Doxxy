@@ -22,7 +22,7 @@
     <logger name="io.netty" level="info"/>
 
     <!-- Bot -->
-    <logger name="com.freya02" level="trace"/>
+    <logger name="dev.freya02.doxxy" level="trace"/>
 
     <!-- All the remaining loggers -->
     <root level="debug">
