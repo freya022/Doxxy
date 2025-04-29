@@ -28,6 +28,8 @@ Module for the main Discord bot.
 
 ## Contributing
 
+See the [`Contributing` section of the project root](../README.md#contributing) first.
+
 ### Running
 
 Run the main class at [`src/main/kotlin/com/freya02/bot/Main.kt`](src/main/kotlin/com/freya02/bot/Main.kt)

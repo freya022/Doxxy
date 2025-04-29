@@ -11,7 +11,7 @@ Module for the backend.
 
 ## Contributing
 
-See the `Contributing` section of the [project root](../README.md) first.
+See the [`Contributing` section of the project root](../README.md#contributing) first.
 
 ### Running
 
