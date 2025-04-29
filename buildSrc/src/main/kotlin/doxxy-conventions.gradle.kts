@@ -43,13 +43,13 @@ java {
         languageVersion = JavaLanguageVersion.of(24)
     }
 
-    sourceCompatibility = JavaVersion.VERSION_22
-    targetCompatibility = JavaVersion.VERSION_22
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 kotlin {
     compilerOptions {
-        jvmTarget = JvmTarget.JVM_22
+        jvmTarget = JvmTarget.JVM_21
 
         freeCompilerArgs.addAll("-Xjsr305=strict", "-Xcontext-receivers", "-Xsuppress-warning=CONTEXT_RECEIVERS_DEPRECATED")
     }
