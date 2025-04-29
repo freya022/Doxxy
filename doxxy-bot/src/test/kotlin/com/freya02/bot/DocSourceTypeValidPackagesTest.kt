@@ -46,7 +46,7 @@ class DocSourceTypeValidPackagesTest {
         Assertions.assertFalse(DocSourceType.JAVA.isValidPackage("java.nio.file.attribute"))
         Assertions.assertFalse(DocSourceType.JAVA.isValidPackage("java.nio.file.spi"))
         Assertions.assertFalse(DocSourceType.JAVA.isValidPackage("java.rmi"))
-        Assertions.assertFalse(DocSourceType.JAVA.isValidPackage("java.text"))
+        Assertions.assertTrue(DocSourceType.JAVA.isValidPackage("java.text"))
         Assertions.assertFalse(DocSourceType.JAVA.isValidPackage("java.util.jar"))
         Assertions.assertFalse(DocSourceType.JAVA.isValidPackage("java.util.logging"))
         Assertions.assertFalse(DocSourceType.JAVA.isValidPackage("java.util.spi"))

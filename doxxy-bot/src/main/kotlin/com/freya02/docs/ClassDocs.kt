@@ -7,6 +7,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import java.io.IOException
 import java.util.*
 
+// TODO Move javadoc parsing to module, try to internalize stuff
 class ClassDocs private constructor(private val source: DocSourceType) {
     private val simpleNameToUrlMap: MutableMap<String, DocsURL> = HashMap()
     private val urlSet: MutableSet<String> = HashSet()
