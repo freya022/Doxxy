@@ -1,11 +1,11 @@
 package dev.freya02.doxxy.bot.versioning.jitpack.pullupdater
 
 import dev.freya02.doxxy.bot.config.Config
-import dev.freya02.doxxy.bot.config.Data
 import dev.freya02.doxxy.bot.versioning.LibraryType
 import dev.freya02.doxxy.bot.versioning.github.CommitHash
 import dev.freya02.doxxy.bot.versioning.github.GithubBranch
 import dev.freya02.doxxy.bot.versioning.github.GithubUtils
+import dev.freya02.doxxy.common.Directories
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -34,7 +34,7 @@ object PullUpdater {
 
     private val logger = KotlinLogging.logger { }
     private val config = Config.config.pullUpdater
-    private val forkPath = Data.jdaForkPath
+    private val forkPath = Directories.jdaFork
 
     private val client = HttpClient(OkHttp) {
         install(ContentNegotiation) {

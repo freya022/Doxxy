@@ -1,7 +1,6 @@
 package dev.freya02.doxxy.bot.config
 
-import io.github.cdimascio.dotenv.Dotenv
-import io.github.cdimascio.dotenv.dotenv
+import dev.freya02.doxxy.common.Env
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 
 data class DatabaseConfig(
@@ -54,47 +53,39 @@ data class Config(
 
         @get:BService
         val config: Config by lazy {
-            val env = dotenv()
-
             Config(
-                env["DEV"].toBooleanStrict(),
-                env["BOT_TOKEN"],
-                env.getList("BOT_OWNER_IDS") { it.toLong() },
-                env.getList("BOT_PREFIXES"),
-                env.getList("BOT_TEST_GUILD_IDS") { it.toLong() },
-                env["BOT_FAKE_JDA_GUILD_ID"].toLong(),
-                env["BOT_FAKE_BC_GUILD_ID"].toLong(),
-                env["BOT_EXAMPLES_HTTP_PORT"].toInt(),
+                Env["DEV"].toBooleanStrict(),
+                Env["BOT_TOKEN"],
+                Env.getList("BOT_OWNER_IDS") { it.toLong() },
+                Env.getList("BOT_PREFIXES"),
+                Env.getList("BOT_TEST_GUILD_IDS") { it.toLong() },
+                Env["BOT_FAKE_JDA_GUILD_ID"].toLong(),
+                Env["BOT_FAKE_BC_GUILD_ID"].toLong(),
+                Env["BOT_EXAMPLES_HTTP_PORT"].toInt(),
                 PullUpdaterConfig(
-                    env["PULL_UPDATER_ENABLE"].toBooleanStrict(),
-                    env["PULL_UPDATER_GIT_TOKEN"],
-                    env["PULL_UPDATER_GIT_NAME"],
-                    env["PULL_UPDATER_GIT_EMAIL"],
-                    env["PULL_UPDATER_FORK_BOT_NAME"],
-                    env["PULL_UPDATER_FORK_REPO_NAME"],
+                    Env["PULL_UPDATER_ENABLE"].toBooleanStrict(),
+                    Env["PULL_UPDATER_GIT_TOKEN"],
+                    Env["PULL_UPDATER_GIT_NAME"],
+                    Env["PULL_UPDATER_GIT_EMAIL"],
+                    Env["PULL_UPDATER_FORK_BOT_NAME"],
+                    Env["PULL_UPDATER_FORK_REPO_NAME"],
                 ),
                 BackendConfig(
-                    env["BACKEND_ENABLE"].toBooleanStrict(),
-                    env["BACKEND_HOST"],
-                    env["BACKEND_PORT"].toInt(),
+                    Env["BACKEND_ENABLE"].toBooleanStrict(),
+                    Env["BACKEND_HOST"],
+                    Env["BACKEND_PORT"].toInt(),
                     BackendConfig.Examples(
-                        env["BACKEND_EXAMPLES_FROM_DOCS"].toBooleanStrict(),
+                        Env["BACKEND_EXAMPLES_FROM_DOCS"].toBooleanStrict(),
                     ),
                 ),
                 DatabaseConfig(
-                    env["DB_HOST"],
-                    env["DB_PORT"].toInt(),
-                    env["POSTGRES_DB"],
-                    env["POSTGRES_USER"],
-                    env["POSTGRES_PASSWORD"],
+                    Env["DB_HOST"],
+                    Env["DB_PORT"].toInt(),
+                    Env["POSTGRES_DB"],
+                    Env["POSTGRES_USER"],
+                    Env["POSTGRES_PASSWORD"],
                 )
             )
-        }
-
-        private fun Dotenv.getList(name: String): List<String> = getList(name) { it }
-
-        private fun <R> Dotenv.getList(name: String, transform: (String) -> R): List<R> {
-            return get(name).split(",").map { it.trim().let(transform) }
         }
     }
 }
