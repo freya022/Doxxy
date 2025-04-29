@@ -1,5 +1,3 @@
-[//]: # (TODO Update instructions for Gradle)
-
 # Doxxy
 A Discord bot to help guide users of the JDA library.
 
@@ -19,12 +17,12 @@ A Discord bot to help guide users of the JDA library.
 ## Modules
 * [doxxy-commons](doxxy-commons): Common source code used by both the bot and the backend
 * [doxxy-bot](doxxy-bot): Main Discord bot
-* [doxxy-backend](doxxy-backend): Backend library optionally used by the bot, cannot be run
-* [doxxy-backend-app](doxxy-backend-app): Application which runs the backend library
+* [doxxy-backend](doxxy-backend): Backend optionally used by the bot
 
 ## Contributing
 ### Requirements
-* JDK 17+
+* JDK 24+
+  * [Configure your IDE](https://docs.gradle.org/current/userguide/toolchains.html#sec:ide-settings-toolchain) to run Gradle with it
 * A PostgreSQL 13 or higher database
 
 ### Set up
@@ -33,23 +31,7 @@ A Discord bot to help guide users of the JDA library.
 3. Delete `logback.xml` as it's configured for production
 4. Copy `.env.example` as `.env` and set the values, values are required unless commented otherwise
 
-### Running
-#### Backend
-You can run it by:
-- Running the main class at [`doxxy-backend-app/src/main/kotlin/io/github/freya022/backend/BackendApplication.kt`](./doxxy-backend-app/src/main/kotlin/io/github/freya022/backend/BackendApplication.kt)
-- Or, running `mvn -pl doxxy-backend-app -am spring-boot:run`
-
-#### Bot
-You can run it by:
-- Running the main class at [`doxxy-bot/src/main/kotlin/com/freya02/bot/Main.kt`](./doxxy-bot/src/main/kotlin/com/freya02/bot/Main.kt)
-- Or, running `mvn -pl doxxy-bot -am compile exec:exec`
-
-### Making database changes
-When changing the schema, please write a migration script,
-with Flyway's naming scheme `V[Major].[Minor].[YYYY].[MM].[DD]__Extended_Description.sql`.
-
-- Backend migrations can be found in [`doxxy-backend/src/main/resources/db/migration`](./doxxy-backend/src/main/resources/db/migration).
-- Bot migrations can be found in [`doxxy-bot/src/main/resources/doxxy_database_scripts`](./doxxy-bot/src/main/resources/doxxy_database_scripts).
+Then follow the instructions of the module you want to contribute to.
 
 ## Deployment
 1. Clone repo
