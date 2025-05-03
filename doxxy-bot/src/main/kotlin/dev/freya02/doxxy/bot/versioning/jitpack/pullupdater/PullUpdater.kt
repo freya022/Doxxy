@@ -3,8 +3,8 @@ package dev.freya02.doxxy.bot.versioning.jitpack.pullupdater
 import dev.freya02.doxxy.bot.config.Config
 import dev.freya02.doxxy.bot.versioning.LibraryType
 import dev.freya02.doxxy.bot.versioning.github.CommitHash
-import dev.freya02.doxxy.bot.versioning.github.GithubBranch
 import dev.freya02.doxxy.bot.versioning.github.GithubUtils
+import dev.freya02.doxxy.bot.versioning.github.UpdatedBranch
 import dev.freya02.doxxy.common.Directories
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
@@ -30,7 +30,7 @@ import kotlin.io.path.notExists
 
 object PullUpdater {
     private data class CacheKey(val headLabel: String, val baseLabel: String)
-    private data class CacheValue(val headSha: String, val baseSha: String, val forkedGithubBranch: GithubBranch)
+    private data class CacheValue(val headSha: String, val baseSha: String, val forkedGithubBranch: UpdatedBranch)
 
     private val logger = KotlinLogging.logger { }
     private val config = Config.config.pullUpdater
@@ -47,7 +47,7 @@ object PullUpdater {
     private val cache: MutableMap<CacheKey, CacheValue> = hashMapOf()
     private var latestCommitHash: CommitHash? = null
 
-    suspend fun tryUpdate(libraryType: LibraryType, prNumber: Int): Result<GithubBranch> = runCatching {
+    suspend fun tryUpdate(libraryType: LibraryType, prNumber: Int): Result<UpdatedBranch> = runCatching {
         if (libraryType != LibraryType.JDA) {
             fail(PullUpdateException.ExceptionType.UNSUPPORTED_LIBRARY, "Only JDA is supported")
         }
@@ -79,12 +79,12 @@ object PullUpdater {
         }
     }
 
-    private suspend fun whenUpdateRequired(libraryType: LibraryType, pullRequest: PullRequest, onUpdate: suspend () -> GithubBranch): GithubBranch {
+    private suspend fun whenUpdateRequired(libraryType: LibraryType, pullRequest: PullRequest, onUpdate: suspend () -> UpdatedBranch): UpdatedBranch {
         val latestHash = GithubUtils.getLatestHash(libraryType.githubOwnerName, libraryType.githubRepoName, "")
 
         fun createCacheKey(): CacheKey = CacheKey(pullRequest.head.label, pullRequest.base.label)
 
-        suspend fun update(): GithubBranch {
+        suspend fun update(): UpdatedBranch {
             val newBranch = onUpdate()
             this.latestCommitHash = latestHash
             cache[createCacheKey()] = CacheValue(pullRequest.head.sha, pullRequest.base.sha, newBranch)
@@ -107,8 +107,8 @@ object PullUpdater {
         }
     }
 
-    private fun getForkedGithubBranch(pr: PullRequest, mergeCommitHash: CommitHash): GithubBranch {
-        return GithubBranch(config.forkBotName, config.forkRepoName, pr.head.toForkedBranchName(), mergeCommitHash)
+    private fun getForkedGithubBranch(pr: PullRequest, mergeCommitHash: CommitHash): UpdatedBranch {
+        return UpdatedBranch(config.forkBotName, config.forkRepoName, pr.head.toForkedBranchName(), mergeCommitHash)
     }
 
     private suspend fun doUpdate(pullRequest: PullRequest): CommitHash {

@@ -6,8 +6,7 @@ import dev.freya02.doxxy.bot.utils.Utils.isBCGuild
 import dev.freya02.doxxy.bot.utils.Utils.truncate
 import dev.freya02.doxxy.bot.versioning.LibraryType
 import dev.freya02.doxxy.bot.versioning.ScriptType
-import dev.freya02.doxxy.bot.versioning.github.GithubBranch
-import dev.freya02.doxxy.bot.versioning.github.PullRequest
+import dev.freya02.doxxy.bot.versioning.github.*
 import dev.freya02.doxxy.bot.versioning.github.PullRequest.Companion.toAutocompleteChoices
 import dev.freya02.doxxy.bot.versioning.jitpack.JitpackBranchService
 import dev.freya02.doxxy.bot.versioning.jitpack.JitpackPrService
@@ -57,7 +56,7 @@ class SlashJitpack(
         val pullRequest = jitpackPrService.getPullRequest(libraryType, pullNumber)
             ?: return event.reply_("Unknown Pull Request", ephemeral = true).queue()
 
-        val message = createPrMessage(event, libraryType, buildToolType, pullRequest, pullRequest.branch)
+        val message = createPrMessage(event, libraryType, buildToolType, pullRequest, pullRequest.branch.toUpdatedBranch())
 
         event.reply(message).queue()
     }
@@ -67,7 +66,7 @@ class SlashJitpack(
         libraryType: LibraryType,
         buildToolType: BuildToolType,
         pullRequest: PullRequest,
-        targetBranch: GithubBranch
+        targetBranch: UpdatedBranch
     ): MessageCreateData {
         val dependencyStr: String = when (libraryType) {
             LibraryType.BOT_COMMANDS -> DependencySupplier.formatBCJitpack(
@@ -263,7 +262,7 @@ class SlashJitpack(
             LibraryType.BOT_COMMANDS -> DependencySupplier.formatBCJitpack(
                 ScriptType.DEPENDENCIES,
                 buildToolType,
-                jitpackBranchService.getUsedJDAVersionFromBranch(branch),
+                jitpackBranchService.getUsedJDAVersionFromBranch(branch.toUpdatedBranch()),
                 branch.toJitpackArtifact()
             )
         }

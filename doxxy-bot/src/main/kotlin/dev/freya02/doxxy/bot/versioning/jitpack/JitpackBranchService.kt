@@ -2,10 +2,7 @@ package dev.freya02.doxxy.bot.versioning.jitpack
 
 import dev.freya02.doxxy.bot.commands.slash.versioning.SlashJitpack
 import dev.freya02.doxxy.bot.versioning.*
-import dev.freya02.doxxy.bot.versioning.github.GithubBranch
-import dev.freya02.doxxy.bot.versioning.github.GithubBranchMap
-import dev.freya02.doxxy.bot.versioning.github.GithubUtils
-import dev.freya02.doxxy.bot.versioning.github.UpdateCountdown
+import dev.freya02.doxxy.bot.versioning.github.*
 import dev.freya02.doxxy.bot.versioning.maven.DependencyVersionChecker
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommandsContext
 import io.github.freya022.botcommands.api.core.service.annotations.BService
@@ -72,7 +69,7 @@ class JitpackBranchService(
         }
     }
 
-    suspend fun getUsedJDAVersionFromBranch(branch: GithubBranch): ArtifactInfo = versionCheckerMapMutex.withLock {
+    suspend fun getUsedJDAVersionFromBranch(branch: UpdatedBranch): ArtifactInfo = versionCheckerMapMutex.withLock {
         val jdaVersionChecker = versionCheckerMap.getOrPut(branch.branchName) {
             // Get back from DB the saved JDA version with the branch classifier (i.e., JDA from BC)
             val latest = versionsRepository.getInitialVersion(LibraryType.JDA, branch.toVersionClassifier())
@@ -85,5 +82,5 @@ class JitpackBranchService(
         jdaVersionChecker.get().artifactInfo
     }
 
-    private fun GithubBranch.toVersionClassifier() = "$ownerName-$repoName-$branchName"
+    private fun UpdatedBranch.toVersionClassifier() = "$ownerName-$repoName-$branchName"
 }

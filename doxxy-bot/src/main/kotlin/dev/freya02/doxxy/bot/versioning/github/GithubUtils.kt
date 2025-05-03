@@ -4,6 +4,8 @@ import dev.freya02.doxxy.bot.utils.HttpUtils
 import gnu.trove.map.TIntObjectMap
 import gnu.trove.map.hash.TIntObjectHashMap
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
 import net.dv8tion.jda.api.utils.data.DataArray
 import net.dv8tion.jda.api.utils.data.DataObject
 import okhttp3.HttpUrl
@@ -132,10 +134,10 @@ object GithubUtils {
             .execute()
             .use { response ->
                 val json = response.body!!.string()
-                val array = DataArray.fromJson(json)
+                val jsonElement = Json.parseToJsonElement(json)
 
-                (0 until array.length()).forEach { i ->
-                    val pullRequest = PullRequest.fromData(array.getObject(i))
+                jsonElement.jsonArray.forEach { element ->
+                    val pullRequest = PullRequest.fromData(element)
                     if (pullRequest != null) {
                         pullRequests.put(pullRequest.number, pullRequest)
                     }

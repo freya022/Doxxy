@@ -2,9 +2,9 @@ package dev.freya02.doxxy.bot.versioning.jitpack
 
 import dev.freya02.doxxy.bot.config.PullUpdaterConfig
 import dev.freya02.doxxy.bot.versioning.LibraryType
-import dev.freya02.doxxy.bot.versioning.github.GithubBranch
 import dev.freya02.doxxy.bot.versioning.github.PullRequest
 import dev.freya02.doxxy.bot.versioning.github.PullRequestCache
+import dev.freya02.doxxy.bot.versioning.github.UpdatedBranch
 import dev.freya02.doxxy.bot.versioning.jitpack.pullupdater.PullUpdateException
 import dev.freya02.doxxy.bot.versioning.jitpack.pullupdater.PullUpdater
 import dev.minn.jda.ktx.messages.send
@@ -37,7 +37,7 @@ class JitpackPrService(private val pullUpdaterConfig: PullUpdaterConfig) {
         else -> throw IllegalArgumentException()
     }
 
-    suspend fun updatePr(libraryType: LibraryType, pullNumber: Int, hook: InteractionHook, waitMessageId: Long, block: suspend (branch: GithubBranch) -> Unit) {
+    suspend fun updatePr(libraryType: LibraryType, pullNumber: Int, hook: InteractionHook, waitMessageId: Long, block: suspend (branch: UpdatedBranch) -> Unit) {
         val result = PullUpdater.tryUpdate(libraryType, pullNumber)
         hook.deleteMessageById(waitMessageId).queue()
 
