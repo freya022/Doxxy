@@ -130,7 +130,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
 
         val sortArgs: Array<*> = when {
             query.isNullOrEmpty() -> arrayOf(limit)
-            else -> arrayOf(query, limit)
+            else -> arrayOf<Any>(query, limit)
         }
 
         return database.preparedStatement(

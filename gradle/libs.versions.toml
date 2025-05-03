@@ -5,9 +5,9 @@ stacktrace-decoroutinator = "2.4.8"
 slf4j = "2.0.16"
 logback-classic = "1.5.16"
 dotenv-kotlin = "6.5.0"
-jda = "5.3.0"
-jda-ktx = "0.12.0"
-botcommands = "3.0.0-beta.1"
+jda = "5a1ed574b4"
+jda-ktx = "7fa68fce12"
+botcommands = "09afa1234e"
 postgresql = "42.7.5"
 hikaricp = "6.2.1"
 flyway = "11.3.2"
@@ -39,8 +39,8 @@ logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "lo
 
 dotenv-kotlin = { module = "io.github.cdimascio:dotenv-kotlin", version.ref = "dotenv-kotlin" }
 
-jda = { module = "net.dv8tion:JDA", version.ref = "jda" }
-jda-ktx = { module = "club.minnced:jda-ktx", version.ref = "jda-ktx" }
+jda = { module = "io.github.freya022:JDA", version.ref = "jda" }
+jda-ktx = { module = "io.github.freya022:jda-ktx", version.ref = "jda-ktx" }
 botcommands = { module = "io.github.freya022:BotCommands", version.ref = "botcommands" }
 
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }

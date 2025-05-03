@@ -5,6 +5,7 @@ import dev.freya02.doxxy.bot.utils.Utils.isBCGuild
 import dev.freya02.doxxy.bot.utils.Utils.isJDAGuild
 import dev.freya02.doxxy.bot.versioning.LibraryType
 import dev.freya02.doxxy.bot.versioning.Versions
+import dev.minn.jda.ktx.interactions.components.row
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
 import io.github.freya022.botcommands.api.commands.application.CommandScope
@@ -45,7 +46,7 @@ class SlashLatest(private val versions: Versions, private val buttons: Buttons) 
         }
 
         event.replyEmbeds(builder.build())
-            .addActionRow(buttons.messageDelete(event.user))
+            .addComponents(row(buttons.messageDelete(event.user)))
             .queue()
     }
 

@@ -20,7 +20,7 @@ import io.github.freya022.botcommands.api.commands.application.slash.builder.Top
 import io.github.freya022.botcommands.api.components.Buttons
 import io.github.freya022.botcommands.api.core.utils.asUnicodeEmoji
 import io.github.oshai.kotlinlogging.KotlinLogging
-import net.dv8tion.jda.api.interactions.components.ItemComponent
+import net.dv8tion.jda.api.components.actionrow.ActionRowChildComponent
 import net.dv8tion.jda.api.utils.FileUpload
 import net.fellbaum.jemoji.Emojis
 import kotlin.time.Duration.Companion.days
@@ -50,7 +50,7 @@ class BuildToolCommands(private val versions: Versions, private val buttons: But
             }
 
             val messageData = MessageCreate {
-                val components: MutableList<ItemComponent> = arrayListOf(buttons.messageDelete(event.user))
+                val components: MutableList<ActionRowChildComponent> = arrayListOf(buttons.messageDelete(event.user))
 
                 when (scriptType) {
                     ScriptType.DEPENDENCIES -> {

@@ -11,7 +11,7 @@ import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashE
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.JDASlashCommand
 import io.github.freya022.botcommands.api.core.BContext
 import net.dv8tion.jda.api.JDAInfo
-import net.dv8tion.jda.api.interactions.components.buttons.Button
+import net.dv8tion.jda.api.components.buttons.Button
 import net.dv8tion.jda.api.requests.RestAction
 import net.dv8tion.jda.api.utils.TimeFormat
 import java.lang.management.ManagementFactory

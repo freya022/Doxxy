@@ -12,8 +12,8 @@ import dev.freya02.doxxy.bot.pagination.CodePaginatorBuilder
 import dev.freya02.doxxy.bot.utils.ParsingUtils.codeBlockRegex
 import dev.freya02.doxxy.bot.utils.Utils.digitAmount
 import dev.freya02.doxxy.bot.utils.Utils.letIf
-import dev.freya02.doxxy.bot.utils.disableIf
 import dev.minn.jda.ktx.interactions.components.asDisabled
+import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.Embed
 import dev.minn.jda.ktx.messages.send
 import io.github.freya022.botcommands.api.commands.annotations.Command
@@ -31,6 +31,7 @@ import io.github.freya022.botcommands.api.core.utils.suppressContentWarning
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.runBlocking
+import net.dv8tion.jda.api.components.replacer.ComponentReplacer
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.interactions.InteractionHook
@@ -198,7 +199,7 @@ class MessageContextPaginateCode(
 
     private fun onPageChange(state: PaginationState, builder: MessageCreateBuilder, page: Int) = runBlocking {
         val blocks = state.blocks
-        builder.addActionRow(makeLineNumbersButton(state), makeUseFormattingButton(state), makeReplaceStringsButton(state))
+        builder.addComponents(row(makeLineNumbersButton(state), makeUseFormattingButton(state), makeReplaceStringsButton(state)))
         builder.setContent("```java\n${blocks[page]}```")
     }
 
@@ -265,7 +266,10 @@ class MessageContextPaginateCode(
         it.editComponents(it.message.components.asDisabled()).queue()
         try {
             if (!block(it, it.hook)) {
-                it.hook.editOriginalComponents(it.message.components.disableIf { c -> c.id == it.componentId }).queue()
+                it.message.componentTree
+                    .replace(ComponentReplacer.byId(it.component, it.component.asDisabled()))
+                    .let { tree -> it.hook.editOriginalComponents(tree) }
+                    .queue()
             }
         } catch (e: Exception) {
             it.hook.editOriginalComponents(it.message.components).queue()

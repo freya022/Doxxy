@@ -7,8 +7,8 @@ import io.github.freya022.botcommands.api.components.event.ButtonEvent
 import io.github.freya022.botcommands.api.core.annotations.Handler
 import io.github.freya022.botcommands.api.core.utils.asUnicodeEmoji
 import net.dv8tion.jda.api.Permission
+import net.dv8tion.jda.api.components.buttons.Button
 import net.dv8tion.jda.api.entities.UserSnowflake
-import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.fellbaum.jemoji.Emojis
 
 @Handler

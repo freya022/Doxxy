@@ -4,6 +4,7 @@ import dev.freya02.doxxy.bot.commands.filters.decl.NotJDACommandDeclarationFilte
 import dev.freya02.doxxy.bot.tag.*
 import dev.freya02.doxxy.bot.utils.isUniqueViolation
 import dev.minn.jda.ktx.coroutines.await
+import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.Embed
 import dev.minn.jda.ktx.messages.InlineEmbed
 import dev.minn.jda.ktx.messages.reply_
@@ -257,7 +258,7 @@ class SlashTag(
             }
 
             event.reply_("Are you sure you want to delete the tag '${tag.name}'?", ephemeral = true)
-                .addActionRow(deleteButton, noButton)
+                .addComponents(row(deleteButton, noButton))
                 .deleteDelayed(event.hook, Components.defaultEphemeralTimeout)
                 .queue()
         }

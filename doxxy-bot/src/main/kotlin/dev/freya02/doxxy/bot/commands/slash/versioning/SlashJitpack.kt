@@ -15,6 +15,7 @@ import dev.freya02.doxxy.bot.versioning.jitpack.pullupdater.PullUpdater
 import dev.freya02.doxxy.bot.versioning.supplier.BuildToolType
 import dev.freya02.doxxy.bot.versioning.supplier.DependencySupplier
 import dev.minn.jda.ktx.coroutines.await
+import dev.minn.jda.ktx.interactions.components.ActionRow
 import dev.minn.jda.ktx.interactions.components.link
 import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.Embed
@@ -40,7 +41,6 @@ import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-import net.dv8tion.jda.api.interactions.components.ItemComponent
 import net.dv8tion.jda.api.requests.ErrorResponse
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import net.fellbaum.jemoji.Emojis
@@ -101,9 +101,9 @@ class SlashJitpack(
                 }
             }
 
-            components += buildList<ItemComponent>(3) {
+            components += ActionRow {
                 if (jitpackPrService.canUsePullUpdate(libraryType)) {
-                    this += buttons.primary(label = "Update PR", emoji = AppEmojis.sync).ephemeral {
+                    +buttons.primary(label = "Update PR", emoji = AppEmojis.sync).ephemeral {
                         val callerId = event.user.idLong
                         timeout(1.hours)
                         bindTo {
@@ -111,13 +111,15 @@ class SlashJitpack(
                         }
                     }
                 }
-                this += link(
+
+                +link(
                     "https://jda.wiki/using-jda/using-new-features/",
                     "How? (Wiki)",
                     Emojis.FACE_WITH_MONOCLE.asUnicodeEmoji()
                 )
-                this += buttons.messageDelete(event.user)
-            }.row()
+
+                +buttons.messageDelete(event.user)
+            }
         }
     }
 
@@ -279,7 +281,7 @@ class SlashJitpack(
         }
 
         event.replyEmbeds(embed)
-            .addActionRow(buttons.messageDelete(event.user))
+            .addComponents(row(buttons.messageDelete(event.user)))
             .queue()
     }
 

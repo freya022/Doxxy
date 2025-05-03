@@ -13,6 +13,7 @@ import dev.freya02.doxxy.bot.examples.ExampleAPI
 import dev.freya02.doxxy.bot.utils.joinLengthyString
 import dev.freya02.doxxy.docs.DocSourceType
 import dev.freya02.doxxy.docs.data.TargetType
+import dev.minn.jda.ktx.interactions.components.ActionRow
 import dev.minn.jda.ktx.interactions.components.SelectOption
 import dev.minn.jda.ktx.messages.Embed
 import dev.minn.jda.ktx.messages.InlineEmbed
@@ -28,14 +29,13 @@ import io.github.freya022.botcommands.api.pagination.menu.buttonized.ButtonMenu
 import io.github.freya022.botcommands.api.pagination.menu.buttonized.ButtonMenuBuilder
 import io.github.freya022.botcommands.api.pagination.menu.buttonized.SuspendingChoiceCallback
 import io.github.oshai.kotlinlogging.KotlinLogging
+import net.dv8tion.jda.api.components.buttons.Button
+import net.dv8tion.jda.api.components.buttons.ButtonStyle
+import net.dv8tion.jda.api.components.selections.SelectMenu
 import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.interactions.InteractionHook
-import net.dv8tion.jda.api.interactions.components.ItemComponent
-import net.dv8tion.jda.api.interactions.components.buttons.Button
-import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
-import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import net.dv8tion.jda.api.utils.messages.MessageCreateRequest
@@ -127,15 +127,15 @@ class CommonDocsController(
         val examples = exampleApi.searchExamplesByTarget(cachedDoc.qualifiedName)
         if (examples.isEmpty()) return
 
-        val selectMenu = selectMenus.stringSelectMenu().persistent {
-            placeholder = "Examples"
-            options += examples.map { SelectOption(it.title, it.title, emoji = Emojis.TEST_TUBE.asUnicodeEmoji()) }
+        addComponents(ActionRow {
+            +selectMenus.stringSelectMenu().persistent {
+                placeholder = "Examples"
+                options += examples.map { SelectOption(it.title, it.title, emoji = Emojis.TEST_TUBE.asUnicodeEmoji()) }
 
-            bindTo(CommonDocsHandlers.EXAMPLE_SELECT_LISTENER_NAME)
-            timeout(14.days)
-        }
-
-        addActionRow(selectMenu)
+                bindTo(CommonDocsHandlers.EXAMPLE_SELECT_LISTENER_NAME)
+                timeout(14.days)
+            }
+        })
     }
 
     private suspend fun MessageCreateRequest<*>.addDocsActionRows(
@@ -144,42 +144,42 @@ class CommonDocsController(
         cachedDoc: CachedDoc,
         caller: UserSnowflake
     ) {
-        val list: List<ItemComponent> = buildList {
-            cachedDoc.sourceLink?.let { sourceLink -> add(Button.link(sourceLink, "Source")) }
+        addComponents(ActionRow {
+            cachedDoc.sourceLink?.also { sourceLink -> +Button.link(sourceLink, "Source") }
 
             if (cachedDoc is CachedClass)
                 classLinksController.addCachedClassComponents(cachedDoc, originalHook, caller)
             else if (cachedDoc is CachedMethod)
                 methodLinksController.addCachedMethodComponents(cachedDoc, originalHook, caller)
 
-            if (!ephemeral) add(buttons.messageDelete(caller))
-        }
+            if (!ephemeral)
+                +buttons.messageDelete(caller)
 
-        if (list.isNotEmpty()) {
-            addActionRow(list)
-        }
+            if (components.isEmpty())
+                return
+        })
     }
 
     private suspend fun MessageCreateRequest<*>.addDocsSeeAlso(caller: UserSnowflake, cachedDoc: CachedDoc) {
         val docReferences = cachedDoc.seeAlsoReferences.filter { it.targetType != TargetType.UNKNOWN }
         if (docReferences.isEmpty()) return
 
-        val selectMenu = selectMenus.stringSelectMenu().persistent {
-            bindWith(CommonDocsHandlers::onSeeAlsoSelect, caller, cachedDoc.source)
-            timeout(15.minutes)
-            placeholder = "See also"
+        addComponents(ActionRow {
+            +selectMenus.stringSelectMenu().persistent {
+                bindWith(CommonDocsHandlers::onSeeAlsoSelect, caller, cachedDoc.source)
+                timeout(15.minutes)
+                placeholder = "See also"
 
-            for (reference in docReferences) {
-                val optionValue = reference.targetType.name + ":" + reference.fullSignature
-                if (optionValue.length > SelectMenu.ID_MAX_LENGTH) {
-                    logger.warn { "Option value was too large (${optionValue.length}) for: '${optionValue}'" }
-                    continue
+                for (reference in docReferences) {
+                    val optionValue = reference.targetType.name + ":" + reference.fullSignature
+                    if (optionValue.length > SelectMenu.ID_MAX_LENGTH) {
+                        logger.warn { "Option value was too large (${optionValue.length}) for: '${optionValue}'" }
+                        continue
+                    }
+
+                    addOption(reference.text, optionValue, Emojis.CLIPBOARD.asUnicodeEmoji())
                 }
-
-                addOption(reference.text, optionValue, Emojis.CLIPBOARD.asUnicodeEmoji())
             }
-        }
-
-        addActionRow(selectMenu)
+        })
     }
 }

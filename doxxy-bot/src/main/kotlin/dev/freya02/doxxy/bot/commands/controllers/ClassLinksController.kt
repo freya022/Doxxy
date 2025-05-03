@@ -6,6 +6,7 @@ import dev.freya02.doxxy.bot.docs.index.DocIndex
 import dev.freya02.doxxy.bot.docs.metadata.ClassType
 import dev.freya02.doxxy.bot.docs.metadata.ImplementationIndex
 import dev.freya02.doxxy.bot.utils.joinLengthyString
+import dev.minn.jda.ktx.interactions.components.InlineActionRow
 import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.MessageCreate
 import dev.minn.jda.ktx.messages.reply_
@@ -19,12 +20,11 @@ import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.freya022.botcommands.api.core.service.lazy
 import io.github.freya022.botcommands.api.core.utils.toEditData
 import io.github.oshai.kotlinlogging.KotlinLogging
+import net.dv8tion.jda.api.components.selections.SelectMenu
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.exceptions.ErrorHandler
 import net.dv8tion.jda.api.interactions.InteractionHook
-import net.dv8tion.jda.api.interactions.components.ItemComponent
-import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.requests.ErrorResponse
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.minutes
@@ -40,7 +40,7 @@ class ClassLinksController(
     private val logger = KotlinLogging.logger { }
     private val commonDocsController: CommonDocsController by serviceContainer.lazy()
 
-    context(MutableList<ItemComponent>)
+    context(InlineActionRow)
     suspend fun addCachedClassComponents(cachedDoc: CachedClass, originalHook: InteractionHook?, caller: UserSnowflake) {
         val index = docIndexMap[cachedDoc.source]
         val clazz = index.implementationIndex.getClass(cachedDoc.name)
@@ -48,18 +48,18 @@ class ClassLinksController(
         if (clazz != null) {
             if (cachedDoc.subclasses.isNotEmpty()) {
                 val decorations = clazz.classType.subDecorations
-                buttons.secondary(decorations.getLabel(context), decorations.emoji).ephemeral {
+                +buttons.secondary(decorations.getLabel(context), decorations.emoji).ephemeral {
                     timeout(5.minutes)
                     bindTo { sendClassLinks(it, originalHook, caller, index, clazz, clazz.getSubclasses(), decorations) }
-                }.also { add(it) }
+                }
             }
 
             if (cachedDoc.superclasses.isNotEmpty()) {
                 val decorations = clazz.classType.superDecorations
-                buttons.secondary(decorations.getLabel(context), decorations.emoji).ephemeral {
+                +buttons.secondary(decorations.getLabel(context), decorations.emoji).ephemeral {
                     timeout(5.minutes)
                     bindTo { sendClassLinks(it, originalHook, caller, index, clazz, clazz.getSuperclasses(), decorations) }
-                }.also { add(it) }
+                }
             }
         } else {
             logger.trace { "Found no metadata for ${cachedDoc.name}" }

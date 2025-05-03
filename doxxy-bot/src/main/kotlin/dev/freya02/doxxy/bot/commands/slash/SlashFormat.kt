@@ -12,9 +12,9 @@ import io.github.freya022.botcommands.api.commands.application.slash.annotations
 import io.github.freya022.botcommands.api.modals.Modals
 import io.github.freya022.botcommands.api.modals.create
 import io.github.freya022.botcommands.api.modals.paragraphTextInput
+import net.dv8tion.jda.api.components.textinput.TextInput
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.interactions.InteractionContextType
-import net.dv8tion.jda.api.interactions.components.text.TextInput
 
 @Command
 class SlashFormat : ApplicationCommand() {

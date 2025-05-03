@@ -19,9 +19,9 @@ import io.github.freya022.botcommands.api.core.db.transactional
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.freya022.botcommands.api.core.utils.edit
 import io.github.freya022.botcommands.api.core.utils.toEditData
+import net.dv8tion.jda.api.components.selections.SelectMenu
 import net.dv8tion.jda.api.entities.Message.MentionType
 import net.dv8tion.jda.api.entities.UserSnowflake
-import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import java.util.*
 import kotlin.time.Duration.Companion.minutes
