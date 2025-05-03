@@ -3,7 +3,6 @@ package dev.freya02.doxxy.bot.commands.slash.versioning
 import dev.freya02.doxxy.bot.commands.slash.DeleteButtonListener.Companion.messageDelete
 import dev.freya02.doxxy.bot.utils.AppEmojis
 import dev.freya02.doxxy.bot.utils.Utils.isBCGuild
-import dev.freya02.doxxy.bot.utils.Utils.truncate
 import dev.freya02.doxxy.bot.versioning.LibraryType
 import dev.freya02.doxxy.bot.versioning.ScriptType
 import dev.freya02.doxxy.bot.versioning.github.*
@@ -13,10 +12,9 @@ import dev.freya02.doxxy.bot.versioning.jitpack.JitpackPrService
 import dev.freya02.doxxy.bot.versioning.jitpack.pullupdater.PullUpdater
 import dev.freya02.doxxy.bot.versioning.supplier.BuildToolType
 import dev.freya02.doxxy.bot.versioning.supplier.DependencySupplier
+import dev.freya02.jda.emojis.unicode.Emojis
 import dev.minn.jda.ktx.coroutines.await
-import dev.minn.jda.ktx.interactions.components.ActionRow
-import dev.minn.jda.ktx.interactions.components.link
-import dev.minn.jda.ktx.interactions.components.row
+import dev.minn.jda.ktx.interactions.components.*
 import dev.minn.jda.ktx.messages.Embed
 import dev.minn.jda.ktx.messages.MessageCreate
 import dev.minn.jda.ktx.messages.reply_
@@ -32,17 +30,15 @@ import io.github.freya022.botcommands.api.commands.application.slash.autocomplet
 import io.github.freya022.botcommands.api.commands.application.slash.builder.SlashCommandBuilder
 import io.github.freya022.botcommands.api.components.Buttons
 import io.github.freya022.botcommands.api.components.event.ButtonEvent
-import io.github.freya022.botcommands.api.core.utils.asUnicodeEmoji
 import io.github.freya022.botcommands.api.core.utils.runIgnoringResponse
 import io.github.freya022.botcommands.api.core.utils.toEditData
-import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.components.separator.Separator
 import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.requests.ErrorResponse
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
-import net.fellbaum.jemoji.Emojis
 import kotlin.time.Duration.Companion.hours
 
 @Command
@@ -83,42 +79,34 @@ class SlashJitpack(
         }
 
         return MessageCreate {
-            embed {
-                title = "${buildToolType.humanName} dependencies for ${libraryType.displayString}: ${pullRequest.title}"
-                    .truncate(MessageEmbed.TITLE_MAX_LENGTH)
-                url = pullRequest.pullUrl
-
-                field("PR Link", pullRequest.pullUrl, false)
-
-                description = when (buildToolType) {
+            components += Container {
+                +TextDisplay("### [${buildToolType.humanName} dependencies for ${libraryType.displayString}: ${pullRequest.title} (#${pullRequest.number})](${pullRequest.pullUrl})")
+                +TextDisplay(when (buildToolType) {
                     BuildToolType.MAVEN -> "```xml\n$dependencyStr```"
                     BuildToolType.GRADLE, BuildToolType.GRADLE_KTS -> "```gradle\n$dependencyStr```"
-                }
+                })
+                +TextDisplay("-# *Remember to remove your existing JDA dependency before adding this*")
 
-                if (jitpackPrService.canUsePullUpdate(libraryType)) {
-                    description += "\nYou can also click on the `Update PR` button to merge the latest changes."
-                }
-            }
+                +Separator(isDivider = true, Separator.Spacing.SMALL)
 
-            components += ActionRow {
-                if (jitpackPrService.canUsePullUpdate(libraryType)) {
-                    +buttons.primary(label = "Update PR", emoji = AppEmojis.sync).ephemeral {
-                        val callerId = event.user.idLong
-                        timeout(1.hours)
-                        bindTo {
-                            onUpdatePrClick(it, callerId, libraryType, buildToolType, pullRequest.number)
+                +ActionRow {
+                    if (jitpackPrService.canUsePullUpdate(libraryType)) {
+                        +buttons.primary(label = "Update PR", emoji = AppEmojis.sync).ephemeral {
+                            val callerId = event.user.idLong
+                            timeout(1.hours)
+                            bindTo {
+                                onUpdatePrClick(it, callerId, libraryType, buildToolType, pullRequest.number)
+                            }
                         }
                     }
+
+                    +link("https://jda.wiki/using-jda/using-new-features/", "How? (Wiki)", Emojis.FACE_WITH_MONOCLE)
+
+                    +buttons.messageDelete(event.user)
                 }
-
-                +link(
-                    "https://jda.wiki/using-jda/using-new-features/",
-                    "How? (Wiki)",
-                    Emojis.FACE_WITH_MONOCLE.asUnicodeEmoji()
-                )
-
-                +buttons.messageDelete(event.user)
             }
+
+            useComponentsV2 = true
         }
     }
 
