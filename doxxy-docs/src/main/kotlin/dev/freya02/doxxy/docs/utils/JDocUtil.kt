@@ -4,7 +4,7 @@ import com.overzealous.remark.Options
 import com.overzealous.remark.Remark
 import java.util.regex.Pattern
 
-object JDocUtil {
+internal object JDocUtil {
     private val linkEscapeRegex = Regex("""<\[(.*?)]\((.*)\)>""")
     private val FIX_NEW_LINES_PATTERN = Pattern.compile("\n{3,}")
     private val FIX_SPACE_PATTERN = Pattern.compile("\\h")
