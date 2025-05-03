@@ -1,12 +1,10 @@
-package dev.freya02.doxxy.bot
+package dev.freya02.doxxy.docs
 
-import dev.freya02.doxxy.bot.utils.HttpUtils.getDocument
 import dev.freya02.doxxy.docs.ClassDocs.Companion.getUpdatedSource
-import dev.freya02.doxxy.docs.DocSourceType
 import dev.freya02.doxxy.docs.DocWebServer.startDocWebServer
-import dev.freya02.doxxy.docs.DocsSession
 import dev.freya02.doxxy.docs.data.ClassDoc
 import dev.freya02.doxxy.docs.data.DocDetailType
+import dev.freya02.doxxy.docs.utils.HttpUtils.getDocument
 import java.util.*
 
 object DocsTest3 {

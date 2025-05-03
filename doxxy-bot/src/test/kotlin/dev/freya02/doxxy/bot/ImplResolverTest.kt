@@ -1,4 +1,4 @@
-package dev.freya02.doxxy.docs
+package dev.freya02.doxxy.bot
 
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration
 import com.github.javaparser.resolution.types.ResolvedReferenceType

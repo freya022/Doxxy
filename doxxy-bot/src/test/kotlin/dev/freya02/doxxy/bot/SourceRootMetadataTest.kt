@@ -1,10 +1,11 @@
-package dev.freya02.doxxy.docs
+package dev.freya02.doxxy.bot
 
-import dev.freya02.doxxy.bot.config.Data
 import dev.freya02.doxxy.bot.docs.metadata.parser.SourceRootMetadata
+import dev.freya02.doxxy.docs.DocSourceType
+import dev.freya02.doxxy.docs.javadocDirectory
 
 fun main() {
-    val metadata = SourceRootMetadata(Data.javadocsPath.resolve("JDA"))
+    val metadata = SourceRootMetadata(DocSourceType.JDA.javadocDirectory)
 
     println(
         metadata.implementationMetadata

@@ -1,4 +1,4 @@
-package dev.freya02.doxxy.bot.utils
+package dev.freya02.doxxy.docs.utils
 
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -7,9 +7,7 @@ import okhttp3.ResponseBody
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.io.IOException
-import java.nio.file.Path
 import java.util.concurrent.TimeUnit
-import kotlin.io.path.outputStream
 
 object HttpUtils {
     val CLIENT: OkHttpClient = OkHttpClient.Builder()
@@ -49,11 +47,9 @@ object HttpUtils {
         body.string()
     }
 
-    fun downloadAt(url: String, path: Path): Path = doRequest(url) { _, body ->
-        path.also { it.outputStream().use { stream -> body.byteStream().transferTo(stream) } }
-    }
-
     fun doesStartByLocalhost(link: String): Boolean {
         return link.startsWith("http://localhost")
     }
+
+    fun removeFragment(url: String): String = url.substringBefore('#')
 }

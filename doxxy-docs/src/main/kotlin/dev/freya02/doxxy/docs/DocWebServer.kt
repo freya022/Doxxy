@@ -2,7 +2,7 @@ package dev.freya02.doxxy.docs
 
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpServer
-import dev.freya02.doxxy.bot.config.Data
+import dev.freya02.doxxy.common.Directories
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.io.IOException
 import java.net.InetSocketAddress
@@ -24,7 +24,7 @@ object DocWebServer {
             }
 
             val path = exchange.requestURI.path
-            val javadocsPath = Data.javadocsPath
+            val javadocsPath = Directories.javadocs
             val file = javadocsPath.resolve(path.substring(1))
             if (!file.startsWith(javadocsPath)) {
                 return@createContext logger.warn { "Tried to access a file outside of the target directory: '$file', from ${exchange.remoteAddress}" }

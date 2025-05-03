@@ -1,8 +1,8 @@
 package dev.freya02.doxxy.docs
 
-import dev.freya02.doxxy.bot.utils.DecomposedName
-import dev.freya02.doxxy.bot.utils.HttpUtils
+import dev.freya02.doxxy.docs.utils.DecomposedName
 import dev.freya02.doxxy.docs.utils.DocsURL
+import dev.freya02.doxxy.docs.utils.HttpUtils
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.io.IOException
 import java.util.*
@@ -19,8 +19,8 @@ class ClassDocs private constructor(private val source: DocSourceType) {
 
     fun getFqcnToConstantsMap(): Map<String, Map<String, String>> = fqcnToConstantsMap
 
-    fun isValidURL(url: String?): Boolean {
-        val cleanURL = HttpUtils.removeFragment(url!!)
+    fun isValidURL(url: String): Boolean {
+        val cleanURL = HttpUtils.removeFragment(url)
         return urlSet.contains(cleanURL)
     }
 

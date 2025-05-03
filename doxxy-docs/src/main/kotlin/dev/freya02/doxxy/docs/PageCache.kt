@@ -1,7 +1,6 @@
 package dev.freya02.doxxy.docs
 
-import dev.freya02.doxxy.bot.config.Data
-import dev.freya02.doxxy.bot.utils.HttpUtils
+import dev.freya02.doxxy.docs.utils.HttpUtils
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Request
 import org.jsoup.nodes.Document
@@ -16,7 +15,7 @@ class PageCache(val type: DocSourceType) {
     private val globalLock = ReentrantLock()
     private val pathMutexMap: MutableMap<Path, ReentrantLock> = ConcurrentHashMap()
 
-    private val baseFolder = Data.getCacheFolder(type)
+    private val baseFolder = type.cacheDirectory
 
     private fun <R> withLockedPath(url: String, block: (Path) -> R): R {
         val cachedFilePath = url.toHttpUrl().let { httpUrl ->

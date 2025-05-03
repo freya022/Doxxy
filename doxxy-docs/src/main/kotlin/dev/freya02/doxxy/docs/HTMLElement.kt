@@ -1,7 +1,7 @@
 package dev.freya02.doxxy.docs
 
-import dev.freya02.doxxy.bot.utils.HttpUtils.doesStartByLocalhost
-import dev.freya02.doxxy.bot.utils.JDocUtil
+import dev.freya02.doxxy.docs.utils.HttpUtils.doesStartByLocalhost
+import dev.freya02.doxxy.docs.utils.JDocUtil
 import org.jetbrains.annotations.Contract
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node

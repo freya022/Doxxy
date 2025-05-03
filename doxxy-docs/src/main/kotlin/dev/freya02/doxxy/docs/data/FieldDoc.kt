@@ -4,8 +4,10 @@ import dev.freya02.doxxy.docs.ClassDocs
 import dev.freya02.doxxy.docs.DocParseException
 import dev.freya02.doxxy.docs.HTMLElement
 import dev.freya02.doxxy.docs.HTMLElementList
-import net.dv8tion.jda.internal.utils.JDALogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jsoup.nodes.Element
+
+private val logger = KotlinLogging.logger { }
 
 class FieldDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, element: Element) : BaseDoc() {
     override val effectiveURL: String
@@ -68,7 +70,7 @@ class FieldDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, el
                 when {
                     constantsMap != null -> constantsMap[fieldName]
                     else -> {
-                        logger.warn("Could not find constants in ${classDocs.classNameFqcn}")
+                        logger.warn { "Could not find constants in ${classDocs.classNameFqcn}" }
                         null
                     }
                 }
@@ -98,8 +100,4 @@ class FieldDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, el
         get() = fieldType
 
     override fun toHumanClassIdentifier(className: String): String = "$className#$simpleSignature"
-
-    companion object {
-        private val logger = JDALogger.getLog(FieldDoc::class.java)
-    }
 }

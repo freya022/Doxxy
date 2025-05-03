@@ -1,6 +1,8 @@
 package dev.freya02.doxxy.docs
 
+import dev.freya02.doxxy.common.Directories
 import dev.freya02.doxxy.common.DocumentedExampleLibrary
+import java.nio.file.Path
 
 enum class DocSourceType(
     val id: Int,
@@ -96,3 +98,12 @@ enum class DocSourceType(
         }
     }
 }
+
+val DocSourceType.cacheDirectory: Path
+    get() = Directories.pageCache.resolve(name)
+
+val DocSourceType.sourceDirectory: Path?
+    get() = sourceFolderName?.let { Directories.javadocs.resolve(it) }
+
+val DocSourceType.javadocDirectory: Path
+    get() = Directories.javadocs.resolve(name)

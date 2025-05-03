@@ -1,7 +1,6 @@
 package dev.freya02.doxxy.bot.versioning
 
 import dev.freya02.doxxy.bot.commands.slash.docs.CommonDocsHandlers
-import dev.freya02.doxxy.bot.config.Data
 import dev.freya02.doxxy.bot.docs.DocIndexMap
 import dev.freya02.doxxy.bot.docs.index.ReindexData
 import dev.freya02.doxxy.bot.utils.Utils.withTemporaryFile
@@ -12,6 +11,7 @@ import dev.freya02.doxxy.bot.versioning.maven.DependencyVersionChecker
 import dev.freya02.doxxy.bot.versioning.maven.MavenVersionChecker
 import dev.freya02.doxxy.bot.versioning.maven.RepoType
 import dev.freya02.doxxy.docs.DocSourceType
+import dev.freya02.doxxy.docs.javadocDirectory
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommandsContext
 import io.github.freya022.botcommands.api.core.annotations.BEventListener
 import io.github.freya022.botcommands.api.core.events.InjectedJDAEvent
@@ -113,7 +113,7 @@ class Versions(
             logger.info { "JDA version changed" }
 
             logger.trace { "Downloading JDA javadocs" }
-            val jdaDocsFolder = Data.jdaDocsFolder
+            val jdaDocsFolder = DocSourceType.JDA.javadocDirectory
             jdaChecker.latest.artifactInfo.downloadMavenJavadoc().withTemporaryFile { tempZip ->
                 logger.trace { "Extracting JDA javadocs" }
                 VersionsUtils.replaceWithZipContent(tempZip, jdaDocsFolder, "html")

@@ -1,9 +1,9 @@
 package dev.freya02.doxxy.docs
 
-import dev.freya02.doxxy.bot.utils.DecomposedName
 import dev.freya02.doxxy.docs.data.BaseDoc
 import dev.freya02.doxxy.docs.data.ClassDoc
 import dev.freya02.doxxy.docs.data.MethodDoc
+import dev.freya02.doxxy.docs.utils.DecomposedName
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import java.util.regex.Pattern

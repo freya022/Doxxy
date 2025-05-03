@@ -1,7 +1,6 @@
 package dev.freya02.doxxy.bot.docs.index
 
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade
-import dev.freya02.doxxy.bot.config.Data
 import dev.freya02.doxxy.bot.docs.DocEmbeds.toEmbed
 import dev.freya02.doxxy.bot.docs.metadata.parser.ImplementationMetadataWriter
 import dev.freya02.doxxy.bot.docs.metadata.parser.SourceRootMetadata
@@ -12,6 +11,7 @@ import dev.freya02.doxxy.docs.DocsSession
 import dev.freya02.doxxy.docs.data.BaseDoc
 import dev.freya02.doxxy.docs.data.ClassDetailType
 import dev.freya02.doxxy.docs.data.ClassDoc
+import dev.freya02.doxxy.docs.sourceDirectory
 import io.github.freya022.botcommands.api.core.db.Database
 import io.github.freya022.botcommands.api.core.db.Transaction
 import io.github.freya022.botcommands.api.core.db.preparedStatement
@@ -28,9 +28,7 @@ internal class DocIndexWriter(
     private val reindexData: ReindexData
 ) {
     private val annotationRegex: Regex = "@\\w+ ".toRegex()
-    private val sourceRootMetadata: SourceRootMetadata? = sourceType.sourceFolderName?.let { docsFolderName ->
-        SourceRootMetadata(Data.javadocsPath.resolve(docsFolderName))
-    }
+    private val sourceRootMetadata: SourceRootMetadata? = sourceType.sourceDirectory?.let { SourceRootMetadata(it) }
 
     suspend fun doReindex() {
         val updatedSource = ClassDocs.getUpdatedSource(sourceType)

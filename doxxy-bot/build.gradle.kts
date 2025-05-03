@@ -5,6 +5,7 @@ plugins {
 
 dependencies {
     implementation(projects.doxxy.doxxyCommons)
+    implementation(projects.doxxy.doxxyDocs)
 
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.debug)
@@ -12,8 +13,6 @@ dependencies {
 
     implementation(libs.bundles.slf4j)
     implementation(libs.logback.classic)
-
-    implementation(libs.dotenv.kotlin)
 
     implementation(libs.jda)
     implementation(libs.botcommands)
@@ -39,8 +38,6 @@ dependencies {
     implementation(libs.ktor.serialization.gson)
 
     implementation(libs.jsoup)
-
-    implementation(libs.remark.java)
 
     implementation(libs.javaparser.symbol.solver.core)
 

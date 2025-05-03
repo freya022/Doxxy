@@ -1,4 +1,4 @@
-package dev.freya02.doxxy.bot.utils
+package dev.freya02.doxxy.docs.utils
 
 import dev.freya02.doxxy.docs.DocSourceType
 import okhttp3.HttpUrl.Companion.toHttpUrl

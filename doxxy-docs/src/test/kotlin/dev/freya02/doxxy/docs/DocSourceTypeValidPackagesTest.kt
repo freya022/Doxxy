@@ -1,6 +1,5 @@
-package dev.freya02.doxxy.bot
+package dev.freya02.doxxy.docs
 
-import dev.freya02.doxxy.docs.DocSourceType
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
