@@ -13,11 +13,8 @@ class UpdateCountdown(duration: Duration) {
 
     suspend fun onUpdate(block: suspend () -> Unit) {
         if (System.currentTimeMillis() > nextUpdate) {
-            try {
-                block()
-            } finally {
-                nextUpdate = System.currentTimeMillis() + interval
-            }
+            block()
+            nextUpdate = System.currentTimeMillis() + interval
         }
     }
 }
