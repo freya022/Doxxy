@@ -70,6 +70,7 @@ data class PullRequest(
     val user: User,
     val base: Branch,
     val head: Branch,
+    val mergeable: Boolean? = null,
     val htmlUrl: String,
 ) {
 

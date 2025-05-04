@@ -51,12 +51,12 @@ class SlashJitpackPrController(
 
             event.reply(message).queue()
 
-            val additionalDetails = jitpackPrService.getAdditionalPRDetails(libraryType, pullRequest)
-
-            createPrMessage(event, additionalDetails.updatedPR, additionalDetails.updatedPR.branch.toUpdatedBranch(), additionalDetails)
-                .toEditData()
-                .edit(event.hook)
-                .queue()
+            jitpackPrService.fetchAdditionalPRDetails(libraryType, pullRequest) { additionalDetails ->
+                createPrMessage(event, additionalDetails.updatedPR, additionalDetails.updatedPR.branch.toUpdatedBranch(), additionalDetails)
+                    .toEditData()
+                    .edit(event.hook)
+                    .queue()
+            }
         }
     }
 
@@ -111,13 +111,13 @@ class SlashJitpackPrController(
 
     context(libraryType: LibraryType, _: BuildToolType)
     private suspend fun InlineContainer.displayAdditionalDetails(interaction: Interaction, additionalDetails: AdditionalPullRequestDetails) {
-        val (_, commitComparisons, reverseCommitComparisons) = additionalDetails
+        val (pullRequest, commitComparisons, reverseCommitComparisons) = additionalDetails
 
         val behindText = when (commitComparisons.behindBy) {
             0 -> "behind"
             else -> "[behind](${reverseCommitComparisons.permalinkUrl})"
         }
-        val branchStatus = TextDisplay("${AppEmojis.changesPush.formatted} ${commitComparisons.aheadBy} commits ahead, ${AppEmojis.changesUpdate.formatted} ${commitComparisons.behindBy} commits $behindText")
+        val branchStatus = "${AppEmojis.changesPush.formatted} ${commitComparisons.aheadBy} commits ahead, ${AppEmojis.changesUpdate.formatted} ${commitComparisons.behindBy} commits $behindText"
 
         if (jitpackPrService.canUsePullUpdate(libraryType)) {
             +Section(
@@ -127,12 +127,16 @@ class SlashJitpackPrController(
                     bindTo {
                         onUpdatePrClick(it, callerId, additionalDetails)
                     }
-                }
+                }.withDisabled(disabled = additionalDetails.updatedPR.mergeable != true)
             ) {
-                +branchStatus
+                +TextDisplay(when (pullRequest.mergeable) {
+                    true -> branchStatus
+                    false -> "$branchStatus, has conflicts"
+                    null -> "$branchStatus, checking for conflicts..."
+                })
             }
         } else {
-            +branchStatus
+            +TextDisplay(branchStatus)
         }
 
         displayMissingCommits(reverseCommitComparisons)

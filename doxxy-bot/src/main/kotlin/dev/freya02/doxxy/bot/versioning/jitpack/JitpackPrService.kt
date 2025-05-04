@@ -10,7 +10,9 @@ import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import net.dv8tion.jda.api.interactions.InteractionHook
+import kotlin.time.Duration.Companion.seconds
 
 private val logger = KotlinLogging.logger { }
 
@@ -60,8 +62,8 @@ class JitpackPrService(
         return libraryType == LibraryType.JDA && pullUpdaterConfig.enable
     }
 
-    suspend fun getAdditionalPRDetails(libraryType: LibraryType, pullRequest: PullRequest): AdditionalPullRequestDetails {
-        return coroutineScope {
+    suspend fun fetchAdditionalPRDetails(libraryType: LibraryType, pullRequest: PullRequest, onUpdate: suspend (AdditionalPullRequestDetails) -> Unit) {
+        val initialDetails = coroutineScope {
             val updatedPR = async {
                 client.getPullRequest(libraryType.githubOwnerName, libraryType.githubRepoName, pullRequest.number)
             }
@@ -82,6 +84,19 @@ class JitpackPrService(
             }
 
             AdditionalPullRequestDetails(updatedPR.await(), commitComparisons.await(), reverseCommitComparisons.await())
+        }
+
+        onUpdate(initialDetails)
+
+        // If GitHub is computing the mergeability, retry until it has it
+        if (initialDetails.updatedPR.mergeable == null) {
+            var updatedPR = initialDetails.updatedPR
+            while (updatedPR.mergeable == null) {
+                delay(2.seconds)
+                updatedPR = client.getPullRequest(libraryType.githubOwnerName, libraryType.githubRepoName, pullRequest.number)
+            }
+
+            onUpdate(initialDetails.copy(updatedPR = updatedPR))
         }
     }
 
