@@ -15,9 +15,7 @@ object HttpClientProvider {
     //TODO use in PullUpdater after removing gson
     @BService
     fun defaultClient(): HttpClient = HttpClient(OkHttp) {
-        install(ContentNegotiation) {
-            json()
-        }
+
     }
 
     @RequiresBackend
@@ -26,6 +24,10 @@ object HttpClientProvider {
         defaultClient: HttpClient,
         backendConfig: BackendConfig
     ): HttpClient = defaultClient.config {
+        install(ContentNegotiation) {
+            json()
+        }
+
         defaultRequest {
             url("http://${backendConfig.host}:${backendConfig.port}")
         }
