@@ -144,7 +144,7 @@ class SlashJitpackPrController(
 
     private fun InlineContainer.displayMissingCommits(reverseCommitComparisons: CommitComparisons) {
         fun CommitComparisons.Commit.asText(): String {
-            return "[`${sha.asSha7}`](${htmlUrl}) ${commit.message} (${TimeFormat.RELATIVE.format(commit.committer.date)})"
+            return "[`${sha.asSha7}`](${htmlUrl}) ${commit.message.lineSequence().first()} (${TimeFormat.RELATIVE.format(commit.committer.date)})"
         }
 
         // If the base branch is ahead (PR is missing updates)
@@ -152,15 +152,15 @@ class SlashJitpackPrController(
             +TextDisplay(reverseCommitComparisons.commits[0].asText())
         } else if (reverseCommitComparisons.aheadBy == 2) {
             +TextDisplay("""
-                ${reverseCommitComparisons.commits[0].asText()}
-                ${reverseCommitComparisons.commits[1].asText()}
-            """.trimIndent())
+                |${reverseCommitComparisons.commits[0].asText()}
+                |${reverseCommitComparisons.commits[1].asText()}
+            """.trimMargin())
         } else if (reverseCommitComparisons.aheadBy > 2) {
             +TextDisplay("""
-                ${reverseCommitComparisons.commits.first().asText()}
-                ...
-                ${reverseCommitComparisons.commits.last().asText()}
-            """.trimIndent())
+                |${reverseCommitComparisons.commits.first().asText()}
+                |...
+                |${reverseCommitComparisons.commits.last().asText()}
+            """.trimMargin())
         }
     }
 
