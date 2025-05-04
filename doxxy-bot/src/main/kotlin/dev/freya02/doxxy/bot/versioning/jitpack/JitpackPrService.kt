@@ -5,13 +5,11 @@ import dev.freya02.doxxy.bot.versioning.LibraryType
 import dev.freya02.doxxy.bot.versioning.github.*
 import dev.freya02.doxxy.bot.versioning.jitpack.pullupdater.PullUpdateException
 import dev.freya02.doxxy.bot.versioning.jitpack.pullupdater.PullUpdater
-import dev.minn.jda.ktx.messages.send
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
-import net.dv8tion.jda.api.interactions.InteractionHook
 import kotlin.time.Duration.Companion.seconds
 
 private val logger = KotlinLogging.logger { }
@@ -42,18 +40,23 @@ class JitpackPrService(
         else -> throw IllegalArgumentException()
     }
 
-    suspend fun updatePr(libraryType: LibraryType, pullNumber: Int, hook: InteractionHook, waitMessageId: Long, block: suspend (branch: UpdatedBranch) -> Unit) {
+    suspend fun updatePr(
+        libraryType: LibraryType,
+        pullNumber: Int,
+        onMergeConflict: suspend () -> Unit,
+        onError: suspend () -> Unit,
+        onSuccess: suspend (branch: UpdatedBranch) -> Unit,
+    ) {
         val result = PullUpdater.tryUpdate(libraryType, pullNumber)
-        hook.deleteMessageById(waitMessageId).queue()
 
         result.onSuccess {
-            block(it)
+            onSuccess(it)
         }.onFailure { exception ->
             if (exception is PullUpdateException && exception.type == PullUpdateException.ExceptionType.PR_UPDATE_FAILURE) {
-                hook.send("Could not update pull request as it has merge conflicts", ephemeral = true).queue()
+                onMergeConflict()
             } else {
                 logger.catching(exception)
-                hook.send("Could not update pull request", ephemeral = true).queue()
+                onError()
             }
         }
     }

@@ -9,11 +9,9 @@ import dev.freya02.doxxy.bot.versioning.github.PullRequest.Companion.toAutocompl
 import dev.freya02.doxxy.bot.versioning.jitpack.JitpackBranchService
 import dev.freya02.doxxy.bot.versioning.jitpack.JitpackPrService
 import dev.freya02.doxxy.bot.versioning.jitpack.JitpackPrService.AdditionalPullRequestDetails
-import dev.freya02.doxxy.bot.versioning.jitpack.pullupdater.PullUpdater
 import dev.freya02.doxxy.bot.versioning.supplier.BuildToolType
 import dev.freya02.doxxy.bot.versioning.supplier.DependencySupplier
 import dev.freya02.jda.emojis.unicode.Emojis
-import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.interactions.components.*
 import dev.minn.jda.ktx.messages.MessageCreate
 import dev.minn.jda.ktx.messages.reply_
@@ -24,7 +22,7 @@ import io.github.freya022.botcommands.api.components.Buttons
 import io.github.freya022.botcommands.api.components.event.ButtonEvent
 import io.github.freya022.botcommands.api.core.annotations.Handler
 import io.github.freya022.botcommands.api.core.utils.edit
-import io.github.freya022.botcommands.api.core.utils.runIgnoringResponse
+import io.github.freya022.botcommands.api.core.utils.queueIgnoring
 import io.github.freya022.botcommands.api.core.utils.toEditData
 import net.dv8tion.jda.api.components.separator.Separator
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
@@ -66,6 +64,7 @@ class SlashJitpackPrController(
         pullRequest: PullRequest,
         targetBranch: UpdatedBranch,
         additionalDetails: AdditionalPullRequestDetails?,
+        updating: Boolean = false,
     ): MessageCreateData {
         val dependencyStr: String = when (libraryType) {
             LibraryType.BOT_COMMANDS -> DependencySupplier.formatBCJitpack(
@@ -91,7 +90,7 @@ class SlashJitpackPrController(
                 +TextDisplay("-# *Remember to remove your existing JDA dependency before adding this*")
 
                 if (additionalDetails != null) {
-                    displayAdditionalDetails(interaction, additionalDetails)
+                    displayAdditionalDetails(targetBranch, additionalDetails, updating)
                 } else {
                     +TextDisplay("-# *Loading pull request details...*")
                 }
@@ -110,7 +109,11 @@ class SlashJitpackPrController(
     }
 
     context(libraryType: LibraryType, _: BuildToolType)
-    private suspend fun InlineContainer.displayAdditionalDetails(interaction: Interaction, additionalDetails: AdditionalPullRequestDetails) {
+    private suspend fun InlineContainer.displayAdditionalDetails(
+        targetBranch: UpdatedBranch,
+        additionalDetails: AdditionalPullRequestDetails,
+        updating: Boolean,
+    ) {
         val (pullRequest, commitComparisons, reverseCommitComparisons) = additionalDetails
 
         val behindText = when (commitComparisons.behindBy) {
@@ -120,15 +123,17 @@ class SlashJitpackPrController(
         val branchStatus = "${AppEmojis.changesPush.formatted} ${commitComparisons.aheadBy} commits ahead, ${AppEmojis.changesUpdate.formatted} ${commitComparisons.behindBy} commits $behindText"
 
         if (jitpackPrService.canUsePullUpdate(libraryType)) {
-            +Section(
-                accessory = buttons.primary(label = "Update PR", emoji = AppEmojis.sync).ephemeral {
-                    val callerId = interaction.user.idLong
+            val updateButton = when (updating) {
+                true -> primary(id = "fake", label = "Updating...", emoji = AppEmojis.sync, disabled = true)
+                false -> buttons.primary(label = "Update PR", emoji = AppEmojis.sync).ephemeral {
                     timeout(1.hours)
                     bindTo {
-                        onUpdatePrClick(it, callerId, additionalDetails)
+                        onUpdatePrClick(it, targetBranch, additionalDetails)
                     }
-                }.withDisabled(disabled = additionalDetails.updatedPR.mergeable != true)
-            ) {
+                }.withDisabled(disabled = pullRequest.mergeable != true || commitComparisons.behindBy == 0)
+            }
+
+            +Section(accessory = updateButton) {
                 +TextDisplay(when (pullRequest.mergeable) {
                     true -> branchStatus
                     false -> "$branchStatus, has conflicts"
@@ -173,18 +178,36 @@ class SlashJitpackPrController(
     }
 
     context(libraryType: LibraryType, buildToolType: BuildToolType)
-    private suspend fun onUpdatePrClick(event: ButtonEvent, callerId: Long, additionalDetails: AdditionalPullRequestDetails) {
+    private suspend fun onUpdatePrClick(event: ButtonEvent, targetBranch: UpdatedBranch, additionalDetails: AdditionalPullRequestDetails) {
         val (pullRequest) = additionalDetails
 
-        event.deferEdit().queue()
-        val waitMessage = when {
-            PullUpdater.isRunning -> "Please wait while the pull request is being updated, this may be longer than usual"
-            else -> "Please wait while the pull request is being updated"
-        }.let { event.hook.send(it, ephemeral = true).await() }
+        createPrMessage(event, pullRequest, targetBranch, additionalDetails, updating = true)
+            .toEditData()
+            .edit(event)
+            .queue()
 
-        // Sometimes funny people delete the /jitpack message before the update has finished
-        runIgnoringResponse(ErrorResponse.UNKNOWN_MESSAGE) {
-            jitpackPrService.updatePr(libraryType, pullRequest.number, event.hook, waitMessage.idLong) { branch ->
+        jitpackPrService.updatePr(
+            libraryType,
+            pullRequest.number,
+            onMergeConflict = {
+                val message = createPrMessage(
+                    event, pullRequest, targetBranch,
+                    additionalDetails.copy(updatedPR = pullRequest.copy(mergeable = false))
+                )
+                // Sometimes funny people delete the /jitpack message before the update has finished
+                event.hook.editOriginal(message.toEditData()).queueIgnoring(ErrorResponse.UNKNOWN_MESSAGE)
+                event.hook.send("Could not update pull request as it has merge conflicts", ephemeral = true).queue()
+            },
+            onError = {
+                val message = createPrMessage(
+                    event, pullRequest, targetBranch,
+                    additionalDetails.copy(updatedPR = pullRequest.copy(mergeable = false))
+                )
+                // Sometimes funny people delete the /jitpack message before the update has finished
+                event.hook.editOriginal(message.toEditData()).queueIgnoring(ErrorResponse.UNKNOWN_MESSAGE)
+                event.hook.send("Could not update pull request", ephemeral = true).queue()
+            },
+            onSuccess = { branch ->
                 val message = createPrMessage(
                     event, pullRequest, branch,
                     additionalDetails.copy(
@@ -192,13 +215,11 @@ class SlashJitpackPrController(
                         reverseCommitComparisons = additionalDetails.reverseCommitComparisons.copy(aheadBy = 0)
                     )
                 )
-                if (event.user.idLong == callerId) {
-                    event.hook.editOriginal(message.toEditData()).await()
-                } else {
-                    event.hook.sendMessage(message).setEphemeral(true).queue()
-                }
+
+                // Sometimes funny people delete the /jitpack message before the update has finished
+                event.hook.editOriginal(message.toEditData()).queueIgnoring(ErrorResponse.UNKNOWN_MESSAGE)
             }
-        }
+        )
     }
 
     companion object {
