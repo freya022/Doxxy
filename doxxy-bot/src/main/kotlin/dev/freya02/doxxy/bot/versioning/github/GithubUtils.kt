@@ -20,7 +20,7 @@ object GithubUtils {
     private fun newGithubRequest(url: HttpUrl): RequestBuilder {
         return RequestBuilder()
             .url(url)
-            .header("Accept", "applications/vnd.github.v3+json")
+            .header("Accept", "application/vnd.github.v3+json")
     }
 
     @Throws(IOException::class)
