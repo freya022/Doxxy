@@ -51,7 +51,7 @@ kotlin {
     compilerOptions {
         jvmTarget = JvmTarget.JVM_21
 
-        freeCompilerArgs.addAll("-Xjsr305=strict", "-Xcontext-receivers", "-Xsuppress-warning=CONTEXT_RECEIVERS_DEPRECATED")
+        freeCompilerArgs.addAll("-Xjsr305=strict", "-Xcontext-parameters")
     }
 }
 

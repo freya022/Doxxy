@@ -15,7 +15,7 @@ internal class ImplementationMetadataWriter private constructor(
     private val reindexData: ReindexData,
     private val sourceRootMetadata: SourceRootMetadata
 ) {
-    context(Transaction, Profiler)
+    context(transaction: Transaction, profiler: Profiler)
     private suspend fun reindex() {
         @Language("PostgreSQL")
         val deleteStatements = listOf(
@@ -24,18 +24,18 @@ internal class ImplementationMetadataWriter private constructor(
             "delete from method where (select source_id from class where id = class_id) = ?",
             "delete from class where source_id = ?"
         )
-        nextStep("Delete old data") {
-            preparedStatement("""
+        profiler.nextStep("Delete old data") {
+            transaction.preparedStatement("""
                 alter table implementation disable trigger all;
                 alter table class disable trigger all;
                 alter table method disable trigger all;
                 alter table subclass disable trigger all;
             """.trimIndent()) { executeUpdate() }
 
-            deleteStatements.forEach { preparedStatement(it) { executeUpdate(sourceType.id) } }
+            deleteStatements.forEach { transaction.preparedStatement(it) { executeUpdate(sourceType.id) } }
 
             //Enable back after deleting as triggers are also FK checks
-            preparedStatement("""
+            transaction.preparedStatement("""
                 alter table implementation enable trigger all;
                 alter table class enable trigger all;
                 alter table method enable trigger all;
@@ -45,22 +45,22 @@ internal class ImplementationMetadataWriter private constructor(
 
         val classes = sourceRootMetadata.implementationMetadata.classes.values
         // First add the classes so we can reference them later
-        val dbClasses: Map<ImplementationMetadata.Class, Int> = nextStep("Add classes") { addClasses(classes) }
+        val dbClasses: Map<ImplementationMetadata.Class, Int> = profiler.nextStep("Add classes") { addClasses(classes) }
 
         //Add subclass relations
-        nextStep("Add subclasses") { addSubclasses(classes, dbClasses) }
+        profiler.nextStep("Add subclasses") { addSubclasses(classes, dbClasses) }
 
         //Add methods
-        val dbMethods: Map<ImplementationMetadata.Method, Int> = nextStep("Add methods") { addMethods(classes, dbClasses) }
+        val dbMethods: Map<ImplementationMetadata.Method, Int> = profiler.nextStep("Add methods") { addMethods(classes, dbClasses) }
 
         //Add implementations
-        nextStep("Add implementations") { addImplementations(classes, dbClasses, dbMethods) }
+        profiler.nextStep("Add implementations") { addImplementations(classes, dbClasses, dbMethods) }
     }
 
-    context(Transaction)
+    context(transaction: Transaction)
     private suspend fun addClasses(classes: Collection<ImplementationMetadata.Class>): Map<ImplementationMetadata.Class, Int> {
         return classes.associateWith {
-            preparedStatement(
+            transaction.preparedStatement(
                 """
                     insert into class (source_id, class_type, package_name, class_name, source_link)
                     values (?, ?, ?, ?, ?)
@@ -73,7 +73,7 @@ internal class ImplementationMetadataWriter private constructor(
         }
     }
 
-    context(Transaction)
+    context(transaction: Transaction)
     private suspend fun addSubclasses(
         classes: Collection<ImplementationMetadata.Class>,
         dbClasses: Map<ImplementationMetadata.Class, Int>
@@ -85,17 +85,17 @@ internal class ImplementationMetadataWriter private constructor(
         }
 
         withContext(Dispatchers.IO) {
-            connection.copyFrom("subclass", subclasses)
+            transaction.connection.copyFrom("subclass", subclasses)
         }
     }
 
-    context(Transaction)
+    context(transaction: Transaction)
     private suspend fun addMethods(
         classes: Collection<ImplementationMetadata.Class>,
         dbClasses: Map<ImplementationMetadata.Class, Int>
     ): Map<ImplementationMetadata.Method, Int> {
         return classes.flatMap { it.declaredMethods.values }.associateWith { method ->
-            preparedStatement(
+            transaction.preparedStatement(
                 """
                     insert into method (class_id, method_type, name, signature, source_link)
                     values (?, ?, ?, ?, ?)
@@ -115,7 +115,7 @@ internal class ImplementationMetadataWriter private constructor(
         }
     }
 
-    context(Transaction)
+    context(transaction: Transaction)
     private suspend fun addImplementations(
         classes: Collection<ImplementationMetadata.Class>,
         dbClasses: Map<ImplementationMetadata.Class, Int>,
@@ -144,12 +144,12 @@ internal class ImplementationMetadataWriter private constructor(
         }
 
         withContext(Dispatchers.IO) {
-            connection.copyFrom("implementation", implementations)
+            transaction.connection.copyFrom("implementation", implementations)
         }
     }
 
     companion object {
-        context(Transaction)
+        context(_: Transaction)
         suspend fun reindex(
             sourceType: DocSourceType,
             reindexData: ReindexData,

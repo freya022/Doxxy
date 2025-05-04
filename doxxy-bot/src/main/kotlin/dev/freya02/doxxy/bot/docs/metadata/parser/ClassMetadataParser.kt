@@ -21,17 +21,17 @@ class ClassMetadataParser private constructor(private val sourceRoot: SourceRoot
     private val classMetadataMap: MutableMap<ClassName, ClassMetadata> = sortedMapOf()
     private val packageToClasses: MutableMap<String, MutableList<Pair<String, ClassName>>> = sortedMapOf()
 
-    context(Profiler)
+    context(profiler: Profiler)
     fun parse(): ClassMetadataParser = this.apply {
         val apiCompilationUnits = sourceRoot.compilationUnits.filter { it.packageDeclaration.get().nameAsString.startsWith("net.dv8tion.jda.api") }
 
-        nextStep("parsePackages") {
+        profiler.nextStep("parsePackages") {
             apiCompilationUnits.forEachCompilationUnit(Companion.logger) { parsePackages(it) }
         }
-        nextStep("parseResult") {
+        profiler.nextStep("parseResult") {
             apiCompilationUnits.forEachCompilationUnit(Companion.logger) { parseResult(it) }
         }
-        nextStep("scanMethods") {
+        profiler.nextStep("scanMethods") {
             apiCompilationUnits.forEachCompilationUnit(Companion.logger) { scanMethods(it) }
         }
     }
@@ -304,7 +304,7 @@ class ClassMetadataParser private constructor(private val sourceRoot: SourceRoot
     companion object {
         private val logger = KotlinLogging.logger { }
 
-        context(Profiler)
+        context(_: Profiler)
         fun parse(sourceRoot: SourceRoot): Map<ClassName, ClassMetadata> {
             return ClassMetadataParser(sourceRoot).parse().classMetadataMap
         }

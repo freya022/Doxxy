@@ -42,8 +42,7 @@ class MethodLinksController(
     private val logger = KotlinLogging.logger { }
     private val commonDocsController: CommonDocsController by serviceContainer.lazy()
 
-    context(InlineActionRow)
-    suspend fun addCachedMethodComponents(cachedMethod: CachedMethod, originalHook: InteractionHook?, caller: UserSnowflake) {
+    suspend fun InlineActionRow.addCachedMethodComponents(cachedMethod: CachedMethod, originalHook: InteractionHook?, caller: UserSnowflake) {
         val index = docIndexMap[cachedMethod.source]
         val method = index.implementationIndex.getMethod(cachedMethod.className, cachedMethod.signature)
 

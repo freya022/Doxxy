@@ -9,7 +9,7 @@ repositories {
 
 dependencies {
     // Change in version catalog too
-    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.10")
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.0-Beta2")
     implementation("com.github.ben-manes.versions:com.github.ben-manes.versions.gradle.plugin:0.52.0")
     implementation("com.google.cloud.tools:jib-gradle-plugin:3.4.4")
 }

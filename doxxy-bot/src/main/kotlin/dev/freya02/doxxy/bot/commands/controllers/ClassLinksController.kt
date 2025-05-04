@@ -40,8 +40,7 @@ class ClassLinksController(
     private val logger = KotlinLogging.logger { }
     private val commonDocsController: CommonDocsController by serviceContainer.lazy()
 
-    context(InlineActionRow)
-    suspend fun addCachedClassComponents(cachedDoc: CachedClass, originalHook: InteractionHook?, caller: UserSnowflake) {
+    suspend fun InlineActionRow.addCachedClassComponents(cachedDoc: CachedClass, originalHook: InteractionHook?, caller: UserSnowflake) {
         val index = docIndexMap[cachedDoc.source]
         val clazz = index.implementationIndex.getClass(cachedDoc.name)
 

@@ -147,10 +147,15 @@ class CommonDocsController(
         addComponents(ActionRow {
             cachedDoc.sourceLink?.also { sourceLink -> +Button.link(sourceLink, "Source") }
 
-            if (cachedDoc is CachedClass)
-                classLinksController.addCachedClassComponents(cachedDoc, originalHook, caller)
-            else if (cachedDoc is CachedMethod)
-                methodLinksController.addCachedMethodComponents(cachedDoc, originalHook, caller)
+            if (cachedDoc is CachedClass) {
+                with (classLinksController) {
+                    addCachedClassComponents(cachedDoc, originalHook, caller)
+                }
+            } else if (cachedDoc is CachedMethod) {
+                with (methodLinksController) {
+                    addCachedMethodComponents(cachedDoc, originalHook, caller)
+                }
+            }
 
             if (!ephemeral)
                 +buttons.messageDelete(caller)

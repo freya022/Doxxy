@@ -255,12 +255,12 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
     }
 
     /** **Requires `pg_trgm.similarity_threshold` to be set**  */
-    context(Transaction)
+    context(transaction: Transaction)
     private suspend fun findAnySignatures0(query: String, limit: Int, docTypes: DocTypes): List<DocSearchResult> {
         if (docTypes.isEmpty()) throw IllegalArgumentException("Must have at least one doc type")
 
         return withSimilarityScoreMethod(query) { similarityScoreQuery, similarityScoreQueryParams ->
-            preparedStatement("""
+            transaction.preparedStatement("""
                 select full_identifier,
                        coalesce(human_identifier, classname)       as human_identifier,
                        coalesce(human_class_identifier, classname) as human_class_identifier,

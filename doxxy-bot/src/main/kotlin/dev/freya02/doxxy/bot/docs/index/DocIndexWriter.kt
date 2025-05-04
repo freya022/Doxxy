@@ -81,7 +81,7 @@ internal class DocIndexWriter(
         }
     }
 
-    context(Transaction)
+    context(_: Transaction)
     private suspend fun insertMethodDocs(classDoc: ClassDoc, sourceLink: String?) {
         for (methodDoc in classDoc.getMethodDocs().values) {
             try {
@@ -150,7 +150,7 @@ internal class DocIndexWriter(
         }
     }
 
-    context(Transaction)
+    context(_: Transaction)
     private suspend fun insertFieldDocs(classDoc: ClassDoc, sourceLink: String?) {
         for (fieldDoc in classDoc.getFieldDocs().values) {
             try {
@@ -189,7 +189,7 @@ internal class DocIndexWriter(
         }
     }
 
-    context(Transaction)
+    context(transaction: Transaction)
     private suspend fun insertDoc(
         docType: DocType,
         className: String,
@@ -197,7 +197,7 @@ internal class DocIndexWriter(
         embedJson: DataObject,
         sourceLink: String?
     ): Int {
-        return preparedStatement(
+        return transaction.preparedStatement(
             """
             insert into doc (source_id, type, classname, identifier, identifier_no_args, human_identifier, human_class_identifier,
                              return_type, embed, javadoc_link, source_link)
@@ -220,10 +220,10 @@ internal class DocIndexWriter(
         }
     }
 
-    context(Transaction)
+    context(transaction: Transaction)
     private suspend fun insertSeeAlso(baseDoc: BaseDoc, docId: Int) {
         baseDoc.seeAlso?.getReferences()?.forEach { seeAlsoReference ->
-            preparedStatement("insert into docseealsoreference (doc_id, text, link, target_type, full_signature) VALUES (?, ?, ?, ?, ?)") {
+            transaction.preparedStatement("insert into docseealsoreference (doc_id, text, link, target_type, full_signature) VALUES (?, ?, ?, ?, ?)") {
                 executeUpdate(
                     docId,
                     seeAlsoReference.text,

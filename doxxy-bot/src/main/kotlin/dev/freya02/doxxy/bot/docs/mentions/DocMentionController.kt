@@ -113,10 +113,10 @@ class DocMentionController(
         }
     }
 
-    context(Transaction)
+    context(transaction: Transaction)
     private suspend fun getMentionedClasses(content: String): List<ClassMention> {
         return spaceRegex.split(content).let { words ->
-            preparedStatement(
+            transaction.preparedStatement(
                 """
                     select d.source_id, d.classname
                     from doc d
