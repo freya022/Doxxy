@@ -28,6 +28,7 @@ fun UpdatedBranch.toJitpackArtifact(): ArtifactInfo = ArtifactInfo(
 
 @Serializable
 data class Branch(
+    val label: String,
     val user: User,
     val repo: Repo,
     val ref: String,
@@ -67,6 +68,7 @@ data class PullRequest(
     val title: String,
     val draft: Boolean,
     val user: User,
+    val base: Branch,
     val head: Branch,
     val htmlUrl: String,
 ) {

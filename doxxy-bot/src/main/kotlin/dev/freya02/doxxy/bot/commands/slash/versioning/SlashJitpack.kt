@@ -32,12 +32,16 @@ import io.github.freya022.botcommands.api.components.Buttons
 import io.github.freya022.botcommands.api.components.event.ButtonEvent
 import io.github.freya022.botcommands.api.core.utils.runIgnoringResponse
 import io.github.freya022.botcommands.api.core.utils.toEditData
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import net.dv8tion.jda.api.components.separator.Separator
 import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
+import net.dv8tion.jda.api.interactions.Interaction
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.requests.ErrorResponse
+import net.dv8tion.jda.api.utils.TimeFormat
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import kotlin.time.Duration.Companion.hours
 
@@ -45,16 +49,48 @@ import kotlin.time.Duration.Companion.hours
 class SlashJitpack(
     private val buttons: Buttons,
     private val jitpackPrService: JitpackPrService,
-    private val jitpackBranchService: JitpackBranchService
+    private val jitpackBranchService: JitpackBranchService,
+    private val client: GithubClient,
 ) : ApplicationCommand(), GuildApplicationCommandProvider {
-    @CommandMarker
+
+    private data class AdditionalPullRequestDetails(
+        val updatedPR: PullRequest,
+        val commitComparisons: UpdatedCommitComparisons,
+        val reverseCommitComparisons: CommitComparisons,
+    )
+
     suspend fun onSlashJitpackPR(event: GuildSlashEvent, libraryType: LibraryType, buildToolType: BuildToolType, pullNumber: Int) {
         val pullRequest = jitpackPrService.getPullRequest(libraryType, pullNumber)
             ?: return event.reply_("Unknown Pull Request", ephemeral = true).queue()
 
-        val message = createPrMessage(event, libraryType, buildToolType, pullRequest, pullRequest.branch.toUpdatedBranch())
+        val message = createPrMessage(event, libraryType, buildToolType, pullRequest, pullRequest.branch.toUpdatedBranch(), additionalDetails = null)
 
         event.reply(message).queue()
+
+        val additionalDetails = coroutineScope {
+            val updatedPR = async {
+                client.getPullRequest(libraryType.githubOwnerName, libraryType.githubRepoName, pullNumber)
+            }
+
+            val commitComparisons = async {
+                val base = pullRequest.base.label
+                val head = pullRequest.head.label
+
+                client.compareCommits(libraryType.githubOwnerName, libraryType.githubRepoName, base, head)
+                    .toUpdatedCommitComparisons()
+            }
+
+            val reverseCommitComparisons = async {
+                val base = pullRequest.base.label
+                val head = pullRequest.head.label
+
+                client.compareCommits(libraryType.githubOwnerName, libraryType.githubRepoName, head, base)
+            }
+
+            AdditionalPullRequestDetails(updatedPR.await(), commitComparisons.await(), reverseCommitComparisons.await())
+        }
+
+        event.hook.editOriginal(createPrMessage(event, libraryType, buildToolType, additionalDetails.updatedPR, additionalDetails.updatedPR.branch.toUpdatedBranch(), additionalDetails).toEditData()).queue()
     }
 
     private suspend fun createPrMessage(
@@ -62,7 +98,8 @@ class SlashJitpack(
         libraryType: LibraryType,
         buildToolType: BuildToolType,
         pullRequest: PullRequest,
-        targetBranch: UpdatedBranch
+        targetBranch: UpdatedBranch,
+        additionalDetails: AdditionalPullRequestDetails?,
     ): MessageCreateData {
         val dependencyStr: String = when (libraryType) {
             LibraryType.BOT_COMMANDS -> DependencySupplier.formatBCJitpack(
@@ -87,19 +124,15 @@ class SlashJitpack(
                 })
                 +TextDisplay("-# *Remember to remove your existing JDA dependency before adding this*")
 
+                if (additionalDetails != null) {
+                    displayAdditionalDetails(event, libraryType, buildToolType, additionalDetails)
+                } else {
+                    +TextDisplay("-# *Loading pull request details...*")
+                }
+
                 +Separator(isDivider = true, Separator.Spacing.SMALL)
 
                 +ActionRow {
-                    if (jitpackPrService.canUsePullUpdate(libraryType)) {
-                        +buttons.primary(label = "Update PR", emoji = AppEmojis.sync).ephemeral {
-                            val callerId = event.user.idLong
-                            timeout(1.hours)
-                            bindTo {
-                                onUpdatePrClick(it, callerId, libraryType, buildToolType, pullRequest.number)
-                            }
-                        }
-                    }
-
                     +link("https://jda.wiki/using-jda/using-new-features/", "How? (Wiki)", Emojis.FACE_WITH_MONOCLE)
 
                     +buttons.messageDelete(event.user)
@@ -107,6 +140,56 @@ class SlashJitpack(
             }
 
             useComponentsV2 = true
+        }
+    }
+
+    private suspend fun InlineContainer.displayAdditionalDetails(interaction: Interaction, libraryType: LibraryType, buildToolType: BuildToolType, additionalDetails: AdditionalPullRequestDetails) {
+        val (pullRequest, commitComparisons, reverseCommitComparisons) = additionalDetails
+
+        val behindText = when (commitComparisons.behindBy) {
+            0 -> "behind"
+            else -> "[behind](${reverseCommitComparisons.permalinkUrl})"
+        }
+        val branchStatus = TextDisplay("${AppEmojis.changesPush.formatted} ${commitComparisons.aheadBy} commits ahead, ${AppEmojis.changesUpdate.formatted} ${commitComparisons.behindBy} commits $behindText")
+
+        if (jitpackPrService.canUsePullUpdate(libraryType)) {
+            +Section(
+                accessory = buttons.primary(label = "Update PR", emoji = AppEmojis.sync).ephemeral {
+                    val callerId = interaction.user.idLong
+                    timeout(1.hours)
+                    bindTo {
+                        onUpdatePrClick(it, callerId, libraryType, buildToolType, pullRequest.number, additionalDetails)
+                    }
+                }
+            ) {
+                +branchStatus
+            }
+        } else {
+            +branchStatus
+        }
+
+        displayMissingCommits(reverseCommitComparisons)
+    }
+
+    private fun InlineContainer.displayMissingCommits(reverseCommitComparisons: CommitComparisons) {
+        fun CommitComparisons.Commit.asText(): String {
+            return "[`${sha.asSha7}`](${htmlUrl}) ${commit.message} (${TimeFormat.RELATIVE.format(commit.committer.date)})"
+        }
+
+        // If the base branch is ahead (PR is missing updates)
+        if (reverseCommitComparisons.aheadBy == 1) {
+            +TextDisplay(reverseCommitComparisons.commits[0].asText())
+        } else if (reverseCommitComparisons.aheadBy == 2) {
+            +TextDisplay("""
+                ${reverseCommitComparisons.commits[0].asText()}
+                ${reverseCommitComparisons.commits[1].asText()}
+            """.trimIndent())
+        } else if (reverseCommitComparisons.aheadBy > 2) {
+            +TextDisplay("""
+                ${reverseCommitComparisons.commits.first().asText()}
+                ...
+                ${reverseCommitComparisons.commits.last().asText()}
+            """.trimIndent())
         }
     }
 
@@ -118,7 +201,7 @@ class SlashJitpack(
         return jitpackPrService.getPullRequests(libraryType).toAutocompleteChoices(event)
     }
 
-    private suspend fun onUpdatePrClick(event: ButtonEvent, callerId: Long, libraryType: LibraryType, buildToolType: BuildToolType, pullNumber: Int) {
+    private suspend fun onUpdatePrClick(event: ButtonEvent, callerId: Long, libraryType: LibraryType, buildToolType: BuildToolType, pullNumber: Int, additionalDetails: AdditionalPullRequestDetails) {
         val pullRequest = jitpackPrService.getPullRequest(libraryType, pullNumber)
             ?: return event.reply_("Unknown Pull Request", ephemeral = true).queue()
 
@@ -131,7 +214,13 @@ class SlashJitpack(
         // Sometimes funny people delete the /jitpack message before the update has finished
         runIgnoringResponse(ErrorResponse.UNKNOWN_MESSAGE) {
             jitpackPrService.updatePr(libraryType, pullNumber, event.hook, waitMessage.idLong) { branch ->
-                val message = createPrMessage(event, libraryType, buildToolType, pullRequest, branch)
+                val message = createPrMessage(
+                    event, libraryType, buildToolType, pullRequest, branch,
+                    additionalDetails.copy(
+                        commitComparisons = additionalDetails.commitComparisons.copy(behindBy = 0),
+                        reverseCommitComparisons = additionalDetails.reverseCommitComparisons.copy(aheadBy = 0)
+                    )
+                )
                 if (event.user.idLong == callerId) {
                     event.hook.editOriginal(message.toEditData()).await()
                 } else {

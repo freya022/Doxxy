@@ -22,4 +22,7 @@ object AppEmojis {
     val method by               AppEmojisRegistry
 
     val sync by                 AppEmojisRegistry
+
+    val changesPush by          AppEmojisRegistry
+    val changesUpdate by        AppEmojisRegistry
 }
