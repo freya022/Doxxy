@@ -143,7 +143,8 @@ object GithubUtils {
             }
 
         return pullRequests.also {
-            if (!it.isEmpty) {
+            // If we got the same number of items as we requested, maybe there's more
+            if (it.size() >= perPage) {
                 it.putAll(retrievePullRequests(ownerName, repoName, baseBranchName, page + 1, perPage))
             }
         }
