@@ -8,13 +8,17 @@ import dev.freya02.doxxy.bot.versioning.github.toUpdatedBranch
 import dev.freya02.doxxy.bot.versioning.jitpack.JitpackBranchService
 import dev.freya02.doxxy.bot.versioning.supplier.BuildToolType
 import dev.freya02.doxxy.bot.versioning.supplier.DependencySupplier
-import dev.minn.jda.ktx.interactions.components.row
-import dev.minn.jda.ktx.messages.Embed
+import dev.minn.jda.ktx.interactions.components.ActionRow
+import dev.minn.jda.ktx.interactions.components.Container
+import dev.minn.jda.ktx.interactions.components.Separator
+import dev.minn.jda.ktx.interactions.components.TextDisplay
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.AutocompleteAlgorithms
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
 import io.github.freya022.botcommands.api.components.Buttons
 import io.github.freya022.botcommands.api.core.annotations.Handler
+import io.github.freya022.botcommands.api.core.utils.reply
+import net.dv8tion.jda.api.components.separator.Separator
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
@@ -87,21 +91,24 @@ class SlashJitpackBranchController(
             )
         }
 
-        val embed = Embed {
-            title = "${buildToolType.humanName} dependencies for ${libraryType.displayString} @ branch '$branchName'"
-            url = branch.toURL()
+        event.reply {
+            components += Container {
+                +TextDisplay("### [${buildToolType.humanName} dependencies for ${libraryType.displayString} @ branch '$branchName'](${branch.toURL()})")
+                +TextDisplay(when (buildToolType) {
+                    BuildToolType.MAVEN -> "```xml\n$dependencyStr```"
+                    BuildToolType.GRADLE, BuildToolType.GRADLE_KTS -> "```gradle\n$dependencyStr```"
+                })
+                +TextDisplay("-# *Remember to remove your existing JDA dependency before adding this*")
 
-            field("Branch Link", branch.toURL(), false)
+                +Separator(isDivider = true, Separator.Spacing.SMALL)
 
-            description = when (buildToolType) {
-                BuildToolType.MAVEN -> "```xml\n$dependencyStr```"
-                BuildToolType.GRADLE, BuildToolType.GRADLE_KTS -> "```gradle\n$dependencyStr```"
+                +ActionRow {
+                    +buttons.messageDelete(event.user)
+                }
             }
-        }
 
-        event.replyEmbeds(embed)
-            .addComponents(row(buttons.messageDelete(event.user)))
-            .queue()
+            useComponentsV2 = true
+        }.queue()
     }
 
     companion object {
