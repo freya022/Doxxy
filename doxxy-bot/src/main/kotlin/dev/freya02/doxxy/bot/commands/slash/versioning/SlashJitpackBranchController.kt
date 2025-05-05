@@ -96,7 +96,7 @@ class SlashJitpackBranchController(
                     BuildToolType.MAVEN -> "```xml\n$dependencyStr```"
                     BuildToolType.GRADLE, BuildToolType.GRADLE_KTS -> "```gradle\n$dependencyStr```"
                 })
-                +TextDisplay("-# *Remember to remove your existing JDA dependency before adding this*")
+                +TextDisplay("-# *Remember to remove your existing dependency before adding this*")
             }
 
             components += ActionRow {
