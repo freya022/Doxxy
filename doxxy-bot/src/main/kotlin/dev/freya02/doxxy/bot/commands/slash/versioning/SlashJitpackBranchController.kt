@@ -10,7 +10,6 @@ import dev.freya02.doxxy.bot.versioning.supplier.BuildToolType
 import dev.freya02.doxxy.bot.versioning.supplier.DependencySupplier
 import dev.minn.jda.ktx.interactions.components.ActionRow
 import dev.minn.jda.ktx.interactions.components.Container
-import dev.minn.jda.ktx.interactions.components.Separator
 import dev.minn.jda.ktx.interactions.components.TextDisplay
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.AutocompleteAlgorithms
@@ -18,7 +17,6 @@ import io.github.freya022.botcommands.api.commands.application.slash.autocomplet
 import io.github.freya022.botcommands.api.components.Buttons
 import io.github.freya022.botcommands.api.core.annotations.Handler
 import io.github.freya022.botcommands.api.core.utils.reply
-import net.dv8tion.jda.api.components.separator.Separator
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
@@ -99,12 +97,10 @@ class SlashJitpackBranchController(
                     BuildToolType.GRADLE, BuildToolType.GRADLE_KTS -> "```gradle\n$dependencyStr```"
                 })
                 +TextDisplay("-# *Remember to remove your existing JDA dependency before adding this*")
+            }
 
-                +Separator(isDivider = true, Separator.Spacing.SMALL)
-
-                +ActionRow {
-                    +buttons.messageDelete(event.user)
-                }
+            components += ActionRow {
+                +buttons.messageDelete(event.user)
             }
 
             useComponentsV2 = true

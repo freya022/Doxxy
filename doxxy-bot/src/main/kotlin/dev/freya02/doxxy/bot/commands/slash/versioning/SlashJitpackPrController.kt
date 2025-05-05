@@ -24,7 +24,6 @@ import io.github.freya022.botcommands.api.core.annotations.Handler
 import io.github.freya022.botcommands.api.core.utils.edit
 import io.github.freya022.botcommands.api.core.utils.queueIgnoring
 import io.github.freya022.botcommands.api.core.utils.toEditData
-import net.dv8tion.jda.api.components.separator.Separator
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.Interaction
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
@@ -94,14 +93,12 @@ class SlashJitpackPrController(
                 } else {
                     +TextDisplay("-# *Loading pull request details...*")
                 }
+            }
 
-                +Separator(isDivider = true, Separator.Spacing.SMALL)
+            components += ActionRow {
+                +link("https://jda.wiki/using-jda/using-new-features/", "How? (Wiki)", Emojis.FACE_WITH_MONOCLE)
 
-                +ActionRow {
-                    +link("https://jda.wiki/using-jda/using-new-features/", "How? (Wiki)", Emojis.FACE_WITH_MONOCLE)
-
-                    +buttons.messageDelete(interaction.user)
-                }
+                +buttons.messageDelete(interaction.user)
             }
 
             useComponentsV2 = true
