@@ -21,10 +21,8 @@ Module for the main Discord bot.
   - [BotCommands](https://github.com/freya022/BotCommands) — Kotlin-first JDA framework to create Discord automations 
 - [Ktor](https://ktor.io/) — Framework for building asynchronous web servers and clients
 - [Flyway](https://github.com/flyway/flyway) — Database migration
-- [Jsoup](https://jsoup.org/) — Java HTML parser
 - [JavaParser](https://github.com/javaparser/javaparser) — Java 1–21 parser as Abstract Syntax Trees with resolution capabilities
 - [palantir-java-format](https://github.com/palantir/palantir-java-format) — 120-characters Java formatter
-- [remark-java](https://github.com/freya022/remark-java) — Converts HTML to Markdown
 
 ## Contributing
 
