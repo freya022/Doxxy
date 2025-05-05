@@ -22,7 +22,7 @@ import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
 @Handler
-class SlashJitpackBranchController(
+class SlashJitpackBranch(
     private val buttons: Buttons,
     private val jitpackBranchService: JitpackBranchService,
 ) {

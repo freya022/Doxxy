@@ -15,23 +15,23 @@ class SlashJitpackCommandProvider : GuildApplicationCommandProvider {
         manager.slashCommand("jitpack", function = null) {
             description = "Shows you how to use jitpack for your bot"
 
-            subcommand("branch", SlashJitpackBranchController::onSlashJitpackBranch) {
+            subcommand("branch", SlashJitpackBranch::onSlashJitpackBranch) {
                 description = "Shows you how to use a branch for your bot"
 
                 addCommonJitpackOptions(manager)
                 option("branchName") {
                     description = "The name of the Git branch to build from"
-                    autocompleteByName(SlashJitpackBranchController.BRANCH_NAME_AUTOCOMPLETE_NAME)
+                    autocompleteByName(SlashJitpackBranch.BRANCH_NAME_AUTOCOMPLETE_NAME)
                 }
             }
 
-            subcommand("pr", SlashJitpackPrController::onSlashJitpackPR) {
+            subcommand("pr", SlashJitpackPr::onSlashJitpackPR) {
                 description = "Shows you how to use Pull Requests for your bot"
 
                 addCommonJitpackOptions(manager)
                 option("pullNumber") {
                     description = "The Pull Request number"
-                    autocompleteByName(SlashJitpackPrController.PR_NUMBER_AUTOCOMPLETE_NAME)
+                    autocompleteByName(SlashJitpackPr.PR_NUMBER_AUTOCOMPLETE_NAME)
                 }
             }
         }

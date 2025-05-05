@@ -37,7 +37,7 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import kotlin.time.Duration.Companion.hours
 
 @Handler
-class SlashJitpackPrController(
+class SlashJitpackPr(
     private val buttons: Buttons,
     private val jitpackPrService: JitpackPrService,
     private val jitpackBranchService: JitpackBranchService,

@@ -1,6 +1,6 @@
 package dev.freya02.doxxy.bot.versioning.jitpack
 
-import dev.freya02.doxxy.bot.commands.slash.versioning.SlashJitpackPrController
+import dev.freya02.doxxy.bot.commands.slash.versioning.SlashJitpackPr
 import dev.freya02.doxxy.bot.versioning.*
 import dev.freya02.doxxy.bot.versioning.github.GithubBranch
 import dev.freya02.doxxy.bot.versioning.github.GithubBranchMap
@@ -49,7 +49,7 @@ class JitpackBranchService(
     private inner class UpdatedDependencyVersionChecker(private val checker: DependencyVersionChecker) : UpdatedValue<LibraryVersion>() {
         override suspend fun update(): LibraryVersion {
             checker.checkVersion()
-            applicationCommandsContext.invalidateAutocompleteCache(SlashJitpackPrController.PR_NUMBER_AUTOCOMPLETE_NAME)
+            applicationCommandsContext.invalidateAutocompleteCache(SlashJitpackPr.PR_NUMBER_AUTOCOMPLETE_NAME)
             checker.save(versionsRepository)
             return checker.latest
         }
