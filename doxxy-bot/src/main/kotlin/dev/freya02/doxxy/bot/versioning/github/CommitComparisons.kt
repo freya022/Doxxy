@@ -30,13 +30,3 @@ data class CommitComparisons(
         }
     }
 }
-
-// While those are identical now, we still make an effort to separate GitHub's data,
-// as the bot can update the PR and thus it should display data that differs from GitHub's
-data class UpdatedCommitComparisons(
-    val url: String,
-    val aheadBy: Int,
-    val behindBy: Int,
-)
-
-fun CommitComparisons.toUpdatedCommitComparisons() = UpdatedCommitComparisons(url = permalinkUrl, aheadBy = aheadBy, behindBy = behindBy)

@@ -4,7 +4,6 @@ import dev.freya02.doxxy.bot.config.Config
 import dev.freya02.doxxy.bot.versioning.LibraryType
 import dev.freya02.doxxy.bot.versioning.github.CommitHash
 import dev.freya02.doxxy.bot.versioning.github.GithubUtils
-import dev.freya02.doxxy.bot.versioning.github.UpdatedBranch
 import dev.freya02.doxxy.common.Directories
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*

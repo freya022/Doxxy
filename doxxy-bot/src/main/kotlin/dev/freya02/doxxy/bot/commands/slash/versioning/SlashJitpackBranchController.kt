@@ -4,8 +4,8 @@ import dev.freya02.doxxy.bot.commands.slash.DeleteButtonListener.Companion.messa
 import dev.freya02.doxxy.bot.versioning.LibraryType
 import dev.freya02.doxxy.bot.versioning.ScriptType
 import dev.freya02.doxxy.bot.versioning.github.GithubBranch
-import dev.freya02.doxxy.bot.versioning.github.toUpdatedBranch
 import dev.freya02.doxxy.bot.versioning.jitpack.JitpackBranchService
+import dev.freya02.doxxy.bot.versioning.jitpack.pullupdater.UpdatedBranch
 import dev.freya02.doxxy.bot.versioning.supplier.BuildToolType
 import dev.freya02.doxxy.bot.versioning.supplier.DependencySupplier
 import dev.minn.jda.ktx.interactions.components.ActionRow
@@ -106,6 +106,8 @@ class SlashJitpackBranchController(
             useComponentsV2 = true
         }.queue()
     }
+
+    private fun GithubBranch.toUpdatedBranch(): UpdatedBranch = UpdatedBranch(ownerName, repoName, branchName, latestCommitSha)
 
     companion object {
         const val BRANCH_NAME_AUTOCOMPLETE_NAME = "SlashJitpack: branchName"

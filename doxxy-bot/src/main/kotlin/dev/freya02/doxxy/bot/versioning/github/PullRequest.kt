@@ -11,21 +11,6 @@ import net.dv8tion.jda.api.interactions.commands.Command
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
-data class UpdatedBranch(
-    val ownerName: String,
-    val repoName: String,
-    val branchName: String,
-    val sha: CommitHash,
-)
-
-fun GithubBranch.toUpdatedBranch(): UpdatedBranch = UpdatedBranch(ownerName, repoName, branchName, latestCommitSha)
-
-fun UpdatedBranch.toJitpackArtifact(): ArtifactInfo = ArtifactInfo(
-    "io.github.$ownerName",
-    repoName,
-    sha.asSha10
-)
-
 @Serializable
 data class Branch(
     val label: String,
@@ -48,8 +33,6 @@ data class Branch(
 
     fun toURL(): String = "https://github.com/$ownerName/$repoName/tree/$branchName"
 }
-
-fun Branch.toUpdatedBranch(): UpdatedBranch = UpdatedBranch(ownerName, repoName, branchName, latestCommitSha)
 
 @Serializable
 data class User(
