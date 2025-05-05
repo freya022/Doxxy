@@ -3,21 +3,64 @@ package dev.freya02.doxxy.bot.versioning.github
 import dev.freya02.doxxy.bot.utils.Utils.truncate
 import dev.freya02.doxxy.bot.versioning.ArtifactInfo
 import info.debatty.java.stringsimilarity.LongestCommonSubsequence
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.*
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-import net.dv8tion.jda.api.utils.data.DataObject
 
-@JvmRecord
+@Serializable
+data class Branch(
+    val label: String,
+    val user: User,
+    val repo: Repo,
+    val ref: String,
+    val sha: CommitHash,
+) {
+
+    val ownerName get() = user.login
+    val repoName get() = repo.name
+    val branchName get() = ref
+    val latestCommitSha get() = sha
+
+    fun toJitpackArtifact(): ArtifactInfo = ArtifactInfo(
+        "io.github.$ownerName",
+        repoName,
+        latestCommitSha.asSha10
+    )
+
+    fun toURL(): String = "https://github.com/$ownerName/$repoName/tree/$branchName"
+}
+
+@Serializable
+data class User(
+    val login: String,
+)
+
+@Serializable
+data class Repo(
+    val name: String,
+    val owner: User,
+)
+
+@Serializable
 data class PullRequest(
     val number: Int,
     val title: String,
     val draft: Boolean,
-    val authorName: String,
-    val branch: GithubBranch,
-    val pullUrl: String
+    val user: User,
+    val base: Branch,
+    val head: Branch,
+    val mergeable: Boolean? = null,
+    val htmlUrl: String,
 ) {
+
+    val authorName get() = user.login
+    val pullUrl get() = htmlUrl
+    val branch get() = head
+
     fun toJitpackArtifact(): ArtifactInfo {
         return branch.toJitpackArtifact()
     }
@@ -31,31 +74,19 @@ data class PullRequest(
     companion object {
         private val lcs = LongestCommonSubsequence()
 
-        fun fromData(data: DataObject): PullRequest? {
-            val head = data.getObject("head")
-            if (head.isNull("repo")) { //If we don't have that then the head repo (the fork) doesn't exist
+        @OptIn(ExperimentalSerializationApi::class)
+        private val json = Json {
+            ignoreUnknownKeys = true
+            namingStrategy = JsonNamingStrategy.SnakeCase
+        }
+
+        fun fromData(jsonElement: JsonElement): PullRequest? {
+            // Discard pull requests from deleted repositories
+            if (jsonElement.jsonObject["head"]?.jsonObject?.get("repo") == null) {
                 return null
             }
 
-            val headRepo = head.getObject("repo")
-            val number = data.getInt("number")
-            val title = data.getString("title")
-            val draft = data.getBoolean("draft")
-            val authorName = data.getObject("user").getString("login")
-            val headRepoOwnerName = head.getObject("user").getString("login")
-            val headRepoName = headRepo.getString("name")
-            val headBranchName = head.getString("ref")
-            val latestHash = head.getString("sha")
-            val pullUrl = data.getString("html_url")
-
-            return PullRequest(
-                number,
-                title,
-                draft,
-                authorName,
-                GithubBranch(headRepoOwnerName, headRepoName, headBranchName, CommitHash(latestHash)),
-                pullUrl
-            )
+            return json.decodeFromJsonElement<PullRequest>(jsonElement)
         }
 
         fun Collection<PullRequest>.toAutocompleteChoices(event: CommandAutoCompleteInteractionEvent): List<Choice> {

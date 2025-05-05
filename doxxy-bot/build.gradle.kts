@@ -1,6 +1,8 @@
 plugins {
     id("doxxy-conventions")
     id("doxxy-app-conventions")
+
+    alias(libs.plugins.kotlinx.serialization)
 }
 
 dependencies {
