@@ -15,6 +15,7 @@ dependencies {
     implementation(libs.postgresql)
     implementation(libs.bundles.flyway)
 
+    implementation(libs.kotlin.reflect) // Spring depends on it
     implementation(libs.kotlinx.serialization.json)
 
     implementation(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
