@@ -28,7 +28,7 @@ object DocsTest3 {
         val document =
             getDocument("https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/file/StandardCopyOption.html")
 
-        val url = updatedSource.getSimpleNameToUrlMap()["OptionData"]
+        val url = updatedSource.simpleNameToUrlMap["OptionData"]
         val onlineClassDoc = ClassDoc(
             DocsSession(),
             "https://docs.jda.wiki/net/dv8tion/jda/api/entities/MessageType.html"

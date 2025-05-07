@@ -66,7 +66,7 @@ class FieldDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, el
                     && "final" in modifiers
                     && seeAlso != null
                     && seeAlso.getReferences().any { it.text == "Constant Field Values" && it.link.contains("/constant-values.html") } -> {
-                val constantsMap = ClassDocs.getSource(classDocs.source).getFqcnToConstantsMap()[classDocs.classNameFqcn]
+                val constantsMap = ClassDocs.getSource(classDocs.source).getConstantsOrNull(classDocs.classNameFqcn)
                 when {
                     constantsMap != null -> constantsMap[fieldName]
                     else -> {

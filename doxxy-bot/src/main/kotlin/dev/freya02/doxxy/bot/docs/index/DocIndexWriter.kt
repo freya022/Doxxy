@@ -48,7 +48,7 @@ internal class DocIndexWriter(
                 executeUpdate(sourceType.id)
             }
 
-            for ((className, classUrl) in updatedSource.getSimpleNameToUrlMap()) {
+            for ((className, classUrl) in updatedSource.simpleNameToUrlMap) {
                 try {
                     val classDoc = docsSession.retrieveDoc(classUrl)
 

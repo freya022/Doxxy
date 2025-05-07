@@ -7,19 +7,21 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import java.io.IOException
 import java.util.*
 
-// TODO Move javadoc parsing to module, try to internalize stuff
-class ClassDocs private constructor(private val source: DocSourceType) {
-    private val simpleNameToUrlMap: MutableMap<String, DocsURL> = HashMap()
-    private val urlSet: MutableSet<String> = HashSet()
-    private val fqcnToConstantsMap: MutableMap<String, MutableMap<String, String>> = hashMapOf()
+private val logger = KotlinLogging.logger { }
 
-    fun getSimpleNameToUrlMap(): Map<String, DocsURL> {
-        return simpleNameToUrlMap
+class ClassDocs private constructor(private val source: DocSourceType) {
+    private val _simpleNameToUrlMap: MutableMap<SimpleName, DocsURL> = HashMap()
+    val simpleNameToUrlMap: Map<SimpleName, DocsURL> get() = _simpleNameToUrlMap
+
+    private val urlSet: MutableSet<String> = HashSet()
+
+    private val constants: MutableMap<FullName, Map<FieldName, FieldValue>> = hashMapOf()
+
+    internal fun getConstantsOrNull(fullClassName: FullName): Map<FieldName, FieldValue>? {
+        return constants[fullClassName]
     }
 
-    fun getFqcnToConstantsMap(): Map<String, Map<String, String>> = fqcnToConstantsMap
-
-    fun isValidURL(url: String): Boolean {
+    internal fun isValidURL(url: String): Boolean {
         val cleanURL = HttpUtils.removeFragment(url)
         return urlSet.contains(cleanURL)
     }
@@ -34,7 +36,7 @@ class ClassDocs private constructor(private val source: DocSourceType) {
         val document = PageCache[source].getPage(indexURL)
         val constantsDocument = PageCache[source].getPage(constantValuesURL)
 
-        simpleNameToUrlMap.clear()
+        _simpleNameToUrlMap.clear()
         urlSet.clear()
 
         //n = 1 needed as type parameters are links and external types
@@ -47,7 +49,7 @@ class ClassDocs private constructor(private val source: DocSourceType) {
 
             if (!source.isValidPackage(decomposition.packageName)) continue
 
-            val oldUrl = simpleNameToUrlMap.put(decomposition.className, classUrl)
+            val oldUrl = _simpleNameToUrlMap.put(decomposition.className, classUrl)
             if (oldUrl != null) {
                 logger.warn { "Detected a duplicate class name '${decomposition.className}' at '$classUrl' and '$oldUrl'" }
             } else {
@@ -56,28 +58,35 @@ class ClassDocs private constructor(private val source: DocSourceType) {
         }
 
         for (classConstantSection in constantsDocument.select("main section.constants-summary ul.block-list li")) {
-            val titleSpan = classConstantSection.selectFirst("div.caption > span") ?: throw DocParseException("Expected constant title FQCN name")
-            val map = fqcnToConstantsMap.getOrPut(titleSpan.text().substringBefore('<')) { hashMapOf() }
+            val fullName = run {
+                val titleSpan = classConstantSection.selectFirst("div.caption > span")
+                    ?: throw DocParseException("Expected constant title FQCN name")
+                titleSpan.text().substringBefore('<')
+            }
+            if (fullName in constants) {
+                logger.warn { "Already got constants for class '$fullName'" }
+                continue
+            }
 
-            //Constant values document wasn't modernized so the html layout sucks.
-            val elementIterator = classConstantSection.select("div.summary-table > div").iterator()
-            repeat(3) { elementIterator.next() } // Skip headers
+            constants[fullName] = buildMap {
+                val elementIterator = classConstantSection.select("div.summary-table > div").iterator()
+                repeat(3) { elementIterator.next() } // Skip headers
 
-            while (elementIterator.hasNext()) {
-                elementIterator.next() //Modifier & type
-                val constantName = elementIterator.next().text()
-                val constantValue = elementIterator.next().text()
+                while (elementIterator.hasNext()) {
+                    elementIterator.next() // "Modifier and type"
+                    val constantName = elementIterator.next().text()
+                    val constantValue = elementIterator.next().text()
 
-                map[constantName] = constantValue
+                    this[constantName] = constantValue
+                }
             }
         }
     }
 
     companion object {
-        private val logger = KotlinLogging.logger { }
-
         private val sourceMap: MutableMap<DocSourceType, ClassDocs> = EnumMap(DocSourceType::class.java)
 
+        // TODO this should not be a thing. Every ClassDoc should retain its parent ClassDocs
         @Synchronized
         fun getSource(source: DocSourceType): ClassDocs {
             return sourceMap.computeIfAbsent(source) { ClassDocs(source) }
