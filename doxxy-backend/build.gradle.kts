@@ -21,3 +21,17 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-web")
 }
+
+jib {
+    from {
+        image = "eclipse-temurin:24-jre"
+    }
+
+    to {
+        image = "doxxy-backend"
+    }
+
+    container {
+        mainClass = "dev.freya02.doxxy.backend.BackendApplicationKt"
+    }
+}

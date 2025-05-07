@@ -48,3 +48,17 @@ dependencies {
     testImplementation(libs.javassist)
     testImplementation(libs.junit.jupiter)
 }
+
+jib {
+    from {
+        image = "docker://doxxy-bot-eclipse-temurin:24-jdk"
+    }
+
+    to {
+        image = "doxxy-bot"
+    }
+
+    container {
+        mainClass = "dev.freya02.doxxy.bot.Main"
+    }
+}
