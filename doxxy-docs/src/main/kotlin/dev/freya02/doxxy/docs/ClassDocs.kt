@@ -60,11 +60,13 @@ class ClassDocs private constructor(private val source: DocSourceType) {
             val map = fqcnToConstantsMap.getOrPut(titleSpan.text().substringBefore('<')) { hashMapOf() }
 
             //Constant values document wasn't modernized so the html layout sucks.
-            val elements = classConstantSection.select("div.summary-table > div").drop(3).toMutableList()
-            while (elements.isNotEmpty()) {
-                elements.removeFirst() //Modifier & type
-                val constantName = elements.removeFirst().text()
-                val constantValue = elements.removeFirst().text()
+            val elementIterator = classConstantSection.select("div.summary-table > div").iterator()
+            repeat(3) { elementIterator.next() } // Skip headers
+
+            while (elementIterator.hasNext()) {
+                elementIterator.next() //Modifier & type
+                val constantName = elementIterator.next().text()
+                val constantValue = elementIterator.next().text()
 
                 map[constantName] = constantValue
             }
