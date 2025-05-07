@@ -8,7 +8,7 @@ import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import java.util.regex.Pattern
 
-object DocUtils {
+internal object DocUtils {
     private val DUPLICATED_ANNOTATION_PATTERN = Pattern.compile("(@.+)?\\s+\\1")
     private val ANNOTATION_PATTERN = Pattern.compile("@\\w*")
 

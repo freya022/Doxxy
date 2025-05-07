@@ -73,9 +73,7 @@ enum class DocSourceType(
         }
     }
 
-    fun isValidPackage(packageName: String?): Boolean {
-        if (packageName == null) return false
-
+    fun isValidPackage(packageName: String): Boolean {
         return validPackagePatterns.any { packageName.matches(it) }
     }
 

@@ -1,7 +1,6 @@
 package dev.freya02.doxxy.docs
 
 import dev.freya02.doxxy.docs.utils.DecomposedName
-import dev.freya02.doxxy.docs.utils.DocsURL
 import dev.freya02.doxxy.docs.utils.HttpUtils
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.io.IOException
@@ -45,13 +44,13 @@ class ClassDocs private constructor(private val source: DocSourceType) {
         // Since it's the left most, it's easy to pick the first one
         for (element in document.select("#all-classes-table > div > div.summary-table.two-column-summary > div.col-first > a:nth-child(1)")) {
             val classUrl = element.absUrl("href")
-            val decomposition = DecomposedName.getDecompositionFromUrl(source, classUrl)
+            val (packageName, className) = DecomposedName.getDecompositionFromUrl(source, classUrl)
 
-            if (!source.isValidPackage(decomposition.packageName)) continue
+            if (packageName == null || !source.isValidPackage(packageName)) continue
 
-            val oldUrl = _simpleNameToUrlMap.put(decomposition.className, classUrl)
+            val oldUrl = _simpleNameToUrlMap.put(className, classUrl)
             if (oldUrl != null) {
-                logger.warn { "Detected a duplicate class name '${decomposition.className}' at '$classUrl' and '$oldUrl'" }
+                logger.warn { "Detected a duplicate class name '${className}' at '$classUrl' and '$oldUrl'" }
             } else {
                 urlSet.add(source.toEffectiveURL(classUrl)) //For quick checks
             }

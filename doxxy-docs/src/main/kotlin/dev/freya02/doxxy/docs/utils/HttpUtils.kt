@@ -9,7 +9,7 @@ import org.jsoup.nodes.Document
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
-object HttpUtils {
+internal object HttpUtils {
     val CLIENT: OkHttpClient = OkHttpClient.Builder()
         .readTimeout(2, TimeUnit.MINUTES) //Jitpack builds have a blocking read
         .build()

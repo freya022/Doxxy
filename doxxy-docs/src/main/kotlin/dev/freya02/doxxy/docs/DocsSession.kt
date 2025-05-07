@@ -2,7 +2,6 @@ package dev.freya02.doxxy.docs
 
 import dev.freya02.doxxy.docs.DocUtils.isJavadocVersionCorrect
 import dev.freya02.doxxy.docs.data.ClassDoc
-import dev.freya02.doxxy.docs.utils.DocsURL
 import dev.freya02.doxxy.docs.utils.HttpUtils.removeFragment
 import java.io.IOException
 

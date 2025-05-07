@@ -5,7 +5,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.jetbrains.annotations.Contract
 
 @JvmRecord
-data class DecomposedName(val packageName: String?, val className: String) {
+internal data class DecomposedName(val packageName: String?, val className: String) {
     companion object {
         fun getSimpleClassName(fullName: String): String {
             for (i in 0 until fullName.length - 1) {
