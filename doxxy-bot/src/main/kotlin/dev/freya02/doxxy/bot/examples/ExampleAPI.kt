@@ -1,20 +1,36 @@
 package dev.freya02.doxxy.bot.examples
 
+import dev.freya02.doxxy.bot.config.BackendConfig
 import dev.freya02.doxxy.bot.switches.RequiresBackend
 import dev.freya02.doxxy.common.dto.ExampleDTO
 import dev.freya02.doxxy.common.dto.ExampleSearchResultDTO
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.ktor.client.*
 import io.ktor.client.call.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
 import java.io.IOException
 
 @RequiresBackend
 @BService
 class ExampleAPI(
-    private val backendClient: HttpClient
+    defaultClient: HttpClient,
+    backendConfig: BackendConfig,
 ) {
+
+    private val backendClient = defaultClient.config {
+        install(ContentNegotiation) {
+            json()
+        }
+
+        defaultRequest {
+            url("http://${backendConfig.host}:${backendConfig.port}")
+        }
+    }
+
     suspend fun updateExamples(ownerName: String, repoName: String, branchName: String): Boolean {
         return backendClient.put("examples/update") {
             url {

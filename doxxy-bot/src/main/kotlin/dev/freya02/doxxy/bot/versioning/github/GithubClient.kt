@@ -14,11 +14,11 @@ import kotlinx.serialization.json.JsonNamingStrategy
 // TODO migrate all GH request to here
 @BService
 class GithubClient(
-    client: HttpClient,
+    defaultClient: HttpClient,
 ) {
 
     @OptIn(ExperimentalSerializationApi::class)
-    private val client = client.config {
+    private val client = defaultClient.config {
         defaultRequest {
             headers {
                 header("Accept", "application/vnd.github.v3+json")
