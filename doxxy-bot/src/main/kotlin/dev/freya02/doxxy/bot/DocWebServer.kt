@@ -1,4 +1,4 @@
-package dev.freya02.doxxy.docs
+package dev.freya02.doxxy.bot
 
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpServer
