@@ -8,7 +8,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.jsoup.nodes.Element
 
-class SeeAlso(type: DocSourceType, docDetail: DocDetail) {
+class SeeAlso internal constructor(type: DocSourceType, docDetail: DocDetail) {
     class SeeAlsoReference(
         val text: String,
         val link: String,
