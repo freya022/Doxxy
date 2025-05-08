@@ -1,12 +1,12 @@
 package dev.freya02.doxxy.docs
 
 import dev.freya02.doxxy.docs.DocUtils.isJavadocVersionCorrect
-import dev.freya02.doxxy.docs.data.ClassDoc
+import dev.freya02.doxxy.docs.data.JavadocClass
 import dev.freya02.doxxy.docs.utils.HttpUtils.removeFragment
 import java.io.IOException
 
 class DocsSession {
-    private val docMap: MutableMap<DocsURL, ClassDoc> = HashMap()
+    private val docMap: MutableMap<DocsURL, JavadocClass> = HashMap()
 
     /**
      * Retrieves the ClassDoc for this URL
@@ -20,7 +20,7 @@ class DocsSession {
      * Always returns a ClassDoc otherwise
      */
     @Throws(IOException::class)
-    fun retrieveDoc(classUrl: DocsURL): ClassDoc? {
+    fun retrieveDoc(classUrl: DocsURL): JavadocClass? {
         synchronized(docMap) {
             //Can't use computeIfAbsent as it could be recursively called, throwing a ConcurrentModificationException
             val doc = docMap[classUrl]
@@ -31,7 +31,7 @@ class DocsSession {
                 val document = PageCache[source].getPage(classUrl)
                 if (!document.isJavadocVersionCorrect()) return null
 
-                return ClassDoc(this, removeFragment(classUrl), document).also { classDoc ->
+                return JavadocClass(this, removeFragment(classUrl), document).also { classDoc ->
                     docMap[classUrl] = classDoc
                 }
             }

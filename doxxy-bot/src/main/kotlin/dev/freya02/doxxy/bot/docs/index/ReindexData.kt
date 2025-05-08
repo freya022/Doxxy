@@ -1,14 +1,14 @@
 package dev.freya02.doxxy.bot.docs.index
 
 import dev.freya02.doxxy.bot.docs.metadata.parser.ImplementationMetadata
-import dev.freya02.doxxy.docs.data.ClassDoc
+import dev.freya02.doxxy.docs.data.JavadocClass
 
 data class ReindexData(val sourceUrl: String? = null) {
-    fun getClassSourceUrlOrNull(classDoc: ClassDoc): String? {
+    fun getClassSourceUrlOrNull(clazz: JavadocClass): String? {
         if (sourceUrl == null) return null
 
-        val packageName = classDoc.packageName.replace('.', '/')
-        val topLevelClassName = classDoc.className.substringBefore('.')
+        val packageName = clazz.packageName.replace('.', '/')
+        val topLevelClassName = clazz.className.substringBefore('.')
         return "$sourceUrl$packageName/$topLevelClassName.java"
     }
 

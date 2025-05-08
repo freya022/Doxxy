@@ -23,7 +23,7 @@ object DocEmbeds {
         DocDetailType.THROWS
     )
 
-    fun toEmbed(doc: ClassDoc): EmbedBuilder {
+    fun toEmbed(doc: JavadocClass): EmbedBuilder {
         return EmbedBuilder {
             title = doc.docTitleElement.targetElement.text()
             url = getDocURL(doc)
@@ -65,62 +65,62 @@ object DocEmbeds {
         }.builder
     }
 
-    fun toEmbed(classDoc: ClassDoc, methodDoc: MethodDoc): EmbedBuilder {
+    fun toEmbed(clazz: JavadocClass, method: JavadocMethod): EmbedBuilder {
         return EmbedBuilder {
-            var title = methodDoc.getSimpleAnnotatedSignature(classDoc)
+            var title = method.getSimpleAnnotatedSignature(clazz)
             if (title.length > MessageEmbed.TITLE_MAX_LENGTH) {
                 title = "%s%s#%s : %s - [full signature on online docs]".format(
-                    if (methodDoc.isStatic) "static " else "",
-                    methodDoc.classDocs.className,
-                    methodDoc.methodName,
-                    methodDoc.methodReturnType
+                    if (method.isStatic) "static " else "",
+                    method.declaringClass.className,
+                    method.methodName,
+                    method.methodReturnType
                 )
             }
 
-            builder.setTitle(title, getDocURL(methodDoc))
+            builder.setTitle(title, getDocURL(method))
 
             //Should use that but JB annotations are duplicated, bruh momentum
-//		    builder.setTitle(methodDoc.getMethodSignature(), methodDoc.getURL());
-            if (classDoc != methodDoc.classDocs) {
-                builder.setDescription("**Inherited from ${methodDoc.classDocs.className}**\n\n")
+//		    builder.setTitle(method.getMethodSignature(), method.getURL());
+            if (clazz != method.declaringClass) {
+                builder.setDescription("**Inherited from ${method.declaringClass.className}**\n\n")
             }
 
-            builder.addDocDescription(methodDoc)
-            builder.addDocDeprecation(methodDoc)
-            builder.addDocDetails(methodDoc, includedTypes)
-            builder.addSeeAlso(methodDoc.seeAlso, getDocURL(methodDoc))
+            builder.addDocDescription(method)
+            builder.addDocDeprecation(method)
+            builder.addDocDetails(method, includedTypes)
+            builder.addSeeAlso(method.seeAlso, getDocURL(method))
         }.builder
     }
 
-    fun toEmbed(classDoc: ClassDoc, fieldDoc: FieldDoc): EmbedBuilder {
+    fun toEmbed(clazz: JavadocClass, field: FieldDoc): EmbedBuilder {
         return EmbedBuilder {
-            title = classDoc.className + " : " + fieldDoc.simpleSignature
-            url = getDocURL(fieldDoc)
+            title = clazz.className + " : " + field.simpleSignature
+            url = getDocURL(field)
 
-            if (classDoc != fieldDoc.classDocs) {
-                description = "**Inherited from ${fieldDoc.classDocs.className}**\n\n"
+            if (clazz != field.declaringClass) {
+                description = "**Inherited from ${field.declaringClass.className}**\n\n"
             }
 
-            builder.addDocDescription(fieldDoc)
-            builder.addDocDeprecation(fieldDoc)
+            builder.addDocDescription(field)
+            builder.addDocDeprecation(field)
 
-            fieldDoc.fieldValue?.let { fieldValue ->
+            field.fieldValue?.let { fieldValue ->
                 field {
                     name = "Value"
                     value = fieldValue
                 }
             }
 
-            builder.addDocDetails(fieldDoc, includedTypes)
-            builder.addSeeAlso(fieldDoc.seeAlso, getDocURL(fieldDoc))
+            builder.addDocDetails(field, includedTypes)
+            builder.addSeeAlso(field.seeAlso, getDocURL(field))
         }.builder
     }
 
-    private fun getDocURL(doc: BaseDoc): String? {
+    private fun getDocURL(doc: AbstractJavadoc): String? {
         return if (doesStartByLocalhost(doc.effectiveURL)) null else doc.effectiveURL
     }
 
-    private fun EmbedBuilder.addDocDescription(doc: BaseDoc) {
+    private fun EmbedBuilder.addDocDescription(doc: AbstractJavadoc) {
         val descriptionElement = doc.descriptionElements
         if (descriptionElement.isNotEmpty()) {
             appendDescription(
@@ -135,7 +135,7 @@ object DocEmbeds {
         }
     }
 
-    private fun EmbedBuilder.addDocDeprecation(doc: BaseDoc) {
+    private fun EmbedBuilder.addDocDeprecation(doc: AbstractJavadoc) {
         val deprecationElement = doc.deprecationElement
         if (deprecationElement != null) {
             this.addDocField(
@@ -147,7 +147,7 @@ object DocEmbeds {
         }
     }
 
-    private fun EmbedBuilder.addDocDetails(doc: BaseDoc, excludedTypes: EnumSet<DocDetailType>) {
+    private fun EmbedBuilder.addDocDetails(doc: AbstractJavadoc, excludedTypes: EnumSet<DocDetailType>) {
         val details = doc.getDetails(excludedTypes)
         for (detail in details) {
             addDocField(

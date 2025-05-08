@@ -8,7 +8,7 @@ import dev.freya02.doxxy.docs.utils.requireDoc
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import org.jsoup.nodes.Element
 
-class MethodDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, element: Element) : BaseDoc() {
+class JavadocMethod(val declaringClass: JavadocClass, val classDetailType: ClassDetailType, element: Element) : AbstractJavadoc() {
     val elementId: String
     val methodAnnotations: String?
     val methodName: String
@@ -44,7 +44,7 @@ class MethodDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, e
 
         val methodReturnTypeElement = element.selectFirst("div.member-signature > span.return-type")
         methodReturnType = when (methodReturnTypeElement) {
-            null -> requireDoc(classDetailType == ClassDetailType.CONSTRUCTOR).let { classDocs.className }
+            null -> requireDoc(classDetailType == ClassDetailType.CONSTRUCTOR).let { declaringClass.className }
             else -> methodReturnTypeElement.text()
         }
 
@@ -63,7 +63,7 @@ class MethodDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, e
         //See also
         val seeAlsoDetail = detailToElementsMap.getDetail(DocDetailType.SEE_ALSO)
         seeAlso = when {
-            seeAlsoDetail != null -> SeeAlso(classDocs.source, seeAlsoDetail)
+            seeAlsoDetail != null -> SeeAlso(declaringClass.source, seeAlsoDetail)
             else -> null
         }
     }
@@ -72,7 +72,7 @@ class MethodDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, e
         get() = DocUtils.getSimpleSignature(elementId)
 
     override val className: String
-        get() = classDocs.className
+        get() = declaringClass.className
 
     override val identifier: String
         get() = simpleSignature
@@ -81,7 +81,7 @@ class MethodDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, e
     override val humanIdentifier: String by lazy { generateHumanIdentifier("") }
     override fun toHumanClassIdentifier(className: String): String = generateHumanIdentifier("$className#")
 
-    fun getSimpleAnnotatedSignature(targetClassdoc: ClassDoc): String {
+    fun getSimpleAnnotatedSignature(targetClassdoc: JavadocClass): String {
         return DocUtils.getSimpleAnnotatedSignature(targetClassdoc, this)
     }
 
@@ -115,9 +115,9 @@ class MethodDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, e
     }
 
     override val effectiveURL: String
-        get() = classDocs.effectiveURL + '#' + elementId
+        get() = declaringClass.effectiveURL + '#' + elementId
 
-    override val onlineURL: String? = classDocs.onlineURL?.let { "$it#$elementId" }
+    override val onlineURL: String? = declaringClass.onlineURL?.let { "$it#$elementId" }
 
     override val returnType: String
         get() = methodReturnType

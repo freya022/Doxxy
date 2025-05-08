@@ -9,7 +9,7 @@ import org.jsoup.nodes.Element
 
 private val logger = KotlinLogging.logger { }
 
-class FieldDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, element: Element) : BaseDoc() {
+class FieldDoc(val declaringClass: JavadocClass, val classDetailType: ClassDetailType, element: Element) : AbstractJavadoc() {
     override val effectiveURL: String
     override val onlineURL: String?
 
@@ -29,8 +29,8 @@ class FieldDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, el
 
     init {
         elementId = element.id()
-        effectiveURL = classDocs.effectiveURL + "#" + elementId
-        onlineURL = classDocs.onlineURL?.let { "$it#$elementId" }
+        effectiveURL = declaringClass.effectiveURL + "#" + elementId
+        onlineURL = declaringClass.onlineURL?.let { "$it#$elementId" }
 
         //Get field modifiers
         val modifiersElement = element.selectFirst("div.member-signature > span.modifiers") ?: throw DocParseException()
@@ -57,7 +57,7 @@ class FieldDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, el
         //See also
         val seeAlsoDetail = detailToElementsMap.getDetail(DocDetailType.SEE_ALSO)
         seeAlso = when {
-            seeAlsoDetail != null -> SeeAlso(classDocs.source, seeAlsoDetail)
+            seeAlsoDetail != null -> SeeAlso(declaringClass.source, seeAlsoDetail)
             else -> null
         }
 
@@ -66,11 +66,11 @@ class FieldDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, el
                     && "final" in modifiers
                     && seeAlso != null
                     && seeAlso.getReferences().any { it.text == "Constant Field Values" && it.link.contains("/constant-values.html") } -> {
-                val constantsMap = ClassDocs.getSource(classDocs.source).getConstantsOrNull(classDocs.classNameFqcn)
+                val constantsMap = ClassDocs.getSource(declaringClass.source).getConstantsOrNull(declaringClass.classNameFqcn)
                 when {
                     constantsMap != null -> constantsMap[fieldName]
                     else -> {
-                        logger.warn { "Could not find constants in ${classDocs.classNameFqcn}" }
+                        logger.warn { "Could not find constants in ${declaringClass.classNameFqcn}" }
                         null
                     }
                 }
@@ -87,7 +87,7 @@ class FieldDoc(val classDocs: ClassDoc, val classDetailType: ClassDetailType, el
         get() = fieldName
 
     override val className: String
-        get() = classDocs.className
+        get() = declaringClass.className
 
     override val identifier: String
         get() = simpleSignature

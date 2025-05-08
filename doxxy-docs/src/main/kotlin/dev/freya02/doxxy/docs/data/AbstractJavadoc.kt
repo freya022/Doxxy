@@ -5,7 +5,7 @@ import dev.freya02.doxxy.docs.HTMLElementList
 import java.util.*
 import java.util.regex.Pattern
 
-abstract class BaseDoc {
+abstract class AbstractJavadoc {
     abstract val effectiveURL: String
     abstract val onlineURL: String?
     abstract val descriptionElements: HTMLElementList
@@ -31,7 +31,7 @@ abstract class BaseDoc {
 }
 
 private val ANNOTATION_PATTERN = Pattern.compile("@\\w*")
-val BaseDoc.returnTypeNoAnnotations: String?
+val AbstractJavadoc.returnTypeNoAnnotations: String?
     get() = returnType?.let {
         ANNOTATION_PATTERN.matcher(it)
             .replaceAll("")

@@ -1,7 +1,7 @@
 package dev.freya02.doxxy.docs
 
-import dev.freya02.doxxy.docs.data.ClassDoc
-import dev.freya02.doxxy.docs.data.MethodDoc
+import dev.freya02.doxxy.docs.data.JavadocClass
+import dev.freya02.doxxy.docs.data.JavadocMethod
 import dev.freya02.doxxy.docs.data.returnTypeNoAnnotations
 import dev.freya02.doxxy.docs.utils.DecomposedName
 import org.jsoup.nodes.Document
@@ -28,15 +28,15 @@ internal object DocUtils {
         }.toString()
     }
 
-    fun getSimpleAnnotatedSignature(targetClassdoc: ClassDoc, methodDoc: MethodDoc) = buildString(100) {
-        methodDoc.methodAnnotations?.let { appendLine(it) }
+    fun getSimpleAnnotatedSignature(targetClassdoc: JavadocClass, method: JavadocMethod) = buildString(100) {
+        method.methodAnnotations?.let { appendLine(it) }
 
-        if (methodDoc.isStatic) append("static ")
+        if (method.isStatic) append("static ")
         append(targetClassdoc.className)
         append("#")
-        append(methodDoc.methodName)
+        append(method.methodName)
 
-        methodDoc.methodParameters?.asString?.let { methodParameters ->
+        method.methodParameters?.asString?.let { methodParameters ->
             val parameters = methodParameters.substring(1, methodParameters.length - 1)
                 .split(",")
                 .joinToString(",\n", "(", ")") {
@@ -47,7 +47,7 @@ internal object DocUtils {
         }
 
         append(" : ")
-        append(methodDoc.returnTypeNoAnnotations)
+        append(method.returnTypeNoAnnotations)
     }
 
     fun Document.isJavadocVersionCorrect(): Boolean {

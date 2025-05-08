@@ -11,11 +11,11 @@ import java.util.*
 import java.util.function.BiConsumer
 import java.util.function.Consumer
 
-class ClassDoc(
+class JavadocClass(
     docsSession: DocsSession,
     val sourceURL: String,
     document: Document = HttpUtils.getDocument(sourceURL)
-) : BaseDoc() {
+) : AbstractJavadoc() {
     val source: DocSourceType = DocSourceType.fromUrl(sourceURL) ?: throw DocParseException()
 
     val docTitleElement: HTMLElement
@@ -29,8 +29,8 @@ class ClassDoc(
 
     override val seeAlso: SeeAlso?
 
-    private val fieldDocs: MutableMap<String, FieldDoc> = hashMapOf()
-    private val methodDocs: MutableMap<String, MethodDoc> = hashMapOf()
+    private val fields: MutableMap<String, FieldDoc> = hashMapOf()
+    private val methods: MutableMap<String, JavadocMethod> = hashMapOf()
 
     init {
         document.checkJavadocVersion()
@@ -67,32 +67,32 @@ class ClassDoc(
 
         //Try to find field details
         processDetailElements(document, ClassDetailType.FIELD) { fieldElement: Element ->
-            val fieldDoc = FieldDoc(this, ClassDetailType.FIELD, fieldElement)
-            this.fieldDocs[fieldDoc.elementId] = fieldDoc
+            val field = FieldDoc(this, ClassDetailType.FIELD, fieldElement)
+            this.fields[field.elementId] = field
         }
 
         //Try to find enum constants, they're similar to fields it seems
         processDetailElements(document, ClassDetailType.ENUM_CONSTANTS) { fieldElement: Element ->
-            val fieldDoc = FieldDoc(this, ClassDetailType.ENUM_CONSTANTS, fieldElement)
-            this.fieldDocs[fieldDoc.elementId] = fieldDoc
+            val field = FieldDoc(this, ClassDetailType.ENUM_CONSTANTS, fieldElement)
+            this.fields[field.elementId] = field
         }
 
         //Try to find constructor details
         processDetailElements(document, ClassDetailType.CONSTRUCTOR) { methodElement: Element ->
-            val methodDoc = MethodDoc(this, ClassDetailType.CONSTRUCTOR, methodElement)
-            this.methodDocs[methodDoc.elementId] = methodDoc
+            val method = JavadocMethod(this, ClassDetailType.CONSTRUCTOR, methodElement)
+            this.methods[method.elementId] = method
         }
 
         //Try to find method details
         processDetailElements(document, ClassDetailType.METHOD) { methodElement: Element ->
-            val methodDoc = MethodDoc(this, ClassDetailType.METHOD, methodElement)
-            this.methodDocs[methodDoc.elementId] = methodDoc
+            val method = JavadocMethod(this, ClassDetailType.METHOD, methodElement)
+            this.methods[method.elementId] = method
         }
 
         //Try to find annotation "methods" (elements)
         processDetailElements(document, ClassDetailType.ANNOTATION_ELEMENT) { annotationElement: Element ->
-            val methodDoc = MethodDoc(this, ClassDetailType.ANNOTATION_ELEMENT, annotationElement)
-            this.methodDocs[methodDoc.elementId] = methodDoc
+            val method = JavadocMethod(this, ClassDetailType.ANNOTATION_ELEMENT, annotationElement)
+            this.methods[method.elementId] = method
         }
     }
 
@@ -104,7 +104,7 @@ class ClassDoc(
         docsSession: DocsSession,
         document: Document,
         inheritedType: InheritedType,
-        inheritedElementConsumer: BiConsumer<ClassDoc, String?>
+        inheritedElementConsumer: BiConsumer<JavadocClass, String?>
     ) {
         val inheritedBlocks = document.select("section." + inheritedType.classSuffix + "-summary > div.inherited-list")
         for (inheritedBlock in inheritedBlocks) {
@@ -124,30 +124,30 @@ class ClassDoc(
         }
     }
 
-    private fun onInheritedMethod(superClassDocs: ClassDoc, targetId: String?) {
+    private fun onInheritedMethod(superClass: JavadocClass, targetId: String?) {
         //You can inherit a same method multiple times, it will show up multiple times in the docs
         // As the html is ordered such as the latest overridden method is shown, we can set the already existing doc to the newest one
         // Example: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/AbstractCollection.html#method.summary
-        val methodDoc = superClassDocs.methodDocs[targetId] ?: return
+        val method = superClass.methods[targetId] ?: return
 
         //This might happen if the target superclass doesn't expose the same access level of members
         // So for example this class might expose protected+ members
         //  but the superclass exposes only public members
-        methodDocs[methodDoc.elementId] = methodDoc
+        methods[method.elementId] = method
     }
 
-    private fun onInheritedField(superClassDocs: ClassDoc, targetId: String?) {
-        val fieldDoc = superClassDocs.fieldDocs[targetId] ?: return
+    private fun onInheritedField(superClass: JavadocClass, targetId: String?) {
+        val field = superClass.fields[targetId] ?: return
 
         //This might happen if the target superclass doesn't expose the same access level of members
         // So for example this class might expose protected+ members
         //  but the superclass exposes only public members
-        fieldDocs[fieldDoc.elementId] = fieldDoc
+        fields[field.elementId] = field
     }
 
-    fun getFieldDocs(): Map<String, FieldDoc> = Collections.unmodifiableMap(fieldDocs)
+    fun getFieldDocs(): Map<String, FieldDoc> = Collections.unmodifiableMap(fields)
 
-    fun getMethodDocs(): Map<String, MethodDoc> = Collections.unmodifiableMap(methodDocs)
+    fun getMethodDocs(): Map<String, JavadocMethod> = Collections.unmodifiableMap(methods)
 
     private fun processDetailElements(document: Document, detailType: ClassDetailType, callback: Consumer<Element>) {
         val detailId = detailType.detailId
@@ -162,8 +162,8 @@ class ClassDoc(
     override fun toString(): String {
         return "%s : %d fields, %d methods%s".format(
             this.className,
-            fieldDocs.size,
-            methodDocs.size,
+            fields.size,
+            methods.size,
             if (descriptionElements.isEmpty()) "" else " : $descriptionElements"
         )
     }
@@ -184,8 +184,8 @@ class ClassDoc(
             .values
             .filter { f: FieldDoc -> f.classDetailType == ClassDetailType.ENUM_CONSTANTS }
 
-    val annotationElements: List<MethodDoc>
+    val annotationElements: List<JavadocMethod>
         get() = getMethodDocs()
             .values
-            .filter { f: MethodDoc -> f.classDetailType == ClassDetailType.ANNOTATION_ELEMENT }
+            .filter { f: JavadocMethod -> f.classDetailType == ClassDetailType.ANNOTATION_ELEMENT }
 }
