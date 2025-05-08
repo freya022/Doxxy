@@ -164,7 +164,7 @@ class ClassDoc(
             this.className,
             fieldDocs.size,
             methodDocs.size,
-            if (descriptionElements.isEmpty()) "" else " : " + descriptionElements.toText()
+            if (descriptionElements.isEmpty()) "" else " : $descriptionElements"
         )
     }
 

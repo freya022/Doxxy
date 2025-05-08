@@ -4,6 +4,9 @@ import dev.freya02.doxxy.common.Directories
 import dev.freya02.doxxy.common.DocumentedExampleLibrary
 import java.nio.file.Path
 
+//TODO this shouldn't be in the docs module
+// move this to the bot, then pass sourceUrl, onlineURL and packagePatterns when creating docs.
+// Depends on ClassDocs being referenced in all BaseDoc
 enum class DocSourceType(
     val id: Int,
     val cmdName: String,

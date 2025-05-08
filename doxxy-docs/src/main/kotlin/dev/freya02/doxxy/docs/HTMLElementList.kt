@@ -1,28 +1,20 @@
+@file:Suppress("JavaDefaultMethodsNotOverriddenByDelegation")
+
 package dev.freya02.doxxy.docs
 
 import org.jsoup.select.Elements
 
-open class HTMLElementList protected constructor(elements: List<HTMLElement> = emptyList()) : ArrayList<HTMLElement>() {
-    constructor(elements: Elements) : this() {
-        for (element in elements) {
-            this.add(HTMLElement.wrap(element))
-        }
-    }
-
-    init {
-        this.addAll(elements)
-    }
-
-    val htmlElements: List<HTMLElement>
+open class HTMLElementList protected constructor(elements: List<HTMLElement>) : List<HTMLElement> by elements {
+    internal val htmlElements: List<HTMLElement>
         get() = this
 
     fun toMarkdown(delimiter: String): String = this.joinToString(delimiter) { obj: HTMLElement -> obj.asMarkdown }
 
-    fun toText(): String = this.joinToString("") { e: HTMLElement -> e.targetElement.text() }
+    override fun toString(): String = joinToString("") { e: HTMLElement -> e.targetElement.text() }
 
-    companion object {
-        fun fromElements(elements: Elements): HTMLElementList {
-            return HTMLElementList(elements)
+    internal companion object {
+        internal fun fromElements(elements: Elements): HTMLElementList {
+            return HTMLElementList(elements.map(HTMLElement::wrap))
         }
     }
 }

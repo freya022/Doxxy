@@ -3,6 +3,7 @@ package dev.freya02.doxxy.docs.data
 import dev.freya02.doxxy.docs.HTMLElement
 import dev.freya02.doxxy.docs.HTMLElementList
 import java.util.*
+import java.util.regex.Pattern
 
 abstract class BaseDoc {
     abstract val effectiveURL: String
@@ -28,3 +29,11 @@ abstract class BaseDoc {
             .filter { it in includedTypes }
             .mapNotNull { detailType -> detailToElementsMap.getDetail(detailType) }
 }
+
+private val ANNOTATION_PATTERN = Pattern.compile("@\\w*")
+val BaseDoc.returnTypeNoAnnotations: String?
+    get() = returnType?.let {
+        ANNOTATION_PATTERN.matcher(it)
+            .replaceAll("")
+            .trim()
+    }

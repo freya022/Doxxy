@@ -1,7 +1,6 @@
 package dev.freya02.doxxy.docs
 
 import dev.freya02.doxxy.docs.ClassDocs.Companion.getUpdatedSource
-import dev.freya02.doxxy.docs.DocWebServer.startDocWebServer
 import dev.freya02.doxxy.docs.data.ClassDoc
 import dev.freya02.doxxy.docs.data.DocDetailType
 import dev.freya02.doxxy.docs.utils.HttpUtils.getDocument
@@ -23,7 +22,7 @@ object DocsTest3 {
 //        val enumTest =
 //            session.retrieveDoc("https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/file/StandardCopyOption.html")
 
-        startDocWebServer()
+//        startDocWebServer()
         val updatedSource = getUpdatedSource(DocSourceType.JDA)
         val document =
             getDocument("https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/file/StandardCopyOption.html")
