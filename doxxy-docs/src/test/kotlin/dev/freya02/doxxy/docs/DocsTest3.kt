@@ -33,7 +33,7 @@ object DocsTest3 {
             "https://docs.jda.wiki/net/dv8tion/jda/api/entities/MessageType.html"
         )
         val clazz = JavadocClass(DocsSession(), url!!)
-        val method = clazz.getMethodDocs()["putRolePermissionOverride(long,long,long)"]
+        val method = clazz.methods["putRolePermissionOverride(long,long,long)"]
         val simpleAnnotatedSignature = method!!.getSimpleAnnotatedSignature(clazz)
         val markdown = method.descriptionElements.toMarkdown("\n")
         val markdown2 =

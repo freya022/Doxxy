@@ -15,7 +15,6 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import java.io.IOException
-import java.util.*
 import java.util.function.BiConsumer
 import java.util.function.Consumer
 
@@ -37,8 +36,11 @@ class JavadocClass(
 
     override val seeAlso: SeeAlso?
 
-    private val fields: MutableMap<String, FieldDoc> = hashMapOf()
-    private val methods: MutableMap<String, JavadocMethod> = hashMapOf()
+    private val _fields: MutableMap<String, FieldDoc> = hashMapOf()
+    val fields: Map<String, FieldDoc> get() = _fields
+
+    private val _methods: MutableMap<String, JavadocMethod> = hashMapOf()
+    val methods: Map<String, JavadocMethod> get() = _methods
 
     init {
         document.checkJavadocVersion()
@@ -76,31 +78,31 @@ class JavadocClass(
         //Try to find field details
         processDetailElements(document, ClassDetailType.FIELD) { fieldElement: Element ->
             val field = FieldDoc(this, ClassDetailType.FIELD, fieldElement)
-            this.fields[field.elementId] = field
+            this._fields[field.elementId] = field
         }
 
         //Try to find enum constants, they're similar to fields it seems
         processDetailElements(document, ClassDetailType.ENUM_CONSTANTS) { fieldElement: Element ->
             val field = FieldDoc(this, ClassDetailType.ENUM_CONSTANTS, fieldElement)
-            this.fields[field.elementId] = field
+            this._fields[field.elementId] = field
         }
 
         //Try to find constructor details
         processDetailElements(document, ClassDetailType.CONSTRUCTOR) { methodElement: Element ->
             val method = JavadocMethod(this, ClassDetailType.CONSTRUCTOR, methodElement)
-            this.methods[method.elementId] = method
+            this._methods[method.elementId] = method
         }
 
         //Try to find method details
         processDetailElements(document, ClassDetailType.METHOD) { methodElement: Element ->
             val method = JavadocMethod(this, ClassDetailType.METHOD, methodElement)
-            this.methods[method.elementId] = method
+            this._methods[method.elementId] = method
         }
 
         //Try to find annotation "methods" (elements)
         processDetailElements(document, ClassDetailType.ANNOTATION_ELEMENT) { annotationElement: Element ->
             val method = JavadocMethod(this, ClassDetailType.ANNOTATION_ELEMENT, annotationElement)
-            this.methods[method.elementId] = method
+            this._methods[method.elementId] = method
         }
     }
 
@@ -136,26 +138,22 @@ class JavadocClass(
         //You can inherit a same method multiple times, it will show up multiple times in the docs
         // As the html is ordered such as the latest overridden method is shown, we can set the already existing doc to the newest one
         // Example: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/AbstractCollection.html#method.summary
-        val method = superClass.methods[targetId] ?: return
+        val method = superClass._methods[targetId] ?: return
 
         //This might happen if the target superclass doesn't expose the same access level of members
         // So for example this class might expose protected+ members
         //  but the superclass exposes only public members
-        methods[method.elementId] = method
+        _methods[method.elementId] = method
     }
 
     private fun onInheritedField(superClass: JavadocClass, targetId: String?) {
-        val field = superClass.fields[targetId] ?: return
+        val field = superClass._fields[targetId] ?: return
 
         //This might happen if the target superclass doesn't expose the same access level of members
         // So for example this class might expose protected+ members
         //  but the superclass exposes only public members
-        fields[field.elementId] = field
+        _fields[field.elementId] = field
     }
-
-    fun getFieldDocs(): Map<String, FieldDoc> = Collections.unmodifiableMap(fields)
-
-    fun getMethodDocs(): Map<String, JavadocMethod> = Collections.unmodifiableMap(methods)
 
     private fun processDetailElements(document: Document, detailType: ClassDetailType, callback: Consumer<Element>) {
         val detailId = detailType.detailId
@@ -170,8 +168,8 @@ class JavadocClass(
     override fun toString(): String {
         return "%s : %d fields, %d methods%s".format(
             this.className,
-            fields.size,
-            methods.size,
+            _fields.size,
+            _methods.size,
             if (descriptionElements.isEmpty()) "" else " : $descriptionElements"
         )
     }
@@ -188,12 +186,12 @@ class JavadocClass(
     override val returnType: String? = null
 
     val enumConstants: List<FieldDoc>
-        get() = getFieldDocs()
+        get() = fields
             .values
             .filter { f: FieldDoc -> f.classDetailType == ClassDetailType.ENUM_CONSTANTS }
 
     val annotationElements: List<JavadocMethod>
-        get() = getMethodDocs()
+        get() = methods
             .values
             .filter { f: JavadocMethod -> f.classDetailType == ClassDetailType.ANNOTATION_ELEMENT }
 

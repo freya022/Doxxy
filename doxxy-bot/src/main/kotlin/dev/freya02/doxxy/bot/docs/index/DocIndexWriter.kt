@@ -83,7 +83,7 @@ internal class DocIndexWriter(
 
     context(_: Transaction)
     private suspend fun insertMethodDocs(clazz: JavadocClass, sourceLink: String?) {
-        for (method in clazz.getMethodDocs().values) {
+        for (method in clazz.methods.values) {
             try {
                 val methodEmbed = toEmbed(clazz, method).build()
                 val methodEmbedJson = methodEmbed.toData()
@@ -152,7 +152,7 @@ internal class DocIndexWriter(
 
     context(_: Transaction)
     private suspend fun insertFieldDocs(clazz: JavadocClass, sourceLink: String?) {
-        for (field in clazz.getFieldDocs().values) {
+        for (field in clazz.fields.values) {
             try {
                 val fieldEmbed = toEmbed(clazz, field).build()
                 val fieldEmbedJson = fieldEmbed.toData()
