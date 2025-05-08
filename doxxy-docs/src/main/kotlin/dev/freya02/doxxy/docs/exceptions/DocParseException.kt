@@ -1,4 +1,4 @@
-package dev.freya02.doxxy.docs
+package dev.freya02.doxxy.docs.exceptions
 
 class DocParseException : IllegalArgumentException {
     internal constructor()

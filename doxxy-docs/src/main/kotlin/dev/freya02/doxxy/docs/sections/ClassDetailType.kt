@@ -1,4 +1,4 @@
-package dev.freya02.doxxy.docs.data
+package dev.freya02.doxxy.docs.sections
 
 enum class ClassDetailType(val detailId: String) {
     FIELD("field-detail"),

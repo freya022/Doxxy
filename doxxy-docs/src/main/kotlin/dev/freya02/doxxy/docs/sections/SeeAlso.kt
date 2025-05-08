@@ -1,11 +1,11 @@
-package dev.freya02.doxxy.docs.data
+package dev.freya02.doxxy.docs.sections
 
 import dev.freya02.doxxy.docs.ClassDocs
 import dev.freya02.doxxy.docs.DocSourceType
-import dev.freya02.doxxy.docs.DocUtils
-import dev.freya02.doxxy.docs.JavadocUrl
+import dev.freya02.doxxy.docs.utils.DocUtils
 import dev.freya02.doxxy.docs.utils.HttpUtils
 import io.github.oshai.kotlinlogging.KotlinLogging
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.jsoup.nodes.Element
 
 class SeeAlso(type: DocSourceType, docDetail: DocDetail) {
@@ -103,6 +103,43 @@ class SeeAlso(type: DocSourceType, docDetail: DocDetail) {
 
     fun getReferences(): List<SeeAlsoReference> {
         return references
+    }
+
+    enum class TargetType(val id: Int) {
+        CLASS(1),
+        METHOD(2),
+        FIELD(3),
+        UNKNOWN(-1);
+
+        companion object {
+            fun fromFragment(fragment: String?): TargetType {
+                return when {
+                    fragment == null -> CLASS
+                    fragment.contains("(") -> METHOD
+                    else -> FIELD
+                }
+            }
+
+            fun fromId(type: Int): TargetType {
+                return entries.find { it.id == type } ?: throw IllegalArgumentException("Unknown type: $type")
+            }
+        }
+    }
+
+    private class JavadocUrl private constructor(val className: String, val fragment: String?, val targetType: TargetType) {
+        companion object {
+            fun fromURL(url: String): JavadocUrl {
+                url.toHttpUrl().let { httpUrl ->
+                    val lastFragment = httpUrl.pathSegments.last()
+                    require(lastFragment.endsWith(".html"))
+
+                    val className = lastFragment.dropLast(5) //Remove .html
+                    val fragment = httpUrl.fragment
+
+                    return JavadocUrl(className, fragment, TargetType.fromFragment(fragment))
+                }
+            }
+        }
     }
 
     companion object {

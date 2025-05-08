@@ -1,5 +1,6 @@
 package dev.freya02.doxxy.docs
 
+import dev.freya02.doxxy.docs.exceptions.DocParseException
 import dev.freya02.doxxy.docs.utils.HttpUtils.doesStartByLocalhost
 import dev.freya02.doxxy.docs.utils.JDocUtil
 import org.jetbrains.annotations.Contract

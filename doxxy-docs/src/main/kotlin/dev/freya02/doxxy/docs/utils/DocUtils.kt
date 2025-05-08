@@ -1,9 +1,9 @@
-package dev.freya02.doxxy.docs
+package dev.freya02.doxxy.docs.utils
 
-import dev.freya02.doxxy.docs.data.JavadocClass
-import dev.freya02.doxxy.docs.data.JavadocMethod
-import dev.freya02.doxxy.docs.data.returnTypeNoAnnotations
-import dev.freya02.doxxy.docs.utils.DecomposedName
+import dev.freya02.doxxy.docs.declarations.JavadocClass
+import dev.freya02.doxxy.docs.declarations.JavadocMethod
+import dev.freya02.doxxy.docs.declarations.returnTypeNoAnnotations
+import dev.freya02.doxxy.docs.exceptions.DocParseException
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import java.util.regex.Pattern

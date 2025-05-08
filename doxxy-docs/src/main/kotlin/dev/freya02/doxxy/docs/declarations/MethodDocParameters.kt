@@ -1,4 +1,4 @@
-package dev.freya02.doxxy.docs.data
+package dev.freya02.doxxy.docs.declarations
 
 import com.github.javaparser.JavaParser
 import com.github.javaparser.ast.nodeTypes.NodeWithTypeArguments

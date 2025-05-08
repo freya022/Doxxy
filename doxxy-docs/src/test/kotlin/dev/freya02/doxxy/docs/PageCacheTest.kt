@@ -1,6 +1,6 @@
 package dev.freya02.doxxy.docs
 
-import dev.freya02.doxxy.docs.data.JavadocClass
+import dev.freya02.doxxy.docs.declarations.JavadocClass
 
 fun main() {
 //    val page =

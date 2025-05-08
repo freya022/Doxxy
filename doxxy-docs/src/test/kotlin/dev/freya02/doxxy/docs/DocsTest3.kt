@@ -1,8 +1,8 @@
 package dev.freya02.doxxy.docs
 
 import dev.freya02.doxxy.docs.ClassDocs.Companion.getUpdatedSource
-import dev.freya02.doxxy.docs.data.DocDetailType
-import dev.freya02.doxxy.docs.data.JavadocClass
+import dev.freya02.doxxy.docs.declarations.JavadocClass
+import dev.freya02.doxxy.docs.sections.DocDetail
 import dev.freya02.doxxy.docs.utils.HttpUtils.getDocument
 import java.util.*
 
@@ -37,7 +37,7 @@ object DocsTest3 {
         val simpleAnnotatedSignature = method!!.getSimpleAnnotatedSignature(clazz)
         val markdown = method.descriptionElements.toMarkdown("\n")
         val markdown2 =
-            method.getDetails(EnumSet.of(DocDetailType.SPECIFIED_BY)).stream().findFirst().get().toMarkdown("\n")
+            method.getDetails(EnumSet.of(DocDetail.Type.SPECIFIED_BY)).stream().findFirst().get().toMarkdown("\n")
 
 //        println(
 //            "onlineClassDoc.getDescriptionElements().getMarkdown() = " + onlineClassDoc.descriptionElements.toMarkdown(

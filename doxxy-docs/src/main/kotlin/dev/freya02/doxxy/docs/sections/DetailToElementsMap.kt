@@ -1,4 +1,4 @@
-package dev.freya02.doxxy.docs.data
+package dev.freya02.doxxy.docs.sections
 
 import dev.freya02.doxxy.docs.HTMLElement
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -6,13 +6,13 @@ import org.jsoup.nodes.Element
 import java.util.*
 
 class DetailToElementsMap private constructor(detailTarget: Element) {
-    private val map: MutableMap<DocDetailType, MutableList<HTMLElement>> = EnumMap(DocDetailType::class.java)
+    private val map: MutableMap<DocDetail.Type, MutableList<HTMLElement>> = EnumMap(DocDetail.Type::class.java)
 
     private inner class DetailsState(private val detailTarget: Element) {
         private var list: MutableList<HTMLElement>? = null
 
         fun newDetail(detailName: String) {
-            val type = DocDetailType.parseType(detailName)
+            val type = DocDetail.Type.parseType(detailName)
 
             @Suppress("LiftReturnOrAssignment")
             if (type == null) {
@@ -47,7 +47,7 @@ class DetailToElementsMap private constructor(detailTarget: Element) {
         }
     }
 
-    fun getDetail(detailType: DocDetailType): DocDetail? {
+    fun getDetail(detailType: DocDetail.Type): DocDetail? {
         val elements = map[detailType] ?: return null
         return DocDetail(detailType, elements)
     }

@@ -1,9 +1,13 @@
-package dev.freya02.doxxy.docs.data
+package dev.freya02.doxxy.docs.declarations
 
-import dev.freya02.doxxy.docs.DocParseException
-import dev.freya02.doxxy.docs.DocUtils
 import dev.freya02.doxxy.docs.HTMLElement
 import dev.freya02.doxxy.docs.HTMLElementList
+import dev.freya02.doxxy.docs.exceptions.DocParseException
+import dev.freya02.doxxy.docs.sections.ClassDetailType
+import dev.freya02.doxxy.docs.sections.DetailToElementsMap
+import dev.freya02.doxxy.docs.sections.DocDetail
+import dev.freya02.doxxy.docs.sections.SeeAlso
+import dev.freya02.doxxy.docs.utils.DocUtils
 import dev.freya02.doxxy.docs.utils.requireDoc
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import org.jsoup.nodes.Element
@@ -61,7 +65,7 @@ class JavadocMethod(val declaringClass: JavadocClass, val classDetailType: Class
         detailToElementsMap = DetailToElementsMap.parseDetails(element)
 
         //See also
-        val seeAlsoDetail = detailToElementsMap.getDetail(DocDetailType.SEE_ALSO)
+        val seeAlsoDetail = detailToElementsMap.getDetail(DocDetail.Type.SEE_ALSO)
         seeAlso = when {
             seeAlsoDetail != null -> SeeAlso(declaringClass.source, seeAlsoDetail)
             else -> null

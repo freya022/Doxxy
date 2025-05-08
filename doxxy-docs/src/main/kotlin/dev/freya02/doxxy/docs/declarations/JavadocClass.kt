@@ -1,6 +1,14 @@
-package dev.freya02.doxxy.docs.data
+package dev.freya02.doxxy.docs.declarations
 
-import dev.freya02.doxxy.docs.*
+import dev.freya02.doxxy.docs.DocSourceType
+import dev.freya02.doxxy.docs.DocsSession
+import dev.freya02.doxxy.docs.HTMLElement
+import dev.freya02.doxxy.docs.HTMLElementList
+import dev.freya02.doxxy.docs.exceptions.DocParseException
+import dev.freya02.doxxy.docs.sections.ClassDetailType
+import dev.freya02.doxxy.docs.sections.DetailToElementsMap
+import dev.freya02.doxxy.docs.sections.DocDetail
+import dev.freya02.doxxy.docs.sections.SeeAlso
 import dev.freya02.doxxy.docs.utils.HttpUtils
 import dev.freya02.doxxy.docs.utils.checkJavadocVersion
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -55,7 +63,7 @@ class JavadocClass(
         detailToElementsMap = DetailToElementsMap.parseDetails(detailTarget)
 
         //See also
-        val seeAlsoDetail = detailToElementsMap.getDetail(DocDetailType.SEE_ALSO)
+        val seeAlsoDetail = detailToElementsMap.getDetail(DocDetail.Type.SEE_ALSO)
         seeAlso = when {
             seeAlsoDetail != null -> SeeAlso(source, seeAlsoDetail)
             else -> null
@@ -188,4 +196,9 @@ class JavadocClass(
         get() = getMethodDocs()
             .values
             .filter { f: JavadocMethod -> f.classDetailType == ClassDetailType.ANNOTATION_ELEMENT }
+
+    private enum class InheritedType(val classSuffix: String) {
+        METHOD("method"),
+        FIELD("field");
+    }
 }

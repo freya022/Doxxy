@@ -12,7 +12,7 @@ import dev.freya02.doxxy.bot.docs.index.DocSuggestion
 import dev.freya02.doxxy.bot.examples.ExampleAPI
 import dev.freya02.doxxy.bot.utils.joinLengthyString
 import dev.freya02.doxxy.docs.DocSourceType
-import dev.freya02.doxxy.docs.data.TargetType
+import dev.freya02.doxxy.docs.sections.SeeAlso.TargetType
 import dev.minn.jda.ktx.interactions.components.ActionRow
 import dev.minn.jda.ktx.interactions.components.SelectOption
 import dev.minn.jda.ktx.messages.Embed

@@ -7,10 +7,10 @@ import dev.freya02.doxxy.bot.docs.metadata.parser.SourceRootMetadata
 import dev.freya02.doxxy.docs.ClassDocs
 import dev.freya02.doxxy.docs.DocSourceType
 import dev.freya02.doxxy.docs.DocsSession
-import dev.freya02.doxxy.docs.data.AbstractJavadoc
-import dev.freya02.doxxy.docs.data.ClassDetailType
-import dev.freya02.doxxy.docs.data.JavadocClass
-import dev.freya02.doxxy.docs.data.returnTypeNoAnnotations
+import dev.freya02.doxxy.docs.declarations.AbstractJavadoc
+import dev.freya02.doxxy.docs.declarations.JavadocClass
+import dev.freya02.doxxy.docs.declarations.returnTypeNoAnnotations
+import dev.freya02.doxxy.docs.sections.ClassDetailType
 import dev.freya02.doxxy.docs.sourceDirectory
 import io.github.freya022.botcommands.api.core.db.Database
 import io.github.freya022.botcommands.api.core.db.Transaction

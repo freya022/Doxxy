@@ -1,8 +1,13 @@
 package dev.freya02.doxxy.bot.docs
 
 import dev.freya02.doxxy.bot.utils.HttpUtils.doesStartByLocalhost
-import dev.freya02.doxxy.docs.data.*
-import dev.freya02.doxxy.docs.data.SeeAlso.SeeAlsoReference
+import dev.freya02.doxxy.docs.declarations.AbstractJavadoc
+import dev.freya02.doxxy.docs.declarations.FieldDoc
+import dev.freya02.doxxy.docs.declarations.JavadocClass
+import dev.freya02.doxxy.docs.declarations.JavadocMethod
+import dev.freya02.doxxy.docs.sections.DocDetail
+import dev.freya02.doxxy.docs.sections.SeeAlso
+import dev.freya02.doxxy.docs.sections.SeeAlso.SeeAlsoReference
 import dev.minn.jda.ktx.messages.EmbedBuilder
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.MessageEmbed
@@ -12,15 +17,15 @@ object DocEmbeds {
     private const val DESCRIPTION_MAX_LENGTH = 2048 //Description max length / 2 basically, otherwise embeds are HUGE
 
     //SEE_ALSO not needed, already added manually
-    private val includedTypes: EnumSet<DocDetailType> = EnumSet.of( //SEE_ALSO not needed, already added manually
-        DocDetailType.PARAMETERS,
-        DocDetailType.TYPE_PARAMETERS,
-        DocDetailType.RETURNS,
-        DocDetailType.SPECIFIED_BY,
-        DocDetailType.OVERRIDES,
-        DocDetailType.INCUBATING,
-        DocDetailType.DEFAULT,
-        DocDetailType.THROWS
+    private val includedTypes: EnumSet<DocDetail.Type> = EnumSet.of( //SEE_ALSO not needed, already added manually
+        DocDetail.Type.PARAMETERS,
+        DocDetail.Type.TYPE_PARAMETERS,
+        DocDetail.Type.RETURNS,
+        DocDetail.Type.SPECIFIED_BY,
+        DocDetail.Type.OVERRIDES,
+        DocDetail.Type.INCUBATING,
+        DocDetail.Type.DEFAULT,
+        DocDetail.Type.THROWS
     )
 
     fun toEmbed(doc: JavadocClass): EmbedBuilder {
@@ -147,7 +152,7 @@ object DocEmbeds {
         }
     }
 
-    private fun EmbedBuilder.addDocDetails(doc: AbstractJavadoc, excludedTypes: EnumSet<DocDetailType>) {
+    private fun EmbedBuilder.addDocDetails(doc: AbstractJavadoc, excludedTypes: EnumSet<DocDetail.Type>) {
         val details = doc.getDetails(excludedTypes)
         for (detail in details) {
             addDocField(

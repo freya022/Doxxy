@@ -9,8 +9,8 @@ import dev.freya02.doxxy.bot.docs.metadata.ImplementationIndex
 import dev.freya02.doxxy.docs.DocSourceType
 import dev.freya02.doxxy.docs.DocsSession
 import dev.freya02.doxxy.docs.PageCache
-import dev.freya02.doxxy.docs.data.SeeAlso.SeeAlsoReference
-import dev.freya02.doxxy.docs.data.TargetType
+import dev.freya02.doxxy.docs.sections.SeeAlso.SeeAlsoReference
+import dev.freya02.doxxy.docs.sections.SeeAlso.TargetType
 import io.github.freya022.botcommands.api.core.db.Database
 import io.github.freya022.botcommands.api.core.db.Transaction
 import io.github.freya022.botcommands.api.core.db.preparedStatement

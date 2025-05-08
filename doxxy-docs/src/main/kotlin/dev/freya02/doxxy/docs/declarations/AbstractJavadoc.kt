@@ -1,7 +1,10 @@
-package dev.freya02.doxxy.docs.data
+package dev.freya02.doxxy.docs.declarations
 
 import dev.freya02.doxxy.docs.HTMLElement
 import dev.freya02.doxxy.docs.HTMLElementList
+import dev.freya02.doxxy.docs.sections.DetailToElementsMap
+import dev.freya02.doxxy.docs.sections.DocDetail
+import dev.freya02.doxxy.docs.sections.SeeAlso
 import java.util.*
 import java.util.regex.Pattern
 
@@ -24,8 +27,8 @@ abstract class AbstractJavadoc {
 
     protected abstract val detailToElementsMap: DetailToElementsMap
 
-    fun getDetails(includedTypes: EnumSet<DocDetailType>): List<DocDetail> =
-        DocDetailType.entries
+    fun getDetails(includedTypes: EnumSet<DocDetail.Type>): List<DocDetail> =
+        DocDetail.Type.entries
             .filter { it in includedTypes }
             .mapNotNull { detailType -> detailToElementsMap.getDetail(detailType) }
 }

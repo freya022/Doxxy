@@ -1,7 +1,7 @@
 package dev.freya02.doxxy.bot.docs.index
 
 import dev.freya02.doxxy.bot.docs.metadata.parser.ImplementationMetadata
-import dev.freya02.doxxy.docs.data.JavadocClass
+import dev.freya02.doxxy.docs.declarations.JavadocClass
 
 data class ReindexData(val sourceUrl: String? = null) {
     fun getClassSourceUrlOrNull(clazz: JavadocClass): String? {

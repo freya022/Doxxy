@@ -1,7 +1,7 @@
 package dev.freya02.doxxy.bot.docs.cached
 
 import dev.freya02.doxxy.bot.docs.index.DocIndex
-import dev.freya02.doxxy.docs.data.SeeAlso.SeeAlsoReference
+import dev.freya02.doxxy.docs.sections.SeeAlso.SeeAlsoReference
 import net.dv8tion.jda.api.entities.MessageEmbed
 
 class CachedField(

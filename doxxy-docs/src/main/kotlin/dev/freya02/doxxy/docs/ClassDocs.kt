@@ -1,5 +1,6 @@
 package dev.freya02.doxxy.docs
 
+import dev.freya02.doxxy.docs.exceptions.DocParseException
 import dev.freya02.doxxy.docs.utils.DecomposedName
 import dev.freya02.doxxy.docs.utils.HttpUtils
 import io.github.oshai.kotlinlogging.KotlinLogging
