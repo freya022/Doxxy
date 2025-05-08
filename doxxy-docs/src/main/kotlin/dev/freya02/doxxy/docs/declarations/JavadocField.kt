@@ -13,7 +13,7 @@ import org.jsoup.nodes.Element
 
 private val logger = KotlinLogging.logger { }
 
-class FieldDoc(val declaringClass: JavadocClass, val classDetailType: ClassDetailType, element: Element) : AbstractJavadoc() {
+class JavadocField(val declaringClass: JavadocClass, val classDetailType: ClassDetailType, element: Element) : AbstractJavadoc() {
     override val effectiveURL: String
     override val onlineURL: String?
 

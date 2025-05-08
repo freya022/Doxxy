@@ -36,8 +36,8 @@ class JavadocClass(
 
     override val seeAlso: SeeAlso?
 
-    private val _fields: MutableMap<String, FieldDoc> = hashMapOf()
-    val fields: Map<String, FieldDoc> get() = _fields
+    private val _fields: MutableMap<String, JavadocField> = hashMapOf()
+    val fields: Map<String, JavadocField> get() = _fields
 
     private val _methods: MutableMap<String, JavadocMethod> = hashMapOf()
     val methods: Map<String, JavadocMethod> get() = _methods
@@ -77,13 +77,13 @@ class JavadocClass(
 
         //Try to find field details
         processDetailElements(document, ClassDetailType.FIELD) { fieldElement: Element ->
-            val field = FieldDoc(this, ClassDetailType.FIELD, fieldElement)
+            val field = JavadocField(this, ClassDetailType.FIELD, fieldElement)
             this._fields[field.elementId] = field
         }
 
         //Try to find enum constants, they're similar to fields it seems
         processDetailElements(document, ClassDetailType.ENUM_CONSTANTS) { fieldElement: Element ->
-            val field = FieldDoc(this, ClassDetailType.ENUM_CONSTANTS, fieldElement)
+            val field = JavadocField(this, ClassDetailType.ENUM_CONSTANTS, fieldElement)
             this._fields[field.elementId] = field
         }
 
@@ -185,10 +185,10 @@ class JavadocClass(
     override fun toHumanClassIdentifier(className: String): String? = null
     override val returnType: String? = null
 
-    val enumConstants: List<FieldDoc>
+    val enumConstants: List<JavadocField>
         get() = fields
             .values
-            .filter { f: FieldDoc -> f.classDetailType == ClassDetailType.ENUM_CONSTANTS }
+            .filter { f: JavadocField -> f.classDetailType == ClassDetailType.ENUM_CONSTANTS }
 
     val annotationElements: List<JavadocMethod>
         get() = methods

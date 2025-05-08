@@ -2,8 +2,8 @@ package dev.freya02.doxxy.bot.docs
 
 import dev.freya02.doxxy.bot.utils.HttpUtils.doesStartByLocalhost
 import dev.freya02.doxxy.docs.declarations.AbstractJavadoc
-import dev.freya02.doxxy.docs.declarations.FieldDoc
 import dev.freya02.doxxy.docs.declarations.JavadocClass
+import dev.freya02.doxxy.docs.declarations.JavadocField
 import dev.freya02.doxxy.docs.declarations.JavadocMethod
 import dev.freya02.doxxy.docs.sections.DocDetail
 import dev.freya02.doxxy.docs.sections.SeeAlso
@@ -97,7 +97,7 @@ object DocEmbeds {
         }.builder
     }
 
-    fun toEmbed(clazz: JavadocClass, field: FieldDoc): EmbedBuilder {
+    fun toEmbed(clazz: JavadocClass, field: JavadocField): EmbedBuilder {
         return EmbedBuilder {
             title = clazz.className + " : " + field.simpleSignature
             url = getDocURL(field)
