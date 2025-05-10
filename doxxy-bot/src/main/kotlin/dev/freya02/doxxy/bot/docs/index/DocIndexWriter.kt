@@ -6,7 +6,6 @@ import dev.freya02.doxxy.bot.docs.metadata.parser.ImplementationMetadataWriter
 import dev.freya02.doxxy.bot.docs.metadata.parser.SourceRootMetadata
 import dev.freya02.doxxy.docs.ClassDocs
 import dev.freya02.doxxy.docs.DocSourceType
-import dev.freya02.doxxy.docs.DocsSession
 import dev.freya02.doxxy.docs.declarations.AbstractJavadoc
 import dev.freya02.doxxy.docs.declarations.JavadocClass
 import dev.freya02.doxxy.docs.declarations.returnTypeNoAnnotations
@@ -26,7 +25,6 @@ private val logger = KotlinLogging.logger { }
 
 internal class DocIndexWriter(
     private val database: Database,
-    private val docsSession: DocsSession,
     private val sourceType: DocSourceType,
     private val reindexData: ReindexData
 ) {
@@ -52,7 +50,7 @@ internal class DocIndexWriter(
             }
 
             updatedSource
-                .documentFlow(docsSession)
+                .documentFlow()
                 .flowOn(Dispatchers.IO.limitedParallelism(parallelism = 8, name = "Document fetch"))
                 .buffer()
                 .collect { classDoc ->

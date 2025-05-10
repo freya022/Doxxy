@@ -19,6 +19,8 @@ class ClassDocs internal constructor(
     val classUrlMappings: Map<SimpleName, DocsURL>,
 ) {
 
+    private val cache = JavadocClassCache(this)
+
     internal fun getConstantsOrNull(fullClassName: FullName): Map<FieldName, FieldValue>? {
         return constants[fullClassName]
     }
@@ -28,10 +30,10 @@ class ClassDocs internal constructor(
         return cleanURL in knownUrls
     }
 
-    fun documentFlow(session: DocsSession): Flow<JavadocClass> = callbackFlow {
+    fun documentFlow(): Flow<JavadocClass> = callbackFlow {
         classUrlMappings.forEach { (className, classUrl) ->
             try {
-                val classDoc = session.retrieveDoc(classUrl) ?: run {
+                val classDoc = retrieveClassOrNull(classUrl) ?: run {
                     logger.warn { "Unable to get docs of '${className}' at '${classUrl}', javadoc version or source type may be incorrect" }
                     return@forEach
                 }
@@ -41,6 +43,18 @@ class ClassDocs internal constructor(
                 logger.error(e) { "An exception occurred while reading the docs of '$className' at '$classUrl', skipping." }
             }
         }
+    }
+
+    /**
+     * Retrieves the [JavadocClass] for this URL
+     *
+     * @param  classUrl URL of the class
+     *
+     * @return The [JavadocClass], or `null` if the DocSourceType cannot be determined,
+     *         or the Javadoc version is unsupported
+     */
+    fun retrieveClassOrNull(classUrl: DocsURL): JavadocClass? {
+        return cache.retrieveClassOrNull(classUrl)
     }
 
     companion object {

@@ -7,7 +7,6 @@ import dev.freya02.doxxy.bot.docs.cached.CachedField
 import dev.freya02.doxxy.bot.docs.cached.CachedMethod
 import dev.freya02.doxxy.bot.docs.metadata.ImplementationIndex
 import dev.freya02.doxxy.docs.DocSourceType
-import dev.freya02.doxxy.docs.DocsSession
 import dev.freya02.doxxy.docs.PageCache
 import dev.freya02.doxxy.docs.sections.SeeAlso.SeeAlsoReference
 import dev.freya02.doxxy.docs.sections.SeeAlso.TargetType
@@ -242,9 +241,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                 logger.info { "Cleared cache of ${sourceType.name}" }
             }
 
-            val docsSession = DocsSession()
-
-            DocIndexWriter(database, docsSession, sourceType, reindexData).doReindex()
+            DocIndexWriter(database, sourceType, reindexData).doReindex()
 
             logger.info { "Re-indexed docs for ${sourceType.name}" }
         }

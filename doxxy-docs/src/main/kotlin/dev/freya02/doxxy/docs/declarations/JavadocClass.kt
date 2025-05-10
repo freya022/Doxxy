@@ -1,7 +1,7 @@
 package dev.freya02.doxxy.docs.declarations
 
+import dev.freya02.doxxy.docs.ClassDocs
 import dev.freya02.doxxy.docs.DocSourceType
-import dev.freya02.doxxy.docs.DocsSession
 import dev.freya02.doxxy.docs.HTMLElement
 import dev.freya02.doxxy.docs.HTMLElementList
 import dev.freya02.doxxy.docs.exceptions.DocParseException
@@ -19,7 +19,7 @@ import java.util.function.BiConsumer
 import java.util.function.Consumer
 
 class JavadocClass internal constructor(
-    docsSession: DocsSession,
+    session: ClassDocs,
     val sourceURL: String,
     document: Document = HttpUtils.getDocument(sourceURL)
 ) : AbstractJavadoc() {
@@ -71,9 +71,9 @@ class JavadocClass internal constructor(
             else -> null
         }
 
-        processInheritedElements(docsSession, document, InheritedType.FIELD, this::onInheritedField)
+        processInheritedElements(session, document, InheritedType.FIELD, this::onInheritedField)
 
-        processInheritedElements(docsSession, document, InheritedType.METHOD, this::onInheritedMethod)
+        processInheritedElements(session, document, InheritedType.METHOD, this::onInheritedMethod)
 
         //Try to find field details
         processDetailElements(document, ClassDetailType.FIELD) { fieldElement: Element ->
@@ -111,7 +111,7 @@ class JavadocClass internal constructor(
 
     @Throws(IOException::class)
     private fun processInheritedElements(
-        docsSession: DocsSession,
+        session: ClassDocs,
         document: Document,
         inheritedType: InheritedType,
         inheritedElementConsumer: BiConsumer<JavadocClass, String?>
@@ -123,7 +123,7 @@ class JavadocClass internal constructor(
 
             if (superClassLinkElement != null) {
                 val superClassLink = superClassLinkElement.absUrl("href")
-                val superClassDocs = docsSession.retrieveDoc(superClassLink)
+                val superClassDocs = session.retrieveClassOrNull(superClassLink)
                 //Probably a bad link or an unsupported Javadoc version
                 if (superClassDocs == null)
                     continue
