@@ -14,11 +14,17 @@ internal class JavadocClassCache internal constructor(
     private val docMap = hashMapOf<DocsURL, JavadocClass>()
     private val locks = ConcurrentHashMap<DocsURL, ReentrantLock>()
 
-    fun retrieveClassOrNull(classUrl: DocsURL): JavadocClass? {
+    private val currentUrls: ThreadLocal<Set<DocsURL>> = ThreadLocal.withInitial { hashSetOf() }
+
+    internal fun retrieveClassOrNull(classUrl: DocsURL): JavadocClass? {
+        docMap[classUrl]?.let { return it }
+
+        check(classUrl in currentUrls.get()) {
+            "Recursion detected for $classUrl in $currentUrls"
+        }
+
         locks.computeIfAbsent(classUrl) { ReentrantLock() }.withLock {
-            //Can't use computeIfAbsent as it could be recursively called, throwing a ConcurrentModificationException
-            val doc = docMap[classUrl]
-            if (doc != null) return doc
+            docMap[classUrl]?.let { return it }
 
             val source = DocSourceType.fromUrl(classUrl) ?: return null
 
