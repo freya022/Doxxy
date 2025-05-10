@@ -1,9 +1,12 @@
 package dev.freya02.doxxy.docs
 
+import dev.freya02.doxxy.docs.declarations.JavadocClass
 import dev.freya02.doxxy.docs.exceptions.DocParseException
 import dev.freya02.doxxy.docs.utils.DecomposedName
 import dev.freya02.doxxy.docs.utils.HttpUtils
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -24,6 +27,21 @@ class ClassDocs internal constructor(
     internal fun isValidURL(url: String): Boolean {
         val cleanURL = HttpUtils.removeFragment(url)
         return cleanURL in knownUrls
+    }
+
+    fun documentFlow(session: DocsSession): Flow<JavadocClass> = callbackFlow {
+        simpleNameToUrlMap.forEach { (className, classUrl) ->
+            try {
+                val classDoc = session.retrieveDoc(classUrl) ?: run {
+                    logger.warn { "Unable to get docs of '${className}' at '${classUrl}', javadoc version or source type may be incorrect" }
+                    return@forEach
+                }
+
+                send(classDoc)
+            } catch (e: Exception) {
+                logger.error(e) { "An exception occurred while reading the docs of '$className' at '$classUrl', skipping." }
+            }
+        }
     }
 
     companion object {

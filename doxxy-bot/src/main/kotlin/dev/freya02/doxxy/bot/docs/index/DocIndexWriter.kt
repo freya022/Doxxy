@@ -17,6 +17,9 @@ import io.github.freya022.botcommands.api.core.db.Transaction
 import io.github.freya022.botcommands.api.core.db.preparedStatement
 import io.github.freya022.botcommands.api.core.db.transactional
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.flowOn
 import net.dv8tion.jda.api.utils.data.DataObject
 
 private val logger = KotlinLogging.logger { }
@@ -48,28 +51,25 @@ internal class DocIndexWriter(
                 executeUpdate(sourceType.id)
             }
 
-            for ((className, classUrl) in updatedSource.simpleNameToUrlMap) {
-                try {
-                    val classDoc = docsSession.retrieveDoc(classUrl)
+            updatedSource
+                .documentFlow(docsSession)
+                .flowOn(Dispatchers.IO.limitedParallelism(parallelism = 8, name = "Document fetch"))
+                .buffer()
+                .collect { classDoc ->
+                    try {
+                        val classEmbed = toEmbed(classDoc)
+                        val classEmbedJson = classEmbed.toData()
+                        val sourceLink = reindexData.getClassSourceUrlOrNull(classDoc)
 
-                    if (classDoc == null) {
-                        logger.warn { "Unable to get docs of '${className}' at '${classUrl}', javadoc version or source type may be incorrect" }
-                        continue
+                        val classDocId = insertDoc(DocType.CLASS, classDoc.className, classDoc, classEmbedJson, sourceLink)
+                        insertSeeAlso(classDoc, classDocId)
+
+                        insertMethodDocs(classDoc, sourceLink)
+                        insertFieldDocs(classDoc, sourceLink)
+                    } catch (e: Exception) {
+                        throw RuntimeException("An exception occurred while reading the docs of '$classDoc.url'", e)
                     }
-
-                    val classEmbed = toEmbed(classDoc)
-                    val classEmbedJson = classEmbed.toData()
-                    val sourceLink = reindexData.getClassSourceUrlOrNull(classDoc)
-
-                    val classDocId = insertDoc(DocType.CLASS, classDoc.className, classDoc, classEmbedJson, sourceLink)
-                    insertSeeAlso(classDoc, classDocId)
-
-                    insertMethodDocs(classDoc, sourceLink)
-                    insertFieldDocs(classDoc, sourceLink)
-                } catch (e: Exception) {
-                    throw RuntimeException("An exception occurred while reading the docs of '$className' at '$classUrl'", e)
                 }
-            }
 
             preparedStatement("refresh materialized view doc_view") {
                 executeUpdate()
