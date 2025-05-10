@@ -9,7 +9,6 @@ import java.util.*
 import java.util.regex.Pattern
 
 abstract class AbstractJavadoc internal constructor() {
-    abstract val effectiveURL: String
     abstract val onlineURL: String?
     abstract val descriptionElements: HTMLElementList
     abstract val deprecationElement: HTMLElement?

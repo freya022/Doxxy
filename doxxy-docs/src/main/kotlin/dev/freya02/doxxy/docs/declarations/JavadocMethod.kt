@@ -122,9 +122,6 @@ class JavadocMethod internal constructor(
         append(')')
     }
 
-    override val effectiveURL: String
-        get() = declaringClass.effectiveURL + '#' + elementId
-
     override val onlineURL: String? = declaringClass.onlineURL?.let { "$it#$elementId" }
 
     override val returnType: String

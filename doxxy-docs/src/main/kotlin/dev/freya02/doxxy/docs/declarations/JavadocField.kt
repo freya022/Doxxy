@@ -18,7 +18,6 @@ class JavadocField internal constructor(
     val classDetailType: ClassDetailType,
     element: Element
 ) : AbstractJavadoc() {
-    override val effectiveURL: String
     override val onlineURL: String?
 
     val fieldName: String
@@ -37,7 +36,6 @@ class JavadocField internal constructor(
 
     init {
         elementId = element.id()
-        effectiveURL = declaringClass.effectiveURL + "#" + elementId
         onlineURL = declaringClass.onlineURL?.let { "$it#$elementId" }
 
         //Get field modifiers
