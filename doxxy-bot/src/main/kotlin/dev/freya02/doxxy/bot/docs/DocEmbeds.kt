@@ -31,7 +31,7 @@ object DocEmbeds {
     fun toEmbed(doc: JavadocClass): EmbedBuilder {
         return EmbedBuilder {
             title = doc.docTitleElement.targetElement.text()
-            url = getDocURL(doc)
+            url = doc.onlineURL
 
             builder.addDocDescription(doc)
             builder.addDocDeprecation(doc)
@@ -46,7 +46,7 @@ object DocEmbeds {
                     "Enum values:",
                     valuesStr + if (enumConstants.size > 10) "\n... and more ..." else "",
                     false,
-                    getDocURL(doc)
+                    doc.onlineURL
                 )
             }
 
@@ -60,13 +60,13 @@ object DocEmbeds {
                     "Annotation fields:",
                     fieldsStr + if (annotationElements.size > 10) "\n... and more ..." else "",
                     false,
-                    getDocURL(doc)
+                    doc.onlineURL
                 )
             }
 
             builder.addDocDetails(doc, includedTypes)
 
-            builder.addSeeAlso(doc.seeAlso, getDocURL(doc))
+            builder.addSeeAlso(doc.seeAlso, doc.onlineURL)
         }.builder
     }
 
@@ -82,7 +82,7 @@ object DocEmbeds {
                 )
             }
 
-            builder.setTitle(title, getDocURL(method))
+            builder.setTitle(title, method.onlineURL)
 
             //Should use that but JB annotations are duplicated, bruh momentum
 //		    builder.setTitle(method.getMethodSignature(), method.getURL());
@@ -93,14 +93,14 @@ object DocEmbeds {
             builder.addDocDescription(method)
             builder.addDocDeprecation(method)
             builder.addDocDetails(method, includedTypes)
-            builder.addSeeAlso(method.seeAlso, getDocURL(method))
+            builder.addSeeAlso(method.seeAlso, method.onlineURL)
         }.builder
     }
 
     fun toEmbed(clazz: JavadocClass, field: JavadocField): EmbedBuilder {
         return EmbedBuilder {
             title = clazz.className + " : " + field.simpleSignature
-            url = getDocURL(field)
+            url = field.onlineURL
 
             if (clazz != field.declaringClass) {
                 description = "**Inherited from ${field.declaringClass.className}**\n\n"
@@ -117,12 +117,8 @@ object DocEmbeds {
             }
 
             builder.addDocDetails(field, includedTypes)
-            builder.addSeeAlso(field.seeAlso, getDocURL(field))
+            builder.addSeeAlso(field.seeAlso, field.onlineURL)
         }.builder
-    }
-
-    private fun getDocURL(doc: AbstractJavadoc): String? {
-        return if (doesStartByLocalhost(doc.effectiveURL)) null else doc.effectiveURL
     }
 
     private fun EmbedBuilder.addDocDescription(doc: AbstractJavadoc) {
@@ -132,7 +128,7 @@ object DocEmbeds {
                 getDescriptionValue(
                     descriptionBuilder.length,
                     descriptionElement.toMarkdown("\n\n"), //Description blocks are separated like paragraphs, unlike details such as "Specified by"
-                    getDocURL(doc)
+                    doc.onlineURL
                 )
             )
         } else {
@@ -147,7 +143,7 @@ object DocEmbeds {
                 "Deprecated",
                 deprecationElement.asMarkdown,
                 false,
-                getDocURL(doc)
+                doc.onlineURL
             )
         }
     }
@@ -159,21 +155,23 @@ object DocEmbeds {
                 detail.detailString,
                 detail.toMarkdown("\n"),
                 false,
-                getDocURL(doc)
+                doc.onlineURL
             )
         }
     }
 
-    private fun getDescriptionValue(currentLength: Int, descriptionValue: String, onlineTarget: String?): String =
-        when {
+    private fun getDescriptionValue(currentLength: Int, descriptionValue: String, onlineTarget: String?): String {
+        return when {
             descriptionValue.length + currentLength > DESCRIPTION_MAX_LENGTH -> {
                 when (onlineTarget) {
                     null -> "Description is too long. Please look at the docs in your IDE"
                     else -> "Description is too long. Please look at [the online docs]($onlineTarget)"
                 }
             }
+
             else -> descriptionValue
         }
+    }
 
     private fun EmbedBuilder.addDocField(
         fieldName: String,
@@ -181,22 +179,15 @@ object DocEmbeds {
         inline: Boolean,
         onlineDocs: String?
     ) {
-        when {
-            fieldValue.length > MessageEmbed.VALUE_MAX_LENGTH -> {
-                when (onlineDocs) {
-                    null -> addField(
-                        fieldName,
-                        "This section is too long" + ". Please look at the docs in your IDE",
-                        inline
-                    )
-                    else -> addField(
-                        fieldName,
-                        "This section is too long. Please look at [the online docs]($onlineDocs)",
-                        inline
-                    )
-                }
+        if (fieldValue.length > MessageEmbed.VALUE_MAX_LENGTH) {
+            val replacement = when {
+                onlineDocs != null -> "This section is too long. Please look at [the online docs]($onlineDocs)"
+                else -> "This section is too long. Please look at the docs in your IDE"
             }
-            else -> addField(fieldName, fieldValue, inline)
+
+            addField(fieldName, replacement, inline)
+        } else {
+            addField(fieldName, fieldValue, inline)
         }
     }
 
