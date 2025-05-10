@@ -8,7 +8,7 @@ import dev.freya02.doxxy.docs.declarations.JavadocMethod
 import dev.freya02.doxxy.docs.sections.DocDetail
 import dev.freya02.doxxy.docs.sections.SeeAlso
 import dev.freya02.doxxy.docs.sections.SeeAlso.SeeAlsoReference
-import dev.minn.jda.ktx.messages.EmbedBuilder
+import dev.minn.jda.ktx.messages.InlineEmbed
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.MessageEmbed
 import java.util.*
@@ -28,97 +28,95 @@ object DocEmbeds {
         DocDetail.Type.THROWS
     )
 
-    fun toEmbed(doc: JavadocClass): EmbedBuilder {
-        return EmbedBuilder {
-            title = doc.docTitleElement.targetElement.text()
-            url = doc.onlineURL
+    fun toEmbed(doc: JavadocClass): MessageEmbed = embed {
+        title = doc.docTitleElement.targetElement.text()
+        url = doc.onlineURL
 
-            builder.addDocDescription(doc)
-            builder.addDocDeprecation(doc)
+        builder.addDocDescription(doc)
+        builder.addDocDeprecation(doc)
 
-            val enumConstants = doc.enumConstants
-            if (enumConstants.isNotEmpty()) {
-                val valuesStr = enumConstants
-                    .take(10)
-                    .joinToString("`\n`", "`", "`") { it.fieldName }
+        val enumConstants = doc.enumConstants
+        if (enumConstants.isNotEmpty()) {
+            val valuesStr = enumConstants
+                .take(10)
+                .joinToString("`\n`", "`", "`") { it.fieldName }
 
-                builder.addDocField(
-                    "Enum values:",
-                    valuesStr + if (enumConstants.size > 10) "\n... and more ..." else "",
-                    false,
-                    doc.onlineURL
-                )
-            }
+            builder.addDocField(
+                "Enum values:",
+                valuesStr + if (enumConstants.size > 10) "\n... and more ..." else "",
+                false,
+                doc.onlineURL
+            )
+        }
 
-            val annotationElements = doc.annotationElements
-            if (annotationElements.isNotEmpty()) {
-                val fieldsStr = annotationElements
-                    .take(10)
-                    .joinToString("`\n`", "`", "`") { "#" + it.methodName + "()" }
+        val annotationElements = doc.annotationElements
+        if (annotationElements.isNotEmpty()) {
+            val fieldsStr = annotationElements
+                .take(10)
+                .joinToString("`\n`", "`", "`") { "#" + it.methodName + "()" }
 
-                builder.addDocField(
-                    "Annotation fields:",
-                    fieldsStr + if (annotationElements.size > 10) "\n... and more ..." else "",
-                    false,
-                    doc.onlineURL
-                )
-            }
+            builder.addDocField(
+                "Annotation fields:",
+                fieldsStr + if (annotationElements.size > 10) "\n... and more ..." else "",
+                false,
+                doc.onlineURL
+            )
+        }
 
-            builder.addDocDetails(doc, includedTypes)
+        builder.addDocDetails(doc, includedTypes)
 
-            builder.addSeeAlso(doc.seeAlso, doc.onlineURL)
-        }.builder
+        builder.addSeeAlso(doc.seeAlso, doc.onlineURL)
     }
 
-    fun toEmbed(clazz: JavadocClass, method: JavadocMethod): EmbedBuilder {
-        return EmbedBuilder {
-            var title = method.getSimpleAnnotatedSignature(clazz)
-            if (title.length > MessageEmbed.TITLE_MAX_LENGTH) {
-                title = "%s%s#%s : %s - [full signature on online docs]".format(
-                    if (method.isStatic) "static " else "",
-                    method.declaringClass.className,
-                    method.methodName,
-                    method.methodReturnType
-                )
-            }
+    fun toEmbed(clazz: JavadocClass, method: JavadocMethod): MessageEmbed = embed {
+        var title = method.getSimpleAnnotatedSignature(clazz)
+        if (title.length > MessageEmbed.TITLE_MAX_LENGTH) {
+            title = "%s%s#%s : %s - [full signature on online docs]".format(
+                if (method.isStatic) "static " else "",
+                method.declaringClass.className,
+                method.methodName,
+                method.methodReturnType
+            )
+        }
 
-            builder.setTitle(title, method.onlineURL)
+        builder.setTitle(title, method.onlineURL)
 
-            //Should use that but JB annotations are duplicated, bruh momentum
+        //Should use that but JB annotations are duplicated, bruh momentum
 //		    builder.setTitle(method.getMethodSignature(), method.getURL());
-            if (clazz != method.declaringClass) {
-                builder.setDescription("**Inherited from ${method.declaringClass.className}**\n\n")
-            }
+        if (clazz != method.declaringClass) {
+            builder.setDescription("**Inherited from ${method.declaringClass.className}**\n\n")
+        }
 
-            builder.addDocDescription(method)
-            builder.addDocDeprecation(method)
-            builder.addDocDetails(method, includedTypes)
-            builder.addSeeAlso(method.seeAlso, method.onlineURL)
-        }.builder
+        builder.addDocDescription(method)
+        builder.addDocDeprecation(method)
+        builder.addDocDetails(method, includedTypes)
+        builder.addSeeAlso(method.seeAlso, method.onlineURL)
     }
 
-    fun toEmbed(clazz: JavadocClass, field: JavadocField): EmbedBuilder {
-        return EmbedBuilder {
-            title = clazz.className + " : " + field.simpleSignature
-            url = field.onlineURL
+    fun toEmbed(clazz: JavadocClass, field: JavadocField): MessageEmbed = embed {
+        title = clazz.className + " : " + field.simpleSignature
+        url = field.onlineURL
 
-            if (clazz != field.declaringClass) {
-                description = "**Inherited from ${field.declaringClass.className}**\n\n"
+        if (clazz != field.declaringClass) {
+            description = "**Inherited from ${field.declaringClass.className}**\n\n"
+        }
+
+        builder.addDocDescription(field)
+        builder.addDocDeprecation(field)
+
+        field.fieldValue?.let { fieldValue ->
+            field {
+                name = "Value"
+                value = fieldValue
             }
+        }
 
-            builder.addDocDescription(field)
-            builder.addDocDeprecation(field)
+        builder.addDocDetails(field, includedTypes)
+        builder.addSeeAlso(field.seeAlso, field.onlineURL)
+    }
 
-            field.fieldValue?.let { fieldValue ->
-                field {
-                    name = "Value"
-                    value = fieldValue
-                }
-            }
-
-            builder.addDocDetails(field, includedTypes)
-            builder.addSeeAlso(field.seeAlso, field.onlineURL)
-        }.builder
+    private inline fun embed(block: InlineEmbed.() -> Unit): MessageEmbed {
+        return EmbedBuilder().let(::InlineEmbed).apply(block).build()
     }
 
     private fun EmbedBuilder.addDocDescription(doc: AbstractJavadoc) {

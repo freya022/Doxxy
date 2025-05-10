@@ -57,7 +57,7 @@ internal class DocIndexWriter(
                         continue
                     }
 
-                    val classEmbed = toEmbed(classDoc).build()
+                    val classEmbed = toEmbed(classDoc)
                     val classEmbedJson = classEmbed.toData()
                     val sourceLink = reindexData.getClassSourceUrlOrNull(classDoc)
 
@@ -85,7 +85,7 @@ internal class DocIndexWriter(
     private suspend fun insertMethodDocs(clazz: JavadocClass, sourceLink: String?) {
         for (method in clazz.methods.values) {
             try {
-                val methodEmbed = toEmbed(clazz, method).build()
+                val methodEmbed = toEmbed(clazz, method)
                 val methodEmbedJson = methodEmbed.toData()
 
                 val methodRange: IntRange? = when (sourceLink) {
@@ -154,7 +154,7 @@ internal class DocIndexWriter(
     private suspend fun insertFieldDocs(clazz: JavadocClass, sourceLink: String?) {
         for (field in clazz.fields.values) {
             try {
-                val fieldEmbed = toEmbed(clazz, field).build()
+                val fieldEmbed = toEmbed(clazz, field)
                 val fieldEmbedJson = fieldEmbed.toData()
 
                 val fieldRange: IntRange? = when (sourceLink) {
