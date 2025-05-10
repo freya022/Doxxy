@@ -12,7 +12,11 @@ import dev.freya02.doxxy.docs.utils.requireDoc
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import org.jsoup.nodes.Element
 
-class JavadocMethod(val declaringClass: JavadocClass, val classDetailType: ClassDetailType, element: Element) : AbstractJavadoc() {
+class JavadocMethod internal constructor(
+    val declaringClass: JavadocClass,
+    val classDetailType: ClassDetailType,
+    element: Element
+) : AbstractJavadoc() {
     val elementId: String
     val methodAnnotations: String?
     val methodName: String

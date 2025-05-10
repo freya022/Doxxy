@@ -8,7 +8,7 @@ import dev.freya02.doxxy.docs.sections.SeeAlso
 import java.util.*
 import java.util.regex.Pattern
 
-abstract class AbstractJavadoc {
+abstract class AbstractJavadoc internal constructor() {
     abstract val effectiveURL: String
     abstract val onlineURL: String?
     abstract val descriptionElements: HTMLElementList

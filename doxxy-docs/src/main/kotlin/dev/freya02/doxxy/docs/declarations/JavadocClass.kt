@@ -18,7 +18,7 @@ import java.io.IOException
 import java.util.function.BiConsumer
 import java.util.function.Consumer
 
-class JavadocClass(
+class JavadocClass internal constructor(
     docsSession: DocsSession,
     val sourceURL: String,
     document: Document = HttpUtils.getDocument(sourceURL)
