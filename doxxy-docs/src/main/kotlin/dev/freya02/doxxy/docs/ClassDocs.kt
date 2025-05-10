@@ -16,8 +16,7 @@ private val logger = KotlinLogging.logger { }
 class ClassDocs internal constructor(
     private val knownUrls: Set<String>,
     private val constants: Map<FullName, Map<FieldName, FieldValue>>,
-    // TODO rename to classUrlMappings?
-    val simpleNameToUrlMap: Map<SimpleName, DocsURL>,
+    val classUrlMappings: Map<SimpleName, DocsURL>,
 ) {
 
     internal fun getConstantsOrNull(fullClassName: FullName): Map<FieldName, FieldValue>? {
@@ -30,7 +29,7 @@ class ClassDocs internal constructor(
     }
 
     fun documentFlow(session: DocsSession): Flow<JavadocClass> = callbackFlow {
-        simpleNameToUrlMap.forEach { (className, classUrl) ->
+        classUrlMappings.forEach { (className, classUrl) ->
             try {
                 val classDoc = session.retrieveDoc(classUrl) ?: run {
                     logger.warn { "Unable to get docs of '${className}' at '${classUrl}', javadoc version or source type may be incorrect" }
@@ -77,7 +76,7 @@ private fun ClassDocs(sourceType: DocSourceType): ClassDocs {
     return ClassDocs(
         knownUrls = knownUrls,
         constants = constants,
-        simpleNameToUrlMap = classUrlMappings,
+        classUrlMappings = classUrlMappings,
     )
 }
 
