@@ -71,7 +71,7 @@ class JavadocMethod internal constructor(
         //See also
         val seeAlsoDetail = detailToElementsMap.getDetail(DocDetail.Type.SEE_ALSO)
         seeAlso = when {
-            seeAlsoDetail != null -> SeeAlso(declaringClass.source, seeAlsoDetail)
+            seeAlsoDetail != null -> SeeAlso(declaringClass.moduleSession, seeAlsoDetail)
             else -> null
         }
     }

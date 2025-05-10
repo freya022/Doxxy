@@ -5,15 +5,15 @@ import dev.freya02.doxxy.docs.exceptions.DocParseException
 import dev.freya02.doxxy.docs.utils.DecomposedName
 import dev.freya02.doxxy.docs.utils.HttpUtils
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import java.util.*
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 
 private val logger = KotlinLogging.logger { }
 
-class ClassDocs internal constructor(
+class JavadocModuleSession internal constructor(
+    internal val globalSession: GlobalJavadocSession,
+    internal val sourceType: DocSourceType,
     private val knownUrls: Set<String>,
     private val constants: Map<FullName, Map<FieldName, FieldValue>>,
     val classUrlMappings: Map<SimpleName, DocsURL>,
@@ -53,41 +53,21 @@ class ClassDocs internal constructor(
      * @return The [JavadocClass], or `null` if the DocSourceType cannot be determined,
      *         or the Javadoc version is unsupported
      */
-    fun retrieveClassOrNull(classUrl: DocsURL): JavadocClass? {
+    internal fun retrieveClassOrNull(classUrl: DocsURL): JavadocClass? {
         return cache.retrieveClassOrNull(classUrl)
-    }
-
-    companion object {
-        private val sourceMap: MutableMap<DocSourceType, ClassDocs> = EnumMap(DocSourceType::class.java)
-        private val lock = ReentrantLock()
-
-        /**
-         * This is only to be used within code triggered from indexing
-         *
-         * TODO remove the need for this by passing the ClassDocs instance to every JavadocClass
-         *   or use a context parameter for it, as data is likely not accessed outside of constructors/factories
-         *   This may also be a good opportunity to merge DocsSession here and rename to JavadocSession/JavadocContext
-         */
-        fun getSource(source: DocSourceType): ClassDocs {
-            return sourceMap[source] ?: error("Source '$source' has not been indexed yet")
-        }
-
-        fun getUpdatedSource(source: DocSourceType): ClassDocs = lock.withLock {
-            val updatedSource = ClassDocs(source)
-            sourceMap[source] = updatedSource
-            updatedSource
-        }
     }
 }
 
-private fun ClassDocs(sourceType: DocSourceType): ClassDocs {
+internal fun JavadocModuleSession(globalSession: GlobalJavadocSession, sourceType: DocSourceType): JavadocModuleSession {
     logger.info { "Parsing ClassDocs URLs for: $sourceType" }
 
     val classUrlMappings = getClassUrlMappings(sourceType)
     val constants = getConstants(sourceType)
     val knownUrls = classUrlMappings.values.mapTo(hashSetOf()) { sourceType.toEffectiveURL(it) }
 
-    return ClassDocs(
+    return JavadocModuleSession(
+        globalSession = globalSession,
+        sourceType = sourceType,
         knownUrls = knownUrls,
         constants = constants,
         classUrlMappings = classUrlMappings,

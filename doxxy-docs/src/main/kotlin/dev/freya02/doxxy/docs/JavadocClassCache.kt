@@ -8,7 +8,7 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 internal class JavadocClassCache internal constructor(
-    private val session: ClassDocs,
+    private val session: JavadocModuleSession,
 ) {
 
     private val docMap = hashMapOf<DocsURL, JavadocClass>()

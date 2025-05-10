@@ -1,15 +1,14 @@
 package dev.freya02.doxxy.docs.declarations
 
-import dev.freya02.doxxy.docs.ClassDocs
 import dev.freya02.doxxy.docs.DocSourceType
 import dev.freya02.doxxy.docs.HTMLElement
 import dev.freya02.doxxy.docs.HTMLElementList
+import dev.freya02.doxxy.docs.JavadocModuleSession
 import dev.freya02.doxxy.docs.exceptions.DocParseException
 import dev.freya02.doxxy.docs.sections.ClassDetailType
 import dev.freya02.doxxy.docs.sections.DetailToElementsMap
 import dev.freya02.doxxy.docs.sections.DocDetail
 import dev.freya02.doxxy.docs.sections.SeeAlso
-import dev.freya02.doxxy.docs.utils.HttpUtils
 import dev.freya02.doxxy.docs.utils.checkJavadocVersion
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.jsoup.nodes.Document
@@ -17,9 +16,9 @@ import org.jsoup.nodes.Element
 import java.io.IOException
 
 class JavadocClass internal constructor(
-    session: ClassDocs,
+    val moduleSession: JavadocModuleSession,
     val sourceURL: String,
-    document: Document = HttpUtils.getDocument(sourceURL)
+    document: Document,
 ) : AbstractJavadoc() {
     val source: DocSourceType = DocSourceType.fromUrl(sourceURL) ?: throw DocParseException()
 
@@ -65,13 +64,13 @@ class JavadocClass internal constructor(
         //See also
         val seeAlsoDetail = detailToElementsMap.getDetail(DocDetail.Type.SEE_ALSO)
         seeAlso = when {
-            seeAlsoDetail != null -> SeeAlso(source, seeAlsoDetail)
+            seeAlsoDetail != null -> SeeAlso(moduleSession, seeAlsoDetail)
             else -> null
         }
 
-        processInheritedElements(session, document, InheritedType.FIELD, this::onInheritedField)
+        processInheritedElements(moduleSession, document, InheritedType.FIELD, this::onInheritedField)
 
-        processInheritedElements(session, document, InheritedType.METHOD, this::onInheritedMethod)
+        processInheritedElements(moduleSession, document, InheritedType.METHOD, this::onInheritedMethod)
 
         //Try to find field details
         processDetailElements(document, ClassDetailType.FIELD) { fieldElement: Element ->
@@ -109,7 +108,7 @@ class JavadocClass internal constructor(
 
     @Throws(IOException::class)
     private fun processInheritedElements(
-        session: ClassDocs,
+        session: JavadocModuleSession,
         document: Document,
         inheritedType: InheritedType,
         inheritedElementConsumer: (JavadocClass, String?) -> Unit,

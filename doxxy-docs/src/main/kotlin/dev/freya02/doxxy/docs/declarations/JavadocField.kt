@@ -1,6 +1,5 @@
 package dev.freya02.doxxy.docs.declarations
 
-import dev.freya02.doxxy.docs.ClassDocs
 import dev.freya02.doxxy.docs.HTMLElement
 import dev.freya02.doxxy.docs.HTMLElementList
 import dev.freya02.doxxy.docs.exceptions.DocParseException
@@ -63,7 +62,7 @@ class JavadocField internal constructor(
         //See also
         val seeAlsoDetail = detailToElementsMap.getDetail(DocDetail.Type.SEE_ALSO)
         seeAlso = when {
-            seeAlsoDetail != null -> SeeAlso(declaringClass.source, seeAlsoDetail)
+            seeAlsoDetail != null -> SeeAlso(declaringClass.moduleSession, seeAlsoDetail)
             else -> null
         }
 
@@ -72,7 +71,7 @@ class JavadocField internal constructor(
                     && "final" in modifiers
                     && seeAlso != null
                     && seeAlso.getReferences().any { it.text == "Constant Field Values" && it.link.contains("/constant-values.html") } -> {
-                val constantsMap = ClassDocs.getSource(declaringClass.source).getConstantsOrNull(declaringClass.classNameFqcn)
+                val constantsMap = declaringClass.moduleSession.getConstantsOrNull(declaringClass.classNameFqcn)
                 when {
                     constantsMap != null -> constantsMap[fieldName]
                     else -> {

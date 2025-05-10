@@ -1,14 +1,14 @@
 package dev.freya02.doxxy.docs.sections
 
-import dev.freya02.doxxy.docs.ClassDocs
 import dev.freya02.doxxy.docs.DocSourceType
+import dev.freya02.doxxy.docs.JavadocModuleSession
 import dev.freya02.doxxy.docs.utils.DocUtils
 import dev.freya02.doxxy.docs.utils.HttpUtils
 import io.github.oshai.kotlinlogging.KotlinLogging
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.jsoup.nodes.Element
 
-class SeeAlso internal constructor(type: DocSourceType, docDetail: DocDetail) {
+class SeeAlso internal constructor(moduleSession: JavadocModuleSession, docDetail: DocDetail) {
     class SeeAlsoReference(
         val text: String,
         val link: String,
@@ -38,16 +38,21 @@ class SeeAlso internal constructor(type: DocSourceType, docDetail: DocDetail) {
     init {
         for (seeAlsoClassElement in docDetail.htmlElements[0].targetElement.select("dd > ul > li > a")) {
             try {
-                val href = type.toEffectiveURL(seeAlsoClassElement.absUrl("href"))
+                // TODO test that we get the expected link when the See Also references another module (JDA -> JDK, for example)
+                //  as I'm 99% sure that we need the module session of the target link
+                val href = moduleSession.sourceType.toEffectiveURL(seeAlsoClassElement.absUrl("href"))
                 val sourceType = DocSourceType.fromUrl(href)
                 if (sourceType == null) {
                     tryAddReference(SeeAlsoReference(seeAlsoClassElement.text(), href, TargetType.UNKNOWN, null))
                     continue
                 }
 
-                val classDocs = ClassDocs.getSource(sourceType)
+                // TODO could be interesting to see if a real workload even crosses sessions
+                //  as the previous code only returned a potentially uninitialized ClassDocs
+                //  which could happen if, for example, JDA has a JDK link, but the JDK wasn't indexed yet.
+                val javadocSession = moduleSession.globalSession.retrieveSession(sourceType)
                 //Class should be detectable as all URLs are pulled first
-                if (classDocs.isValidURL(href)) { //TODO check if URLs are checked correctly
+                if (javadocSession.isValidURL(href)) { //TODO check if URLs are checked correctly
                     //Class exists
                     //Is it a class, method, or field
                     val javadocUrl = JavadocUrl.fromURL(href)

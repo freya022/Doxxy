@@ -4,8 +4,8 @@ import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade
 import dev.freya02.doxxy.bot.docs.DocEmbeds.toEmbed
 import dev.freya02.doxxy.bot.docs.metadata.parser.ImplementationMetadataWriter
 import dev.freya02.doxxy.bot.docs.metadata.parser.SourceRootMetadata
-import dev.freya02.doxxy.docs.ClassDocs
 import dev.freya02.doxxy.docs.DocSourceType
+import dev.freya02.doxxy.docs.GlobalJavadocSession
 import dev.freya02.doxxy.docs.declarations.AbstractJavadoc
 import dev.freya02.doxxy.docs.declarations.JavadocClass
 import dev.freya02.doxxy.docs.declarations.returnTypeNoAnnotations
@@ -32,7 +32,8 @@ internal class DocIndexWriter(
     private val sourceRootMetadata: SourceRootMetadata? = sourceType.sourceDirectory?.let { SourceRootMetadata(it) }
 
     suspend fun doReindex() {
-        val updatedSource = ClassDocs.getUpdatedSource(sourceType)
+        val globalJavadocSession = GlobalJavadocSession()
+        val javadocModuleSession = globalJavadocSession.retrieveSession(sourceType)
 
         database.transactional {
             sourceRootMetadata?.let { sourceRootMetadata ->
@@ -49,7 +50,7 @@ internal class DocIndexWriter(
                 executeUpdate(sourceType.id)
             }
 
-            updatedSource
+            javadocModuleSession
                 .documentFlow()
                 .flowOn(Dispatchers.IO.limitedParallelism(parallelism = 8, name = "Document fetch"))
                 .buffer()
