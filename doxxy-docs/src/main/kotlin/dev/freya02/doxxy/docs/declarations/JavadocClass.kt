@@ -15,8 +15,6 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import java.io.IOException
-import java.util.function.BiConsumer
-import java.util.function.Consumer
 
 class JavadocClass internal constructor(
     session: ClassDocs,
@@ -114,7 +112,7 @@ class JavadocClass internal constructor(
         session: ClassDocs,
         document: Document,
         inheritedType: InheritedType,
-        inheritedElementConsumer: BiConsumer<JavadocClass, String?>
+        inheritedElementConsumer: (JavadocClass, String?) -> Unit,
     ) {
         val inheritedBlocks = document.select("section." + inheritedType.classSuffix + "-summary > div.inherited-list")
         for (inheritedBlock in inheritedBlocks) {
@@ -130,7 +128,7 @@ class JavadocClass internal constructor(
 
                 for (element in inheritedBlock.select("code > a")) {
                     val targetId = element.absUrl("href").toHttpUrl().fragment
-                    inheritedElementConsumer.accept(superClassDocs, targetId)
+                    inheritedElementConsumer(superClassDocs, targetId)
                 }
             }
         }
@@ -157,14 +155,12 @@ class JavadocClass internal constructor(
         _fields[field.elementId] = field
     }
 
-    private fun processDetailElements(document: Document, detailType: ClassDetailType, callback: Consumer<Element>) {
+    private fun processDetailElements(document: Document, detailType: ClassDetailType, callback: (Element) -> Unit) {
         val detailId = detailType.detailId
 
         //Get main blocks to determine what details are available (field, constructor (constr), method)
         val detailsSection = document.getElementById(detailId) ?: return
-        for (element in detailsSection.select("ul.member-list > li > section.detail")) {
-            callback.accept(element)
-        }
+        detailsSection.select("ul.member-list > li > section.detail").forEach(callback)
     }
 
     override fun toString(): String {
