@@ -123,9 +123,11 @@ class JavadocClass internal constructor(
 
             if (superClassLinkElement != null) {
                 val superClassLink = superClassLinkElement.absUrl("href")
-                val superClassDocs = docsSession.retrieveDoc(superClassLink) ?: continue
+                val superClassDocs = docsSession.retrieveDoc(superClassLink)
+                //Probably a bad link or an unsupported Javadoc version
+                if (superClassDocs == null)
+                    continue
 
-                //Probably a bad link or an unsupported javadoc version
                 for (element in inheritedBlock.select("code > a")) {
                     val targetId = element.absUrl("href").toHttpUrl().fragment
                     inheritedElementConsumer.accept(superClassDocs, targetId)
@@ -135,23 +137,23 @@ class JavadocClass internal constructor(
     }
 
     private fun onInheritedMethod(superClass: JavadocClass, targetId: String?) {
-        //You can inherit a same method multiple times, it will show up multiple times in the docs
-        // As the html is ordered such as the latest overridden method is shown, we can set the already existing doc to the newest one
+        // You can inherit the same method multiple times, it will show up multiple times in the docs
+        // As the HTML is ordered such as the latest overridden method is shown, we can set the already existing doc to the newest one
         // Example: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/AbstractCollection.html#method.summary
-        val method = superClass._methods[targetId] ?: return
+        val method = superClass._methods[targetId]
+        // This might happen if the target superclass doesn't expose the same access level of members.
+        // For example, this class might expose protected+ members, but the superclass exposes only public members
+        if (method == null) return
 
-        //This might happen if the target superclass doesn't expose the same access level of members
-        // So for example this class might expose protected+ members
-        //  but the superclass exposes only public members
         _methods[method.elementId] = method
     }
 
     private fun onInheritedField(superClass: JavadocClass, targetId: String?) {
-        val field = superClass._fields[targetId] ?: return
+        val field = superClass._fields[targetId]
+        // This might happen if the target superclass doesn't expose the same access level of members.
+        // For example, this class might expose protected+ members, but the superclass exposes only public members
+        if (field == null) return
 
-        //This might happen if the target superclass doesn't expose the same access level of members
-        // So for example this class might expose protected+ members
-        //  but the superclass exposes only public members
         _fields[field.elementId] = field
     }
 
