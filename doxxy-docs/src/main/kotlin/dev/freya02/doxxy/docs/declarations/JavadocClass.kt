@@ -9,10 +9,13 @@ import dev.freya02.doxxy.docs.sections.DetailToElementsMap
 import dev.freya02.doxxy.docs.sections.DocDetail
 import dev.freya02.doxxy.docs.sections.SeeAlso
 import dev.freya02.doxxy.docs.utils.checkJavadocVersion
+import io.github.oshai.kotlinlogging.KotlinLogging
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import java.io.IOException
+
+private val logger = KotlinLogging.logger { }
 
 class JavadocClass internal constructor(
     val moduleSession: JavadocModuleSession,
@@ -120,8 +123,10 @@ class JavadocClass internal constructor(
                 val superClassLink = superClassLinkElement.absUrl("href")
                 val superClassDocs = session.retrieveClassOrNull(superClassLink)
                 //Probably a bad link or an unsupported Javadoc version
-                if (superClassDocs == null)
+                if (superClassDocs == null) {
+                    logger.debug { "Skipping superclass at '$superClassLink'" }
                     continue
+                }
 
                 for (element in inheritedBlock.select("code > a")) {
                     val targetId = element.absUrl("href").toHttpUrl().fragment
