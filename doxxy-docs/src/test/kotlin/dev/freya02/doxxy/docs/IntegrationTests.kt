@@ -15,7 +15,7 @@ import kotlin.test.assertEquals
 
 object IntegrationTests {
 
-    private val sources = JavadocSources(listOf(JDA_SOURCE))
+    private val sources = JavadocSources(listOf(JDA_SOURCE, JDK_SOURCE))
 
     @BeforeAll
     @JvmStatic
