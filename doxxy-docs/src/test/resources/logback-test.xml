@@ -6,6 +6,8 @@
         </encoder>
     </appender>
 
+    <logger name="dev.freya02.doxxy" level="debug"/>
+
     <!-- All the remaining loggers -->
     <root level="info">
         <appender-ref ref="STDOUT"/>
