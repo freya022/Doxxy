@@ -19,8 +19,8 @@ internal class JavadocClassCache internal constructor(
     internal fun retrieveClassOrNull(classUrl: DocsURL): JavadocClass? {
         docMap[classUrl]?.let { return it }
 
-        check(classUrl in currentUrls.get()) {
-            "Recursion detected for $classUrl in $currentUrls"
+        check(classUrl !in currentUrls.get()) {
+            "Recursion detected for $classUrl in ${currentUrls.get()}"
         }
 
         locks.computeIfAbsent(classUrl) { ReentrantLock() }.withLock {
