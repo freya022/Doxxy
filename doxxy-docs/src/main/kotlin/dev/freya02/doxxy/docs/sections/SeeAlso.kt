@@ -35,62 +35,54 @@ class SeeAlso internal constructor(moduleSession: JavadocModuleSession, docDetai
         }
     }
 
-    private val references: MutableList<SeeAlsoReference> = ArrayList()
+    private val references = linkedSetOf<SeeAlsoReference>()
 
     init {
         for (seeAlsoClassElement in docDetail.htmlElements[0].targetElement.select("dd > ul > li > a")) {
             try {
-                // TODO test that we get the expected link when the See Also references another module (JDA -> JDK, for example)
-                //  as I'm 99% sure that we need the module session of the target link
-                val href = moduleSession.sourceType.toEffectiveURL(seeAlsoClassElement.absUrl("href"))
-                val sourceType = DocSourceType.fromUrl(href)
-                if (sourceType == null) {
-                    tryAddReference(SeeAlsoReference(seeAlsoClassElement.text(), href, TargetType.UNKNOWN, null))
+                // Make sure the link is from a known source and is indexed
+                val absUrl = seeAlsoClassElement.absUrl("href")
+                val targetSourceType = DocSourceType.fromUrl(absUrl)
+                if (targetSourceType == null) {
+                    references += SeeAlsoReference(seeAlsoClassElement.text(), absUrl, TargetType.UNKNOWN, null)
                     continue
                 }
 
-                // TODO could be interesting to see if a real workload even crosses sessions
-                //  as the previous code only returned a potentially uninitialized ClassDocs
-                //  which could happen if, for example, JDA has a JDK link, but the JDK wasn't indexed yet.
-                val javadocSession = moduleSession.globalSession.retrieveSession(sourceType)
-                //Class should be detectable as all URLs are pulled first
-                if (javadocSession.isValidURL(href)) { //TODO check if URLs are checked correctly
-                    //Class exists
-                    //Is it a class, method, or field
-                    val javadocUrl = JavadocUrl.fromURL(href)
-                    val className = javadocUrl.className
-                    val targetAsText = getTargetAsText(seeAlsoClassElement, javadocUrl.targetType)
-
-                    val ref = when (javadocUrl.targetType) {
-                        TargetType.CLASS -> SeeAlsoReference(targetAsText, href, TargetType.CLASS, className)
-                        TargetType.METHOD -> SeeAlsoReference(
-                            targetAsText,
-                            href,
-                            TargetType.METHOD,
-                            className + "#" + DocUtils.getSimpleSignature(javadocUrl.fragment!!)
-                        )
-                        TargetType.FIELD -> SeeAlsoReference(
-                            targetAsText,
-                            href,
-                            TargetType.FIELD,
-                            className + "#" + javadocUrl.fragment!!
-                        )
-                        else -> throw IllegalStateException("Unexpected javadoc target type: " + javadocUrl.targetType)
-                    }
-
-                    tryAddReference(ref)
-                } else {
-                    tryAddReference(SeeAlsoReference(seeAlsoClassElement.text(), href, TargetType.UNKNOWN, null))
+                val javadocSession = moduleSession.globalSession.retrieveSession(targetSourceType)
+                val href = targetSourceType.toEffectiveURL(absUrl)
+                if (!javadocSession.isValidURL(href)) {
+                    references += SeeAlsoReference(seeAlsoClassElement.text(), href, TargetType.UNKNOWN, null)
+                    continue
                 }
+
+                // Construct an appropriate link from the linked member's type
+                val javadocUrl = JavadocUrl.fromURL(href)
+                val className = javadocUrl.className
+                val targetAsText = getTargetAsText(seeAlsoClassElement, javadocUrl.targetType)
+
+                val ref = when (javadocUrl.targetType) {
+                    TargetType.CLASS -> SeeAlsoReference(targetAsText, href, TargetType.CLASS, className)
+                    TargetType.METHOD -> SeeAlsoReference(
+                        targetAsText,
+                        href,
+                        TargetType.METHOD,
+                        className + "#" + DocUtils.getSimpleSignature(javadocUrl.fragment!!)
+                    )
+
+                    TargetType.FIELD -> SeeAlsoReference(
+                        targetAsText,
+                        href,
+                        TargetType.FIELD,
+                        className + "#" + javadocUrl.fragment!!
+                    )
+
+                    else -> throw IllegalStateException("Unexpected javadoc target type: " + javadocUrl.targetType)
+                }
+
+                references += ref
             } catch (e: Exception) {
                 logger.error(e) { "An exception occurred while retrieving a 'See also' detail" }
             }
-        }
-    }
-
-    private fun tryAddReference(seeAlsoClassElement: SeeAlsoReference) {
-        if (!references.contains(seeAlsoClassElement)) {
-            references.add(seeAlsoClassElement)
         }
     }
 
@@ -108,7 +100,8 @@ class SeeAlso internal constructor(moduleSession: JavadocModuleSession, docDetai
         return textBuilder.toString()
     }
 
-    fun getReferences(): List<SeeAlsoReference> {
+    // TODO move SeeAlso ctor to a factory function, then inline this as it will be immutable
+    fun getReferences(): Set<SeeAlsoReference> {
         return references
     }
 
@@ -133,7 +126,11 @@ class SeeAlso internal constructor(moduleSession: JavadocModuleSession, docDetai
         }
     }
 
-    private class JavadocUrl private constructor(val className: String, val fragment: String?, val targetType: TargetType) {
+    private class JavadocUrl private constructor(
+        val className: String,
+        val fragment: String?,
+        val targetType: TargetType
+    ) {
         companion object {
             fun fromURL(url: String): JavadocUrl {
                 url.toHttpUrl().let { httpUrl ->
