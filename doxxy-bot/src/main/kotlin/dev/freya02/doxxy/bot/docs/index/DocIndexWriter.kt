@@ -51,7 +51,7 @@ internal class DocIndexWriter(
             }
 
             javadocModuleSession
-                .documentFlow()
+                .classesAsFlow()
                 .flowOn(Dispatchers.IO.limitedParallelism(parallelism = 8, name = "Document fetch"))
                 .buffer()
                 .collect { classDoc ->

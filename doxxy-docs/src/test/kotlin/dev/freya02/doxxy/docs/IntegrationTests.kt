@@ -34,7 +34,7 @@ object IntegrationTests {
 
         val classes = runBlocking {
             moduleSession
-                .documentFlow()
+                .classesAsFlow()
                 .buffer()
                 .toList()
         }
