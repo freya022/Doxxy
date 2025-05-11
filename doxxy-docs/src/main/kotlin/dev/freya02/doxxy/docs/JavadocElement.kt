@@ -8,7 +8,7 @@ import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.select.NodeVisitor
 
-class HTMLElement private constructor(val targetElement: Element) {
+class JavadocElement private constructor(val targetElement: Element) {
     val asMarkdown: String by lazy {
         targetElement.traverse(object : NodeVisitor {
             override fun head(node: Node, depth: Int) {
@@ -127,14 +127,14 @@ class HTMLElement private constructor(val targetElement: Element) {
                 .joinToString("")
 
         @Contract("null -> fail; !null -> new", pure = true)
-        internal fun wrap(targetElement: Element?): HTMLElement = when (targetElement) {
+        internal fun wrap(targetElement: Element?): JavadocElement = when (targetElement) {
            null -> throw DocParseException()
-           else -> HTMLElement(targetElement)
+           else -> JavadocElement(targetElement)
        }
 
         @Contract(value = "null -> null; !null -> new", pure = true)
-        internal fun tryWrap(targetElement: Element?): HTMLElement? = when {
-            targetElement != null -> HTMLElement(targetElement)
+        internal fun tryWrap(targetElement: Element?): JavadocElement? = when {
+            targetElement != null -> JavadocElement(targetElement)
             else -> null
         }
     }

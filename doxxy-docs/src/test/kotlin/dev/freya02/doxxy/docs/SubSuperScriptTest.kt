@@ -1,10 +1,10 @@
 package dev.freya02.doxxy.docs
 
-import dev.freya02.doxxy.docs.HTMLElement.Companion.replaceScriptCharactersOrNull
+import dev.freya02.doxxy.docs.JavadocElement.Companion.replaceScriptCharactersOrNull
 
 fun main() {
-    println("abcdefghijklmnopqrstuvwxyz0123456789+-=()".replaceScriptCharactersOrNull(HTMLElement.superscripts))
-    println("abcdefghijklmnopqrstuvwxyz0123456789+-=()".replaceScriptCharactersOrNull(HTMLElement.subscripts))
-    println("−w".replaceScriptCharactersOrNull(HTMLElement.superscripts))
-    println("−w".replaceScriptCharactersOrNull(HTMLElement.subscripts))
+    println("abcdefghijklmnopqrstuvwxyz0123456789+-=()".replaceScriptCharactersOrNull(JavadocElement.superscripts))
+    println("abcdefghijklmnopqrstuvwxyz0123456789+-=()".replaceScriptCharactersOrNull(JavadocElement.subscripts))
+    println("−w".replaceScriptCharactersOrNull(JavadocElement.superscripts))
+    println("−w".replaceScriptCharactersOrNull(JavadocElement.subscripts))
 }

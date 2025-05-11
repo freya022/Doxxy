@@ -22,7 +22,7 @@ object MdTest {
     }
 
     private fun testHtml(html: String) {
-        val element = HTMLElement.wrap(Jsoup.parseBodyFragment(html, "https://myurl.com").selectFirst("body"))
+        val element = JavadocElement.wrap(Jsoup.parseBodyFragment(html, "https://myurl.com").selectFirst("body"))
         println(element.asMarkdown)
     }
 }

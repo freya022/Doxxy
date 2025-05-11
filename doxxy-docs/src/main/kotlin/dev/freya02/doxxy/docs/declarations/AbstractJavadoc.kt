@@ -1,7 +1,7 @@
 package dev.freya02.doxxy.docs.declarations
 
-import dev.freya02.doxxy.docs.HTMLElement
-import dev.freya02.doxxy.docs.HTMLElementList
+import dev.freya02.doxxy.docs.JavadocElement
+import dev.freya02.doxxy.docs.JavadocElements
 import dev.freya02.doxxy.docs.sections.DetailToElementsMap
 import dev.freya02.doxxy.docs.sections.DocDetail
 import dev.freya02.doxxy.docs.sections.SeeAlso
@@ -10,8 +10,8 @@ import java.util.regex.Pattern
 
 abstract class AbstractJavadoc internal constructor() {
     abstract val onlineURL: String?
-    abstract val descriptionElements: HTMLElementList
-    abstract val deprecationElement: HTMLElement?
+    abstract val descriptionElements: JavadocElements
+    abstract val deprecationElement: JavadocElement?
     abstract val seeAlso: SeeAlso?
 
     abstract val className: String

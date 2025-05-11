@@ -1,7 +1,7 @@
 package dev.freya02.doxxy.docs.declarations
 
-import dev.freya02.doxxy.docs.HTMLElement
-import dev.freya02.doxxy.docs.HTMLElementList
+import dev.freya02.doxxy.docs.JavadocElement
+import dev.freya02.doxxy.docs.JavadocElements
 import dev.freya02.doxxy.docs.exceptions.DocParseException
 import dev.freya02.doxxy.docs.sections.ClassDetailType
 import dev.freya02.doxxy.docs.sections.DetailToElementsMap
@@ -26,8 +26,8 @@ class JavadocMethod internal constructor(
 
     val isStatic: Boolean
 
-    override val descriptionElements: HTMLElementList
-    override val deprecationElement: HTMLElement?
+    override val descriptionElements: JavadocElements
+    override val deprecationElement: JavadocElement?
 
     override val detailToElementsMap: DetailToElementsMap
 
@@ -60,10 +60,10 @@ class JavadocMethod internal constructor(
         isStatic = modifiersElement != null && "static" in modifiersElement.text()
 
         //Get method description
-        descriptionElements = HTMLElementList.fromElements(element.select("section.detail > div.block"))
+        descriptionElements = JavadocElements.fromElements(element.select("section.detail > div.block"))
 
         //Get method possible's deprecation
-        deprecationElement = HTMLElement.tryWrap(element.selectFirst("section.detail > div.deprecation-block"))
+        deprecationElement = JavadocElement.tryWrap(element.selectFirst("section.detail > div.deprecation-block"))
 
         //Need to parse the children of the <dl> tag in order to make a map of dt[class] -> List<Element>
         detailToElementsMap = DetailToElementsMap.parseDetails(element)

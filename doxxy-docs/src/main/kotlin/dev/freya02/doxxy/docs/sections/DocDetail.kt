@@ -1,9 +1,9 @@
 package dev.freya02.doxxy.docs.sections
 
-import dev.freya02.doxxy.docs.HTMLElement
-import dev.freya02.doxxy.docs.HTMLElementList
+import dev.freya02.doxxy.docs.JavadocElement
+import dev.freya02.doxxy.docs.JavadocElements
 
-class DocDetail internal constructor(detailType: Type, htmlElements: List<HTMLElement>) : HTMLElementList(htmlElements) {
+class DocDetail internal constructor(detailType: Type, javadocElements: List<JavadocElement>) : JavadocElements(javadocElements) {
     val detailString: String = detailType.elementText
 
     enum class Type(val elementText: String) {

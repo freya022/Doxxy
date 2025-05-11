@@ -1,15 +1,15 @@
 package dev.freya02.doxxy.docs.sections
 
-import dev.freya02.doxxy.docs.HTMLElement
+import dev.freya02.doxxy.docs.JavadocElement
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jsoup.nodes.Element
 import java.util.*
 
 class DetailToElementsMap private constructor(detailTarget: Element) {
-    private val map: MutableMap<DocDetail.Type, MutableList<HTMLElement>> = EnumMap(DocDetail.Type::class.java)
+    private val map: MutableMap<DocDetail.Type, MutableList<JavadocElement>> = EnumMap(DocDetail.Type::class.java)
 
     private inner class DetailsState(private val detailTarget: Element) {
-        private var list: MutableList<HTMLElement>? = null
+        private var list: MutableList<JavadocElement>? = null
 
         fun newDetail(detailName: String) {
             val type = DocDetail.Type.parseType(detailName)
@@ -25,7 +25,7 @@ class DetailToElementsMap private constructor(detailTarget: Element) {
             }
         }
 
-        fun pushDetail(supplier: () -> HTMLElement) {
+        fun pushDetail(supplier: () -> JavadocElement) {
             list?.add(supplier())
         }
     }
@@ -41,7 +41,7 @@ class DetailToElementsMap private constructor(detailTarget: Element) {
 
                     detailsState.newDetail(detailName)
                 } else if (tagName == "dd") {
-                    detailsState.pushDetail { HTMLElement.wrap(child) }
+                    detailsState.pushDetail { JavadocElement.wrap(child) }
                 }
             }
         }

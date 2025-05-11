@@ -1,7 +1,7 @@
 package dev.freya02.doxxy.docs.declarations
 
-import dev.freya02.doxxy.docs.HTMLElement
-import dev.freya02.doxxy.docs.HTMLElementList
+import dev.freya02.doxxy.docs.JavadocElement
+import dev.freya02.doxxy.docs.JavadocElements
 import dev.freya02.doxxy.docs.JavadocModuleSession
 import dev.freya02.doxxy.docs.exceptions.DocParseException
 import dev.freya02.doxxy.docs.sections.ClassDetailType
@@ -23,12 +23,12 @@ class JavadocClass internal constructor(
     document: Document,
 ) : AbstractJavadoc() {
 
-    val docTitleElement: HTMLElement
+    val docTitleElement: JavadocElement
     val classNameFqcn: String by lazy { "$packageName.$className" }
     val packageName: String
     override val className: String
-    override val descriptionElements: HTMLElementList
-    override val deprecationElement: HTMLElement?
+    override val descriptionElements: JavadocElements
+    override val deprecationElement: JavadocElement?
 
     override val detailToElementsMap: DetailToElementsMap
 
@@ -44,7 +44,7 @@ class JavadocClass internal constructor(
         document.checkJavadocVersion()
 
         //Get javadoc title
-        docTitleElement = HTMLElement.wrap(document.selectFirst("body > div.flex-box > div > main > div > h1"))
+        docTitleElement = JavadocElement.wrap(document.selectFirst("body > div.flex-box > div > main > div > h1"))
 
         //Get package name
         packageName = document.selectFirst("body > div > div > main > div.header > div.sub-title > a[href='package-summary.html']")?.text() ?: throw DocParseException()
@@ -53,10 +53,10 @@ class JavadocClass internal constructor(
         className = getClassName(sourceURL)
 
         //Get class description
-        descriptionElements = HTMLElementList.fromElements(document.select("#class-description > div.block"))
+        descriptionElements = JavadocElements.fromElements(document.select("#class-description > div.block"))
 
         //Get class possible's deprecation
-        deprecationElement = HTMLElement.tryWrap(document.selectFirst("#class-description > div.deprecation-block"))
+        deprecationElement = JavadocElement.tryWrap(document.selectFirst("#class-description > div.deprecation-block"))
 
         //Get class type parameters if they exist
         val detailTarget = document.selectFirst("#class-description") ?: throw DocParseException()

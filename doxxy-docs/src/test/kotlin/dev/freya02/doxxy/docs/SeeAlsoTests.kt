@@ -15,7 +15,7 @@ class SeeAlsoTests {
         val sources = JavadocSources(listOf(JDA_SOURCE, JDK_SOURCE))
 
         val detail = DocDetail(DocDetail.Type.SEE_ALSO, listOf(
-            HTMLElement.wrap(Jsoup.parse("""
+            JavadocElement.wrap(Jsoup.parse("""
                 <dd>
                 <ul class="tag-list-long">
                 <li><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Enum.html">Enum</a></li>

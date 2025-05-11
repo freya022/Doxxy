@@ -1,7 +1,7 @@
 package dev.freya02.doxxy.docs.declarations
 
-import dev.freya02.doxxy.docs.HTMLElement
-import dev.freya02.doxxy.docs.HTMLElementList
+import dev.freya02.doxxy.docs.JavadocElement
+import dev.freya02.doxxy.docs.JavadocElements
 import dev.freya02.doxxy.docs.exceptions.DocParseException
 import dev.freya02.doxxy.docs.sections.ClassDetailType
 import dev.freya02.doxxy.docs.sections.DetailToElementsMap
@@ -23,8 +23,8 @@ class JavadocField internal constructor(
     val fieldType: String
     val fieldValue: String?
 
-    override val descriptionElements: HTMLElementList
-    override val deprecationElement: HTMLElement?
+    override val descriptionElements: JavadocElements
+    override val deprecationElement: JavadocElement?
 
     val elementId: String
     val modifiers: String
@@ -51,10 +51,10 @@ class JavadocField internal constructor(
         fieldType = fieldTypeElement.text()
 
         //Get field description
-        descriptionElements = HTMLElementList.fromElements(element.select("section.detail > div.block"))
+        descriptionElements = JavadocElements.fromElements(element.select("section.detail > div.block"))
 
         //Get field possible's deprecation
-        deprecationElement = HTMLElement.tryWrap(element.selectFirst("section.detail > div.deprecation-block"))
+        deprecationElement = JavadocElement.tryWrap(element.selectFirst("section.detail > div.deprecation-block"))
 
         //Details
         detailToElementsMap = DetailToElementsMap.parseDetails(element)
