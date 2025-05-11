@@ -52,11 +52,11 @@ class DetailToElementsMap private constructor(detailTarget: Element) {
         return DocDetail(detailType, elements)
     }
 
-    companion object {
+    internal companion object {
         private val logger = KotlinLogging.logger { }
         private val warned: MutableSet<String> = hashSetOf()
 
-        fun parseDetails(detailTarget: Element): DetailToElementsMap {
+        internal fun parseDetails(detailTarget: Element): DetailToElementsMap {
             return DetailToElementsMap(detailTarget)
         }
     }

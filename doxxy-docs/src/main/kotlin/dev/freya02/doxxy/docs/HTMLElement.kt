@@ -52,10 +52,10 @@ class HTMLElement private constructor(val targetElement: Element) {
         return targetElement.wholeText()
     }
 
-    companion object {
+    internal companion object {
         // fun
         // https://lingojam.com/SuperscriptGenerator
-        val superscripts = "abcdefghijklmnopqrstuvwxyz0123456789+-=()".zip("ᵃᵇᶜᵈᵉᶠᵍʰᶦʲᵏˡᵐⁿᵒᵖᑫʳˢᵗᵘᵛʷˣʸᶻ⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾") //uhh ok
+        internal val superscripts = "abcdefghijklmnopqrstuvwxyz0123456789+-=()".zip("ᵃᵇᶜᵈᵉᶠᵍʰᶦʲᵏˡᵐⁿᵒᵖᑫʳˢᵗᵘᵛʷˣʸᶻ⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾") //uhh ok
             .associate { (k, v) -> k to v } + mapOf(
             // https://en.wikipedia.org/wiki/Unicode_subscripts_and_superscripts#Superscripts_and_subscripts_block
             '2' to '\u00B2',
@@ -84,7 +84,7 @@ class HTMLElement private constructor(val targetElement: Element) {
 
         // even funnier
         // https://lingojam.com/SubscriptGenerator
-        val subscripts = "abcdefghijklmnopqrstuvwxyz0123456789+-=()".zip("ₐ₆꜀ₔₑբ₉ₕᵢⱼₖₗₘₙₒₚqᵣₛₜᵤᵥᵥᵥₓᵧ₂₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎") //wtf
+        internal val subscripts = "abcdefghijklmnopqrstuvwxyz0123456789+-=()".zip("ₐ₆꜀ₔₑբ₉ₕᵢⱼₖₗₘₙₒₚqᵣₛₜᵤᵥᵥᵥₓᵧ₂₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎") //wtf
             .associate { (k, v) -> k to v } + mapOf(
             // https://en.wikipedia.org/wiki/Unicode_subscripts_and_superscripts#Superscripts_and_subscripts_block
             '0' to '\u2080',
@@ -118,20 +118,20 @@ class HTMLElement private constructor(val targetElement: Element) {
             't' to '\u209C',
         )
 
-        fun String.replaceScriptCharactersOrNull(mappings: Map<Char, Char>): String? =
+        internal fun String.replaceScriptCharactersOrNull(mappings: Map<Char, Char>): String? =
             lowercase()
                 .toCharArray()
                 .map { c -> mappings[c] ?: return null } //If you can't convert everything, abort
                 .joinToString("")
 
         @Contract("null -> fail; !null -> new", pure = true)
-        fun wrap(targetElement: Element?): HTMLElement = when (targetElement) {
+        internal fun wrap(targetElement: Element?): HTMLElement = when (targetElement) {
            null -> throw DocParseException()
            else -> HTMLElement(targetElement)
        }
 
         @Contract(value = "null -> null; !null -> new", pure = true)
-        fun tryWrap(targetElement: Element?): HTMLElement? = when {
+        internal fun tryWrap(targetElement: Element?): HTMLElement? = when {
             targetElement != null -> HTMLElement(targetElement)
             else -> null
         }

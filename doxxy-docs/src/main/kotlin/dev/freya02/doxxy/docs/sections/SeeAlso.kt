@@ -8,6 +8,8 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.jsoup.nodes.Element
 
+private val logger = KotlinLogging.logger { }
+
 class SeeAlso internal constructor(moduleSession: JavadocModuleSession, docDetail: DocDetail) {
     class SeeAlsoReference(
         val text: String,
@@ -145,9 +147,5 @@ class SeeAlso internal constructor(moduleSession: JavadocModuleSession, docDetai
                 }
             }
         }
-    }
-
-    companion object {
-        private val logger = KotlinLogging.logger { }
     }
 }
