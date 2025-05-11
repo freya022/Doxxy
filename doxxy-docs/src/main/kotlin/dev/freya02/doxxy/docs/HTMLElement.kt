@@ -12,31 +12,33 @@ class HTMLElement private constructor(val targetElement: Element) {
     val asMarkdown: String by lazy {
         targetElement.traverse(object : NodeVisitor {
             override fun head(node: Node, depth: Int) {
-                if (node is Element) {
-                    if (!node.tagName().equals("a", ignoreCase = true)) {
-                        if (node.tagName().equals("sub", ignoreCase = true)) {
-                            node.text().replaceScriptCharactersOrNull(subscripts)?.let { node.text(it) }
-                        } else if (node.tagName().equals("sup", ignoreCase = true)) {
-                            node.text().replaceScriptCharactersOrNull(superscripts)?.let { node.text(it) }
-                        }
+                if (node !is Element) return
 
+                if (!node.tagName().equals("a", ignoreCase = true)) {
+                    if (node.tagName().equals("sub", ignoreCase = true)) {
+                        node.text().replaceScriptCharactersOrNull(subscripts)?.let { node.text(it) }
+                    } else if (node.tagName().equals("sup", ignoreCase = true)) {
+                        node.text().replaceScriptCharactersOrNull(superscripts)?.let { node.text(it) }
+                    }
+
+                    return
+                }
+
+                val href = node.absUrl("href")
+
+                // TODO maybe move to a step after building the javadocs
+                //  make sure not to edit the node directly as it could also change others
+                //Try to resolve into an online link
+                for (type in DocSourceType.entries) {
+                    val effectiveUrl = type.toEffectiveURL(href)
+                    if (!doesStartByLocalhost(effectiveUrl)) { //If it's a valid link then don't remove it
+                        node.attr("href", effectiveUrl)
                         return
                     }
-
-                    val href = node.absUrl("href")
-
-                    //Try to resolve into an online link
-                    for (type in DocSourceType.entries) {
-                        val effectiveUrl = type.toEffectiveURL(href)
-                        if (!doesStartByLocalhost(effectiveUrl)) { //If it's a valid link then don't remove it
-                            node.attr("href", effectiveUrl)
-                            return
-                        }
-                    }
-
-                    //If no online URL has been found then do not link to localhost href(s)
-                    node.removeAttr("href")
                 }
+
+                //If no online URL has been found then do not link to localhost href(s)
+                node.removeAttr("href")
             }
 
             override fun tail(node: Node, depth: Int) {}

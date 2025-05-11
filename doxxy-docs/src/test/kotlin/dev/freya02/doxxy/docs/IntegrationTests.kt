@@ -15,10 +15,12 @@ import kotlin.test.assertEquals
 
 object IntegrationTests {
 
+    private val sources = JavadocSources(listOf(JDA_SOURCE))
+
     @BeforeAll
     @JvmStatic
     fun setup() {
-        PageCache[DocSourceType.JDA].clearCache()
+        PageCache[JDA_SOURCE].clearCache()
 
         embeddedServer(Netty, host = "localhost", port = DocSourceType.JDA.sourceUrl.toHttpUrl().port) {
             routing {
@@ -29,8 +31,8 @@ object IntegrationTests {
 
     @Test
     fun `Read JDA Javadocs`() {
-        val globalSession = GlobalJavadocSession()
-        val moduleSession = globalSession.retrieveSession(DocSourceType.JDA)
+        val globalSession = GlobalJavadocSession(sources)
+        val moduleSession = globalSession.retrieveSession(JDA_SOURCE)
 
         val classes = runBlocking {
             moduleSession

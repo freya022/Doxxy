@@ -4,13 +4,11 @@ import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade
 import dev.freya02.doxxy.bot.docs.DocEmbeds.toEmbed
 import dev.freya02.doxxy.bot.docs.metadata.parser.ImplementationMetadataWriter
 import dev.freya02.doxxy.bot.docs.metadata.parser.SourceRootMetadata
-import dev.freya02.doxxy.docs.DocSourceType
-import dev.freya02.doxxy.docs.GlobalJavadocSession
+import dev.freya02.doxxy.docs.*
 import dev.freya02.doxxy.docs.declarations.AbstractJavadoc
 import dev.freya02.doxxy.docs.declarations.JavadocClass
 import dev.freya02.doxxy.docs.declarations.returnTypeNoAnnotations
 import dev.freya02.doxxy.docs.sections.ClassDetailType
-import dev.freya02.doxxy.docs.sourceDirectory
 import io.github.freya022.botcommands.api.core.db.Database
 import io.github.freya022.botcommands.api.core.db.Transaction
 import io.github.freya022.botcommands.api.core.db.preparedStatement
@@ -32,8 +30,10 @@ internal class DocIndexWriter(
     private val sourceRootMetadata: SourceRootMetadata? = sourceType.sourceDirectory?.let { SourceRootMetadata(it) }
 
     suspend fun doReindex() {
-        val globalJavadocSession = GlobalJavadocSession()
-        val javadocModuleSession = globalJavadocSession.retrieveSession(sourceType)
+        val globalJavadocSession = GlobalJavadocSession(JavadocSources(DocSourceType.entries.map { type ->
+            JavadocSource(type.name, type.sourceUrl, type.onlineURL, type.packageMatchers.toList())
+        }))
+        val javadocModuleSession = globalJavadocSession.retrieveSession(globalJavadocSession.sources.getByName(sourceType.name)!!)
 
         database.transactional {
             sourceRootMetadata?.let { sourceRootMetadata ->

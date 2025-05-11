@@ -12,6 +12,8 @@ class SeeAlsoTests {
 
     @Test
     fun `References across modules have correct links`() {
+        val sources = JavadocSources(listOf(JDA_SOURCE, JDK_SOURCE))
+
         val detail = DocDetail(DocDetail.Type.SEE_ALSO, listOf(
             HTMLElement.wrap(Jsoup.parse("""
                 <dd>
@@ -23,9 +25,10 @@ class SeeAlsoTests {
         ))
 
         val moduleSession = mockk<JavadocModuleSession> {
-            every { sourceType } returns DocSourceType.JDA
+            every { source } returns JDA_SOURCE
             every { globalSession } returns mockk<GlobalJavadocSession> {
-                every { retrieveSession(DocSourceType.JAVA) } returns mockk<JavadocModuleSession> {
+                every { sources } returns sources
+                every { retrieveSession(JDK_SOURCE) } returns mockk<JavadocModuleSession> {
                     every { isValidURL("https://docs.oracle.com/javase/8/docs/api/java/lang/Enum.html") } returns true
                 }
             }

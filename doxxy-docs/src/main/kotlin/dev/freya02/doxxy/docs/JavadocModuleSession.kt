@@ -14,7 +14,7 @@ private val logger = KotlinLogging.logger { }
 
 class JavadocModuleSession internal constructor(
     internal val globalSession: GlobalJavadocSession,
-    internal val sourceType: DocSourceType,
+    internal val source: JavadocSource,
     private val knownUrls: Set<String>,
     private val constants: Map<FullName, Map<FieldName, FieldValue>>,
     val classUrlMappings: Map<SimpleName, DocsURL>,
@@ -63,25 +63,25 @@ class JavadocModuleSession internal constructor(
     }
 }
 
-internal fun JavadocModuleSession(globalSession: GlobalJavadocSession, sourceType: DocSourceType): JavadocModuleSession {
-    logger.info { "Parsing ClassDocs URLs for: $sourceType" }
+internal fun JavadocModuleSession(globalSession: GlobalJavadocSession, source: JavadocSource): JavadocModuleSession {
+    logger.info { "Parsing ClassDocs URLs from '${source.sourceUrl}'" }
 
-    val classUrlMappings = getClassUrlMappings(sourceType)
-    val constants = getConstants(sourceType)
-    val knownUrls = classUrlMappings.values.mapTo(hashSetOf()) { sourceType.toEffectiveURL(it) }
+    val classUrlMappings = getClassUrlMappings(source)
+    val constants = getConstants(source)
+    val knownUrls = classUrlMappings.values.mapTo(hashSetOf()) { source.toEffectiveURL(it) }
 
     return JavadocModuleSession(
         globalSession = globalSession,
-        sourceType = sourceType,
+        source = source,
         knownUrls = knownUrls,
         constants = constants,
         classUrlMappings = classUrlMappings,
     )
 }
 
-private fun getClassUrlMappings(sourceType: DocSourceType): Map<SimpleName, DocsURL> = buildMap {
-    val indexURL = sourceType.allClassesIndexURL
-    val document = PageCache[sourceType].getPage(indexURL)
+private fun getClassUrlMappings(source: JavadocSource): Map<SimpleName, DocsURL> = buildMap {
+    val indexURL = source.allClassesIndexURL
+    val document = PageCache[source].getPage(indexURL)
 
     //n = 1 needed as type parameters are links and external types
     // For example in AbstractComponentBuilder<T extends AbstractComponentBuilder<T>>
@@ -89,9 +89,9 @@ private fun getClassUrlMappings(sourceType: DocSourceType): Map<SimpleName, Docs
     // Since it's the left most, it's easy to pick the first one
     for (element in document.select("#all-classes-table > div > div.summary-table.two-column-summary > div.col-first > a:nth-child(1)")) {
         val classUrl = element.absUrl("href")
-        val (packageName, className) = DecomposedName.getDecompositionFromUrl(sourceType, classUrl)
+        val (packageName, className) = DecomposedName.getDecompositionFromUrl(source, classUrl)
 
-        if (packageName == null || !sourceType.isValidPackage(packageName)) continue
+        if (packageName == null || !source.isValidPackage(packageName)) continue
 
         val oldUrl = putIfAbsent(className, classUrl)
         if (oldUrl != null) {
@@ -100,9 +100,9 @@ private fun getClassUrlMappings(sourceType: DocSourceType): Map<SimpleName, Docs
     }
 }
 
-private fun getConstants(sourceType: DocSourceType): Map<SimpleName, Map<FieldName, FieldValue>> = buildMap {
-    val constantValuesURL = sourceType.constantValuesURL
-    val constantsDocument = PageCache[sourceType].getPage(constantValuesURL)
+private fun getConstants(source: JavadocSource): Map<SimpleName, Map<FieldName, FieldValue>> = buildMap {
+    val constantValuesURL = source.constantValuesURL
+    val constantsDocument = PageCache[source].getPage(constantValuesURL)
 
     for (classConstantSection in constantsDocument.select("main section.constants-summary ul.block-list li")) {
         val fullName = run {

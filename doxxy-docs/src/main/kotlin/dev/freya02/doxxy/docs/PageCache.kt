@@ -1,21 +1,21 @@
 package dev.freya02.doxxy.docs
 
+import dev.freya02.doxxy.common.Directories
 import dev.freya02.doxxy.docs.utils.HttpUtils
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Request
 import org.jsoup.nodes.Document
 import java.nio.file.Path
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.io.path.*
 
-class PageCache private constructor(val type: DocSourceType) {
+class PageCache private constructor(name: String) {
     private val globalLock = ReentrantLock()
     private val pathMutexMap: MutableMap<Path, ReentrantLock> = ConcurrentHashMap()
 
-    private val baseFolder = type.cacheDirectory
+    private val baseFolder = Directories.pageCache.resolve(name)
 
     private fun <R> withLockedPath(url: String, block: (Path) -> R): R {
         val cachedFilePath = url.toHttpUrl().let { httpUrl ->
@@ -86,10 +86,14 @@ class PageCache private constructor(val type: DocSourceType) {
     }
 
     companion object {
-        private val map: MutableMap<DocSourceType, PageCache> = EnumMap(DocSourceType::class.java)
+        private val map: MutableMap<String, PageCache> = hashMapOf()
 
-        operator fun get(type: DocSourceType): PageCache {
-            return map.getOrPut(type) { PageCache(type) }
+        operator fun get(name: String): PageCache {
+            return map.getOrPut(name) { PageCache(name) }
+        }
+
+        operator fun get(source: JavadocSource): PageCache {
+            return map.getOrPut(source.name) { PageCache(source.name) }
         }
     }
 }

@@ -1,6 +1,6 @@
 package dev.freya02.doxxy.docs.utils
 
-import dev.freya02.doxxy.docs.DocSourceType
+import dev.freya02.doxxy.docs.JavadocSource
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.jetbrains.annotations.Contract
 
@@ -42,8 +42,8 @@ internal data class DecomposedName(val packageName: String?, val className: Stri
         }
 
         @Contract("_, _ -> new")
-        fun getDecompositionFromUrl(sourceType: DocSourceType, target: String): DecomposedName {
-            val sourceUrl = sourceType.sourceUrl.toHttpUrl()
+        fun getDecompositionFromUrl(source: JavadocSource, target: String): DecomposedName {
+            val sourceUrl = source.sourceUrl.toHttpUrl()
             val targetUrl = target.toHttpUrl()
             val rightSegments: MutableList<String> =
                 ArrayList(targetUrl.pathSegments.subList(sourceUrl.pathSize, targetUrl.pathSize))

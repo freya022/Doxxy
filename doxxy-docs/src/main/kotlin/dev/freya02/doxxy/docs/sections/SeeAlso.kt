@@ -1,6 +1,5 @@
 package dev.freya02.doxxy.docs.sections
 
-import dev.freya02.doxxy.docs.DocSourceType
 import dev.freya02.doxxy.docs.JavadocModuleSession
 import dev.freya02.doxxy.docs.sections.SeeAlso.SeeAlsoReference
 import dev.freya02.doxxy.docs.sections.SeeAlso.TargetType
@@ -68,7 +67,7 @@ internal fun SeeAlso(moduleSession: JavadocModuleSession, docDetail: DocDetail):
             try {
                 // Make sure the link is from a known source and is indexed
                 val absUrl = seeAlsoClassElement.absUrl("href")
-                val targetSourceType = DocSourceType.fromUrl(absUrl)
+                val targetSourceType = moduleSession.globalSession.sources.getByUrl(absUrl)
                 if (targetSourceType == null) {
                     return@mapNotNullTo SeeAlsoReference(seeAlsoClassElement.text(), absUrl, TargetType.UNKNOWN, null)
                 }

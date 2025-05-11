@@ -26,9 +26,8 @@ internal class JavadocClassCache internal constructor(
         locks.computeIfAbsent(classUrl) { ReentrantLock() }.withLock {
             docMap[classUrl]?.let { return it }
 
-            val source = DocSourceType.fromUrl(classUrl) ?: return null
-
-            val document = PageCache[source].getPage(classUrl)
+            val targetSource = session.globalSession.sources.getByUrl(classUrl) ?: return null
+            val document = PageCache[targetSource].getPage(classUrl)
             if (!document.isJavadocVersionCorrect()) return null
 
             return JavadocClass(session, removeFragment(classUrl), document).also { classDoc ->

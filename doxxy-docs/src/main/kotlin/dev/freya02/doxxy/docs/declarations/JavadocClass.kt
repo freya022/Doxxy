@@ -1,6 +1,5 @@
 package dev.freya02.doxxy.docs.declarations
 
-import dev.freya02.doxxy.docs.DocSourceType
 import dev.freya02.doxxy.docs.HTMLElement
 import dev.freya02.doxxy.docs.HTMLElementList
 import dev.freya02.doxxy.docs.JavadocModuleSession
@@ -20,7 +19,6 @@ class JavadocClass internal constructor(
     val sourceURL: String,
     document: Document,
 ) : AbstractJavadoc() {
-    val source: DocSourceType = DocSourceType.fromUrl(sourceURL) ?: throw DocParseException()
 
     val docTitleElement: HTMLElement
     val classNameFqcn: String by lazy { "$packageName.$className" }
@@ -172,7 +170,7 @@ class JavadocClass internal constructor(
     }
 
     override val onlineURL: String?
-        get() = source.toOnlineURL(sourceURL)
+        get() = moduleSession.source.toOnlineURL(sourceURL)
 
     override val identifier: String? = null
     override val identifierNoArgs: String? = null
