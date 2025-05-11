@@ -20,4 +20,9 @@ dependencies {
     implementation(libs.remark.java)
 
     testImplementation(libs.junit.jupiter)
+    testImplementation(libs.mockk)
+    testImplementation(libs.bytebuddy)
+
+    testImplementation(libs.bundles.slf4j)
+    testImplementation(libs.logback.classic)
 }
