@@ -64,6 +64,7 @@ class PageCache private constructor(val type: DocSourceType) {
                             .url(url)
                             .build()
                     ).execute().use { response ->
+                        check(response.isSuccessful) { "Failed to get '$url': ${response.code} ${response.message}" }
                         val body = response.body ?: throw IllegalArgumentException("Got no body from url: $url")
                         return@use body.string()
                     }.also { body ->
