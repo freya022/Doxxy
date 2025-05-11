@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.junit.jupiter.api.BeforeAll
-import kotlin.io.path.Path
+import kotlin.io.path.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -41,6 +41,13 @@ object IntegrationTests {
                 .toList()
         }
 
-        assertEquals(768, classes.size)
+        val actualSnapshot = classes.map { it.classNameFqcn }.sorted().joinToString("\n")
+        val snapshotPath = Path("snapshots", "JDA.txt")
+        if (snapshotPath.exists()) {
+            val expectedSnapshot = snapshotPath.readText()
+            assertEquals(expectedSnapshot, actualSnapshot)
+        } else {
+            snapshotPath.createParentDirectories().writeText(actualSnapshot)
+        }
     }
 }
