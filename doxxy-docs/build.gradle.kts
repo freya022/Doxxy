@@ -26,6 +26,9 @@ dependencies {
 
     testImplementation(libs.bundles.slf4j)
     testImplementation(libs.logback.classic)
+
+    testImplementation(libs.ktor.server.core)
+    testImplementation(libs.ktor.server.netty)
 }
 
 jmh {
