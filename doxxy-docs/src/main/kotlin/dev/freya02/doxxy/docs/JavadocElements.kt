@@ -5,8 +5,6 @@ package dev.freya02.doxxy.docs
 import org.jsoup.select.Elements
 
 open class JavadocElements protected constructor(elements: List<JavadocElement>) : List<JavadocElement> by elements {
-    internal val javadocElements: List<JavadocElement>
-        get() = this
 
     fun toMarkdown(delimiter: String): String = this.joinToString(delimiter) { obj: JavadocElement -> obj.asMarkdown }
 

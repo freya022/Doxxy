@@ -60,11 +60,9 @@ class JavadocField internal constructor(
         detailToElementsMap = DetailToElementsMap.parseDetails(element)
 
         //See also
-        val seeAlsoDetail = detailToElementsMap.getDetail(DocDetail.Type.SEE_ALSO)
-        seeAlso = when {
-            seeAlsoDetail != null -> SeeAlso(declaringClass.moduleSession, seeAlsoDetail)
-            else -> null
-        }
+        seeAlso = detailToElementsMap
+            .getDetail(DocDetail.Type.SEE_ALSO)
+            ?.let { SeeAlso(declaringClass.moduleSession, it) }
 
         fieldValue = when {
             "static" in modifiers //public might be omitted in interface constants

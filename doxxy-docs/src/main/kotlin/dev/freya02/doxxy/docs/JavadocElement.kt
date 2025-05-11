@@ -3,7 +3,6 @@ package dev.freya02.doxxy.docs
 import dev.freya02.doxxy.docs.exceptions.DocParseException
 import dev.freya02.doxxy.docs.utils.HttpUtils.doesStartByLocalhost
 import dev.freya02.doxxy.docs.utils.JDocUtil
-import org.jetbrains.annotations.Contract
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.select.NodeVisitor
@@ -126,16 +125,10 @@ class JavadocElement private constructor(val targetElement: Element) {
                 .map { c -> mappings[c] ?: return null } //If you can't convert everything, abort
                 .joinToString("")
 
-        @Contract("null -> fail; !null -> new", pure = true)
-        internal fun wrap(targetElement: Element?): JavadocElement = when (targetElement) {
-           null -> throw DocParseException()
-           else -> JavadocElement(targetElement)
-       }
+        internal fun wrap(targetElement: Element?): JavadocElement =
+            targetElement?.let { JavadocElement(it) } ?: throw DocParseException()
 
-        @Contract(value = "null -> null; !null -> new", pure = true)
-        internal fun tryWrap(targetElement: Element?): JavadocElement? = when {
-            targetElement != null -> JavadocElement(targetElement)
-            else -> null
-        }
+        internal fun tryWrap(targetElement: Element?): JavadocElement? =
+            targetElement?.let { JavadocElement(it) }
     }
 }

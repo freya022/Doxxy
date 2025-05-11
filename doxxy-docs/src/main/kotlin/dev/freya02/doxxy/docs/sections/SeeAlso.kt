@@ -61,7 +61,7 @@ class SeeAlso internal constructor(
 }
 
 internal fun SeeAlso(moduleSession: JavadocModuleSession, docDetail: DocDetail): SeeAlso {
-    val references = docDetail.javadocElements[0].targetElement
+    val references = docDetail[0].targetElement
         .select("dd > ul > li > a")
         .mapNotNullTo(linkedSetOf()) { seeAlsoClassElement ->
             try {

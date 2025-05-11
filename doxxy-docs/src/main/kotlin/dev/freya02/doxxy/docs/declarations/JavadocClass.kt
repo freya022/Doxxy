@@ -63,11 +63,9 @@ class JavadocClass internal constructor(
         detailToElementsMap = DetailToElementsMap.parseDetails(detailTarget)
 
         //See also
-        val seeAlsoDetail = detailToElementsMap.getDetail(DocDetail.Type.SEE_ALSO)
-        seeAlso = when {
-            seeAlsoDetail != null -> SeeAlso(moduleSession, seeAlsoDetail)
-            else -> null
-        }
+        seeAlso = detailToElementsMap
+            .getDetail(DocDetail.Type.SEE_ALSO)
+            ?.let { SeeAlso(moduleSession, it) }
 
         processInheritedElements(moduleSession, document, InheritedType.FIELD, this::onInheritedField)
 
