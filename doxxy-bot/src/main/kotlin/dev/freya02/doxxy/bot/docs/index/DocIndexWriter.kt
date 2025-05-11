@@ -221,7 +221,7 @@ internal class DocIndexWriter(
 
     context(transaction: Transaction)
     private suspend fun insertSeeAlso(javadoc: AbstractJavadoc, docId: Int) {
-        javadoc.seeAlso?.getReferences()?.forEach { seeAlsoReference ->
+        javadoc.seeAlso?.references?.forEach { seeAlsoReference ->
             transaction.preparedStatement("insert into docseealsoreference (doc_id, text, link, target_type, full_signature) VALUES (?, ?, ?, ?, ?)") {
                 executeUpdate(
                     docId,

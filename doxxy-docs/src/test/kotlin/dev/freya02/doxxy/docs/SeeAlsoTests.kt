@@ -32,7 +32,7 @@ class SeeAlsoTests {
         }
         val seeAlso = SeeAlso(moduleSession, detail)
 
-        val references = seeAlso.getReferences()
+        val references = seeAlso.references
         assertEquals(1, references.size)
         assertEquals("https://docs.oracle.com/javase/8/docs/api/java/lang/Enum.html", references.first().link)
     }

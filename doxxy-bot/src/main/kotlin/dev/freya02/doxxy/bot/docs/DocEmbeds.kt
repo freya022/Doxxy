@@ -192,7 +192,7 @@ object DocEmbeds {
     private fun EmbedBuilder.addSeeAlso(seeAlso: SeeAlso?, onlineDocs: String?) {
         if (seeAlso == null) return
 
-        val seeAlsoMd = seeAlso.getReferences().joinToString(", ") { ref: SeeAlsoReference ->
+        val seeAlsoMd = seeAlso.references.joinToString(", ") { ref: SeeAlsoReference ->
             return@joinToString when {
                 doesStartByLocalhost(ref.link) -> ref.text
                 else -> "[" + ref.text + "](" + ref.link + ")"

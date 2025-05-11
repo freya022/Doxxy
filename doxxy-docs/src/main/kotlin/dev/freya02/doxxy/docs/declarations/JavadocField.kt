@@ -70,7 +70,7 @@ class JavadocField internal constructor(
             "static" in modifiers //public might be omitted in interface constants
                     && "final" in modifiers
                     && seeAlso != null
-                    && seeAlso.getReferences().any { it.text == "Constant Field Values" && it.link.contains("/constant-values.html") } -> {
+                    && seeAlso.references.any { it.text == "Constant Field Values" && it.link.contains("/constant-values.html") } -> {
                 val constantsMap = declaringClass.moduleSession.getConstantsOrNull(declaringClass.classNameFqcn)
                 when {
                     constantsMap != null -> constantsMap[fieldName]
