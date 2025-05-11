@@ -5,9 +5,8 @@ import dev.freya02.doxxy.docs.exceptions.DocParseException
 import dev.freya02.doxxy.docs.utils.DecomposedName
 import dev.freya02.doxxy.docs.utils.HttpUtils
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flow
 
 private val logger = KotlinLogging.logger { }
 
@@ -30,7 +29,7 @@ class JavadocModuleSession internal constructor(
         return cleanURL in knownUrls
     }
 
-    fun documentFlow(): Flow<JavadocClass> = callbackFlow {
+    fun documentFlow(): Flow<JavadocClass> = flow {
         classUrlMappings.forEach { (className, classUrl) ->
             try {
                 val classDoc = retrieveClassOrNull(classUrl) ?: run {
@@ -38,7 +37,7 @@ class JavadocModuleSession internal constructor(
                     return@forEach
                 }
 
-                send(classDoc)
+                emit(classDoc)
             } catch (e: Exception) {
                 logger.error(e) { "An exception occurred while reading the docs of '$className' at '$classUrl', skipping." }
             }
