@@ -30,8 +30,8 @@ internal class JavadocClassCache internal constructor(
             val document = PageCache[targetSource].getPage(classUrl)
             if (!document.isJavadocVersionCorrect()) return null
 
-            return JavadocClass(session, removeFragment(classUrl), document).also { classDoc ->
-                docMap[classUrl] = classDoc
+            return JavadocClass(session, removeFragment(classUrl), document).also { javadocClass ->
+                docMap[classUrl] = javadocClass
             }
         }
     }

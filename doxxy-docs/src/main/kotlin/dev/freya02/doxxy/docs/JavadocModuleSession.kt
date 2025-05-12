@@ -37,12 +37,12 @@ class JavadocModuleSession internal constructor(
         classUrlMappings.forEach { (className, classUrl) ->
             launch(dispatcher) {
                 try {
-                    val classDoc = retrieveClassOrNull(classUrl) ?: run {
+                    val javadocClass = retrieveClassOrNull(classUrl) ?: run {
                         logger.warn { "Unable to get docs of '${className}' at '${classUrl}', javadoc version or source type may be incorrect" }
                         return@launch
                     }
 
-                    send(classDoc)
+                    send(javadocClass)
                 } catch (e: Exception) {
                     logger.error(e) { "An exception occurred while reading the docs of '$className' at '$classUrl', skipping." }
                 }

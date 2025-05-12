@@ -58,19 +58,19 @@ internal class DocIndexWriter(
                 .classesAsFlow()
                 .flowOn(Dispatchers.IO.limitedParallelism(parallelism = 8, name = "Document fetch"))
                 .buffer()
-                .collect { classDoc ->
+                .collect { javadocClass ->
                     try {
-                        val classEmbed = toEmbed(classDoc)
+                        val classEmbed = toEmbed(javadocClass)
                         val classEmbedJson = classEmbed.toData()
-                        val sourceLink = reindexData.getClassSourceUrlOrNull(classDoc)
+                        val sourceLink = reindexData.getClassSourceUrlOrNull(javadocClass)
 
-                        val classDocId = insertDoc(DocType.CLASS, classDoc.className, classDoc, classEmbedJson, sourceLink)
-                        insertSeeAlso(classDoc, classDocId)
+                        val classDocId = insertDoc(DocType.CLASS, javadocClass.className, javadocClass, classEmbedJson, sourceLink)
+                        insertSeeAlso(javadocClass, classDocId)
 
-                        insertMethodDocs(classDoc, sourceLink)
-                        insertFieldDocs(classDoc, sourceLink)
+                        insertMethodDocs(javadocClass, sourceLink)
+                        insertFieldDocs(javadocClass, sourceLink)
                     } catch (e: Exception) {
-                        throw RuntimeException("An exception occurred while reading the docs of '$classDoc.url'", e)
+                        throw RuntimeException("An exception occurred while reading the docs of '${javadocClass.sourceURL}'", e)
                     }
                 }
 
