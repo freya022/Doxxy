@@ -23,6 +23,7 @@ Module for the main Discord bot.
 - [Flyway](https://github.com/flyway/flyway) — Database migration
 - [JavaParser](https://github.com/javaparser/javaparser) — Java 1–21 parser as Abstract Syntax Trees with resolution capabilities
 - [palantir-java-format](https://github.com/palantir/palantir-java-format) — 120-characters Java formatter
+- [remark-java](https://github.com/freya022/remark-java) — Converts Javadoc's HTML to Markdown
 
 ## Contributing
 

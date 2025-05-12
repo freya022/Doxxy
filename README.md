@@ -18,7 +18,7 @@ A Discord bot to help guide users of the JDA library.
 * [doxxy-commons](doxxy-commons): Common source code used by both the bot and the backend
 * [doxxy-bot](doxxy-bot): Main Discord bot
 * [doxxy-backend](doxxy-backend): Backend optionally used by the bot
-* [doxxy-docs](doxxy-docs): Parses Javadoc pages and turns them into Markdown
+* [doxxy-docs](doxxy-docs): Parses Javadoc pages
 
 ## Contributing
 ### Requirements
