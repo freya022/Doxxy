@@ -16,6 +16,7 @@ import org.jsoup.nodes.Element
 import java.io.IOException
 
 private val logger = KotlinLogging.logger { }
+private val loggedMissingSuperclassLinks = hashSetOf<String>()
 
 class JavadocClass internal constructor(
     val moduleSession: JavadocModuleSession,
@@ -122,7 +123,8 @@ class JavadocClass internal constructor(
                 val superClassDocs = session.retrieveClassOrNull(superClassLink)
                 //Probably a bad link or an unsupported Javadoc version
                 if (superClassDocs == null) {
-                    logger.trace { "Skipping superclass at '$superClassLink'" }
+                    if (loggedMissingSuperclassLinks.add(superClassLink))
+                        logger.trace { "Skipping superclass at '$superClassLink'" }
                     continue
                 }
 
