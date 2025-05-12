@@ -21,12 +21,16 @@ javaparser = "3.26.3"
 palantir-java-format = "2.52.0"
 javassist = "3.30.2-GA"
 junit = "5.9.2"
+mockk = "1.14.2"
+bytebuddy = "1.17.5"
+jmh = "0.7.3"
 
 [plugins]
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
 spring-boot = { id = "org.springframework.boot", version = "3.4.5" }
 jpa = { id = "org.jetbrains.kotlin.plugin.jpa", version.ref = "kotlin" }
+jmh = { id = "me.champeau.jmh", version.ref = "jmh" }
 
 [libraries]
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
@@ -78,6 +82,8 @@ palantir-java-format = { module = "com.palantir.javaformat:palantir-java-format"
 javassist = { module = "org.javassist:javassist", version.ref = "javassist" }
 
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+bytebuddy = { module = "net.bytebuddy:byte-buddy", version.ref = "bytebuddy" }
 
 [bundles]
 slf4j = ["slf4j-api", "slf4j-ext"]

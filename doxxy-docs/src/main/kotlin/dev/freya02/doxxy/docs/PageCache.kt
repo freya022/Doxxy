@@ -1,21 +1,21 @@
 package dev.freya02.doxxy.docs
 
+import dev.freya02.doxxy.common.Directories
 import dev.freya02.doxxy.docs.utils.HttpUtils
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Request
 import org.jsoup.nodes.Document
 import java.nio.file.Path
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.io.path.*
 
-class PageCache(val type: DocSourceType) {
+class PageCache private constructor(name: String) {
     private val globalLock = ReentrantLock()
     private val pathMutexMap: MutableMap<Path, ReentrantLock> = ConcurrentHashMap()
 
-    private val baseFolder = type.cacheDirectory
+    private val baseFolder = Directories.pageCache.resolve(name)
 
     private fun <R> withLockedPath(url: String, block: (Path) -> R): R {
         val cachedFilePath = url.toHttpUrl().let { httpUrl ->
@@ -30,30 +30,6 @@ class PageCache(val type: DocSourceType) {
             .withLock { block(cachedFilePath) }
     }
 
-    fun getRawOrNull(url: String): ByteArray? {
-        return withLockedPath(url) { cachedFilePath ->
-            when {
-                cachedFilePath.exists() -> cachedFilePath.readBytes()
-                else -> {
-                    HttpUtils.CLIENT.newCall(
-                        Request.Builder()
-                            .url(url)
-                            .build()
-                    ).execute().use { response ->
-                        if (!response.isSuccessful) return@use null
-                        val body = response.body ?: return@use null
-                        return@use body.bytes()
-                    }.also { bytes ->
-                        if (bytes == null) return@also
-
-                        cachedFilePath.parent.createDirectories()
-                        cachedFilePath.writeBytes(bytes)
-                    }
-                }
-            }
-        }
-    }
-
     fun getPage(url: String): Document {
         return withLockedPath(url) { cachedFilePath ->
             val body = when {
@@ -64,6 +40,7 @@ class PageCache(val type: DocSourceType) {
                             .url(url)
                             .build()
                     ).execute().use { response ->
+                        check(response.isSuccessful) { "Failed to get '$url': ${response.code} ${response.message}" }
                         val body = response.body ?: throw IllegalArgumentException("Got no body from url: $url")
                         return@use body.string()
                     }.also { body ->
@@ -85,10 +62,14 @@ class PageCache(val type: DocSourceType) {
     }
 
     companion object {
-        private val map: MutableMap<DocSourceType, PageCache> = EnumMap(DocSourceType::class.java)
+        private val map: MutableMap<String, PageCache> = hashMapOf()
 
-        operator fun get(type: DocSourceType): PageCache {
-            return map.getOrPut(type) { PageCache(type) }
+        operator fun get(name: String): PageCache {
+            return map.getOrPut(name) { PageCache(name) }
+        }
+
+        operator fun get(source: JavadocSource): PageCache {
+            return map.getOrPut(source.name) { PageCache(source.name) }
         }
     }
 }

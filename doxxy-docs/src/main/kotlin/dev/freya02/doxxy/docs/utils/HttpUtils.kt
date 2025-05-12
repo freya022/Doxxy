@@ -9,7 +9,7 @@ import org.jsoup.nodes.Document
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
-object HttpUtils {
+internal object HttpUtils {
     val CLIENT: OkHttpClient = OkHttpClient.Builder()
         .readTimeout(2, TimeUnit.MINUTES) //Jitpack builds have a blocking read
         .build()
@@ -17,12 +17,6 @@ object HttpUtils {
     @Synchronized
     fun parseDocument(downloadedBody: String, baseUri: String): Document {
         return Jsoup.parse(downloadedBody, baseUri)
-    }
-
-    @Synchronized
-    @Throws(IOException::class)
-    fun getDocument(url: String): Document {
-        return parseDocument(downloadBody(url), url)
     }
 
     fun <R> doRequest(request: Request, handleNonSuccess: Boolean = true, block: (Response, ResponseBody) -> R): R {
@@ -45,10 +39,6 @@ object HttpUtils {
     @Throws(IOException::class)
     fun downloadBody(url: String): String = doRequest(url) { _, body ->
         body.string()
-    }
-
-    fun doesStartByLocalhost(link: String): Boolean {
-        return link.startsWith("http://localhost")
     }
 
     fun removeFragment(url: String): String = url.substringBefore('#')

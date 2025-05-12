@@ -1,16 +1,15 @@
 package dev.freya02.doxxy.bot.docs.index
 
 import dev.freya02.doxxy.bot.docs.DocResolveChain
+import dev.freya02.doxxy.bot.docs.DocSourceType
 import dev.freya02.doxxy.bot.docs.cached.CachedClass
 import dev.freya02.doxxy.bot.docs.cached.CachedDoc
 import dev.freya02.doxxy.bot.docs.cached.CachedField
 import dev.freya02.doxxy.bot.docs.cached.CachedMethod
 import dev.freya02.doxxy.bot.docs.metadata.ImplementationIndex
-import dev.freya02.doxxy.docs.DocSourceType
-import dev.freya02.doxxy.docs.DocsSession
 import dev.freya02.doxxy.docs.PageCache
-import dev.freya02.doxxy.docs.data.SeeAlso.SeeAlsoReference
-import dev.freya02.doxxy.docs.data.TargetType
+import dev.freya02.doxxy.docs.sections.SeeAlso.SeeAlsoReference
+import dev.freya02.doxxy.docs.sections.SeeAlso.TargetType
 import io.github.freya022.botcommands.api.core.db.Database
 import io.github.freya022.botcommands.api.core.db.Transaction
 import io.github.freya022.botcommands.api.core.db.preparedStatement
@@ -238,13 +237,11 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
 
             if (sourceType != DocSourceType.JAVA) {
                 logger.info { "Clearing cache for ${sourceType.name}" }
-                PageCache[sourceType].clearCache()
+                PageCache[sourceType.name].clearCache()
                 logger.info { "Cleared cache of ${sourceType.name}" }
             }
 
-            val docsSession = DocsSession()
-
-            DocIndexWriter(database, docsSession, sourceType, reindexData).doReindex()
+            DocIndexWriter(database, sourceType, reindexData).doReindex()
 
             logger.info { "Re-indexed docs for ${sourceType.name}" }
         }

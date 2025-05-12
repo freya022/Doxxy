@@ -1,8 +1,8 @@
 package dev.freya02.doxxy.bot
 
+import dev.freya02.doxxy.bot.docs.DocSourceType
+import dev.freya02.doxxy.bot.docs.javadocDirectory
 import dev.freya02.doxxy.bot.docs.metadata.parser.SourceRootMetadata
-import dev.freya02.doxxy.docs.DocSourceType
-import dev.freya02.doxxy.docs.javadocDirectory
 
 fun main() {
     val metadata = SourceRootMetadata(DocSourceType.JDA.javadocDirectory)

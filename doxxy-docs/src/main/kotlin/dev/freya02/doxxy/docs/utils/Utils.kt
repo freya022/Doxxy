@@ -1,16 +1,16 @@
 package dev.freya02.doxxy.docs.utils
 
-import dev.freya02.doxxy.docs.DocParseException
-import dev.freya02.doxxy.docs.DocUtils.isJavadocVersionCorrect
+import dev.freya02.doxxy.docs.exceptions.DocParseException
+import dev.freya02.doxxy.docs.utils.DocUtils.isJavadocVersionCorrect
 import org.jsoup.nodes.Document
 
 @Suppress("NOTHING_TO_INLINE")
-inline fun requireDoc(boolean: Boolean) {
+internal inline fun requireDoc(boolean: Boolean) {
     if (!boolean)
         throw DocParseException()
 }
 
-fun Document.checkJavadocVersion() {
+internal fun Document.checkJavadocVersion() {
     if (!isJavadocVersionCorrect()) {
         throw DocParseException("Javadoc at '${baseUri()}' is not javadoc 17")
     }

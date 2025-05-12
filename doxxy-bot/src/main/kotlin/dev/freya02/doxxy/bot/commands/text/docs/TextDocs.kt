@@ -3,10 +3,10 @@ package dev.freya02.doxxy.bot.commands.text.docs
 import dev.freya02.doxxy.bot.commands.controllers.CommonDocsController
 import dev.freya02.doxxy.bot.commands.text.docs.controllers.TextDocsController
 import dev.freya02.doxxy.bot.docs.DocIndexMap
+import dev.freya02.doxxy.bot.docs.DocSourceType
 import dev.freya02.doxxy.bot.docs.index.DocSuggestion
 import dev.freya02.doxxy.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
 import dev.freya02.doxxy.bot.docs.index.DocTypes
-import dev.freya02.doxxy.docs.DocSourceType
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.text.BaseCommandEvent
 import io.github.freya022.botcommands.api.commands.text.TextCommand

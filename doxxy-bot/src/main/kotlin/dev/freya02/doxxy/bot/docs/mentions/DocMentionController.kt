@@ -3,9 +3,9 @@ package dev.freya02.doxxy.bot.docs.mentions
 import dev.freya02.doxxy.bot.commands.controllers.CommonDocsController
 import dev.freya02.doxxy.bot.commands.slash.DeleteButtonListener.Companion.messageDelete
 import dev.freya02.doxxy.bot.docs.DocIndexMap
+import dev.freya02.doxxy.bot.docs.DocSourceType
 import dev.freya02.doxxy.bot.utils.ParsingUtils.codeBlockRegex
 import dev.freya02.doxxy.bot.utils.ParsingUtils.spaceRegex
-import dev.freya02.doxxy.docs.DocSourceType
 import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.MessageCreate
 import dev.minn.jda.ktx.messages.reply_

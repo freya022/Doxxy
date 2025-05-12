@@ -1,7 +1,6 @@
 package dev.freya02.doxxy.bot.docs
 
 import dev.freya02.doxxy.bot.docs.index.DocIndex
-import dev.freya02.doxxy.docs.DocSourceType
 import io.github.freya022.botcommands.api.core.db.Database
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import java.util.*
