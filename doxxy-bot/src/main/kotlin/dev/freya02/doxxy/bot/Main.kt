@@ -2,6 +2,7 @@ package dev.freya02.doxxy.bot
 
 import ch.qos.logback.classic.ClassicConstants
 import dev.freya02.doxxy.bot.config.Config
+import dev.freya02.doxxy.bot.docs.DocWebServer
 import dev.reformator.stacktracedecoroutinator.jvm.DecoroutinatorJvmApi
 import io.github.freya022.botcommands.api.core.BotCommands
 import io.github.freya022.botcommands.api.core.config.DevConfig

@@ -1,4 +1,4 @@
-package dev.freya02.doxxy.bot
+package dev.freya02.doxxy.bot.docs
 
 import dev.freya02.doxxy.common.Directories
 import io.ktor.server.engine.*
