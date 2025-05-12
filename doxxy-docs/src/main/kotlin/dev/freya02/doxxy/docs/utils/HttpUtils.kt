@@ -19,12 +19,6 @@ internal object HttpUtils {
         return Jsoup.parse(downloadedBody, baseUri)
     }
 
-    @Synchronized
-    @Throws(IOException::class)
-    fun getDocument(url: String): Document {
-        return parseDocument(downloadBody(url), url)
-    }
-
     fun <R> doRequest(request: Request, handleNonSuccess: Boolean = true, block: (Response, ResponseBody) -> R): R {
         CLIENT.newCall(request).execute().use { response ->
             if (handleNonSuccess) {
@@ -45,10 +39,6 @@ internal object HttpUtils {
     @Throws(IOException::class)
     fun downloadBody(url: String): String = doRequest(url) { _, body ->
         body.string()
-    }
-
-    fun doesStartByLocalhost(link: String): Boolean {
-        return link.startsWith("http://localhost")
     }
 
     fun removeFragment(url: String): String = url.substringBefore('#')

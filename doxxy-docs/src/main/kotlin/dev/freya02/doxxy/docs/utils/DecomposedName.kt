@@ -18,29 +18,6 @@ internal data class DecomposedName(val packageName: String?, val className: Stri
             return fullName
         }
 
-        fun getPackageName(fullName: String): String? {
-            for (i in 0 until fullName.length - 1) {
-                if (fullName[i] == '.' && Character.isUpperCase(fullName[i + 1])) {
-                    return fullName.substring(0, i)
-                }
-            }
-
-            //No package if naming conventions aren't respected
-            return null
-        }
-
-        @Contract("_ -> new")
-        fun getDecomposition(fullName: String): DecomposedName {
-            for (i in 0 until fullName.length - 1) {
-                if (fullName[i] == '.' && Character.isUpperCase(fullName[i + 1])) {
-                    return DecomposedName(fullName.substring(0, i), fullName.substring(i + 1))
-                }
-            }
-
-            //No package if naming conventions aren't respected
-            return DecomposedName(null, fullName)
-        }
-
         @Contract("_, _ -> new")
         fun getDecompositionFromUrl(source: JavadocSource, target: String): DecomposedName {
             val sourceUrl = source.sourceUrl.toHttpUrl()

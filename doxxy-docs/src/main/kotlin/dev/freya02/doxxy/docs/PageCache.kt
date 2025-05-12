@@ -30,30 +30,6 @@ class PageCache private constructor(name: String) {
             .withLock { block(cachedFilePath) }
     }
 
-    fun getRawOrNull(url: String): ByteArray? {
-        return withLockedPath(url) { cachedFilePath ->
-            when {
-                cachedFilePath.exists() -> cachedFilePath.readBytes()
-                else -> {
-                    HttpUtils.CLIENT.newCall(
-                        Request.Builder()
-                            .url(url)
-                            .build()
-                    ).execute().use { response ->
-                        if (!response.isSuccessful) return@use null
-                        val body = response.body ?: return@use null
-                        return@use body.bytes()
-                    }.also { bytes ->
-                        if (bytes == null) return@also
-
-                        cachedFilePath.parent.createDirectories()
-                        cachedFilePath.writeBytes(bytes)
-                    }
-                }
-            }
-        }
-    }
-
     fun getPage(url: String): Document {
         return withLockedPath(url) { cachedFilePath ->
             val body = when {
