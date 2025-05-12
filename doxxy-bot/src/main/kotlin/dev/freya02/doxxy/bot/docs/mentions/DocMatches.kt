@@ -1,6 +1,6 @@
 package dev.freya02.doxxy.bot.docs.mentions
 
-import dev.freya02.doxxy.docs.DocSourceType
+import dev.freya02.doxxy.bot.docs.DocSourceType
 import java.util.*
 
 data class ClassMention(val sourceType: DocSourceType, val identifier: String)

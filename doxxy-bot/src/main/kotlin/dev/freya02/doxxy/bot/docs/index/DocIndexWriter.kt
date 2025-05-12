@@ -2,9 +2,13 @@ package dev.freya02.doxxy.bot.docs.index
 
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade
 import dev.freya02.doxxy.bot.docs.DocEmbeds.toEmbed
+import dev.freya02.doxxy.bot.docs.DocSourceType
 import dev.freya02.doxxy.bot.docs.metadata.parser.ImplementationMetadataWriter
 import dev.freya02.doxxy.bot.docs.metadata.parser.SourceRootMetadata
-import dev.freya02.doxxy.docs.*
+import dev.freya02.doxxy.bot.docs.sourceDirectory
+import dev.freya02.doxxy.docs.GlobalJavadocSession
+import dev.freya02.doxxy.docs.JavadocSource
+import dev.freya02.doxxy.docs.JavadocSources
 import dev.freya02.doxxy.docs.declarations.AbstractJavadoc
 import dev.freya02.doxxy.docs.declarations.JavadocClass
 import dev.freya02.doxxy.docs.declarations.returnTypeNoAnnotations

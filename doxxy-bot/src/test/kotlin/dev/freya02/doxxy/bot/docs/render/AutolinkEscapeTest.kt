@@ -1,8 +1,7 @@
-package dev.freya02.doxxy.docs
+package dev.freya02.doxxy.bot.docs.render
 
-import dev.freya02.doxxy.docs.utils.JDocUtil
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
 
 class AutolinkEscapeTest {
     @Test
@@ -15,10 +14,12 @@ class AutolinkEscapeTest {
         """.trimIndent()
         val md = JDocUtil.formatText(returnsDetailHtml, "https://docs.jda.wiki/net/dv8tion/jda/api/entities/Guild.html")
 
-        assertEquals("""
+        assertEquals(
+            """
             [`RestAction`](https://docs.jda.wiki/net/dv8tion/jda/api/requests/RestAction.html) \- Type: List\<[`Invite`](https://docs.jda.wiki/net/dv8tion/jda/api/entities/Invite.html)\>
             The list of expanded Invite objects
-        """.trimIndent(), md)
+        """.trimIndent(), md
+        )
     }
 
     @Test
@@ -43,7 +44,8 @@ class AutolinkEscapeTest {
 
         val md = JDocUtil.formatText(descriptionHtml, "https://docs.jda.wiki/net/dv8tion/jda/api/entities/emoji/Emoji.html")
 
-        assertEquals("""
+        assertEquals(
+            """
             Parses the provided markdown formatting, or unicode characters, to an Emoji instance.
             
             **Example**
@@ -60,6 +62,7 @@ class AutolinkEscapeTest {
              // unicode emoji
              fromFormatted("😃");
             ```
-        """.trimIndent(), md)
+        """.trimIndent(), md
+        )
     }
 }

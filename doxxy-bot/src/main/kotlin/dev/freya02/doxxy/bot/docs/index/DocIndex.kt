@@ -1,12 +1,12 @@
 package dev.freya02.doxxy.bot.docs.index
 
 import dev.freya02.doxxy.bot.docs.DocResolveChain
+import dev.freya02.doxxy.bot.docs.DocSourceType
 import dev.freya02.doxxy.bot.docs.cached.CachedClass
 import dev.freya02.doxxy.bot.docs.cached.CachedDoc
 import dev.freya02.doxxy.bot.docs.cached.CachedField
 import dev.freya02.doxxy.bot.docs.cached.CachedMethod
 import dev.freya02.doxxy.bot.docs.metadata.ImplementationIndex
-import dev.freya02.doxxy.docs.DocSourceType
 import dev.freya02.doxxy.docs.PageCache
 import dev.freya02.doxxy.docs.sections.SeeAlso.SeeAlsoReference
 import dev.freya02.doxxy.docs.sections.SeeAlso.TargetType

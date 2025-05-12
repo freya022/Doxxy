@@ -41,12 +41,16 @@ dependencies {
 
     implementation(libs.jsoup)
 
+    implementation(libs.remark.java)
+
     implementation(libs.javaparser.symbol.solver.core)
 
     implementation(libs.palantir.java.format)
 
     testImplementation(libs.javassist)
     testImplementation(libs.junit.jupiter)
+    testImplementation(libs.mockk)
+    testImplementation(libs.bytebuddy)
 }
 
 jib {

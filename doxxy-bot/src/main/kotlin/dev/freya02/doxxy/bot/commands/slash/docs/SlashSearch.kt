@@ -2,7 +2,7 @@ package dev.freya02.doxxy.bot.commands.slash.docs
 
 import dev.freya02.doxxy.bot.commands.slash.docs.CommonDocsHandlers.Companion.SEARCH_AUTOCOMPLETE_NAME
 import dev.freya02.doxxy.bot.commands.slash.docs.controllers.SlashDocsController
-import dev.freya02.doxxy.docs.DocSourceType
+import dev.freya02.doxxy.bot.docs.DocSourceType
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandManager
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandProvider

@@ -1,6 +1,6 @@
 package dev.freya02.doxxy.bot.resolvers
 
-import dev.freya02.doxxy.docs.DocSourceType
+import dev.freya02.doxxy.bot.docs.DocSourceType
 import io.github.freya022.botcommands.api.core.service.annotations.BConfiguration
 import io.github.freya022.botcommands.api.core.service.annotations.Resolver
 import io.github.freya022.botcommands.api.core.utils.enumSetOf

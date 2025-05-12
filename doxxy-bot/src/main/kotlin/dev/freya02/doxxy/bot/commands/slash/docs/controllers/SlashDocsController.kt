@@ -3,11 +3,11 @@ package dev.freya02.doxxy.bot.commands.slash.docs.controllers
 import dev.freya02.doxxy.bot.commands.controllers.CommonDocsController
 import dev.freya02.doxxy.bot.commands.slash.docs.searchAutocomplete
 import dev.freya02.doxxy.bot.docs.DocIndexMap
+import dev.freya02.doxxy.bot.docs.DocSourceType
 import dev.freya02.doxxy.bot.docs.cached.CachedDoc
 import dev.freya02.doxxy.bot.docs.index.DocIndex
 import dev.freya02.doxxy.bot.docs.index.DocSuggestion
 import dev.freya02.doxxy.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
-import dev.freya02.doxxy.docs.DocSourceType
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import io.github.freya022.botcommands.api.components.event.ButtonEvent
 import io.github.freya022.botcommands.api.core.service.annotations.BService

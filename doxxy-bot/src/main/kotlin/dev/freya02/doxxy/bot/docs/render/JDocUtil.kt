@@ -15,7 +15,7 @@
  * under the License.
  */
 
-package dev.freya02.doxxy.docs.utils
+package dev.freya02.doxxy.bot.docs.render
 
 import com.overzealous.remark.Options
 import com.overzealous.remark.Remark
@@ -31,7 +31,7 @@ internal object JDocUtil {
             fencedCodeBlocksWidth = 3
         }.let { Remark(it) }
 
-    fun formatText(docs: String, currentUrl: String): String {
+    internal fun formatText(docs: String, currentUrl: String): String {
         var markdown = REMARK.convertFragment(fixSpaces(docs), currentUrl)
 
         //remove unnecessary carriage return chars

@@ -4,9 +4,9 @@ import dev.freya02.doxxy.bot.commands.slash.docs.CommonDocsHandlers.Companion.CL
 import dev.freya02.doxxy.bot.commands.slash.docs.CommonDocsHandlers.Companion.METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME
 import dev.freya02.doxxy.bot.commands.slash.docs.controllers.SlashDocsController
 import dev.freya02.doxxy.bot.docs.DocIndexMap
+import dev.freya02.doxxy.bot.docs.DocSourceType
 import dev.freya02.doxxy.bot.docs.index.DocSuggestion
 import dev.freya02.doxxy.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
-import dev.freya02.doxxy.docs.DocSourceType
 import io.github.freya022.botcommands.api.annotations.CommandMarker
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandManager

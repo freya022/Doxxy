@@ -4,6 +4,7 @@ import dev.freya02.doxxy.bot.commands.slash.DeleteButtonListener.Companion.messa
 import dev.freya02.doxxy.bot.commands.slash.docs.CommonDocsHandlers
 import dev.freya02.doxxy.bot.config.BackendConfig
 import dev.freya02.doxxy.bot.docs.DocResolveChain
+import dev.freya02.doxxy.bot.docs.DocSourceType
 import dev.freya02.doxxy.bot.docs.cached.CachedClass
 import dev.freya02.doxxy.bot.docs.cached.CachedDoc
 import dev.freya02.doxxy.bot.docs.cached.CachedMethod
@@ -11,7 +12,6 @@ import dev.freya02.doxxy.bot.docs.index.DocIndex
 import dev.freya02.doxxy.bot.docs.index.DocSuggestion
 import dev.freya02.doxxy.bot.examples.ExampleAPI
 import dev.freya02.doxxy.bot.utils.joinLengthyString
-import dev.freya02.doxxy.docs.DocSourceType
 import dev.freya02.doxxy.docs.sections.SeeAlso.TargetType
 import dev.minn.jda.ktx.interactions.components.ActionRow
 import dev.minn.jda.ktx.interactions.components.SelectOption

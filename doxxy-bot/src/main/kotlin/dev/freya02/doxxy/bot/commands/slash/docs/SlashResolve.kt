@@ -3,7 +3,7 @@ package dev.freya02.doxxy.bot.commands.slash.docs
 import dev.freya02.doxxy.bot.commands.controllers.CommonDocsController
 import dev.freya02.doxxy.bot.docs.DocIndexMap
 import dev.freya02.doxxy.bot.docs.DocResolveChain
-import dev.freya02.doxxy.docs.DocSourceType
+import dev.freya02.doxxy.bot.docs.DocSourceType
 import dev.minn.jda.ktx.messages.reply_
 import io.github.freya022.botcommands.api.annotations.CommandMarker
 import io.github.freya022.botcommands.api.commands.annotations.Command

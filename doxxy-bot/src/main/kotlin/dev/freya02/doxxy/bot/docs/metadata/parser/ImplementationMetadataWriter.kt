@@ -1,9 +1,9 @@
 package dev.freya02.doxxy.bot.docs.metadata.parser
 
+import dev.freya02.doxxy.bot.docs.DocSourceType
 import dev.freya02.doxxy.bot.docs.index.ReindexData
 import dev.freya02.doxxy.bot.utils.createProfiler
 import dev.freya02.doxxy.bot.utils.nextStep
-import dev.freya02.doxxy.docs.DocSourceType
 import io.github.freya022.botcommands.api.core.db.Transaction
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

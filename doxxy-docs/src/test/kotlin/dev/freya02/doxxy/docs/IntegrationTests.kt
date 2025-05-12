@@ -7,7 +7,6 @@ import io.ktor.server.routing.*
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.junit.jupiter.api.BeforeAll
 import kotlin.io.path.*
 import kotlin.test.Test
@@ -22,9 +21,9 @@ object IntegrationTests {
     fun setup() {
         PageCache[JDA_SOURCE].clearCache()
 
-        embeddedServer(Netty, host = "localhost", port = DocSourceType.JDA.sourceUrl.toHttpUrl().port) {
+        embeddedServer(Netty, host = JDA_HOST, port = JDA_PORT) {
             routing {
-                staticZip("/JDA", "", Path("test-files", "JDA-javadoc.zip"), index = null)
+                staticZip(JDA_PATH, "", Path("test-files", "JDA-javadoc.zip"), index = null)
             }
         }.start()
     }

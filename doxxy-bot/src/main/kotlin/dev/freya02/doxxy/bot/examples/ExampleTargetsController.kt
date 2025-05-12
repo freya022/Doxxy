@@ -1,6 +1,7 @@
 package dev.freya02.doxxy.bot.examples
 
 import dev.freya02.doxxy.bot.config.Config
+import dev.freya02.doxxy.bot.docs.DocSourceType.Companion.toDocSourceType
 import dev.freya02.doxxy.bot.switches.RequiresBackend
 import dev.freya02.doxxy.common.DocumentedExampleLibrary
 import dev.freya02.doxxy.common.PartialIdentifier
@@ -8,7 +9,6 @@ import dev.freya02.doxxy.common.QualifiedPartialIdentifier
 import dev.freya02.doxxy.common.SimpleClassName
 import dev.freya02.doxxy.common.dto.MissingTargetsDTO
 import dev.freya02.doxxy.common.dto.RequestedTargetsDTO
-import dev.freya02.doxxy.docs.DocSourceType.Companion.toDocSourceType
 import io.github.freya022.botcommands.api.core.db.Database
 import io.github.freya022.botcommands.api.core.db.preparedStatement
 import io.github.freya022.botcommands.api.core.service.annotations.BService

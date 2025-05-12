@@ -18,8 +18,6 @@ dependencies {
 
     implementation(libs.jda)
 
-    implementation(libs.remark.java)
-
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.mockk)
     testImplementation(libs.bytebuddy)

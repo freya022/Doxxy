@@ -1,5 +1,6 @@
 package dev.freya02.doxxy.bot.docs
 
+import dev.freya02.doxxy.bot.docs.render.toMarkdown
 import dev.freya02.doxxy.bot.utils.HttpUtils.doesStartByLocalhost
 import dev.freya02.doxxy.docs.declarations.AbstractJavadoc
 import dev.freya02.doxxy.docs.declarations.JavadocClass
@@ -139,7 +140,7 @@ object DocEmbeds {
         if (deprecationElement != null) {
             this.addDocField(
                 "Deprecated",
-                deprecationElement.asMarkdown,
+                deprecationElement.toMarkdown(),
                 false,
                 doc.onlineURL
             )

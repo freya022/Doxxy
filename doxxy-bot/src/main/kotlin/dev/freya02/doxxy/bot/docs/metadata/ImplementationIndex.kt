@@ -1,8 +1,8 @@
 package dev.freya02.doxxy.bot.docs.metadata
 
+import dev.freya02.doxxy.bot.docs.DocSourceType
 import dev.freya02.doxxy.bot.docs.index.DocIndex
 import dev.freya02.doxxy.bot.docs.metadata.parser.FullSimpleClassName
-import dev.freya02.doxxy.docs.DocSourceType
 import io.github.freya022.botcommands.api.core.db.DBResult
 import io.github.freya022.botcommands.api.core.db.Database
 import io.github.freya022.botcommands.api.core.db.preparedStatement

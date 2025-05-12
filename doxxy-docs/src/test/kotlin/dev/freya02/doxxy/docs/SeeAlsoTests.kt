@@ -19,7 +19,7 @@ class SeeAlsoTests {
                 <li><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Enum.html">Enum</a></li>
                 </ul>
                 </dd>
-            """.trimIndent(), "${DocSourceType.JDA.sourceUrl}/net/dv8tion/jda/api/entities/Activity.ActivityType.html"))
+            """.trimIndent(), "${JDA_SOURCE.sourceUrl}/net/dv8tion/jda/api/entities/Activity.ActivityType.html"))
         ))
 
         val moduleSession = mockk<JavadocModuleSession> {

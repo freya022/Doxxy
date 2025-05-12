@@ -4,10 +4,10 @@ import dev.freya02.doxxy.bot.commands.controllers.CommonDocsController
 import dev.freya02.doxxy.bot.commands.slash.docs.controllers.SlashDocsController
 import dev.freya02.doxxy.bot.docs.DocIndexMap
 import dev.freya02.doxxy.bot.docs.DocResolveChain
+import dev.freya02.doxxy.bot.docs.DocSourceType
 import dev.freya02.doxxy.bot.docs.index.DocSearchResult
 import dev.freya02.doxxy.bot.examples.ExampleAPI
 import dev.freya02.doxxy.bot.examples.ExamplePaginatorFactory
-import dev.freya02.doxxy.docs.DocSourceType
 import dev.freya02.doxxy.docs.sections.SeeAlso.TargetType
 import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.interactions.components.SelectOption

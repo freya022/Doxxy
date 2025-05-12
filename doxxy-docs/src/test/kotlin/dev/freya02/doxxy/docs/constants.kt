@@ -3,9 +3,13 @@ package dev.freya02.doxxy.docs
 import dev.freya02.doxxy.docs.JavadocSource.PackageMatcher.Companion.recursive
 import dev.freya02.doxxy.docs.JavadocSource.PackageMatcher.Companion.single
 
+const val JDA_HOST = "localhost"
+const val JDA_PORT = 25566
+const val JDA_PATH = "/JDA"
+
 val JDA_SOURCE = JavadocSource(
     name = "JDA",
-    sourceUrl = "http://localhost:25566/JDA",
+    sourceUrl = "http://$JDA_HOST:$JDA_PORT$JDA_PATH",
     onlineURL = "https://docs.jda.wiki",
     packageMatchers = listOf(
         recursive("net.dv8tion.jda")
