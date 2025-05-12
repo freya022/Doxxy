@@ -122,7 +122,7 @@ class JavadocClass internal constructor(
                 val superClassDocs = session.retrieveClassOrNull(superClassLink)
                 //Probably a bad link or an unsupported Javadoc version
                 if (superClassDocs == null) {
-                    logger.debug { "Skipping superclass at '$superClassLink'" }
+                    logger.trace { "Skipping superclass at '$superClassLink'" }
                     continue
                 }
 
