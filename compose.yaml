@@ -14,7 +14,7 @@ services:
     volumes:
       - db-data:/var/lib/postgresql/data
   backend:
-    image: doxxy-backend:latest
+    image: ghcr.io/freya022/doxxy-backend:latest
     container_name: doxxy-backend
     depends_on:
       - db
@@ -24,7 +24,7 @@ services:
       - ./config:/config
       - ./backend/logs:/logs
   bot:
-    image: doxxy-bot:latest
+    image: ghcr.io/freya022/doxxy-bot:latest
     container_name: doxxy-bot
     depends_on:
       - db
