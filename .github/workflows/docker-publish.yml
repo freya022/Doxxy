@@ -48,4 +48,4 @@ jobs:
           -Djib.to.auth.username=${{ github.actor }}
           -Djib.to.auth.password=${{ github.token }}
           -Djib.to.tags=${{ steps.metadata.outputs.tags }}
-          -Djib.container.labels=${{ steps.formatted-labels.outputs.result }}
+          -Djib.container.labels="${{ steps.formatted-labels.outputs.result }}"
