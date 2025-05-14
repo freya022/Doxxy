@@ -44,7 +44,7 @@ jobs:
 
       - name: Build and push image
         run: > 
-          ./gradlew --debug --stacktrace doxxy-backend:jib
+          ./gradlew --stacktrace doxxy-backend:jib
           -Djib.to.auth.username=${{ github.actor }}
           -Djib.to.auth.password=${{ github.token }}
           -Djib.to.tags=${{ steps.metadata.outputs.tags }}
