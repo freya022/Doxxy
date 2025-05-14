@@ -33,10 +33,17 @@ jobs:
         id: metadata
         uses: docker/metadata-action@v5
 
+      - name: Transform labels to JIB's map format
+        id: formatted-labels
+        uses: actions/github-script@v7
+        with:
+          script: 'return "${{ steps.metadata.outputs.labels }}".replace("\n", ",")'
+          result-encoding: 'string'
+
       - name: Build and push image
         run: > 
           ./gradlew jibDockerBuild 
           -Djib.to.auth.username=${{ github.actor }}
           -Djib.to.auth.password=${{ github.token }}
           -Djib.to.tags=${{ steps.metadata.outputs.tags }}
-          -Djib.container.labels=${{ steps.metadata.outputs.labels }}
+          -Djib.container.labels=${{ steps.formatted-labels.outputs.result }}
