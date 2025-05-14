@@ -42,9 +42,13 @@ jobs:
           script: 'return process.env.LABELS.replaceAll("\n", ",")'
           result-encoding: 'string'
 
-      - name: Build and push image
+      - name: Build and push images
+        env:
+          # GitHub Actions has 16GBs of available RAM for workers, so let's bump it a bit up!
+          # https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#standard-github-hosted-runners-for-public-repositories
+          GRADLE_OPTS: -Xmx5G -Xms5G
         run: > 
-          ./gradlew --stacktrace doxxy-backend:jib
+          ./gradlew doxxy-backend:jib
           -Djib.to.auth.username=${{ github.actor }}
           -Djib.to.auth.password=${{ github.token }}
           -Djib.to.tags=${{ steps.metadata.outputs.tags }}
