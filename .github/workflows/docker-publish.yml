@@ -39,7 +39,7 @@ jobs:
         env:
           LABELS: ${{ steps.metadata.outputs.labels }}
         with:
-          script: 'return process.env.LABELS.replace("\n", ",")'
+          script: 'return process.env.LABELS.replaceAll("\n", ",")'
           result-encoding: 'string'
 
       - name: Build and push image
