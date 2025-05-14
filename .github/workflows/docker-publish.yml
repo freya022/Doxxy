@@ -1,0 +1,41 @@
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 24
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+
+      - name: Build bot base image
+        run: docker build --tag doxxy-bot-eclipse-temurin:jdk-24 ./doxxy-bot
+
+      - name: Docker metadata
+        id: metadata
+        uses: docker/metadata-action@v5
+
+      - name: Build and push image
+        run: > 
+          ./gradlew jibDockerBuild 
+            -Djib.to.auth.username=${{ github.actor }}
+            -Djib.to.auth.password=${{ github.token }}
+            -Djib.to.tags=${{ steps.metadata.outputs.tags }}
+            -Djib.container.labels=${{ steps.metadata.outputs.labels }}
+
