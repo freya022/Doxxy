@@ -59,7 +59,7 @@ jib {
     }
 
     to {
-        image = if (System.getenv("CI") != null) "ghcr.io/doxxy-bot" else "doxxy-bot"
+        image = "ghcr.io/freya022/doxxy-bot"
     }
 
     container {

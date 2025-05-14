@@ -29,7 +29,7 @@ jib {
     }
 
     to {
-        image = if (System.getenv("CI") != null) "ghcr.io/doxxy-backend" else "doxxy-backend"
+        image = "ghcr.io/freya022/doxxy-backend"
     }
 
     container {
