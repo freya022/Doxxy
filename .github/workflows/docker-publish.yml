@@ -48,7 +48,7 @@ jobs:
           # https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#standard-github-hosted-runners-for-public-repositories
           GRADLE_OPTS: -Xmx5G -Xms5G
         run: > 
-          ./gradlew doxxy-backend:jib
+          ./gradlew jib
           -Djib.to.auth.username=${{ github.actor }}
           -Djib.to.auth.password=${{ github.token }}
           -Djib.to.tags=${{ steps.metadata.outputs.tags }}
