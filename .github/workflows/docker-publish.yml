@@ -36,8 +36,10 @@ jobs:
       - name: Transform labels to JIB's map format
         id: formatted-labels
         uses: actions/github-script@v7
+        env:
+          LABELS: ${{ steps.metadata.outputs.labels }}
         with:
-          script: 'return "${{ steps.metadata.outputs.labels }}".replace("\n", ",")'
+          script: 'return process.env.LABELS.replace("\n", ",")'
           result-encoding: 'string'
 
       - name: Build and push image
