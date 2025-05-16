@@ -8,6 +8,8 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.serialization.kotlinx.json.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
@@ -34,10 +36,8 @@ class GithubClient(
         }
     }
 
-    suspend fun getBranches(owner: String, repo: String, page: Int = 1, perPage: Int = 100): Branches {
-        return withPagination(page, perPage, "https://api.github.com/repos/$owner/$repo/branches", ::Branches) {
-            it.body<List<Branches.Branch>>()
-        }
+    fun getBranches(owner: String, repo: String, perPage: Int = 100): Flow<Branches.Branch> {
+        return withPagination(perPage, "https://api.github.com/repos/$owner/$repo/branches", fetch = HttpResponse::body)
     }
 
     suspend fun getPullRequest(owner: String, repo: String, pr: Int): PullRequest {
@@ -52,31 +52,31 @@ class GithubClient(
             .body()
     }
 
-    // Pagination endpoints often have different schemas than individual GETs
-    // so we make different DTOs for those, example:
-    // Fetch a bunch of [[Branches#Branch]] and merge them in [[Branches]]
-    private suspend fun <T, R : Any> withPagination(
-        page: Int,
+    // Pagination endpoints often have different schemas than individual GETs, so we make different DTOs for those,
+    // this is why there is a kind-of namespace interface like [[Branches]], containing [[Branches#Branch]]
+    private fun <R> withPagination(
         perPage: Int,
         url: String,
-        finalizer: (List<T>) -> R,
         customizer: HttpRequestBuilder.() -> Unit = {},
-        fetch: suspend (HttpResponse) -> List<T>,
-    ): R {
-        val items = fetch(client.get(url) {
-            customizer()
+        fetch: suspend (HttpResponse) -> List<R>,
+    ): Flow<R> = flow {
+        var page = 0
 
-            url {
-                parameter("page", page)
-                parameter("per_page", perPage)
-            }
-        })
+        while (true) {
+            val items = fetch(client.get(url) {
+                customizer()
 
-        return if (items.size >= perPage) {
-            val mergedFinalizer = { nextPageItems: List<T> -> finalizer(nextPageItems + items) }
-            withPagination(page + 1, perPage, url, mergedFinalizer, customizer, fetch)
-        } else {
-            finalizer(items)
+                url {
+                    parameter("page", page)
+                    parameter("per_page", perPage)
+                }
+            })
+
+            items.forEach { emit(it) }
+            // Last items
+            if (items.size < perPage) break
+
+            page += 1
         }
     }
 }

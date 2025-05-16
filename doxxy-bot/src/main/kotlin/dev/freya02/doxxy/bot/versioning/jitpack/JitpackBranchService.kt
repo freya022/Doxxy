@@ -11,6 +11,7 @@ import dev.freya02.doxxy.bot.versioning.maven.DependencyVersionChecker
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommandsContext
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.freya022.botcommands.api.core.utils.enumMapOf
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.time.Duration.Companion.minutes
@@ -44,7 +45,8 @@ class JitpackBranchService(
     private inner class UpdatedBranchMap(private val libraryType: LibraryType) : UpdatedValue<GithubBranchMap>() {
         override suspend fun update(): GithubBranchMap {
             val branchByName = githubClient
-                .getBranches(libraryType.githubOwnerName, libraryType.githubRepoName).branches
+                .getBranches(libraryType.githubOwnerName, libraryType.githubRepoName)
+                .toList()
                 .associateBy { it.name }
             val defaultBranchName = GithubUtils.getDefaultBranchName(libraryType.githubOwnerName, libraryType.githubRepoName)
             val defaultBranch = branchByName[defaultBranchName]!!
