@@ -26,23 +26,6 @@ object GithubUtils {
     }
 
     @Throws(IOException::class)
-    fun getLatestHash(ownerName: String, repoName: String, branchName: String): CommitHash {
-        val url = "https://api.github.com/repos/$ownerName/$repoName/commits".toHttpUrl()
-            .newBuilder()
-            .addQueryParameter("page", "1")
-            .addQueryParameter("per_page", "1")
-            .addQueryParameter("sha", branchName)
-            .build()
-
-        HttpUtils.CLIENT.newCall(newGithubRequest(url).build())
-            .execute()
-            .use { response ->
-                val json = response.body!!.string()
-                return CommitHash(DataArray.fromJson(json).getObject(0).getString("sha"))
-            }
-    }
-
-    @Throws(IOException::class)
     fun getDefaultBranchName(ownerName: String, repoName: String): String {
         val url = "https://api.github.com/repos/$ownerName/$repoName".toHttpUrl()
             .newBuilder()

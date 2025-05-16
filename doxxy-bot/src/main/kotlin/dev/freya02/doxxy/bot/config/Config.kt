@@ -42,7 +42,7 @@ data class Config(
     val fakeJDAGuildId: Long,
     val fakeBCGuildId: Long,
     val examplesHttpPort: Int,
-    @get:BService
+    @get:BService("pullUpdaterConfig")
     val pullUpdater: PullUpdaterConfig,
     @get:BService
     val backend: BackendConfig,

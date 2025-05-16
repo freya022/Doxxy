@@ -22,6 +22,7 @@ private val logger = KotlinLogging.logger { }
 @BService
 class JitpackPrService(
     private val pullUpdaterConfig: PullUpdaterConfig,
+    private val pullUpdater: PullUpdater,
     private val client: GithubClient,
 ) {
     private val bcPullRequestCache = PullRequestCache(LibraryType.BOT_COMMANDS, null)
@@ -52,7 +53,7 @@ class JitpackPrService(
         onError: suspend () -> Unit,
         onSuccess: suspend (branch: UpdatedBranch) -> Unit,
     ) {
-        val result = PullUpdater.tryUpdate(libraryType, pullNumber)
+        val result = pullUpdater.tryUpdate(libraryType, pullNumber)
 
         result.onSuccess {
             onSuccess(it)

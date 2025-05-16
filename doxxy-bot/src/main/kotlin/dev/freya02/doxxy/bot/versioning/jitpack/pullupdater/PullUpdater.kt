@@ -3,8 +3,9 @@ package dev.freya02.doxxy.bot.versioning.jitpack.pullupdater
 import dev.freya02.doxxy.bot.config.Config
 import dev.freya02.doxxy.bot.versioning.LibraryType
 import dev.freya02.doxxy.bot.versioning.github.CommitHash
-import dev.freya02.doxxy.bot.versioning.github.GithubUtils
+import dev.freya02.doxxy.bot.versioning.github.GithubClient
 import dev.freya02.doxxy.common.Directories
+import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -15,6 +16,7 @@ import io.ktor.http.*
 import io.ktor.serialization.gson.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -27,7 +29,10 @@ import kotlin.io.path.moveTo
 import kotlin.io.path.name
 import kotlin.io.path.notExists
 
-object PullUpdater {
+@BService
+class PullUpdater(
+    private val githubClient: GithubClient,
+) {
     private data class CacheKey(val headLabel: String, val baseLabel: String)
     private data class CacheValue(val headSha: String, val baseSha: String, val forkedGithubBranch: UpdatedBranch)
 
@@ -79,7 +84,10 @@ object PullUpdater {
     }
 
     private suspend fun whenUpdateRequired(libraryType: LibraryType, pullRequest: PullRequest, onUpdate: suspend () -> UpdatedBranch): UpdatedBranch {
-        val latestHash = GithubUtils.getLatestHash(libraryType.githubOwnerName, libraryType.githubRepoName, "")
+        val latestHash = githubClient
+            .getCommits(libraryType.githubOwnerName, libraryType.githubRepoName, perPage = 1)
+            .first()
+            .sha
 
         fun createCacheKey(): CacheKey = CacheKey(pullRequest.head.label, pullRequest.base.label)
 

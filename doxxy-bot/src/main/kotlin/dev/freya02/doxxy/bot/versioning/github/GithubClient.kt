@@ -14,6 +14,8 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 
+private const val DEFAULT_BRANCH = ""
+
 // TODO migrate all GH request to here
 @BService
 class GithubClient(
@@ -38,6 +40,21 @@ class GithubClient(
 
     fun getBranches(owner: String, repo: String, perPage: Int = 100): Flow<Branches.Branch> {
         return withPagination(perPage, "https://api.github.com/repos/$owner/$repo/branches", fetch = HttpResponse::body)
+    }
+
+    fun getCommits(owner: String, repo: String, sha: String = DEFAULT_BRANCH, perPage: Int = 100): Flow<Commits.Commit> {
+        return withPagination(
+            perPage,
+            url = "https://api.github.com/repos/$owner/$repo/commits",
+            customizer = {
+                url {
+                    if (sha !== DEFAULT_BRANCH) {
+                        parameter("sha", sha)
+                    }
+                }
+            },
+            fetch = HttpResponse::body
+        )
     }
 
     suspend fun getPullRequest(owner: String, repo: String, pr: Int): PullRequest {
