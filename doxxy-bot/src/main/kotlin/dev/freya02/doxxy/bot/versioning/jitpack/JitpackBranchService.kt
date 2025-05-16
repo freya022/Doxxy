@@ -3,7 +3,6 @@ package dev.freya02.doxxy.bot.versioning.jitpack
 import dev.freya02.doxxy.bot.commands.slash.versioning.SlashJitpackPr
 import dev.freya02.doxxy.bot.versioning.*
 import dev.freya02.doxxy.bot.versioning.github.GithubBranch
-import dev.freya02.doxxy.bot.versioning.github.GithubBranchMap
 import dev.freya02.doxxy.bot.versioning.github.GithubUtils
 import dev.freya02.doxxy.bot.versioning.github.UpdateCountdown
 import dev.freya02.doxxy.bot.versioning.jitpack.pullupdater.UpdatedBranch
@@ -36,6 +35,9 @@ class JitpackBranchService(
             return value
         }
     }
+
+    @JvmRecord
+    data class GithubBranchMap(val defaultBranch: GithubBranch, val branches: Map<String, GithubBranch>)
 
     private inner class UpdatedBranchMap(private val libraryType: LibraryType) : UpdatedValue<GithubBranchMap>() {
         override suspend fun update(): GithubBranchMap {
