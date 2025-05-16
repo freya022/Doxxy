@@ -1,4 +1,4 @@
-package dev.freya02.doxxy.bot.versioning.github
+package dev.freya02.doxxy.bot.utils
 
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.locks.ReentrantLock

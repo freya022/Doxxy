@@ -1,5 +1,6 @@
 package dev.freya02.doxxy.bot.versioning.github
 
+import dev.freya02.doxxy.bot.utils.UpdateCountdownDelegate
 import dev.freya02.doxxy.bot.versioning.LibraryType
 import dev.freya02.doxxy.bot.versioning.github.GithubUtils.retrievePullRequests
 import gnu.trove.map.TIntObjectMap
