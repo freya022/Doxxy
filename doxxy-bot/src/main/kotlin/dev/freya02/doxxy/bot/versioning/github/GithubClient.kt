@@ -7,6 +7,7 @@ import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -46,7 +47,7 @@ class GithubClient(
         return withPagination(perPage, "https://api.github.com/repos/$owner/$repo/branches", fetch = HttpResponse::body)
     }
 
-    fun getCommits(owner: String, repo: String, sha: String = DEFAULT_BRANCH, perPage: Int = 100): Flow<Commits.Commit> {
+    fun getCommits(owner: String, repo: String, sha: String = DEFAULT_BRANCH, perPage: Int = 30): Flow<Commits.Commit> {
         return withPagination(
             perPage,
             url = "https://api.github.com/repos/$owner/$repo/commits",
@@ -61,7 +62,7 @@ class GithubClient(
         )
     }
 
-    fun getPullRequests(owner: String, repo: String, baseBranch: String = DEFAULT_BRANCH, perPage: Int = 100): Flow<PullRequest> {
+    fun getPullRequests(owner: String, repo: String, baseBranch: String = DEFAULT_BRANCH, perPage: Int = 30): Flow<PullRequest> {
         return withPagination(
             perPage,
             url = "https://api.github.com/repos/$owner/$repo/pulls",
@@ -80,6 +81,25 @@ class GithubClient(
         return client
             .get("https://api.github.com/repos/$owner/$repo/pulls/$pr")
             .body()
+    }
+
+    suspend fun getLatestRelease(owner: String, repo: String): Release? {
+        return client
+            .get("https://api.github.com/repos/$owner/$repo/releases/latest")
+            .also {
+                if (it.status == HttpStatusCode.NotFound) {
+                    return null
+                }
+            }
+            .body()
+    }
+
+    fun getAllTags(owner: String, repo: String, perPage: Int = 30): Flow<Tag> {
+        return withPagination(
+            perPage,
+            url = "https://api.github.com/repos/$owner/$repo/tags",
+            fetch = HttpResponse::body
+        )
     }
 
     suspend fun compareCommits(owner: String, repo: String, baseLabel: String, headLabel: String): CommitComparisons {

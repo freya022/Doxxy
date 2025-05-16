@@ -8,7 +8,8 @@ import dev.freya02.doxxy.bot.docs.javadocDirectory
 import dev.freya02.doxxy.bot.utils.Utils.withTemporaryFile
 import dev.freya02.doxxy.bot.versioning.VersionsUtils.downloadMavenJavadoc
 import dev.freya02.doxxy.bot.versioning.VersionsUtils.downloadMavenSources
-import dev.freya02.doxxy.bot.versioning.github.GithubUtils
+import dev.freya02.doxxy.bot.versioning.github.CommitHash
+import dev.freya02.doxxy.bot.versioning.github.GithubClient
 import dev.freya02.doxxy.bot.versioning.maven.DependencyVersionChecker
 import dev.freya02.doxxy.bot.versioning.maven.MavenVersionChecker
 import dev.freya02.doxxy.bot.versioning.maven.RepoType
@@ -20,6 +21,7 @@ import io.github.freya022.botcommands.api.core.utils.namedDefaultScope
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import kotlin.time.Duration
@@ -32,6 +34,7 @@ class Versions(
     private val applicationCommandsContext: ApplicationCommandsContext,
     private val docIndexMap: DocIndexMap,
     private val versionsRepository: VersionsRepository,
+    private val githubClient: GithubClient,
 ) {
     private val bcChecker =
         MavenVersionChecker(versionsRepository.getInitialVersion(LibraryType.BOT_COMMANDS), RepoType.MAVEN)
@@ -104,8 +107,9 @@ class Versions(
         val changed = jdaChecker.checkVersion()
 
         if (changed) {
-            val sourceUrl = GithubUtils.getLatestReleaseHash("discord-jda", "JDA")
+            val sourceUrl = githubClient.getLatestReleaseHash("discord-jda", "JDA")
                 ?.let { hash -> "https://github.com/discord-jda/JDA/blob/${hash.hash}/src/main/java/" }
+                ?: return logger.debug { "Ignoring new JDA version (${jdaChecker.latest}) from Maven Central as no GitHub release could be retrieved" }
 
             if (sourceUrl == versionsRepository.findByName(LibraryType.JDA, classifier = null)?.sourceUrl)
                 return logger.debug { "Ignoring new JDA version (${jdaChecker.latest}) from Maven Central as the GitHub release hasn't been made" }
@@ -166,5 +170,13 @@ class Versions(
 
             logger.info { "BotCommands version updated to ${bcChecker.latest.version}" }
         }
+    }
+
+    private suspend fun GithubClient.getLatestReleaseHash(owner: String, repo: String): CommitHash? {
+        val latestRelease = getLatestRelease(owner, repo) ?: return null
+        val latestReleaseTag = getAllTags(owner, repo).firstOrNull { tag -> tag.name == latestRelease.tagName }
+            ?: return null
+
+        return latestReleaseTag.commit.sha
     }
 }
