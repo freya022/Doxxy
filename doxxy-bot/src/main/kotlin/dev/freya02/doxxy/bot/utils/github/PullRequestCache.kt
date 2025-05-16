@@ -33,7 +33,7 @@ class PullRequestCache(
                 "Retrieving pull requests of '$githubOwnerName/$githubRepoName' targeting $targetBranch"
             }
 
-            pullRequests = githubClient.getPullRequests(githubOwnerName, githubRepoName, baseBranchName ?: GithubClient.DEFAULT_BRANCH)
+            pullRequests = githubClient.getPullRequests(githubOwnerName, githubRepoName, baseBranchName ?: GithubClient.DEFAULT_BRANCH, perPage = 100)
                 .toList()
                 .associateBy { it.number }
         }

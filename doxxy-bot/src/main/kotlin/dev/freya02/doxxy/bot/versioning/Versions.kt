@@ -174,7 +174,7 @@ class Versions(
 
     private suspend fun GithubClient.getLatestReleaseHash(owner: String, repo: String): CommitHash? {
         val latestRelease = getLatestRelease(owner, repo) ?: return null
-        val latestReleaseTag = getAllTags(owner, repo).firstOrNull { tag -> tag.name == latestRelease.tagName }
+        val latestReleaseTag = getAllTags(owner, repo, perPage = 100).firstOrNull { tag -> tag.name == latestRelease.tagName }
             ?: return null
 
         return latestReleaseTag.commit.sha

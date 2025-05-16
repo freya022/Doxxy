@@ -11,7 +11,7 @@ class JitpackVersionChecker(private val githubClient: GithubClient, latest: Libr
         val (_, groupId, artifactId) = latest
         // TODO make retrieveLatest suspend and replace with `run`
         val latestBranch = runBlocking {
-            val branches = githubClient.getBranches(groupId.substringAfter(".github."), artifactId).toList()
+            val branches = githubClient.getBranches(groupId.substringAfter(".github."), artifactId, perPage = 100).toList()
             val mostRecentVersionedBranch = branches
                 .filter { it.name.matches("\\d\\.\\d\\.\\d".toRegex()) }
                 .maxByOrNull { it.name }

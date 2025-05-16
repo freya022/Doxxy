@@ -44,7 +44,7 @@ class JitpackBranchService(
     private inner class UpdatedBranchMap(private val libraryType: LibraryType) : UpdatedValue<GithubBranchMap>() {
         override suspend fun update(): GithubBranchMap {
             val branchByName = githubClient
-                .getBranches(libraryType.githubOwnerName, libraryType.githubRepoName)
+                .getBranches(libraryType.githubOwnerName, libraryType.githubRepoName, perPage = 100)
                 .toList()
                 .associateBy { it.name }
             val defaultBranchName = githubClient
