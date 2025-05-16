@@ -14,8 +14,6 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 
-private const val DEFAULT_BRANCH = ""
-
 // TODO migrate all GH request to here
 @BService
 class GithubClient(
@@ -101,5 +99,10 @@ class GithubClient(
 
             page += 1
         }
+    }
+
+    companion object {
+
+        const val DEFAULT_BRANCH = "default_branch"
     }
 }
