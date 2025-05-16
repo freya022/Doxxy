@@ -2,10 +2,7 @@ package dev.freya02.doxxy.bot.versioning.github
 
 import kotlinx.serialization.Serializable
 
-@JvmInline
-value class Branches(
-    val branches: List<Branch>
-) {
+interface Branches {
 
     @Serializable
     data class Branch(
