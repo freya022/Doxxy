@@ -122,9 +122,11 @@ object GithubUtils {
 
         val pullRequests: TIntObjectMap<PullRequest> = TIntObjectHashMap()
         val urlBuilder: URLBuilder = "https://api.github.com/repos/$ownerName/$repoName/pulls".toHttpUrl()
-                .newBuilder()
-                .addQueryParameter("page", page.toString())
-                .addQueryParameter("per_page", perPage.toString())
+            .newBuilder()
+            .addQueryParameter("page", page.toString())
+            .addQueryParameter("per_page", perPage.toString())
+            // This ensures head.repo is not null
+            .addQueryParameter("state", "open")
 
         if (baseBranchName != null) {
             urlBuilder.addQueryParameter("base", baseBranchName)
@@ -138,9 +140,7 @@ object GithubUtils {
 
                 jsonElement.jsonArray.forEach { element ->
                     val pullRequest = PullRequest.fromData(element)
-                    if (pullRequest != null) {
-                        pullRequests.put(pullRequest.number, pullRequest)
-                    }
+                    pullRequests.put(pullRequest.number, pullRequest)
                 }
             }
 

@@ -4,7 +4,10 @@ import dev.freya02.doxxy.bot.utils.Utils.truncate
 import info.debatty.java.stringsimilarity.LongestCommonSubsequence
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNamingStrategy
+import kotlinx.serialization.json.decodeFromJsonElement
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
@@ -60,12 +63,7 @@ data class PullRequest(
             namingStrategy = JsonNamingStrategy.SnakeCase
         }
 
-        fun fromData(jsonElement: JsonElement): PullRequest? {
-            // Discard pull requests from deleted repositories
-            if (jsonElement.jsonObject["head"]?.jsonObject?.get("repo") == null) {
-                return null
-            }
-
+        fun fromData(jsonElement: JsonElement): PullRequest {
             return json.decodeFromJsonElement<PullRequest>(jsonElement)
         }
     }
