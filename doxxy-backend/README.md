@@ -15,7 +15,7 @@ See the [`Contributing` section of the project root](../README.md#contributing) 
 
 ### Running
 
-Run the main class at [`src/main/kotlin/io/github/freya022/backend/BackendApplication.kt`](./src/main/kotlin/io/github/freya022/backend/BackendApplication.kt)
+Run the main class at [`src/main/kotlin/dev/freya02/doxxy/backend/BackendApplication.kt`](./src/main/kotlin/dev/freya02/doxxy/backend/BackendApplication.kt)
 
 ### Making database changes
 When changing the schema, please write a migration script in [`src/main/resources/db/migration`](./src/main/resources/db/migration),

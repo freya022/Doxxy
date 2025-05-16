@@ -31,7 +31,7 @@ See the [`Contributing` section of the project root](../README.md#contributing) 
 
 ### Running
 
-Run the main class at [`src/main/kotlin/com/freya02/bot/Main.kt`](src/main/kotlin/com/freya02/bot/Main.kt)
+Run the main class at [`src/main/kotlin/dev/freya02/doxxy/bot/Main.kt`](src/main/kotlin/dev/freya02/doxxy/bot/Main.kt)
 
 ### Making database changes
 When changing the schema, please write a migration script in [`src/main/resources/doxxy_database_scripts`](./src/main/resources/doxxy_database_scripts),
