@@ -7,7 +7,6 @@ import io.ktor.client.engine.okhttp.*
 
 @BConfiguration
 object HttpClientProvider {
-    //TODO use in PullUpdater after removing gson
     @BService
     fun defaultClient(): HttpClient = HttpClient(OkHttp) {
 

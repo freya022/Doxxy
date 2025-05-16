@@ -48,12 +48,12 @@ class JitpackPrService(
 
     suspend fun updatePr(
         libraryType: LibraryType,
-        pullNumber: Int,
+        pullRequest: PullRequest,
         onMergeConflict: suspend () -> Unit,
         onError: suspend () -> Unit,
         onSuccess: suspend (branch: UpdatedBranch) -> Unit,
     ) {
-        val result = pullUpdater.tryUpdate(libraryType, pullNumber)
+        val result = pullUpdater.tryUpdate(libraryType, pullRequest)
 
         result.onSuccess {
             onSuccess(it)

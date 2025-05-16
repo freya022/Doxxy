@@ -25,7 +25,6 @@ dependencies {
     implementation(libs.hikaricp)
     implementation(libs.bundles.flyway)
 
-    implementation(libs.gson)
     implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.ktor.client.core)
@@ -37,8 +36,6 @@ dependencies {
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.server.netty)
-
-    implementation(libs.ktor.serialization.gson)
 
     implementation(libs.jsoup)
 

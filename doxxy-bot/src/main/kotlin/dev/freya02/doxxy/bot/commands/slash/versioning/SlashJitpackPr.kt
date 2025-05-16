@@ -189,7 +189,7 @@ class SlashJitpackPr(
 
         jitpackPrService.updatePr(
             libraryType,
-            pullRequest.number,
+            pullRequest,
             onMergeConflict = {
                 val message = createPrMessage(
                     event, pullRequest, targetBranch,
