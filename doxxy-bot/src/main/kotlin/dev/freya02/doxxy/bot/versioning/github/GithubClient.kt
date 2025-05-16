@@ -38,6 +38,12 @@ class GithubClient(
         }
     }
 
+    suspend fun getRepository(owner: String, repo: String): Repository {
+        return client
+            .get("https://api.github.com/repos/$owner/$repo")
+            .body()
+    }
+
     fun getBranches(owner: String, repo: String, perPage: Int = 100): Flow<Branches.Branch> {
         return withPagination(perPage, "https://api.github.com/repos/$owner/$repo/branches", fetch = HttpResponse::body)
     }

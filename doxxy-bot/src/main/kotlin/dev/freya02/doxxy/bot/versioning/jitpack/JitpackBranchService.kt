@@ -5,7 +5,6 @@ import dev.freya02.doxxy.bot.utils.UpdateCountdown
 import dev.freya02.doxxy.bot.versioning.*
 import dev.freya02.doxxy.bot.versioning.github.Branches
 import dev.freya02.doxxy.bot.versioning.github.GithubClient
-import dev.freya02.doxxy.bot.versioning.github.GithubUtils
 import dev.freya02.doxxy.bot.versioning.jitpack.pullupdater.UpdatedBranch
 import dev.freya02.doxxy.bot.versioning.maven.DependencyVersionChecker
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommandsContext
@@ -48,7 +47,9 @@ class JitpackBranchService(
                 .getBranches(libraryType.githubOwnerName, libraryType.githubRepoName)
                 .toList()
                 .associateBy { it.name }
-            val defaultBranchName = GithubUtils.getDefaultBranchName(libraryType.githubOwnerName, libraryType.githubRepoName)
+            val defaultBranchName = githubClient
+                .getRepository(libraryType.githubOwnerName, libraryType.githubRepoName)
+                .defaultBranch
             val defaultBranch = branchByName[defaultBranchName]!!
             return GithubBranchMap(defaultBranch, branchByName)
         }

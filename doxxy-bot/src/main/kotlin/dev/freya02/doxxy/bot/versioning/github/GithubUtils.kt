@@ -26,22 +26,6 @@ object GithubUtils {
     }
 
     @Throws(IOException::class)
-    fun getDefaultBranchName(ownerName: String, repoName: String): String {
-        val url = "https://api.github.com/repos/$ownerName/$repoName".toHttpUrl()
-            .newBuilder()
-            .build()
-        HttpUtils.CLIENT.newCall(
-            newGithubRequest(url)
-                .build()
-        )
-            .execute().use { response ->
-                val json = response.body!!.string()
-                val dataObject = DataObject.fromJson(json)
-                return dataObject.getString("default_branch")
-            }
-    }
-
-    @Throws(IOException::class)
     fun retrievePullRequests(
         ownerName: String,
         repoName: String,
