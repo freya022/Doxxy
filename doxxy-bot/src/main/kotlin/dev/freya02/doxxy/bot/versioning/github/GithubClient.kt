@@ -15,7 +15,6 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 
-// TODO migrate all GH request to here
 @BService
 class GithubClient(
     defaultClient: HttpClient,
