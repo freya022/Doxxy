@@ -8,12 +8,12 @@ data class GithubBranch(
     val repoName: String,
     val branchName: String,
     val latestCommitSha: CommitHash
-) {
-    fun toJitpackArtifact(): ArtifactInfo = ArtifactInfo(
-        "io.github.$ownerName",
-        repoName,
-        latestCommitSha.asSha10
-    )
+)
 
-    fun toURL(): String = "https://github.com/$ownerName/$repoName/tree/$branchName"
-}
+val GithubBranch.jitpackArtifact: ArtifactInfo get() = ArtifactInfo(
+    "io.github.$ownerName",
+    repoName,
+    latestCommitSha.asSha10
+)
+
+val GithubBranch.url: String get() = "https://github.com/$ownerName/$repoName/tree/$branchName"

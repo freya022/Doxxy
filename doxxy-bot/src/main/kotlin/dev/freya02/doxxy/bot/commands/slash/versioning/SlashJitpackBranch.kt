@@ -4,6 +4,8 @@ import dev.freya02.doxxy.bot.commands.slash.DeleteButtonListener.Companion.messa
 import dev.freya02.doxxy.bot.versioning.LibraryType
 import dev.freya02.doxxy.bot.versioning.ScriptType
 import dev.freya02.doxxy.bot.versioning.github.GithubBranch
+import dev.freya02.doxxy.bot.versioning.github.jitpackArtifact
+import dev.freya02.doxxy.bot.versioning.github.url
 import dev.freya02.doxxy.bot.versioning.jitpack.JitpackBranchService
 import dev.freya02.doxxy.bot.versioning.jitpack.pullupdater.UpdatedBranch
 import dev.freya02.doxxy.bot.versioning.supplier.BuildToolType
@@ -79,19 +81,19 @@ class SlashJitpackBranch(
             LibraryType.JDA, LibraryType.JDA_KTX, LibraryType.LAVA_PLAYER -> DependencySupplier.formatJitpack(
                 ScriptType.DEPENDENCIES,
                 buildToolType,
-                branch.toJitpackArtifact()
+                branch.jitpackArtifact
             )
             LibraryType.BOT_COMMANDS -> DependencySupplier.formatBCJitpack(
                 ScriptType.DEPENDENCIES,
                 buildToolType,
                 jitpackBranchService.getUsedJDAVersionFromBranch(branch.toUpdatedBranch()),
-                branch.toJitpackArtifact()
+                branch.jitpackArtifact
             )
         }
 
         event.reply {
             components += Container {
-                +TextDisplay("### [${buildToolType.humanName} dependencies for ${libraryType.displayString} @ branch '$branchName'](${branch.toURL()})")
+                +TextDisplay("### [${buildToolType.humanName} dependencies for ${libraryType.displayString} @ branch '$branchName'](${branch.url})")
                 +TextDisplay(when (buildToolType) {
                     BuildToolType.MAVEN -> "```xml\n$dependencyStr```"
                     BuildToolType.GRADLE, BuildToolType.GRADLE_KTS -> "```gradle\n$dependencyStr```"

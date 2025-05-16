@@ -5,8 +5,8 @@ import dev.freya02.doxxy.bot.examples.ExamplePaginatorFactory
 import dev.freya02.doxxy.bot.switches.RequiresBackend
 import dev.freya02.doxxy.bot.utils.Utils.isBCGuild
 import dev.freya02.doxxy.bot.utils.Utils.letIf
-import dev.freya02.doxxy.bot.versioning.github.PullRequest.Companion.toAutocompleteChoices
 import dev.freya02.doxxy.bot.versioning.github.PullRequestCache
+import dev.freya02.doxxy.bot.versioning.github.toAutocompleteChoices
 import dev.minn.jda.ktx.messages.reply_
 import dev.minn.jda.ktx.messages.send
 import io.github.freya022.botcommands.api.annotations.CommandMarker

@@ -1,7 +1,6 @@
 package dev.freya02.doxxy.bot.versioning.github
 
 import dev.freya02.doxxy.bot.utils.Utils.truncate
-import dev.freya02.doxxy.bot.versioning.ArtifactInfo
 import info.debatty.java.stringsimilarity.LongestCommonSubsequence
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
@@ -24,14 +23,6 @@ data class Branch(
     val repoName get() = repo.name
     val branchName get() = ref
     val latestCommitSha get() = sha
-
-    fun toJitpackArtifact(): ArtifactInfo = ArtifactInfo(
-        "io.github.$ownerName",
-        repoName,
-        latestCommitSha.asSha10
-    )
-
-    fun toURL(): String = "https://github.com/$ownerName/$repoName/tree/$branchName"
 }
 
 @Serializable
@@ -61,18 +52,7 @@ data class PullRequest(
     val pullUrl get() = htmlUrl
     val branch get() = head
 
-    fun toJitpackArtifact(): ArtifactInfo {
-        return branch.toJitpackArtifact()
-    }
-
-    val asHumanDescription: String
-        get() {
-            val branchAuthorName = " ($authorName)"
-            return "$number - $title".truncate(Command.Choice.MAX_NAME_LENGTH - branchAuthorName.length) + branchAuthorName
-        }
-
     companion object {
-        private val lcs = LongestCommonSubsequence()
 
         @OptIn(ExperimentalSerializationApi::class)
         private val json = Json {
@@ -88,25 +68,33 @@ data class PullRequest(
 
             return json.decodeFromJsonElement<PullRequest>(jsonElement)
         }
-
-        fun Collection<PullRequest>.toAutocompleteChoices(event: CommandAutoCompleteInteractionEvent): List<Choice> {
-            val query = event.focusedOption.value
-            val sortedPullRequests = when {
-                query.isBlank() -> sortedByDescending { it.number }
-
-                query.first().isDigit() ->
-                    filter { it.number.toString().startsWith(query) }
-                        .sortedByDescending { it.number }
-
-                else -> {
-                    val lowercaseQuery = query.lowercase()
-                    sortedByDescending { lcs.length(lowercaseQuery, it.title.lowercase()) }
-                }
-            }.take(OptionData.MAX_CHOICES)
-
-            return sortedPullRequests.map { it.toChoice() }
-        }
-
-        private fun PullRequest.toChoice() = Choice(asHumanDescription, number.toLong())
     }
 }
+
+private val lcs = LongestCommonSubsequence()
+
+fun Collection<PullRequest>.toAutocompleteChoices(event: CommandAutoCompleteInteractionEvent): List<Choice> {
+    val query = event.focusedOption.value
+    val sortedPullRequests = when {
+        query.isBlank() -> sortedByDescending { it.number }
+
+        query.first().isDigit() ->
+            filter { it.number.toString().startsWith(query) }
+                .sortedByDescending { it.number }
+
+        else -> {
+            val lowercaseQuery = query.lowercase()
+            sortedByDescending { lcs.length(lowercaseQuery, it.title.lowercase()) }
+        }
+    }.take(OptionData.MAX_CHOICES)
+
+    return sortedPullRequests.map { it.toChoice() }
+}
+
+private fun PullRequest.toChoice() = Choice(asHumanDescription, number.toLong())
+
+private val PullRequest.asHumanDescription: String
+    get() {
+        val branchAuthorName = " ($authorName)"
+        return "$number - $title".truncate(Command.Choice.MAX_NAME_LENGTH - branchAuthorName.length) + branchAuthorName
+    }

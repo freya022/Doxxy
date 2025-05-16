@@ -8,7 +8,7 @@ import dev.freya02.doxxy.bot.versioning.ScriptType
 import dev.freya02.doxxy.bot.versioning.github.Branch
 import dev.freya02.doxxy.bot.versioning.github.CommitComparisons
 import dev.freya02.doxxy.bot.versioning.github.PullRequest
-import dev.freya02.doxxy.bot.versioning.github.PullRequest.Companion.toAutocompleteChoices
+import dev.freya02.doxxy.bot.versioning.github.toAutocompleteChoices
 import dev.freya02.doxxy.bot.versioning.jitpack.JitpackBranchService
 import dev.freya02.doxxy.bot.versioning.jitpack.JitpackPrService
 import dev.freya02.doxxy.bot.versioning.jitpack.JitpackPrService.AdditionalPullRequestDetails
