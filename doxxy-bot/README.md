@@ -31,7 +31,9 @@ See the [`Contributing` section of the project root](../README.md#contributing) 
 
 ### Running
 
-Run the main class at [`src/main/kotlin/dev/freya02/doxxy/bot/Main.kt`](src/main/kotlin/dev/freya02/doxxy/bot/Main.kt)
+Run the main class at [`src/main/kotlin/dev/freya02/doxxy/bot/Main.kt`](src/main/kotlin/dev/freya02/doxxy/bot/Main.kt),
+and add the following VM options in the run configuration:
+`--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED`
 
 ### Making database changes
 When changing the schema, please write a migration script in [`src/main/resources/doxxy_database_scripts`](./src/main/resources/doxxy_database_scripts),
