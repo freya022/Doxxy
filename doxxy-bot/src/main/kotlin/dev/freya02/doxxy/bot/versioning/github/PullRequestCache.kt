@@ -1,22 +1,41 @@
 package dev.freya02.doxxy.bot.versioning.github
 
-import dev.freya02.doxxy.bot.utils.UpdateCountdownDelegate
+import dev.freya02.doxxy.bot.utils.UpdateCountdown
 import dev.freya02.doxxy.bot.versioning.LibraryType
-import dev.freya02.doxxy.bot.versioning.github.GithubUtils.retrievePullRequests
-import gnu.trove.map.TIntObjectMap
+import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.flow.toList
 import kotlin.time.Duration.Companion.minutes
 
+private val logger = KotlinLogging.logger { }
+
 class PullRequestCache(
+    private val githubClient: GithubClient,
     private val githubOwnerName: String,
     private val githubRepoName: String,
     private val baseBranchName: String?
 ) {
     constructor(
+        githubClient: GithubClient,
         libraryType: LibraryType,
         baseBranchName: String?
-    ) : this(libraryType.githubOwnerName, libraryType.githubRepoName, baseBranchName)
+    ) : this(githubClient, libraryType.githubOwnerName, libraryType.githubRepoName, baseBranchName)
 
-    val pullRequests: TIntObjectMap<PullRequest> by UpdateCountdownDelegate(1.minutes) {
-        retrievePullRequests(githubOwnerName, githubRepoName, baseBranchName)
+    private val updateCountdown = UpdateCountdown(1.minutes)
+
+    private lateinit var pullRequests: Map<Int, PullRequest>
+
+    suspend fun retrievePullRequests(): Map<Int, PullRequest> {
+        updateCountdown.onUpdate {
+            logger.debug {
+                val targetBranch = baseBranchName?.let { "'$it'" } ?: "the default branch"
+                "Retrieving pull requests of '$githubOwnerName/$githubRepoName' targeting $targetBranch"
+            }
+
+            pullRequests = githubClient.getPullRequests(githubOwnerName, githubRepoName, baseBranchName ?: GithubClient.DEFAULT_BRANCH)
+                .toList()
+                .associateBy { it.number }
+        }
+
+        return pullRequests
     }
 }

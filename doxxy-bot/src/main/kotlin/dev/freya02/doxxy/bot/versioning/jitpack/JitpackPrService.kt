@@ -25,24 +25,24 @@ class JitpackPrService(
     private val pullUpdater: PullUpdater,
     private val client: GithubClient,
 ) {
-    private val bcPullRequestCache = PullRequestCache(LibraryType.BOT_COMMANDS, null)
-    private val jdaPullRequestCache = PullRequestCache(LibraryType.JDA, "master")
-    private val jdaKtxPullRequestCache = PullRequestCache(LibraryType.JDA_KTX, "master")
-    private val lavaPlayerPullRequestCache = PullRequestCache(LibraryType.LAVA_PLAYER, "main")
+    private val bcPullRequestCache = PullRequestCache(client, LibraryType.BOT_COMMANDS, null)
+    private val jdaPullRequestCache = PullRequestCache(client, LibraryType.JDA, "master")
+    private val jdaKtxPullRequestCache = PullRequestCache(client, LibraryType.JDA_KTX, "master")
+    private val lavaPlayerPullRequestCache = PullRequestCache(client, LibraryType.LAVA_PLAYER, "main")
 
-    fun getPullRequest(libraryType: LibraryType, pullNumber: Int): PullRequest? = when (libraryType) {
-        LibraryType.BOT_COMMANDS -> bcPullRequestCache.pullRequests[pullNumber]
-        LibraryType.JDA -> jdaPullRequestCache.pullRequests[pullNumber]
-        LibraryType.JDA_KTX -> jdaKtxPullRequestCache.pullRequests[pullNumber]
-        LibraryType.LAVA_PLAYER -> lavaPlayerPullRequestCache.pullRequests[pullNumber]
+    suspend fun getPullRequest(libraryType: LibraryType, pullNumber: Int): PullRequest? = when (libraryType) {
+        LibraryType.BOT_COMMANDS -> bcPullRequestCache.retrievePullRequests()[pullNumber]
+        LibraryType.JDA -> jdaPullRequestCache.retrievePullRequests()[pullNumber]
+        LibraryType.JDA_KTX -> jdaKtxPullRequestCache.retrievePullRequests()[pullNumber]
+        LibraryType.LAVA_PLAYER -> lavaPlayerPullRequestCache.retrievePullRequests()[pullNumber]
         else -> throw IllegalArgumentException()
     }
 
-    fun getPullRequests(libraryType: LibraryType): Collection<PullRequest> = when (libraryType) {
-        LibraryType.BOT_COMMANDS -> bcPullRequestCache.pullRequests.valueCollection()
-        LibraryType.JDA -> jdaPullRequestCache.pullRequests.valueCollection()
-        LibraryType.JDA_KTX -> jdaKtxPullRequestCache.pullRequests.valueCollection()
-        LibraryType.LAVA_PLAYER -> lavaPlayerPullRequestCache.pullRequests.valueCollection()
+    suspend fun getPullRequests(libraryType: LibraryType): Collection<PullRequest> = when (libraryType) {
+        LibraryType.BOT_COMMANDS -> bcPullRequestCache.retrievePullRequests().values
+        LibraryType.JDA -> jdaPullRequestCache.retrievePullRequests().values
+        LibraryType.JDA_KTX -> jdaKtxPullRequestCache.retrievePullRequests().values
+        LibraryType.LAVA_PLAYER -> lavaPlayerPullRequestCache.retrievePullRequests().values
         else -> throw IllegalArgumentException()
     }
 

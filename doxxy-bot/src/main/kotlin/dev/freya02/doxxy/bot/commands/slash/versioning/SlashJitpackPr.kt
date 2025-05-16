@@ -171,7 +171,7 @@ class SlashJitpackPr(
     }
 
     @AutocompleteHandler(name = PR_NUMBER_AUTOCOMPLETE_NAME, showUserInput = false)
-    fun onPRNumberAutocomplete(
+    suspend fun onPRNumberAutocomplete(
         event: CommandAutoCompleteInteractionEvent,
         libraryType: LibraryType
     ): Collection<Choice> {

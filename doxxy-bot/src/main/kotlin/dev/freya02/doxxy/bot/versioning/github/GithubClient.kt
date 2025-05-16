@@ -61,6 +61,21 @@ class GithubClient(
         )
     }
 
+    fun getPullRequests(owner: String, repo: String, baseBranch: String = DEFAULT_BRANCH, perPage: Int = 100): Flow<PullRequest> {
+        return withPagination(
+            perPage,
+            url = "https://api.github.com/repos/$owner/$repo/pulls",
+            customizer = {
+                url {
+                    if (baseBranch !== DEFAULT_BRANCH) {
+                        parameter("base", baseBranch)
+                    }
+                }
+            },
+            fetch = HttpResponse::body
+        )
+    }
+
     suspend fun getPullRequest(owner: String, repo: String, pr: Int): PullRequest {
         return client
             .get("https://api.github.com/repos/$owner/$repo/pulls/$pr")
