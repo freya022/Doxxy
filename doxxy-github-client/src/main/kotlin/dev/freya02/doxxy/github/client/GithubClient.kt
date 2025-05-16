@@ -17,12 +17,15 @@ import kotlinx.serialization.json.JsonNamingStrategy
 
 class GithubClient(
     defaultClient: HttpClient,
+    token: String?,
 ) {
 
     @OptIn(ExperimentalSerializationApi::class)
     private val client = defaultClient.config {
         defaultRequest {
             headers {
+                if (token != null)
+                    bearerAuth(token)
                 header("Accept", "application/vnd.github.v3+json")
             }
         }
