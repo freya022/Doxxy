@@ -8,6 +8,7 @@ plugins {
 dependencies {
     implementation(projects.doxxy.doxxyCommons)
     implementation(projects.doxxy.doxxyDocs)
+    implementation(projects.doxxy.doxxyGithubClient)
 
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.debug)
