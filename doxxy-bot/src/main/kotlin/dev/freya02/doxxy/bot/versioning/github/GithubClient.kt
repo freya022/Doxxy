@@ -6,6 +6,7 @@ import io.ktor.client.call.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
@@ -33,6 +34,12 @@ class GithubClient(
         }
     }
 
+    suspend fun getBranches(owner: String, repo: String, page: Int = 1, perPage: Int = 100): Branches {
+        return withPagination(page, perPage, "https://api.github.com/repos/$owner/$repo/branches", ::Branches) {
+            it.body<List<Branches.Branch>>()
+        }
+    }
+
     suspend fun getPullRequest(owner: String, repo: String, pr: Int): PullRequest {
         return client
             .get("https://api.github.com/repos/$owner/$repo/pulls/$pr")
@@ -43,5 +50,33 @@ class GithubClient(
         return client
             .get("https://api.github.com/repos/$owner/$repo/compare/$baseLabel...$headLabel")
             .body()
+    }
+
+    // Pagination endpoints often have different schemas than individual GETs
+    // so we make different DTOs for those, example:
+    // Fetch a bunch of [[Branches#Branch]] and merge them in [[Branches]]
+    private suspend fun <T, R : Any> withPagination(
+        page: Int,
+        perPage: Int,
+        url: String,
+        finalizer: (List<T>) -> R,
+        customizer: HttpRequestBuilder.() -> Unit = {},
+        fetch: suspend (HttpResponse) -> List<T>,
+    ): R {
+        val items = fetch(client.get(url) {
+            customizer()
+
+            url {
+                parameter("page", page)
+                parameter("per_page", perPage)
+            }
+        })
+
+        return if (items.size >= perPage) {
+            val mergedFinalizer = { nextPageItems: List<T> -> finalizer(nextPageItems + items) }
+            withPagination(page + 1, perPage, url, mergedFinalizer, customizer, fetch)
+        } else {
+            finalizer(items)
+        }
     }
 }

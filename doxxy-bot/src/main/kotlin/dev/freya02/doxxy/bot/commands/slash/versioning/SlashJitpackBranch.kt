@@ -1,11 +1,10 @@
 package dev.freya02.doxxy.bot.commands.slash.versioning
 
 import dev.freya02.doxxy.bot.commands.slash.DeleteButtonListener.Companion.messageDelete
+import dev.freya02.doxxy.bot.versioning.ArtifactInfo
 import dev.freya02.doxxy.bot.versioning.LibraryType
 import dev.freya02.doxxy.bot.versioning.ScriptType
-import dev.freya02.doxxy.bot.versioning.github.GithubBranch
-import dev.freya02.doxxy.bot.versioning.github.jitpackArtifact
-import dev.freya02.doxxy.bot.versioning.github.url
+import dev.freya02.doxxy.bot.versioning.github.Branches
 import dev.freya02.doxxy.bot.versioning.jitpack.JitpackBranchService
 import dev.freya02.doxxy.bot.versioning.jitpack.pullupdater.UpdatedBranch
 import dev.freya02.doxxy.bot.versioning.supplier.BuildToolType
@@ -35,7 +34,7 @@ class SlashJitpackBranch(
         libraryType: LibraryType
     ): Collection<Choice> {
         val branchMap = jitpackBranchService.getBranchMap(libraryType)
-        val defaultBranchName = branchMap.defaultBranch.branchName
+        val defaultBranchName = branchMap.defaultBranch.name
 
         return AutocompleteAlgorithms.fuzzyMatching(branchMap.branches.keys, { it }, event.focusedOption.value)
             .take(OptionData.MAX_CHOICES)
@@ -73,27 +72,27 @@ class SlashJitpackBranch(
         event: GuildSlashEvent,
         libraryType: LibraryType,
         buildToolType: BuildToolType,
-        branch: GithubBranch
+        branch: Branches.Branch,
     ) {
-        val branchName = branch.branchName
+        val branchName = branch.name
 
         val dependencyStr = when (libraryType) {
             LibraryType.JDA, LibraryType.JDA_KTX, LibraryType.LAVA_PLAYER -> DependencySupplier.formatJitpack(
                 ScriptType.DEPENDENCIES,
                 buildToolType,
-                branch.jitpackArtifact
+                branch.toJitpackArtifact(libraryType)
             )
             LibraryType.BOT_COMMANDS -> DependencySupplier.formatBCJitpack(
                 ScriptType.DEPENDENCIES,
                 buildToolType,
-                jitpackBranchService.getUsedJDAVersionFromBranch(branch.toUpdatedBranch()),
-                branch.jitpackArtifact
+                jitpackBranchService.getUsedJDAVersionFromBranch(branch.toUpdatedBranch(libraryType)),
+                branch.toJitpackArtifact(libraryType)
             )
         }
 
         event.reply {
             components += Container {
-                +TextDisplay("### [${buildToolType.humanName} dependencies for ${libraryType.displayString} @ branch '$branchName'](${branch.url})")
+                +TextDisplay("### [${buildToolType.humanName} dependencies for ${libraryType.displayString} @ branch '$branchName'](${branch.toUrl(libraryType)})")
                 +TextDisplay(when (buildToolType) {
                     BuildToolType.MAVEN -> "```xml\n$dependencyStr```"
                     BuildToolType.GRADLE, BuildToolType.GRADLE_KTS -> "```gradle\n$dependencyStr```"
@@ -109,7 +108,17 @@ class SlashJitpackBranch(
         }.queue()
     }
 
-    private fun GithubBranch.toUpdatedBranch(): UpdatedBranch = UpdatedBranch(ownerName, repoName, branchName, latestCommitSha)
+    private fun Branches.Branch.toUrl(libraryType: LibraryType): String =
+        "https://github.com/${libraryType.githubOwnerName}/${libraryType.githubRepoName}/tree/$name"
+
+    private fun Branches.Branch.toJitpackArtifact(libraryType: LibraryType): ArtifactInfo = ArtifactInfo(
+        "io.github.${libraryType.githubOwnerName}",
+        libraryType.githubRepoName,
+        commit.sha.asSha10,
+    )
+
+    private fun Branches.Branch.toUpdatedBranch(libraryType: LibraryType): UpdatedBranch =
+        UpdatedBranch(libraryType.githubOwnerName, libraryType.githubRepoName, name, commit.sha)
 
     companion object {
         const val BRANCH_NAME_AUTOCOMPLETE_NAME = "SlashJitpack: branchName"

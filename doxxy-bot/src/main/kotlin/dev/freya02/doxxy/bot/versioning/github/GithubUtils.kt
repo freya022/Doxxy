@@ -26,14 +26,6 @@ object GithubUtils {
     }
 
     @Throws(IOException::class)
-    fun getLatestBranch(ownerName: String, artifactId: String): GithubBranch {
-        val branches = getBranches(ownerName, artifactId)
-        return branches
-            .filter { s: GithubBranch -> s.branchName.matches("\\d\\.\\d\\.\\d".toRegex()) }
-            .maxWithOrNull(Comparator.comparing { obj: GithubBranch -> obj.branchName }) ?: branches[0]
-    }
-
-    @Throws(IOException::class)
     fun getLatestHash(ownerName: String, repoName: String, branchName: String): CommitHash {
         val url = "https://api.github.com/repos/$ownerName/$repoName/commits".toHttpUrl()
             .newBuilder()
@@ -64,50 +56,6 @@ object GithubUtils {
                 val dataObject = DataObject.fromJson(json)
                 return dataObject.getString("default_branch")
             }
-    }
-
-    @Throws(IOException::class)
-    fun getBranches(ownerName: String, repoName: String, page: Int = 1, perPage: Int = 100): List<GithubBranch> {
-        val url = "https://api.github.com/repos/$ownerName/$repoName/branches".toHttpUrl()
-            .newBuilder()
-            .addQueryParameter("page", page.toString())
-            .addQueryParameter("per_page", perPage.toString())
-            .build()
-        HttpUtils.CLIENT.newCall(newGithubRequest(url).build())
-            .execute()
-            .use { response ->
-                val json = response.body!!.string()
-                val branches = DataArray.fromJson(json)
-
-                return (0 until branches.length()).map { i ->
-                    val branchObject = branches.getObject(i)
-                    makeBranch(branchObject, ownerName, repoName)
-                }.let {
-                    if (it.isNotEmpty()) {
-                        it + getBranches(ownerName, repoName, page + 1, perPage)
-                    } else {
-                        it
-                    }
-                }
-            }
-    }
-
-    @Throws(IOException::class)
-    fun getBranch(ownerName: String, repoName: String, branchName: String): GithubBranch {
-        val url = "https://api.github.com/repos/$ownerName/$repoName/branches/$branchName".toHttpUrl()
-        HttpUtils.CLIENT.newCall(newGithubRequest(url).build())
-            .execute()
-            .use { response ->
-                val json = response.body!!.string()
-                return makeBranch(DataObject.fromJson(json), ownerName, repoName)
-            }
-    }
-
-    private fun makeBranch(branchObject: DataObject, ownerName: String, repoName: String): GithubBranch {
-        val name = branchObject.getString("name")
-        val sha = branchObject.getObject("commit").getString("sha")
-
-        return GithubBranch(ownerName, repoName, name, CommitHash(sha))
     }
 
     @Throws(IOException::class)

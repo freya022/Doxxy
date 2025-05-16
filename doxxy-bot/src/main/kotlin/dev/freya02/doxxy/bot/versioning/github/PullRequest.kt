@@ -14,21 +14,6 @@ import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
 @Serializable
-data class Branch(
-    val label: String,
-    val user: User,
-    val repo: Repo,
-    val ref: String,
-    val sha: CommitHash,
-) {
-
-    val ownerName get() = user.login
-    val repoName get() = repo.name
-    val branchName get() = ref
-    val latestCommitSha get() = sha
-}
-
-@Serializable
 data class User(
     val login: String,
 )

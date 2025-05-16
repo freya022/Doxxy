@@ -3,7 +3,8 @@ package dev.freya02.doxxy.bot.versioning.jitpack
 import dev.freya02.doxxy.bot.commands.slash.versioning.SlashJitpackPr
 import dev.freya02.doxxy.bot.utils.UpdateCountdown
 import dev.freya02.doxxy.bot.versioning.*
-import dev.freya02.doxxy.bot.versioning.github.GithubBranch
+import dev.freya02.doxxy.bot.versioning.github.Branches
+import dev.freya02.doxxy.bot.versioning.github.GithubClient
 import dev.freya02.doxxy.bot.versioning.github.GithubUtils
 import dev.freya02.doxxy.bot.versioning.jitpack.pullupdater.UpdatedBranch
 import dev.freya02.doxxy.bot.versioning.maven.DependencyVersionChecker
@@ -19,7 +20,8 @@ private typealias BranchName = String
 @BService
 class JitpackBranchService(
     private val applicationCommandsContext: ApplicationCommandsContext,
-    private val versionsRepository: VersionsRepository
+    private val versionsRepository: VersionsRepository,
+    private val githubClient: GithubClient,
 ) {
     private sealed class UpdatedValue<T : Any> {
         private val updateCountdown = UpdateCountdown(1.minutes)
@@ -37,14 +39,16 @@ class JitpackBranchService(
     }
 
     @JvmRecord
-    data class GithubBranchMap(val defaultBranch: GithubBranch, val branches: Map<String, GithubBranch>)
+    data class GithubBranchMap(val defaultBranch: Branches.Branch, val branches: Map<String, Branches.Branch>)
 
     private inner class UpdatedBranchMap(private val libraryType: LibraryType) : UpdatedValue<GithubBranchMap>() {
         override suspend fun update(): GithubBranchMap {
-            val map: Map<String, GithubBranch> = GithubUtils.getBranches(libraryType.githubOwnerName, libraryType.githubRepoName).associateBy { it.branchName }
+            val branchByName = githubClient
+                .getBranches(libraryType.githubOwnerName, libraryType.githubRepoName).branches
+                .associateBy { it.name }
             val defaultBranchName = GithubUtils.getDefaultBranchName(libraryType.githubOwnerName, libraryType.githubRepoName)
-            val defaultBranch = map[defaultBranchName]!!
-            return GithubBranchMap(defaultBranch, map)
+            val defaultBranch = branchByName[defaultBranchName]!!
+            return GithubBranchMap(defaultBranch, branchByName)
         }
     }
 
@@ -67,7 +71,7 @@ class JitpackBranchService(
         updatedBranchMap.get()
     }
 
-    suspend fun getBranch(libraryType: LibraryType, branchName: String?): GithubBranch? {
+    suspend fun getBranch(libraryType: LibraryType, branchName: String?): Branches.Branch? {
         val githubBranchMap = getBranchMap(libraryType)
         return when (branchName) {
             null -> githubBranchMap.defaultBranch
