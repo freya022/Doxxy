@@ -2,19 +2,19 @@ package dev.freya02.doxxy.bot.commands.slash.versioning
 
 import dev.freya02.doxxy.bot.commands.slash.DeleteButtonListener.Companion.messageDelete
 import dev.freya02.doxxy.bot.utils.AppEmojis
+import dev.freya02.doxxy.bot.utils.github.toAutocompleteChoices
 import dev.freya02.doxxy.bot.versioning.ArtifactInfo
 import dev.freya02.doxxy.bot.versioning.LibraryType
 import dev.freya02.doxxy.bot.versioning.ScriptType
-import dev.freya02.doxxy.bot.versioning.github.Branch
-import dev.freya02.doxxy.bot.versioning.github.CommitComparisons
-import dev.freya02.doxxy.bot.versioning.github.PullRequest
-import dev.freya02.doxxy.bot.versioning.github.toAutocompleteChoices
 import dev.freya02.doxxy.bot.versioning.jitpack.JitpackBranchService
 import dev.freya02.doxxy.bot.versioning.jitpack.JitpackPrService
 import dev.freya02.doxxy.bot.versioning.jitpack.JitpackPrService.AdditionalPullRequestDetails
 import dev.freya02.doxxy.bot.versioning.jitpack.pullupdater.UpdatedBranch
 import dev.freya02.doxxy.bot.versioning.supplier.BuildToolType
 import dev.freya02.doxxy.bot.versioning.supplier.DependencySupplier
+import dev.freya02.doxxy.github.client.data.Branch
+import dev.freya02.doxxy.github.client.data.CommitComparisons
+import dev.freya02.doxxy.github.client.data.PullRequest
 import dev.freya02.jda.emojis.unicode.Emojis
 import dev.minn.jda.ktx.interactions.components.*
 import dev.minn.jda.ktx.messages.MessageCreate

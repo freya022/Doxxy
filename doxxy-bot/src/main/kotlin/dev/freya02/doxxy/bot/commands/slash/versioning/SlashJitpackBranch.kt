@@ -4,11 +4,11 @@ import dev.freya02.doxxy.bot.commands.slash.DeleteButtonListener.Companion.messa
 import dev.freya02.doxxy.bot.versioning.ArtifactInfo
 import dev.freya02.doxxy.bot.versioning.LibraryType
 import dev.freya02.doxxy.bot.versioning.ScriptType
-import dev.freya02.doxxy.bot.versioning.github.Branches
 import dev.freya02.doxxy.bot.versioning.jitpack.JitpackBranchService
 import dev.freya02.doxxy.bot.versioning.jitpack.pullupdater.UpdatedBranch
 import dev.freya02.doxxy.bot.versioning.supplier.BuildToolType
 import dev.freya02.doxxy.bot.versioning.supplier.DependencySupplier
+import dev.freya02.doxxy.github.client.data.Branches
 import dev.minn.jda.ktx.interactions.components.ActionRow
 import dev.minn.jda.ktx.interactions.components.Container
 import dev.minn.jda.ktx.interactions.components.TextDisplay

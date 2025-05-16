@@ -1,7 +1,9 @@
-package dev.freya02.doxxy.bot.versioning.github
+package dev.freya02.doxxy.bot.utils.github
 
 import dev.freya02.doxxy.bot.utils.UpdateCountdown
 import dev.freya02.doxxy.bot.versioning.LibraryType
+import dev.freya02.doxxy.github.client.GithubClient
+import dev.freya02.doxxy.github.client.data.PullRequest
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.toList
 import kotlin.time.Duration.Companion.minutes

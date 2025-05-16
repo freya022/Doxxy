@@ -1,15 +1,15 @@
 package dev.freya02.doxxy.bot.versioning.jitpack
 
 import dev.freya02.doxxy.bot.config.PullUpdaterConfig
+import dev.freya02.doxxy.bot.utils.github.PullRequestCache
 import dev.freya02.doxxy.bot.versioning.LibraryType
-import dev.freya02.doxxy.bot.versioning.github.CommitComparisons
-import dev.freya02.doxxy.bot.versioning.github.GithubClient
-import dev.freya02.doxxy.bot.versioning.github.PullRequest
-import dev.freya02.doxxy.bot.versioning.github.PullRequestCache
 import dev.freya02.doxxy.bot.versioning.jitpack.JitpackPrService.UpdatedCommitComparisons
 import dev.freya02.doxxy.bot.versioning.jitpack.pullupdater.PullUpdateException
 import dev.freya02.doxxy.bot.versioning.jitpack.pullupdater.PullUpdater
 import dev.freya02.doxxy.bot.versioning.jitpack.pullupdater.UpdatedBranch
+import dev.freya02.doxxy.github.client.GithubClient
+import dev.freya02.doxxy.github.client.data.CommitComparisons
+import dev.freya02.doxxy.github.client.data.PullRequest
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.async

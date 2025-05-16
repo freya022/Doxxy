@@ -1,4 +1,4 @@
-package dev.freya02.doxxy.bot.serializers
+package dev.freya02.doxxy.github.client.serializers
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.serializer
@@ -7,7 +7,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import java.time.Instant
 
-class InstantSerializer : KSerializer<Instant> {
+internal object InstantSerializer : KSerializer<Instant> {
     override val descriptor: SerialDescriptor = String.serializer().descriptor
 
     override fun serialize(encoder: Encoder, value: Instant) {

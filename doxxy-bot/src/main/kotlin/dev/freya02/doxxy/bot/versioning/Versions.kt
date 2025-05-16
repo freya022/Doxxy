@@ -8,11 +8,11 @@ import dev.freya02.doxxy.bot.docs.javadocDirectory
 import dev.freya02.doxxy.bot.utils.Utils.withTemporaryFile
 import dev.freya02.doxxy.bot.versioning.VersionsUtils.downloadMavenJavadoc
 import dev.freya02.doxxy.bot.versioning.VersionsUtils.downloadMavenSources
-import dev.freya02.doxxy.bot.versioning.github.CommitHash
-import dev.freya02.doxxy.bot.versioning.github.GithubClient
 import dev.freya02.doxxy.bot.versioning.maven.DependencyVersionChecker
 import dev.freya02.doxxy.bot.versioning.maven.MavenVersionChecker
 import dev.freya02.doxxy.bot.versioning.maven.RepoType
+import dev.freya02.doxxy.github.client.GithubClient
+import dev.freya02.doxxy.github.client.utils.CommitHash
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommandsContext
 import io.github.freya022.botcommands.api.core.annotations.BEventListener
 import io.github.freya022.botcommands.api.core.events.InjectedJDAEvent

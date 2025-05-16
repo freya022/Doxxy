@@ -1,4 +1,4 @@
-package dev.freya02.doxxy.bot.versioning.github
+package dev.freya02.doxxy.github.client.data
 
 import kotlinx.serialization.Serializable
 

@@ -1,5 +1,6 @@
-package dev.freya02.doxxy.bot.versioning.github
+package dev.freya02.doxxy.github.client.data
 
+import dev.freya02.doxxy.github.client.utils.CommitHash
 import kotlinx.serialization.Serializable
 
 interface Commits {

@@ -2,9 +2,9 @@ package dev.freya02.doxxy.bot.versioning.jitpack.pullupdater
 
 import dev.freya02.doxxy.bot.config.Config
 import dev.freya02.doxxy.bot.versioning.LibraryType
-import dev.freya02.doxxy.bot.versioning.github.CommitHash
-import dev.freya02.doxxy.bot.versioning.github.GithubClient
 import dev.freya02.doxxy.common.Directories
+import dev.freya02.doxxy.github.client.GithubClient
+import dev.freya02.doxxy.github.client.utils.CommitHash
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*

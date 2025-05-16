@@ -1,6 +1,6 @@
-package dev.freya02.doxxy.bot.versioning.github
+package dev.freya02.doxxy.github.client
 
-import io.github.freya022.botcommands.api.core.service.annotations.BService
+import dev.freya02.doxxy.github.client.data.*
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*
@@ -15,7 +15,6 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 
-@BService
 class GithubClient(
     defaultClient: HttpClient,
 ) {

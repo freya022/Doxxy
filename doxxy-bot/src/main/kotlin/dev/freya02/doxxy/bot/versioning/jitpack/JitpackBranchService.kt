@@ -3,10 +3,10 @@ package dev.freya02.doxxy.bot.versioning.jitpack
 import dev.freya02.doxxy.bot.commands.slash.versioning.SlashJitpackPr
 import dev.freya02.doxxy.bot.utils.UpdateCountdown
 import dev.freya02.doxxy.bot.versioning.*
-import dev.freya02.doxxy.bot.versioning.github.Branches
-import dev.freya02.doxxy.bot.versioning.github.GithubClient
 import dev.freya02.doxxy.bot.versioning.jitpack.pullupdater.UpdatedBranch
 import dev.freya02.doxxy.bot.versioning.maven.DependencyVersionChecker
+import dev.freya02.doxxy.github.client.GithubClient
+import dev.freya02.doxxy.github.client.data.Branches
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommandsContext
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.freya022.botcommands.api.core.utils.enumMapOf

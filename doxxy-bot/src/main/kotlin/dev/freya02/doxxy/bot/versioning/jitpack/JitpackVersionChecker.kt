@@ -2,7 +2,7 @@ package dev.freya02.doxxy.bot.versioning.jitpack
 
 import dev.freya02.doxxy.bot.versioning.LibraryVersion
 import dev.freya02.doxxy.bot.versioning.VersionChecker
-import dev.freya02.doxxy.bot.versioning.github.GithubClient
+import dev.freya02.doxxy.github.client.GithubClient
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 
