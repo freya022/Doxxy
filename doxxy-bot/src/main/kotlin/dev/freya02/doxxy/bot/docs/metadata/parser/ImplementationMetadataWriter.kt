@@ -13,7 +13,7 @@ import org.slf4j.profiler.Profiler
 internal class ImplementationMetadataWriter private constructor(
     private val sourceType: DocSourceType,
     private val reindexData: ReindexData,
-    private val sourceRootMetadata: SourceRootMetadata
+    private val sourceMetadata: SourceMetadata
 ) {
     context(transaction: Transaction, profiler: Profiler)
     private suspend fun reindex() {
@@ -43,7 +43,7 @@ internal class ImplementationMetadataWriter private constructor(
             """.trimIndent()) { executeUpdate() }
         }
 
-        val classes = sourceRootMetadata.implementationMetadata.classes.values
+        val classes = sourceMetadata.implementationMetadata.classes.values
         // First add the classes so we can reference them later
         val dbClasses: Map<ImplementationMetadata.Class, Int> = profiler.nextStep("Add classes") { addClasses(classes) }
 
@@ -153,10 +153,10 @@ internal class ImplementationMetadataWriter private constructor(
         suspend fun reindex(
             sourceType: DocSourceType,
             reindexData: ReindexData,
-            sourceRootMetadata: SourceRootMetadata
+            sourceMetadata: SourceMetadata
         ) {
             createProfiler("ImplementationMetadataWriter") {
-                ImplementationMetadataWriter(sourceType, reindexData, sourceRootMetadata).reindex()
+                ImplementationMetadataWriter(sourceType, reindexData, sourceMetadata).reindex()
             }
         }
     }

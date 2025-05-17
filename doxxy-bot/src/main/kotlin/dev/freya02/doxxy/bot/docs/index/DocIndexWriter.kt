@@ -4,14 +4,12 @@ import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade
 import dev.freya02.doxxy.bot.docs.DocEmbeds.toEmbed
 import dev.freya02.doxxy.bot.docs.DocSourceType
 import dev.freya02.doxxy.bot.docs.metadata.parser.ImplementationMetadataWriter
-import dev.freya02.doxxy.bot.docs.metadata.parser.SourceRootMetadata
+import dev.freya02.doxxy.bot.docs.metadata.parser.SourceMetadata
 import dev.freya02.doxxy.bot.docs.sourceDirectory
 import dev.freya02.doxxy.docs.GlobalJavadocSession
 import dev.freya02.doxxy.docs.JavadocSource
 import dev.freya02.doxxy.docs.JavadocSources
-import dev.freya02.doxxy.docs.declarations.AbstractJavadoc
-import dev.freya02.doxxy.docs.declarations.JavadocClass
-import dev.freya02.doxxy.docs.declarations.returnTypeNoAnnotations
+import dev.freya02.doxxy.docs.declarations.*
 import dev.freya02.doxxy.docs.sections.ClassDetailType
 import io.github.freya022.botcommands.api.core.db.Database
 import io.github.freya022.botcommands.api.core.db.Transaction
@@ -24,14 +22,14 @@ import kotlinx.coroutines.flow.flowOn
 import net.dv8tion.jda.api.utils.data.DataObject
 
 private val logger = KotlinLogging.logger { }
+private val annotationRegex: Regex = "@\\w+ ".toRegex()
 
 internal class DocIndexWriter(
     private val database: Database,
     private val sourceType: DocSourceType,
     private val reindexData: ReindexData
 ) {
-    private val annotationRegex: Regex = "@\\w+ ".toRegex()
-    private val sourceRootMetadata: SourceRootMetadata? = sourceType.sourceDirectory?.let { SourceRootMetadata(it) }
+    private val sourceMetadata: SourceMetadata? = sourceType.sourceDirectory?.let { SourceMetadata(it) }
 
     suspend fun doReindex() {
         val globalJavadocSession = GlobalJavadocSession(JavadocSources(DocSourceType.entries.map { type ->
@@ -40,7 +38,7 @@ internal class DocIndexWriter(
         val javadocModuleSession = globalJavadocSession.retrieveSession(globalJavadocSession.sources.getByName(sourceType.name)!!)
 
         database.transactional {
-            sourceRootMetadata?.let { sourceRootMetadata ->
+            sourceMetadata?.let { sourceRootMetadata ->
                 ImplementationMetadataWriter.reindex(sourceType, reindexData, sourceRootMetadata)
             }
 
@@ -91,55 +89,19 @@ internal class DocIndexWriter(
                 val methodEmbed = toEmbed(clazz, method)
                 val methodEmbedJson = methodEmbed.toData()
 
-                val methodRange: IntRange? = when (sourceLink) {
-                    null -> null
-                    else -> sourceRootMetadata?.let { sourceRootMetadata ->
-                        val docsParametersString = method.methodParameters
-                            ?.asString
-                            ?.drop(1)
-                            ?.dropLast(1)
-                            ?.replace(annotationRegex, "")
-                            ?: ""
+                val methodLink: String? = run {
+                    if (sourceLink == null) return@run null
+                    if (sourceMetadata == null) return@run null
 
-                        if (docsParametersString.isEmpty() && method.classDetailType == ClassDetailType.CONSTRUCTOR) {
-                            return@let null
-                        } else if (docsParametersString.isEmpty() && method.classDetailType == ClassDetailType.ANNOTATION_ELEMENT) {
-                            return@let null
-                        } else if (docsParametersString.contains("net.dv8tion.jda.internal")) {
-                            return@let null
-                        } else if (docsParametersString.contains("okhttp3")) {
-                            return@let null
-                        } else if (docsParametersString.contains("gnu.")) {
-                            return@let null
-                        } else {
-                            if (docsParametersString.isEmpty() && method.methodName == "values"
-                                && method.declaringClass.enumConstants.isNotEmpty()
-                            ) {
-                                return@let null
-                            } else if (docsParametersString == "String name" && method.methodName == "valueOf"
-                                && method.declaringClass.enumConstants.isNotEmpty()
-                            ) {
-                                return@let null
-                            }
-                        }
-
-                        val range: IntRange? = sourceRootMetadata
-                            .getMethodsParameters(method.declaringClass.classNameFqcn, method.methodName)
-                            .find { it.parametersString == docsParametersString }
-                            ?.methodRange
-
-                        if (range != null) return@let range
-
+                    val methodRange: IntRange? = sourceMetadata.getMethodRange(method)
+                    if (methodRange == null) {
                         logger.warn { "Method not found: ${method.methodSignature}" }
-
-                        null
+                        return@run null
                     }
-                }
 
-                val methodClassSourceLink = reindexData.getClassSourceUrlOrNull(method.declaringClass)
-                val methodLink = when (methodRange) {
-                    null -> null
-                    else -> "$methodClassSourceLink#L${methodRange.first}-L${methodRange.last}"
+                    // This is different from `sourceLink` as it could come from a superclass
+                    val methodClassSourceLink = reindexData.getClassSourceUrlOrNull(method.declaringClass)
+                    "$methodClassSourceLink#L${methodRange.first}-L${methodRange.last}"
                 }
 
                 val methodId = insertDoc(DocType.METHOD, clazz.className, method, methodEmbedJson, methodLink)
@@ -160,25 +122,19 @@ internal class DocIndexWriter(
                 val fieldEmbed = toEmbed(clazz, field)
                 val fieldEmbedJson = fieldEmbed.toData()
 
-                val fieldRange: IntRange? = when (sourceLink) {
-                    null -> null
-                    else -> sourceRootMetadata?.let { sourceRootMetadata ->
-                        val range: IntRange? = sourceRootMetadata
-                            .getFieldMetadata(field.declaringClass.classNameFqcn, field.fieldName)
-                            ?.fieldRange
+                val fieldLink: String? = run {
+                    if (sourceLink == null) return@run null
+                    if (sourceMetadata == null) return@run null
 
-                        if (range != null) return@let range
-
-                        logger.warn { "Field not found: ${field.declaringClass.className}#${field.simpleSignature}" }
-
-                        null
+                    val fieldRange: IntRange? = sourceMetadata.getFieldRange(field)
+                    if (fieldRange == null) {
+                        logger.warn { "Field not found: ${field.declaringClass.className}#${field.fieldName}" }
+                        return@run null
                     }
-                }
 
-                val fieldClassSourceLink = reindexData.getClassSourceUrlOrNull(field.declaringClass)
-                val fieldLink = when (fieldRange) {
-                    null -> null
-                    else -> "$fieldClassSourceLink#L${fieldRange.first}-L${fieldRange.last}"
+                    // This is different from `sourceLink` as it could come from a superclass
+                    val fieldClassSourceLink = reindexData.getClassSourceUrlOrNull(field.declaringClass)
+                    "$fieldClassSourceLink#L${fieldRange.first}-L${fieldRange.last}"
                 }
 
                 val fieldId = insertDoc(DocType.FIELD, clazz.className, field, fieldEmbedJson, fieldLink)
@@ -237,4 +193,45 @@ internal class DocIndexWriter(
             }
         }
     }
+}
+
+private fun SourceMetadata.getMethodRange(method: JavadocMethod): IntRange? {
+    val docsParametersString = method.methodParameters
+        ?.asString
+        ?.drop(1)
+        ?.dropLast(1)
+        ?.replace(annotationRegex, "")
+        ?: ""
+
+    if (docsParametersString.isEmpty() && method.classDetailType == ClassDetailType.CONSTRUCTOR) {
+        return null // TODO handle constructors and remove
+    } else if (docsParametersString.isEmpty() && method.classDetailType == ClassDetailType.ANNOTATION_ELEMENT) {
+        return null // TODO handle annotation members and remove
+    } else if (docsParametersString.contains("net.dv8tion.jda.internal")) {
+        return null // TODO fix MethodDocParameter#type then remove
+    } else if (docsParametersString.contains("okhttp3")) {
+        return null // TODO fix MethodDocParameter#type then remove
+    } else if (docsParametersString.contains("gnu.")) {
+        return null // TODO fix MethodDocParameter#type then remove
+    } else {
+        // Move enum checks outside so they don't trigger warnings
+        if (docsParametersString.isEmpty() && method.methodName == "values"
+            && method.declaringClass.enumConstants.isNotEmpty()
+        ) {
+            return null
+            // TODO check effective type
+        } else if (docsParametersString == "String name" && method.methodName == "valueOf"
+            && method.declaringClass.enumConstants.isNotEmpty()
+        ) {
+            return null
+        }
+    }
+
+    return getMethodsParameters(method.declaringClass.classNameFqcn, method.methodName)
+        .find { it.parametersString == docsParametersString }
+        ?.methodRange
+}
+
+private fun SourceMetadata.getFieldRange(field: JavadocField): IntRange? {
+    return getFieldMetadata(field.declaringClass.classNameFqcn, field.fieldName)?.fieldRange
 }

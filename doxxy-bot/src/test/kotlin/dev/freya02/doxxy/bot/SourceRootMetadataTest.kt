@@ -2,10 +2,18 @@ package dev.freya02.doxxy.bot
 
 import dev.freya02.doxxy.bot.docs.DocSourceType
 import dev.freya02.doxxy.bot.docs.javadocDirectory
-import dev.freya02.doxxy.bot.docs.metadata.parser.SourceRootMetadata
+import dev.freya02.doxxy.bot.docs.metadata.parser.SourceMetadata
+import io.github.freya022.botcommands.api.emojis.AppEmojisRegistry
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
 
 fun main() {
-    val metadata = SourceRootMetadata(DocSourceType.JDA.javadocDirectory)
+    // [[ClassType]] gets instantiated so we need to mock app emojis
+    mockkStatic(AppEmojisRegistry::class)
+    every { AppEmojisRegistry[any()] } returns mockk()
+
+    val metadata = SourceMetadata(DocSourceType.JDA.javadocDirectory)
 
     println(
         metadata.implementationMetadata

@@ -12,15 +12,14 @@ import dev.freya02.doxxy.bot.docs.metadata.data.MethodMetadata
 import dev.freya02.doxxy.bot.utils.createProfiler
 import dev.freya02.doxxy.bot.utils.nestedProfiler
 import dev.freya02.doxxy.bot.utils.nextStep
-import io.github.oshai.kotlinlogging.KotlinLogging
 import java.nio.file.Path
 
-class SourceRootMetadata(sourceRootPath: Path) {
+class SourceMetadata(sourceRootPath: Path) {
     private val classMetadataMap: Map<ClassName, ClassMetadata>
     val implementationMetadata: ImplementationMetadata
 
     init {
-        createProfiler("SourceRootMetadata") {
+        createProfiler("SymbolSolverSourceMetadata") {
             val sourceRoot = SourceRoot(sourceRootPath)
 
             nextStep("Make solver") {
@@ -38,9 +37,9 @@ class SourceRootMetadata(sourceRootPath: Path) {
                     .tryToParseParallelized("net.dv8tion.jda")
                     .filter { result ->
                         if (result.problems.isNotEmpty()) {
-                            result.problems.forEach { Companion.logger.error { it.toString() } }
+                            result.problems.forEach { logger.error(it.toString()) }
                         } else if (!result.isSuccessful) {
-                            Companion.logger.error { "Unexpected failure while parsing CU" }
+                            logger.error("Unexpected failure while parsing CU")
                         }
 
                         result.isSuccessful
@@ -68,9 +67,5 @@ class SourceRootMetadata(sourceRootPath: Path) {
         return classMetadataMap[className]
             ?.fieldMetadataMap
             ?.get(fieldName)
-    }
-
-    companion object {
-        private val logger = KotlinLogging.logger { }
     }
 }
