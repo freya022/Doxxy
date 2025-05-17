@@ -7,11 +7,17 @@ import io.ktor.server.netty.*
 import io.ktor.server.routing.*
 
 object DocWebServer {
-    fun startDocWebServer() {
-        embeddedServer(Netty, 25566) {
+    suspend fun withLocalJavadocsWebServer(block: suspend () -> Unit) {
+        val server = embeddedServer(Netty, 25566) {
             routing {
                 staticFiles("/", Directories.javadocs.toFile(), index = null)
             }
-        }.start()
+        }.startSuspend()
+
+        try {
+            block()
+        } finally {
+           server.stopSuspend()
+        }
     }
 }

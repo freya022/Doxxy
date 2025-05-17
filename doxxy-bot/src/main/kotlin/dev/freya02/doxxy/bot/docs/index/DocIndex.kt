@@ -2,6 +2,7 @@ package dev.freya02.doxxy.bot.docs.index
 
 import dev.freya02.doxxy.bot.docs.DocResolveChain
 import dev.freya02.doxxy.bot.docs.DocSourceType
+import dev.freya02.doxxy.bot.docs.DocWebServer
 import dev.freya02.doxxy.bot.docs.cached.CachedClass
 import dev.freya02.doxxy.bot.docs.cached.CachedDoc
 import dev.freya02.doxxy.bot.docs.cached.CachedField
@@ -241,7 +242,9 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                 logger.info { "Cleared cache of ${sourceType.name}" }
             }
 
-            DocIndexWriter(database, sourceType, reindexData).doReindex()
+            DocWebServer.withLocalJavadocsWebServer {
+                DocIndexWriter(database, sourceType, reindexData).doReindex()
+            }
 
             logger.info { "Re-indexed docs for ${sourceType.name}" }
         }

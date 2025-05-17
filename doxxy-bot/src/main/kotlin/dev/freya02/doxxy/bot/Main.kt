@@ -2,7 +2,6 @@ package dev.freya02.doxxy.bot
 
 import ch.qos.logback.classic.ClassicConstants
 import dev.freya02.doxxy.bot.config.Config
-import dev.freya02.doxxy.bot.docs.DocWebServer
 import dev.reformator.stacktracedecoroutinator.jvm.DecoroutinatorJvmApi
 import io.github.freya022.botcommands.api.core.BotCommands
 import io.github.freya022.botcommands.api.core.config.DevConfig
@@ -39,10 +38,6 @@ object Main {
             }
 
             DebugProbes.install()
-
-            logger.info { "Starting docs web server" }
-            DocWebServer.startDocWebServer()
-            logger.info { "Started docs web server" }
 
             val config = Config.config
             BotCommands.create {
