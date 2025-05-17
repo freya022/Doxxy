@@ -6,6 +6,7 @@ import kotlin.io.path.Path
 object Directories {
 
     val javadocs = Path(Env["JAVADOCS_DIRECTORY"])
+    val sources = Path(Env["SOURCES_DIRECTORY"])
     val jdaFork: Path = Path(Env["JDA-FORK_DIRECTORY"])
     val pageCache: Path = Path(Env["PAGE_CACHE_DIRECTORY"])
 }

@@ -78,8 +78,8 @@ enum class DocSourceType(
     }
 }
 
-val DocSourceType.sourceDirectory: Path?
-    get() = sourceFolderName?.let { Directories.javadocs.resolve(it) }
+val DocSourceType.sourceDirectoryPath: Path?
+    get() = sourceFolderName?.let { Directories.sources.resolve(it) }
 
-val DocSourceType.javadocDirectory: Path
-    get() = Directories.javadocs.resolve(name)
+val DocSourceType.javadocArchivePath: Path
+    get() = Directories.javadocs.resolve("$name.zip")

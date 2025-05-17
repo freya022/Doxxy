@@ -4,7 +4,8 @@ import dev.freya02.doxxy.bot.commands.slash.docs.CommonDocsHandlers
 import dev.freya02.doxxy.bot.docs.DocIndexMap
 import dev.freya02.doxxy.bot.docs.DocSourceType
 import dev.freya02.doxxy.bot.docs.index.ReindexData
-import dev.freya02.doxxy.bot.docs.javadocDirectory
+import dev.freya02.doxxy.bot.docs.javadocArchivePath
+import dev.freya02.doxxy.bot.docs.sourceDirectoryPath
 import dev.freya02.doxxy.bot.utils.Utils.withTemporaryFile
 import dev.freya02.doxxy.bot.versioning.VersionsUtils.downloadMavenJavadoc
 import dev.freya02.doxxy.bot.versioning.VersionsUtils.downloadMavenSources
@@ -24,6 +25,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import kotlin.io.path.moveTo
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
@@ -117,15 +119,14 @@ class Versions(
             logger.info { "JDA version changed" }
 
             logger.trace { "Downloading JDA javadocs" }
-            val jdaDocsFolder = DocSourceType.JDA.javadocDirectory
-            jdaChecker.latest.artifactInfo.downloadMavenJavadoc().withTemporaryFile { tempZip ->
-                logger.trace { "Extracting JDA javadocs" }
-                VersionsUtils.replaceWithZipContent(tempZip, jdaDocsFolder, "html")
-            }
+            jdaChecker.latest.artifactInfo
+                .downloadMavenJavadoc()
+                .moveTo(DocSourceType.JDA.javadocArchivePath)
 
+            logger.trace { "Downloading JDA sources" }
             jdaChecker.latest.artifactInfo.downloadMavenSources().withTemporaryFile { tempZip ->
                 logger.trace { "Extracting JDA sources" }
-                VersionsUtils.extractZip(tempZip, jdaDocsFolder, "java")
+                VersionsUtils.extractZip(tempZip, DocSourceType.JDA.sourceDirectoryPath!!, "java")
             }
 
             logger.trace { "Invalidating JDA index" }

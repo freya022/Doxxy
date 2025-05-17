@@ -5,7 +5,7 @@ import dev.freya02.doxxy.bot.docs.DocEmbeds.toEmbed
 import dev.freya02.doxxy.bot.docs.DocSourceType
 import dev.freya02.doxxy.bot.docs.metadata.parser.ImplementationMetadataWriter
 import dev.freya02.doxxy.bot.docs.metadata.parser.SourceMetadata
-import dev.freya02.doxxy.bot.docs.sourceDirectory
+import dev.freya02.doxxy.bot.docs.sourceDirectoryPath
 import dev.freya02.doxxy.docs.GlobalJavadocSession
 import dev.freya02.doxxy.docs.JavadocSource
 import dev.freya02.doxxy.docs.JavadocSources
@@ -29,7 +29,7 @@ internal class DocIndexWriter(
     private val sourceType: DocSourceType,
     private val reindexData: ReindexData
 ) {
-    private val sourceMetadata: SourceMetadata? = sourceType.sourceDirectory?.let { SourceMetadata(it) }
+    private val sourceMetadata: SourceMetadata? = sourceType.sourceDirectoryPath?.let { SourceMetadata(it) }
 
     suspend fun doReindex() {
         val globalJavadocSession = GlobalJavadocSession(JavadocSources(DocSourceType.entries.map { type ->

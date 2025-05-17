@@ -7,6 +7,7 @@ import dev.freya02.doxxy.bot.docs.cached.CachedClass
 import dev.freya02.doxxy.bot.docs.cached.CachedDoc
 import dev.freya02.doxxy.bot.docs.cached.CachedField
 import dev.freya02.doxxy.bot.docs.cached.CachedMethod
+import dev.freya02.doxxy.bot.docs.javadocArchivePath
 import dev.freya02.doxxy.bot.docs.metadata.ImplementationIndex
 import dev.freya02.doxxy.docs.PageCache
 import dev.freya02.doxxy.docs.sections.SeeAlso.SeeAlsoReference
@@ -242,7 +243,11 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                 logger.info { "Cleared cache of ${sourceType.name}" }
             }
 
-            DocWebServer.withLocalJavadocsWebServer {
+            if (sourceType == DocSourceType.JDA) {
+                DocWebServer.withLocalJavadocsWebServer("/JDA", sourceType.javadocArchivePath) {
+                    DocIndexWriter(database, sourceType, reindexData).doReindex()
+                }
+            } else {
                 DocIndexWriter(database, sourceType, reindexData).doReindex()
             }
 

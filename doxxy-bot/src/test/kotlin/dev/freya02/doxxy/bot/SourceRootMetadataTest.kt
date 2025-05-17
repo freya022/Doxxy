@@ -1,7 +1,5 @@
 package dev.freya02.doxxy.bot
 
-import dev.freya02.doxxy.bot.docs.DocSourceType
-import dev.freya02.doxxy.bot.docs.javadocDirectory
 import dev.freya02.doxxy.bot.docs.metadata.parser.SourceMetadata
 import io.github.freya022.botcommands.api.emojis.AppEmojisRegistry
 import io.mockk.every
@@ -13,7 +11,7 @@ fun main() {
     mockkStatic(AppEmojisRegistry::class)
     every { AppEmojisRegistry[any()] } returns mockk()
 
-    val metadata = SourceMetadata(DocSourceType.JDA.javadocDirectory)
+    val metadata = SourceMetadata(extractJDASources())
 
     println(
         metadata.implementationMetadata
