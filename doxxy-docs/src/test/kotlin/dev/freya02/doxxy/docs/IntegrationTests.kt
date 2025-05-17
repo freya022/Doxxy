@@ -23,7 +23,7 @@ object IntegrationTests {
 
         embeddedServer(Netty, host = JDA_HOST, port = JDA_PORT) {
             routing {
-                staticZip(JDA_PATH, "", Path("test-files", "JDA-javadoc.zip"), index = null)
+                staticZip(JDA_PATH, "", getResourcePath("/JDA-javadoc.zip"), index = null)
             }
         }.start()
     }
