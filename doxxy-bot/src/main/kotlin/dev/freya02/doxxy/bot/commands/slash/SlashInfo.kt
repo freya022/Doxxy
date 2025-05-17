@@ -1,6 +1,6 @@
 package dev.freya02.doxxy.bot.commands.slash
 
-import dev.freya02.doxxy.bot.versioning.github.UpdateCountdown
+import dev.freya02.doxxy.bot.utils.UpdateCountdown
 import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.interactions.components.row
 import dev.minn.jda.ktx.messages.MessageCreate

@@ -1,15 +1,15 @@
 package dev.freya02.doxxy.bot.versioning.jitpack
 
 import dev.freya02.doxxy.bot.config.PullUpdaterConfig
+import dev.freya02.doxxy.bot.utils.github.PullRequestCache
 import dev.freya02.doxxy.bot.versioning.LibraryType
-import dev.freya02.doxxy.bot.versioning.github.CommitComparisons
-import dev.freya02.doxxy.bot.versioning.github.GithubClient
-import dev.freya02.doxxy.bot.versioning.github.PullRequest
-import dev.freya02.doxxy.bot.versioning.github.PullRequestCache
 import dev.freya02.doxxy.bot.versioning.jitpack.JitpackPrService.UpdatedCommitComparisons
 import dev.freya02.doxxy.bot.versioning.jitpack.pullupdater.PullUpdateException
 import dev.freya02.doxxy.bot.versioning.jitpack.pullupdater.PullUpdater
 import dev.freya02.doxxy.bot.versioning.jitpack.pullupdater.UpdatedBranch
+import dev.freya02.doxxy.github.client.GithubClient
+import dev.freya02.doxxy.github.client.data.CommitComparisons
+import dev.freya02.doxxy.github.client.data.PullRequest
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.async
@@ -22,37 +22,38 @@ private val logger = KotlinLogging.logger { }
 @BService
 class JitpackPrService(
     private val pullUpdaterConfig: PullUpdaterConfig,
+    private val pullUpdater: PullUpdater,
     private val client: GithubClient,
 ) {
-    private val bcPullRequestCache = PullRequestCache(LibraryType.BOT_COMMANDS, null)
-    private val jdaPullRequestCache = PullRequestCache(LibraryType.JDA, "master")
-    private val jdaKtxPullRequestCache = PullRequestCache(LibraryType.JDA_KTX, "master")
-    private val lavaPlayerPullRequestCache = PullRequestCache(LibraryType.LAVA_PLAYER, "main")
+    private val bcPullRequestCache = PullRequestCache(client, LibraryType.BOT_COMMANDS, null)
+    private val jdaPullRequestCache = PullRequestCache(client, LibraryType.JDA, "master")
+    private val jdaKtxPullRequestCache = PullRequestCache(client, LibraryType.JDA_KTX, "master")
+    private val lavaPlayerPullRequestCache = PullRequestCache(client, LibraryType.LAVA_PLAYER, "main")
 
-    fun getPullRequest(libraryType: LibraryType, pullNumber: Int): PullRequest? = when (libraryType) {
-        LibraryType.BOT_COMMANDS -> bcPullRequestCache.pullRequests[pullNumber]
-        LibraryType.JDA -> jdaPullRequestCache.pullRequests[pullNumber]
-        LibraryType.JDA_KTX -> jdaKtxPullRequestCache.pullRequests[pullNumber]
-        LibraryType.LAVA_PLAYER -> lavaPlayerPullRequestCache.pullRequests[pullNumber]
+    suspend fun getPullRequest(libraryType: LibraryType, pullNumber: Int): PullRequest? = when (libraryType) {
+        LibraryType.BOT_COMMANDS -> bcPullRequestCache.retrievePullRequests()[pullNumber]
+        LibraryType.JDA -> jdaPullRequestCache.retrievePullRequests()[pullNumber]
+        LibraryType.JDA_KTX -> jdaKtxPullRequestCache.retrievePullRequests()[pullNumber]
+        LibraryType.LAVA_PLAYER -> lavaPlayerPullRequestCache.retrievePullRequests()[pullNumber]
         else -> throw IllegalArgumentException()
     }
 
-    fun getPullRequests(libraryType: LibraryType): Collection<PullRequest> = when (libraryType) {
-        LibraryType.BOT_COMMANDS -> bcPullRequestCache.pullRequests.valueCollection()
-        LibraryType.JDA -> jdaPullRequestCache.pullRequests.valueCollection()
-        LibraryType.JDA_KTX -> jdaKtxPullRequestCache.pullRequests.valueCollection()
-        LibraryType.LAVA_PLAYER -> lavaPlayerPullRequestCache.pullRequests.valueCollection()
+    suspend fun getPullRequests(libraryType: LibraryType): Collection<PullRequest> = when (libraryType) {
+        LibraryType.BOT_COMMANDS -> bcPullRequestCache.retrievePullRequests().values
+        LibraryType.JDA -> jdaPullRequestCache.retrievePullRequests().values
+        LibraryType.JDA_KTX -> jdaKtxPullRequestCache.retrievePullRequests().values
+        LibraryType.LAVA_PLAYER -> lavaPlayerPullRequestCache.retrievePullRequests().values
         else -> throw IllegalArgumentException()
     }
 
     suspend fun updatePr(
         libraryType: LibraryType,
-        pullNumber: Int,
+        pullRequest: PullRequest,
         onMergeConflict: suspend () -> Unit,
         onError: suspend () -> Unit,
         onSuccess: suspend (branch: UpdatedBranch) -> Unit,
     ) {
-        val result = PullUpdater.tryUpdate(libraryType, pullNumber)
+        val result = pullUpdater.tryUpdate(libraryType, pullRequest)
 
         result.onSuccess {
             onSuccess(it)

@@ -42,7 +42,8 @@ data class Config(
     val fakeJDAGuildId: Long,
     val fakeBCGuildId: Long,
     val examplesHttpPort: Int,
-    @get:BService
+    val githubToken: String?,
+    @get:BService("pullUpdaterConfig")
     val pullUpdater: PullUpdaterConfig,
     @get:BService
     val backend: BackendConfig,
@@ -62,6 +63,7 @@ data class Config(
                 Env["BOT_FAKE_JDA_GUILD_ID"].toLong(),
                 Env["BOT_FAKE_BC_GUILD_ID"].toLong(),
                 Env["BOT_EXAMPLES_HTTP_PORT"].toInt(),
+                Env.getOrNull("GITHUB_TOKEN"),
                 PullUpdaterConfig(
                     Env["PULL_UPDATER_ENABLE"].toBooleanStrict(),
                     Env["PULL_UPDATER_GIT_TOKEN"],

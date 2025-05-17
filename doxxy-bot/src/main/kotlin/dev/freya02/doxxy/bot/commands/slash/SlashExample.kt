@@ -5,8 +5,9 @@ import dev.freya02.doxxy.bot.examples.ExamplePaginatorFactory
 import dev.freya02.doxxy.bot.switches.RequiresBackend
 import dev.freya02.doxxy.bot.utils.Utils.isBCGuild
 import dev.freya02.doxxy.bot.utils.Utils.letIf
-import dev.freya02.doxxy.bot.versioning.github.PullRequest.Companion.toAutocompleteChoices
-import dev.freya02.doxxy.bot.versioning.github.PullRequestCache
+import dev.freya02.doxxy.bot.utils.github.PullRequestCache
+import dev.freya02.doxxy.bot.utils.github.toAutocompleteChoices
+import dev.freya02.doxxy.github.client.GithubClient
 import dev.minn.jda.ktx.messages.reply_
 import dev.minn.jda.ktx.messages.send
 import io.github.freya022.botcommands.api.annotations.CommandMarker
@@ -31,6 +32,7 @@ private const val pullRequestNumberAutocompleteName = "SlashExample: pullRequest
 @RequiresBackend
 @Command
 class SlashExample(
+    private val githubClient: GithubClient,
     private val exampleApi: ExampleAPI,
     private val paginatorFactory: ExamplePaginatorFactory
 ) : ApplicationCommand(), GuildApplicationCommandProvider {
@@ -91,13 +93,14 @@ class SlashExample(
     }
 
     private val pullRequestCache by lazy {
-        PullRequestCache(githubOwnerName = "freya022", githubRepoName = "doc-examples", baseBranchName = "master")
+        PullRequestCache(githubClient, githubOwnerName = "freya022", githubRepoName = "doc-examples", baseBranchName = "master")
     }
 
     @CommandMarker
     suspend fun onSlashExamplesUpdateFromPR(event: GuildSlashEvent, pullRequestNumber: Int?) {
         if (pullRequestNumber != null) {
-            val pr = pullRequestCache.pullRequests[pullRequestNumber]
+            val pr = pullRequestCache.retrievePullRequests()[pullRequestNumber]
+                ?: return event.reply_("This pull request does not exist", ephemeral = true).queue()
             onSlashExamplesUpdate(event, pr.branch.ownerName, pr.branch.repoName, pr.branch.branchName)
         } else {
             onSlashExamplesUpdate(event)
@@ -105,8 +108,8 @@ class SlashExample(
     }
 
     @AutocompleteHandler(pullRequestNumberAutocompleteName, showUserInput = false)
-    fun onPullRequestNumberAutocomplete(event: CommandAutoCompleteInteractionEvent): List<Choice> {
-        return pullRequestCache.pullRequests.valueCollection().toAutocompleteChoices(event)
+    suspend fun onPullRequestNumberAutocomplete(event: CommandAutoCompleteInteractionEvent): List<Choice> {
+        return pullRequestCache.retrievePullRequests().values.toAutocompleteChoices(event)
     }
 
     private suspend fun onSlashExamplesUpdate(event: GuildSlashEvent, ownerName: String = "freya022", repoName: String = "doc-examples", branchName: String = "master") {

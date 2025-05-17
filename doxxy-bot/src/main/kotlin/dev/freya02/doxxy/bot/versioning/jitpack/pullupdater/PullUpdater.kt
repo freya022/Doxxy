@@ -2,19 +2,16 @@ package dev.freya02.doxxy.bot.versioning.jitpack.pullupdater
 
 import dev.freya02.doxxy.bot.config.Config
 import dev.freya02.doxxy.bot.versioning.LibraryType
-import dev.freya02.doxxy.bot.versioning.github.CommitHash
-import dev.freya02.doxxy.bot.versioning.github.GithubUtils
 import dev.freya02.doxxy.common.Directories
+import dev.freya02.doxxy.github.client.GithubClient
+import dev.freya02.doxxy.github.client.data.Branch
+import dev.freya02.doxxy.github.client.data.PullRequest
+import dev.freya02.doxxy.github.client.utils.CommitHash
+import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.engine.okhttp.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.*
-import io.ktor.http.*
-import io.ktor.serialization.gson.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -27,26 +24,24 @@ import kotlin.io.path.moveTo
 import kotlin.io.path.name
 import kotlin.io.path.notExists
 
-object PullUpdater {
+@BService
+class PullUpdater(
+    private val githubClient: GithubClient,
+) {
     private data class CacheKey(val headLabel: String, val baseLabel: String)
-    private data class CacheValue(val headSha: String, val baseSha: String, val forkedGithubBranch: UpdatedBranch)
+    private data class CacheValue(val headSha: CommitHash, val baseSha: CommitHash, val forkedGithubBranch: UpdatedBranch)
 
     private val logger = KotlinLogging.logger { }
     private val config = Config.config.pullUpdater
     private val forkPath = Directories.jdaFork
 
-    private val client = HttpClient(OkHttp) {
-        install(ContentNegotiation) {
-            gson {  }
-        }
-    }
     private val mutex = Mutex()
     val isRunning: Boolean get() = mutex.isLocked
 
     private val cache: MutableMap<CacheKey, CacheValue> = hashMapOf()
     private var latestCommitHash: CommitHash? = null
 
-    suspend fun tryUpdate(libraryType: LibraryType, prNumber: Int): Result<UpdatedBranch> = runCatching {
+    suspend fun tryUpdate(libraryType: LibraryType, pullRequest: PullRequest): Result<UpdatedBranch> = runCatching {
         if (libraryType != LibraryType.JDA) {
             fail(PullUpdateException.ExceptionType.UNSUPPORTED_LIBRARY, "Only JDA is supported")
         }
@@ -54,19 +49,7 @@ object PullUpdater {
         mutex.withLock {
             init()
 
-            val pullRequest: PullRequest = client.get("https://api.github.com/repos/${libraryType.githubOwnerName}/${libraryType.githubRepoName}/pulls/$prNumber") {
-                header("Accept", "applications/vnd.github.v3+json")
-            }.also {
-                if (it.status == HttpStatusCode.NotFound) {
-                    fail(PullUpdateException.ExceptionType.PR_NOT_FOUND, "Pull request not found")
-                } else if (!it.status.isSuccess()) {
-                    fail(PullUpdateException.ExceptionType.UNKNOWN_ERROR, "Error while getting pull request")
-                }
-            }.body()
-
-            if (pullRequest.merged) {
-                fail(PullUpdateException.ExceptionType.UNKNOWN_ERROR, "Pull request is already merged")
-            } else if (pullRequest.mergeable == false) {
+            if (pullRequest.mergeable != true) {
                 //Skip PRs with conflicts
                 fail(PullUpdateException.ExceptionType.PR_UPDATE_FAILURE, "Head branch cannot be updated")
             } else {
@@ -79,7 +62,10 @@ object PullUpdater {
     }
 
     private suspend fun whenUpdateRequired(libraryType: LibraryType, pullRequest: PullRequest, onUpdate: suspend () -> UpdatedBranch): UpdatedBranch {
-        val latestHash = GithubUtils.getLatestHash(libraryType.githubOwnerName, libraryType.githubRepoName, "")
+        val latestHash = githubClient
+            .getCommits(libraryType.githubOwnerName, libraryType.githubRepoName, perPage = 1)
+            .first()
+            .sha
 
         fun createCacheKey(): CacheKey = CacheKey(pullRequest.head.label, pullRequest.base.label)
 
@@ -115,13 +101,13 @@ object PullUpdater {
         val base = pullRequest.base
         val baseBranchName = base.branchName
         val baseRepo = base.repo.name
-        val baseRemoteName = base.user.userName
+        val baseRemoteName = base.user.login
 
         //The PR author's repo
         val head = pullRequest.head
         val headBranchName = head.branchName
         val headRepo = head.repo.name
-        val headRemoteName = head.user.userName
+        val headRemoteName = head.user.login
 
         //Add remote
         val remotes = runProcess(forkPath, "git", "remote").trim().lineSequence().toMutableList()
@@ -208,7 +194,7 @@ object PullUpdater {
         }
     }
 
-    private fun PullRequest.Branch.toForkedBranchName() = "${user.userName}/$branchName"
+    private fun Branch.toForkedBranchName() = "${user.login}/$branchName"
 
     private suspend fun runProcess(workingDirectory: Path, vararg command: String): String = withContext(Dispatchers.IO) {
         val process = ProcessBuilder(command.asList())
