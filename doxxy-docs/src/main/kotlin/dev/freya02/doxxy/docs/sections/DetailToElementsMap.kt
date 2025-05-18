@@ -6,7 +6,8 @@ import org.jsoup.nodes.Element
 import java.util.*
 
 class DetailToElementsMap private constructor(detailTarget: Element) {
-    private val map: MutableMap<DocDetail.Type, MutableList<JavadocElement>> = EnumMap(DocDetail.Type::class.java)
+    private val _map: MutableMap<DocDetail.Type, MutableList<JavadocElement>> = EnumMap(DocDetail.Type::class.java)
+    internal val map: Map<DocDetail.Type, List<JavadocElement>> get() = _map
 
     private inner class DetailsState(private val detailTarget: Element) {
         private var list: MutableList<JavadocElement>? = null
@@ -21,7 +22,7 @@ class DetailToElementsMap private constructor(detailTarget: Element) {
 
                 list = null
             } else {
-                list = map.getOrPut(type) { arrayListOf() }
+                list = _map.getOrPut(type) { arrayListOf() }
             }
         }
 
@@ -48,7 +49,7 @@ class DetailToElementsMap private constructor(detailTarget: Element) {
     }
 
     fun getDetail(detailType: DocDetail.Type): DocDetail? {
-        val elements = map[detailType] ?: return null
+        val elements = _map[detailType] ?: return null
         return DocDetail(detailType, elements)
     }
 

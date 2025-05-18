@@ -1,6 +1,7 @@
 plugins {
     id("doxxy-conventions")
     alias(libs.plugins.jmh)
+    alias(libs.plugins.kotlinx.serialization)
 }
 
 dependencies {
@@ -27,6 +28,8 @@ dependencies {
 
     testImplementation(libs.ktor.server.core)
     testImplementation(libs.ktor.server.netty)
+
+    testImplementation(libs.kotlinx.serialization.json)
 }
 
 jmh {

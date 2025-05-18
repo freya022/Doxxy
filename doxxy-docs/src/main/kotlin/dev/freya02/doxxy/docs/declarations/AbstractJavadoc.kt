@@ -24,7 +24,7 @@ abstract class AbstractJavadoc internal constructor() {
     abstract fun toHumanClassIdentifier(className: String): String?
     abstract val returnType: String?
 
-    protected abstract val detailToElementsMap: DetailToElementsMap
+    internal abstract val detailToElementsMap: DetailToElementsMap
 
     fun getDetails(includedTypes: EnumSet<DocDetail.Type>): List<DocDetail> =
         DocDetail.Type.entries
