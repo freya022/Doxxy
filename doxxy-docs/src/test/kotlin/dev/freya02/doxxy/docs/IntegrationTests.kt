@@ -221,7 +221,7 @@ object IntegrationTests {
     )
 
     private fun MethodDocParameters.toSerializable() = SerializableJavadocMethod.SerializableParameters(
-        asString,
+        originalText,
         parameters.map { it.toSerializable() },
     )
 

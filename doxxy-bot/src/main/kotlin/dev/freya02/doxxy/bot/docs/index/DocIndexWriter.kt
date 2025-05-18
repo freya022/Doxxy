@@ -197,7 +197,7 @@ internal class DocIndexWriter(
 
 private fun SourceMetadata.getMethodRange(method: JavadocMethod): IntRange? {
     val docsParametersString = method.methodParameters
-        ?.asString
+        ?.originalText
         ?.drop(1)
         ?.dropLast(1)
         ?.replace(annotationRegex, "")

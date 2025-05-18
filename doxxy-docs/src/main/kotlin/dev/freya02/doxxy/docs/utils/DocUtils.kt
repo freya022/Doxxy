@@ -36,7 +36,7 @@ internal object DocUtils {
         append("#")
         append(method.methodName)
 
-        method.methodParameters?.asString?.let { methodParameters ->
+        method.methodParameters?.originalText?.let { methodParameters ->
             val parameters = methodParameters.substring(1, methodParameters.length - 1)
                 .split(",")
                 .joinToString(",\n", "(", ")") {

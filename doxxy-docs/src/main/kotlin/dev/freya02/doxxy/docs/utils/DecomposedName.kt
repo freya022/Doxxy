@@ -3,6 +3,7 @@ package dev.freya02.doxxy.docs.utils
 import dev.freya02.doxxy.docs.JavadocSource
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.jetbrains.annotations.Contract
+import org.jsoup.nodes.Element
 
 @JvmRecord
 internal data class DecomposedName(val packageName: String?, val className: String) {
@@ -18,6 +19,7 @@ internal data class DecomposedName(val packageName: String?, val className: Stri
             return fullName
         }
 
+        // TODO replace with getDecompositionFromLink
         @Contract("_, _ -> new")
         fun getDecompositionFromUrl(source: JavadocSource, target: String): DecomposedName {
             val sourceUrl = source.sourceUrl.toHttpUrl()
@@ -35,6 +37,20 @@ internal data class DecomposedName(val packageName: String?, val className: Stri
             //Remove .html extension
             val className = lastSegment.substringBeforeLast('.')
             return DecomposedName(packageSegments.joinToString("."), className)
+        }
+
+        fun getDecompositionFromLink(element: Element): DecomposedName {
+            require(element.tag().name == "a")
+            val href = element.attr("href").ifEmpty { error("href is missing in $element") }
+            val title = element.attr("title").ifEmpty { error("title is missing in $element") }
+
+            val simpleClassName = href
+                .substringAfterLast('/') // Last path segment
+                .dropLast(5) // remove .html
+
+            val packageName = title.substringAfterLast(' ')
+
+            return DecomposedName(packageName, simpleClassName)
         }
     }
 }

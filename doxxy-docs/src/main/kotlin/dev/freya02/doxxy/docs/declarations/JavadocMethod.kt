@@ -48,7 +48,8 @@ class JavadocMethod internal constructor(
         methodAnnotations = methodAnnotationsElement?.text()
 
         val methodParametersElement = element.selectFirst("div.member-signature > span.parameters")
-        methodParameters = methodParametersElement?.let { MethodDocParameters(it.text()) }
+        // TODO this is currently null for parameter-less methods, return an empty object instead.
+        methodParameters = methodParametersElement?.let { MethodDocParameters(it) }
 
         val methodReturnTypeElement = element.selectFirst("div.member-signature > span.return-type")
         methodReturnType = when (methodReturnTypeElement) {
