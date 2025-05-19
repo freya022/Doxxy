@@ -234,7 +234,7 @@ private fun SourceMetadata.getMethodRange(method: JavadocMethod): IntRange? {
     }
 
     return getMethodsParameters(method.declaringClass.classNameFqcn, method.methodName)
-        .find { it.parametersString == docsParametersString }
+        .find { it.types == method.methodParameters?.parameters?.map(MethodDocParameter::type) }
         ?.methodRange
 }
 

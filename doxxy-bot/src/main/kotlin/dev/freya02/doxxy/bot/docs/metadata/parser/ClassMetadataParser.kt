@@ -3,10 +3,9 @@ package dev.freya02.doxxy.bot.docs.metadata.parser
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.ImportDeclaration
 import com.github.javaparser.ast.Node
-import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.body.*
 import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName
-import com.github.javaparser.ast.type.ClassOrInterfaceType
+import com.github.javaparser.ast.nodeTypes.NodeWithTypeArguments
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter
 import com.github.javaparser.utils.SourceRoot
 import dev.freya02.doxxy.bot.docs.metadata.data.ClassMetadata
@@ -34,19 +33,6 @@ class ClassMetadataParser private constructor(private val sourceRoot: SourceRoot
         profiler.nextStep("scanMethods") {
             apiCompilationUnits.forEachCompilationUnit(Companion.logger) { scanMethods(it) }
         }
-    }
-
-    fun getCombinedResolvedMaps(className: ClassName, map: ResolvedClassesList = hashMapOf()): ResolvedClassesList {
-        val metadata = classMetadataMap[className] ?: let {
-//            logger.warn("Class metadata not found for $className")
-            return map
-        }
-        map.putAll(metadata.resolvedMap)
-        metadata.extends.forEach { getCombinedResolvedMaps(it, map) }
-        metadata.implements.forEach { getCombinedResolvedMaps(it, map) }
-        metadata.enclosedBy?.let { getCombinedResolvedMaps(it, map) }
-
-        return map
     }
 
     private fun parsePackages(compilationUnit: CompilationUnit) {
@@ -231,50 +217,23 @@ class ClassMetadataParser private constructor(private val sourceRoot: SourceRoot
             }
 
             private fun processMethod(n: CallableDeclaration<*>) {
-                currentClassStack.peek().let { currentClass ->
-                    n.parameters.forEach { parameter ->
-                        val typeStr = parameter.typeAsString
-                        val resolvedType = when (val type = parameter.type) {
-                            is ClassOrInterfaceType -> {
-                                when {
-                                    type.typeArguments.isEmpty -> getCombinedResolvedMaps(currentClass)[typeStr] ?: typeStr
-                                    else -> {
-                                        buildString {
-                                            append(type.nameAsString)
-                                            append("<")
-                                            append(type.typeArguments.get().joinToString(", ") {
-                                                getCombinedResolvedMaps(currentClass)[it.asString()] ?: it.asString()
-                                            })
-                                            append(">")
-                                        }
-                                    }
-                                }
-                            }
-                            else -> getCombinedResolvedMaps(currentClass)[typeStr] ?: typeStr
-                        }
+                currentClassStack.peek().also { currentClass ->
+                    n.parameters.map { it.type }
+                        .filterIsInstance<NodeWithTypeArguments<*>>()
+                        .forEach { it.removeTypeArguments() }
 
-                        parameter.setType(resolvedType)
-                    }
-
-                    return@let classMetadataMap[currentClass]!!
+                    classMetadataMap[currentClass]!!
                         .methodMetadataMap
                         .getOrPut(n.nameAsString) { arrayListOf() }
                         .add(
                             MethodMetadata(
-                                n.parameters.toSimpleParameterString(),
+                                n.parameters.map { it.resolve().describeType() },
                                 n.begin.get().line..n.end.get().line
                             )
                         )
                 }
             }
         }, null)
-    }
-
-    private fun NodeList<Parameter>.toSimpleParameterString(): String = joinToString(", ") {
-        when {
-            it.isVarArgs -> "${it.typeAsString}... ${it.nameAsString}"
-            else -> "${it.typeAsString} ${it.nameAsString}"
-        }
     }
 
     private fun findAllImportVariants(simpleFullName: String): List<String> {
