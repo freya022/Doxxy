@@ -1,6 +1,6 @@
 package dev.freya02.doxxy.docs
 
-import dev.freya02.doxxy.docs.declarations.MethodDocParameters
+import dev.freya02.doxxy.docs.declarations.MethodDocParameter
 import org.junit.jupiter.api.assertDoesNotThrow
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -10,7 +10,7 @@ object MethodDocParameterTest {
     @Test
     fun `Requires the 'parameters' class on the parsed node`() {
         assertDoesNotThrow {
-            MethodDocParameters(htmlFragment(
+            MethodDocParameter.parseParameters(htmlFragment(
                 """<span class="parameters">(java.lang.String content, java.lang.String content2)</span>"""
             ))
         }
@@ -18,33 +18,31 @@ object MethodDocParameterTest {
 
     @Test
     fun `Non-linked parameters have full types`() {
-        val params = MethodDocParameters(htmlFragment(
+        val parameters = MethodDocParameter.parseParameters(htmlFragment(
             """
                 <span class="parameters">(java.lang.String content)</span>
             """.trimIndent()
         ))
-        val param = params.parameters[0]
 
-        assertEquals("java.lang.String", param.type)
-        assertEquals("String", param.simpleType)
+        assertEquals("java.lang.String", parameters[0].type)
+        assertEquals("String", parameters[0].simpleType)
     }
 
     @Test
     fun `Linked parameters have full types`() {
-        val params = MethodDocParameters(htmlFragment(
+        val parameters = MethodDocParameter.parseParameters(htmlFragment(
             """
                 <span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang">String</a> content)</span>
             """.trimIndent()
         ))
-        val param = params.parameters[0]
 
-        assertEquals("java.lang.String", param.type)
-        assertEquals("String", param.simpleType)
+        assertEquals("java.lang.String", parameters[0].type)
+        assertEquals("String", parameters[0].simpleType)
     }
 
     @Test
     fun `Read multiple types`() {
-        val params = MethodDocParameters(htmlFragment(
+        val parameters = MethodDocParameter.parseParameters(htmlFragment(
             """
                 <span class="parameters">(<a href="https://docs.oracle.com/javase/8/docs/api/javax/annotation/Nonnull.html"
                                              title="class or interface in javax.annotation" class="external-link">@Nonnull</a>
@@ -53,15 +51,14 @@ object MethodDocParameterTest {
                 boolean&nbsp;ignoreCase)</span>
             """.trimIndent()
         ))
-        val param = params.parameters[0]
 
-        assertEquals("java.lang.String", param.type)
-        assertEquals("String", param.simpleType)
+        assertEquals("java.lang.String", parameters[0].type)
+        assertEquals("String", parameters[0].simpleType)
     }
 
     @Test
     fun `Nested classes have full types`() {
-        val params = MethodDocParameters(htmlFragment(
+        val parameters = MethodDocParameter.parseParameters(htmlFragment(
             """
                 <span class="parameters">(<a href="https://docs.oracle.com/javase/8/docs/api/javax/annotation/Nonnull.html"
                                              title="class or interface in javax.annotation" class="external-link">@Nonnull</a>
@@ -75,29 +72,29 @@ object MethodDocParameterTest {
                 <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html" title="class or interface in java.lang"
                    class="external-link">String</a>&nbsp;url)</span>
             """.trimIndent()
-        )).parameters
+        ))
 
-        assertEquals("net.dv8tion.jda.api.entities.Activity.ActivityType", params[0].type)
-        assertEquals("Activity.ActivityType", params[0].simpleType)
+        assertEquals("net.dv8tion.jda.api.entities.Activity.ActivityType", parameters[0].type)
+        assertEquals("Activity.ActivityType", parameters[0].simpleType)
 
-        assertEquals("java.lang.String", params[1].type)
-        assertEquals("String", params[1].simpleType)
+        assertEquals("java.lang.String", parameters[1].type)
+        assertEquals("String", parameters[1].simpleType)
 
-        assertEquals("java.lang.String", params[2].type)
-        assertEquals("String", params[2].simpleType)
+        assertEquals("java.lang.String", parameters[2].type)
+        assertEquals("String", parameters[2].simpleType)
     }
 
     @Test
     fun `Type parameters are used as-is`() {
-        val params = MethodDocParameters(htmlFragment(
+        val parameters = MethodDocParameter.parseParameters(htmlFragment(
             """
                 <span class="parameters">(<a href="https://docs.oracle.com/javase/8/docs/api/javax/annotation/Nonnull.html"
                                              title="class or interface in javax.annotation" class="external-link">@Nonnull</a>
                 <a href="OrderAction.html" title="type parameter in OrderAction">T</a>&nbsp;other)</span>
             """.trimIndent()
-        )).parameters
+        ))
 
-        assertEquals("T", params[0].type)
-        assertEquals("T", params[0].simpleType)
+        assertEquals("T", parameters[0].type)
+        assertEquals("T", parameters[0].simpleType)
     }
 }

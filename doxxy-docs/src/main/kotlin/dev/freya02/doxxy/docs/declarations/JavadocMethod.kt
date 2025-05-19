@@ -21,7 +21,7 @@ class JavadocMethod internal constructor(
     val methodAnnotations: String?
     val methodName: String
     val methodSignature: String
-    val methodParameters: MethodDocParameters?
+    val parameters: List<MethodDocParameter>
     val methodReturnType: String
 
     val isStatic: Boolean
@@ -48,8 +48,7 @@ class JavadocMethod internal constructor(
         methodAnnotations = methodAnnotationsElement?.text()
 
         val methodParametersElement = element.selectFirst("div.member-signature > span.parameters")
-        // TODO this is currently null for parameter-less methods, return an empty object instead.
-        methodParameters = methodParametersElement?.let { MethodDocParameters(it) }
+        parameters = methodParametersElement?.let(MethodDocParameter::parseParameters) ?: emptyList()
 
         val methodReturnTypeElement = element.selectFirst("div.member-signature > span.return-type")
         methodReturnType = when (methodReturnTypeElement) {
@@ -92,9 +91,9 @@ class JavadocMethod internal constructor(
         return DocUtils.getSimpleAnnotatedSignature(targetClassdoc, this)
     }
 
-    private fun MethodDocParameters.asParametersString(numTypes: Int): String {
+    private fun List<MethodDocParameter>.asParametersString(numTypes: Int): String {
         var i = 0
-        return this.parameters.joinToString { param ->
+        return joinToString { param ->
             i++
 
             when {
@@ -109,13 +108,11 @@ class JavadocMethod internal constructor(
 
         append(methodName)
         append('(')
-        if (methodParameters != null) {
-            for (numTypes in methodParameters.parameters.size downTo 0) {
-                val asParametersString = methodParameters.asParametersString(numTypes)
-                if (asParametersString.length + this.length + 1 <= Choice.MAX_NAME_LENGTH) {
-                    append(asParametersString)
-                    break
-                }
+        for (numTypes in parameters.size downTo 0) {
+            val asParametersString = parameters.asParametersString(numTypes)
+            if (asParametersString.length + this.length + 1 <= Choice.MAX_NAME_LENGTH) {
+                append(asParametersString)
+                break
             }
         }
         append(')')

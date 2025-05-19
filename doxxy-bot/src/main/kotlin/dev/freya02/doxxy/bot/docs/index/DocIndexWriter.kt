@@ -107,7 +107,7 @@ internal class DocIndexWriter(
 
         val methodRange: IntRange? = sourceMetadata.getMethodRange(this)
         if (methodRange == null) {
-            if (classDetailType == ClassDetailType.CONSTRUCTOR && methodParameters?.parameters.isNullOrEmpty())
+            if (classDetailType == ClassDetailType.CONSTRUCTOR && parameters.isEmpty())
                 return null
             logger.warn { "Method not found: $methodSignature" }
             return null
@@ -205,14 +205,12 @@ private fun JavadocMethod.isBuiltInEnumMethod(): Boolean {
     if (declaringClass.enumConstants.isEmpty()) return false
 
     // values()
-    if (methodName == "values" &&
-        (methodParameters?.parameters?.size ?: 0) == 0
-    ) return true
+    if (methodName == "values" && parameters.isEmpty()) return true
 
     // valueOf(java.lang.String)
     if (methodName == "valueOf" &&
-        methodParameters?.parameters?.size == 1 &&
-        methodParameters!!.parameters[0].type == "java.lang.String"
+        parameters.size == 1 &&
+        parameters[0].type == "java.lang.String"
     ) return true
 
     return false
@@ -220,7 +218,7 @@ private fun JavadocMethod.isBuiltInEnumMethod(): Boolean {
 
 private fun SourceMetadata.getMethodRange(method: JavadocMethod): IntRange? {
     return getMethodsParameters(method.declaringClass.classNameFqcn, method.methodName)
-        .find { it.types == method.methodParameters?.parameters?.map(MethodDocParameter::type) }
+        .find { it.types == method.parameters.map(MethodDocParameter::type) }
         ?.methodRange
 }
 
