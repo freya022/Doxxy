@@ -89,22 +89,7 @@ internal class DocIndexWriter(
                 val methodEmbed = toEmbed(clazz, method)
                 val methodEmbedJson = methodEmbed.toData()
 
-                val methodLink: String? = run {
-                    if (sourceLink == null || sourceMetadata == null) return@run null
-                    if (method.isBuiltInEnumMethod()) return@run null
-
-                    val methodRange: IntRange? = sourceMetadata.getMethodRange(method)
-                    if (methodRange == null) {
-                        if (method.classDetailType == ClassDetailType.CONSTRUCTOR && method.methodParameters?.parameters.isNullOrEmpty())
-                            return@run null
-                        logger.warn { "Method not found: ${method.methodSignature}" }
-                        return@run null
-                    }
-
-                    // This is different from `sourceLink` as it could come from a superclass
-                    val methodClassSourceLink = reindexData.getClassSourceUrlOrNull(method.declaringClass)
-                    "$methodClassSourceLink#L${methodRange.first}-L${methodRange.last}"
-                }
+                val methodLink: String? = method.getLinkOrNull(sourceLink)
 
                 val methodId = insertDoc(DocType.METHOD, clazz.className, method, methodEmbedJson, methodLink)
                 insertSeeAlso(method, methodId)
@@ -117,6 +102,23 @@ internal class DocIndexWriter(
         }
     }
 
+    private fun JavadocMethod.getLinkOrNull(sourceLink: String?): String? {
+        if (sourceLink == null || sourceMetadata == null) return null
+        if (isBuiltInEnumMethod()) return null
+
+        val methodRange: IntRange? = sourceMetadata.getMethodRange(this)
+        if (methodRange == null) {
+            if (classDetailType == ClassDetailType.CONSTRUCTOR && methodParameters?.parameters.isNullOrEmpty())
+                return null
+            logger.warn { "Method not found: $methodSignature" }
+            return null
+        }
+
+        // This is different from `sourceLink` as it could come from a superclass
+        val methodClassSourceLink = reindexData.getClassSourceUrlOrNull(declaringClass)
+        return "$methodClassSourceLink#L${methodRange.first}-L${methodRange.last}"
+    }
+
     context(_: Transaction)
     private suspend fun insertFieldDocs(clazz: JavadocClass, sourceLink: String?) {
         for (field in clazz.fields.values) {
@@ -124,20 +126,7 @@ internal class DocIndexWriter(
                 val fieldEmbed = toEmbed(clazz, field)
                 val fieldEmbedJson = fieldEmbed.toData()
 
-                val fieldLink: String? = run {
-                    if (sourceLink == null) return@run null
-                    if (sourceMetadata == null) return@run null
-
-                    val fieldRange: IntRange? = sourceMetadata.getFieldRange(field)
-                    if (fieldRange == null) {
-                        logger.warn { "Field not found: ${field.declaringClass.className}#${field.fieldName}" }
-                        return@run null
-                    }
-
-                    // This is different from `sourceLink` as it could come from a superclass
-                    val fieldClassSourceLink = reindexData.getClassSourceUrlOrNull(field.declaringClass)
-                    "$fieldClassSourceLink#L${fieldRange.first}-L${fieldRange.last}"
-                }
+                val fieldLink: String? = field.getLinkOrNull(sourceLink)
 
                 val fieldId = insertDoc(DocType.FIELD, clazz.className, field, fieldEmbedJson, fieldLink)
                 insertSeeAlso(field, fieldId)
@@ -148,6 +137,21 @@ internal class DocIndexWriter(
                 )
             }
         }
+    }
+
+    private fun JavadocField.getLinkOrNull(sourceLink: String?): String? {
+        if (sourceLink == null) return null
+        if (sourceMetadata == null) return null
+
+        val fieldRange: IntRange? = sourceMetadata.getFieldRange(this)
+        if (fieldRange == null) {
+            logger.warn { "Field not found: ${declaringClass.className}#$fieldName" }
+            return null
+        }
+
+        // This is different from `sourceLink` as it could come from a superclass
+        val fieldClassSourceLink = reindexData.getClassSourceUrlOrNull(declaringClass)
+        return "$fieldClassSourceLink#L${fieldRange.first}-L${fieldRange.last}"
     }
 
     context(transaction: Transaction)
