@@ -95,6 +95,8 @@ internal class DocIndexWriter(
 
                     val methodRange: IntRange? = sourceMetadata.getMethodRange(method)
                     if (methodRange == null) {
+                        if (method.classDetailType == ClassDetailType.CONSTRUCTOR && method.methodParameters?.parameters.isNullOrEmpty())
+                            return@run null
                         logger.warn { "Method not found: ${method.methodSignature}" }
                         return@run null
                     }
@@ -221,9 +223,7 @@ private fun SourceMetadata.getMethodRange(method: JavadocMethod): IntRange? {
         ?.replace(annotationRegex, "")
         ?: ""
 
-    if (docsParametersString.isEmpty() && method.classDetailType == ClassDetailType.CONSTRUCTOR) {
-        return null // TODO handle constructors and remove
-    } else if (docsParametersString.contains("net.dv8tion.jda.internal")) {
+    if (docsParametersString.contains("net.dv8tion.jda.internal")) {
         return null // TODO fix MethodDocParameter#type then remove
     } else if (docsParametersString.contains("okhttp3")) {
         return null // TODO fix MethodDocParameter#type then remove
