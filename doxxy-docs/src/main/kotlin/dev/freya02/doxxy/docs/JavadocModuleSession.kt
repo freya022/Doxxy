@@ -89,7 +89,7 @@ private fun getClassUrlMappings(source: JavadocSource): Map<SimpleName, DocsURL>
     // Since it's the left most, it's easy to pick the first one
     for (element in document.select("#all-classes-table > div > div.summary-table.two-column-summary > div.col-first > a:nth-child(1)")) {
         val classUrl = element.absUrl("href")
-        val (packageName, className) = DecomposedName.getDecompositionFromUrl(source, classUrl)
+        val (packageName, className) = DecomposedName.getDecompositionFromLink(element)
 
         if (packageName == null || !source.isValidPackage(packageName)) continue
 
