@@ -22,7 +22,10 @@ class ClassMetadataParser private constructor(private val sourceRoot: SourceRoot
 
     context(profiler: Profiler)
     fun parse(): ClassMetadataParser = this.apply {
-        val apiCompilationUnits = sourceRoot.compilationUnits.filter { it.packageDeclaration.get().nameAsString.startsWith("net.dv8tion.jda.api") }
+        val apiCompilationUnits = sourceRoot.compilationUnits.filter {
+            val pkgName = it.packageDeclaration.get().nameAsString
+            pkgName.startsWith("net.dv8tion.jda.api") || pkgName.startsWith("net.dv8tion.jda.annotations")
+        }
 
         profiler.nextStep("parsePackages") {
             apiCompilationUnits.forEachCompilationUnit(Companion.logger) { parsePackages(it) }
@@ -211,6 +214,24 @@ class ClassMetadataParser private constructor(private val sourceRoot: SourceRoot
                 currentClassStack.peek().let { currentClass ->
                     classMetadataMap[currentClass]!!.fieldMetadataMap[n.nameAsString] =
                         FieldMetadata(n.begin.get().line..n.end.get().line)
+                }
+
+                super.visit(n, arg)
+            }
+
+            override fun visit(n: AnnotationMemberDeclaration, arg: Void?) {
+                currentClassStack.peek().also { currentClass ->
+                    val classMetadata = classMetadataMap[currentClass]!!
+                    check(n.nameAsString !in classMetadata.methodMetadataMap) {
+                        "Annotation member '$currentClass#${n.nameAsString}' already exists"
+                    }
+
+                    classMetadata.methodMetadataMap[n.nameAsString] = arrayListOf(
+                        MethodMetadata(
+                            emptyList(),
+                            n.begin.get().line..n.end.get().line
+                        )
+                    )
                 }
 
                 super.visit(n, arg)

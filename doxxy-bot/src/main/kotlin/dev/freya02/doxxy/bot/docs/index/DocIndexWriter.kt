@@ -223,8 +223,6 @@ private fun SourceMetadata.getMethodRange(method: JavadocMethod): IntRange? {
 
     if (docsParametersString.isEmpty() && method.classDetailType == ClassDetailType.CONSTRUCTOR) {
         return null // TODO handle constructors and remove
-    } else if (docsParametersString.isEmpty() && method.classDetailType == ClassDetailType.ANNOTATION_ELEMENT) {
-        return null // TODO handle annotation members and remove
     } else if (docsParametersString.contains("net.dv8tion.jda.internal")) {
         return null // TODO fix MethodDocParameter#type then remove
     } else if (docsParametersString.contains("okhttp3")) {
