@@ -121,7 +121,7 @@ class Versions(
             logger.trace { "Downloading JDA javadocs" }
             jdaChecker.latest.artifactInfo
                 .downloadMavenJavadoc()
-                .moveTo(DocSourceType.JDA.javadocArchivePath)
+                .moveTo(DocSourceType.JDA.javadocArchivePath, overwrite = true)
 
             logger.trace { "Downloading JDA sources" }
             jdaChecker.latest.artifactInfo.downloadMavenSources().withTemporaryFile { tempZip ->
