@@ -34,8 +34,10 @@ internal fun MethodDocParameters(element: Element): MethodDocParameters {
                         ?: return@run parameter.typeAsString
 
                     val (packageName, className) = DecomposedName.getDecompositionFromLink(linkedType)
-                    requireNotNull(packageName) { "Package is null for $linkedType"}
-                    "$packageName.$className"
+                    if (packageName != null)
+                        "$packageName.$className"
+                    else
+                        className
                 }
 
                 val simpleType = run {

@@ -92,4 +92,18 @@ object MethodDocParameterTest {
         assertEquals("java.lang.String", params[2].type)
         assertEquals("String", params[2].simpleType)
     }
+
+    @Test
+    fun `Type parameters are used as-is`() {
+        val params = MethodDocParameters(htmlFragment(
+            """
+                <span class="parameters">(<a href="https://docs.oracle.com/javase/8/docs/api/javax/annotation/Nonnull.html"
+                                             title="class or interface in javax.annotation" class="external-link">@Nonnull</a>
+                <a href="OrderAction.html" title="type parameter in OrderAction">T</a>&nbsp;other)</span>
+            """.trimIndent()
+        )).parameters
+
+        assertEquals("T", params[0].type)
+        assertEquals("T", params[0].simpleType)
+    }
 }

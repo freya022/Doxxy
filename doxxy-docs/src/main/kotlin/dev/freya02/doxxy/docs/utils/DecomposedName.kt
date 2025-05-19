@@ -21,6 +21,9 @@ internal data class DecomposedName(val packageName: String?, val className: Stri
             val href = element.attr("href").ifEmpty { error("href is missing in $element") }
             val title = element.attr("title").ifEmpty { error("title is missing in $element") }
 
+            if (title.startsWith("type parameter"))
+                return DecomposedName(null, element.ownText())
+
             val simpleClassName = href
                 .substringAfterLast('/') // Last path segment
                 .dropLast(5) // remove .html
