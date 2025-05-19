@@ -44,7 +44,7 @@ internal fun MethodDocParameters(element: Element): MethodDocParameters {
                 }
 
                 MethodDocParameter(
-                    annotations = parameter.annotations.mapTo(hashSetOf()) { it.nameAsString },
+                    annotations = parameter.annotations.mapTo(linkedSetOf()) { it.nameAsString },
                     type = fullType + if (parameter.isVarArgs) "..." else "",
                     simpleType = simpleType + if (parameter.isVarArgs) "..." else "",
                     name = parameter.nameAsString,
