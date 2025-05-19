@@ -22,7 +22,6 @@ import kotlinx.coroutines.flow.flowOn
 import net.dv8tion.jda.api.utils.data.DataObject
 
 private val logger = KotlinLogging.logger { }
-private val annotationRegex: Regex = "@\\w+ ".toRegex()
 
 internal class DocIndexWriter(
     private val database: Database,
@@ -220,21 +219,6 @@ private fun JavadocMethod.isBuiltInEnumMethod(): Boolean {
 }
 
 private fun SourceMetadata.getMethodRange(method: JavadocMethod): IntRange? {
-    val docsParametersString = method.methodParameters
-        ?.originalText
-        ?.drop(1)
-        ?.dropLast(1)
-        ?.replace(annotationRegex, "")
-        ?: ""
-
-    if (docsParametersString.contains("net.dv8tion.jda.internal")) {
-        return null // TODO fix MethodDocParameter#type then remove
-    } else if (docsParametersString.contains("okhttp3")) {
-        return null // TODO fix MethodDocParameter#type then remove
-    } else if (docsParametersString.contains("gnu.")) {
-        return null // TODO fix MethodDocParameter#type then remove
-    }
-
     return getMethodsParameters(method.declaringClass.classNameFqcn, method.methodName)
         .find { it.types == method.methodParameters?.parameters?.map(MethodDocParameter::type) }
         ?.methodRange
