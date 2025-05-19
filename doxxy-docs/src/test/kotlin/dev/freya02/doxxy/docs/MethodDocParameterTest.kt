@@ -1,17 +1,11 @@
 package dev.freya02.doxxy.docs
 
 import dev.freya02.doxxy.docs.declarations.MethodDocParameters
-import io.mockk.every
-import io.mockk.mockk
 import org.junit.jupiter.api.assertDoesNotThrow
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 object MethodDocParameterTest {
-
-    private val moduleSession = mockk<JavadocModuleSession> {
-        every { source } returns JDK_SOURCE
-    }
 
     @Test
     fun `Requires the 'parameters' class on the parsed node`() {
