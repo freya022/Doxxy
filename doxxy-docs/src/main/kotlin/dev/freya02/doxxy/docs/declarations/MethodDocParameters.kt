@@ -20,7 +20,7 @@ internal fun MethodDocParameters(element: Element): MethodDocParameters {
             val type = it.type
             if (type is NodeWithTypeArguments<*>) type.removeTypeArguments()
         }
-    val linkedTypes = element.select("a").filterTo(arrayListOf()) { it.text().all(Char::isLetter) }
+    val linkedTypes = element.select("a").filterTo(arrayListOf()) { it.text().none { c -> c == '@' } }
 
     // On each parameter we look up the node which's effective text is the param type,
     // and get the link to get the actual package (!!! must do it in the correct order as there could be two types with diff packages in theory)
