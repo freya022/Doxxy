@@ -90,8 +90,8 @@ internal class DocIndexWriter(
                 val methodEmbedJson = methodEmbed.toData()
 
                 val methodLink: String? = run {
-                    if (sourceLink == null) return@run null
-                    if (sourceMetadata == null) return@run null
+                    if (sourceLink == null || sourceMetadata == null) return@run null
+                    if (method.isBuiltInEnumMethod()) return@run null
 
                     val methodRange: IntRange? = sourceMetadata.getMethodRange(method)
                     if (methodRange == null) {
@@ -195,6 +195,24 @@ internal class DocIndexWriter(
     }
 }
 
+private fun JavadocMethod.isBuiltInEnumMethod(): Boolean {
+    // Technically this isn't entirely accurate, but who leaves empty enums?
+    if (declaringClass.enumConstants.isEmpty()) return false
+
+    // values()
+    if (methodName == "values" &&
+        (methodParameters?.parameters?.size ?: 0) == 0
+    ) return true
+
+    // valueOf(java.lang.String)
+    if (methodName == "valueOf" &&
+        methodParameters?.parameters?.size == 1 &&
+        methodParameters!!.parameters[0].type == "java.lang.String"
+    ) return true
+
+    return false
+}
+
 private fun SourceMetadata.getMethodRange(method: JavadocMethod): IntRange? {
     val docsParametersString = method.methodParameters
         ?.originalText
@@ -213,18 +231,6 @@ private fun SourceMetadata.getMethodRange(method: JavadocMethod): IntRange? {
         return null // TODO fix MethodDocParameter#type then remove
     } else if (docsParametersString.contains("gnu.")) {
         return null // TODO fix MethodDocParameter#type then remove
-    } else {
-        // Move enum checks outside so they don't trigger warnings
-        if (docsParametersString.isEmpty() && method.methodName == "values"
-            && method.declaringClass.enumConstants.isNotEmpty()
-        ) {
-            return null
-            // TODO check effective type
-        } else if (docsParametersString == "String name" && method.methodName == "valueOf"
-            && method.declaringClass.enumConstants.isNotEmpty()
-        ) {
-            return null
-        }
     }
 
     return getMethodsParameters(method.declaringClass.classNameFqcn, method.methodName)
