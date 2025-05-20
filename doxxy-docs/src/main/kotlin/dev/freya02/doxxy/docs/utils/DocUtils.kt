@@ -6,10 +6,8 @@ import dev.freya02.doxxy.docs.declarations.returnTypeNoAnnotations
 import dev.freya02.doxxy.docs.exceptions.DocParseException
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
-import java.util.regex.Pattern
 
 internal object DocUtils {
-    private val DUPLICATED_ANNOTATION_PATTERN = Pattern.compile("(@.+)?\\s+\\1")
 
     fun getSimpleSignature(elementId: String): String {
         return StringBuilder().apply {
@@ -36,15 +34,9 @@ internal object DocUtils {
         append("#")
         append(method.methodName)
 
-        method.methodParameters?.asString?.let { methodParameters ->
-            val parameters = methodParameters.substring(1, methodParameters.length - 1)
-                .split(",")
-                .joinToString(",\n", "(", ")") {
-                    DUPLICATED_ANNOTATION_PATTERN.matcher(it).replaceAll("$1")
-                }
-
-            append(parameters)
-        }
+        append(method.parameters.joinToString(", ", "(", ")") { parameter ->
+            "${parameter.annotations.joinToString(" ")}${parameter.simpleType} ${parameter.name}"
+        })
 
         append(" : ")
         append(method.returnTypeNoAnnotations)

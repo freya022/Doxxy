@@ -22,7 +22,6 @@ import kotlinx.coroutines.flow.flowOn
 import net.dv8tion.jda.api.utils.data.DataObject
 
 private val logger = KotlinLogging.logger { }
-private val annotationRegex: Regex = "@\\w+ ".toRegex()
 
 internal class DocIndexWriter(
     private val database: Database,
@@ -89,20 +88,7 @@ internal class DocIndexWriter(
                 val methodEmbed = toEmbed(clazz, method)
                 val methodEmbedJson = methodEmbed.toData()
 
-                val methodLink: String? = run {
-                    if (sourceLink == null) return@run null
-                    if (sourceMetadata == null) return@run null
-
-                    val methodRange: IntRange? = sourceMetadata.getMethodRange(method)
-                    if (methodRange == null) {
-                        logger.warn { "Method not found: ${method.methodSignature}" }
-                        return@run null
-                    }
-
-                    // This is different from `sourceLink` as it could come from a superclass
-                    val methodClassSourceLink = reindexData.getClassSourceUrlOrNull(method.declaringClass)
-                    "$methodClassSourceLink#L${methodRange.first}-L${methodRange.last}"
-                }
+                val methodLink: String? = method.getLinkOrNull(sourceLink)
 
                 val methodId = insertDoc(DocType.METHOD, clazz.className, method, methodEmbedJson, methodLink)
                 insertSeeAlso(method, methodId)
@@ -115,6 +101,23 @@ internal class DocIndexWriter(
         }
     }
 
+    private fun JavadocMethod.getLinkOrNull(sourceLink: String?): String? {
+        if (sourceLink == null || sourceMetadata == null) return null
+        if (isBuiltInEnumMethod()) return null
+
+        val methodRange: IntRange? = sourceMetadata.getMethodRange(this)
+        if (methodRange == null) {
+            if (classDetailType == ClassDetailType.CONSTRUCTOR && parameters.isEmpty())
+                return null
+            logger.warn { "Method not found: $methodSignature" }
+            return null
+        }
+
+        // This is different from `sourceLink` as it could come from a superclass
+        val methodClassSourceLink = reindexData.getClassSourceUrlOrNull(declaringClass)
+        return "$methodClassSourceLink#L${methodRange.first}-L${methodRange.last}"
+    }
+
     context(_: Transaction)
     private suspend fun insertFieldDocs(clazz: JavadocClass, sourceLink: String?) {
         for (field in clazz.fields.values) {
@@ -122,20 +125,7 @@ internal class DocIndexWriter(
                 val fieldEmbed = toEmbed(clazz, field)
                 val fieldEmbedJson = fieldEmbed.toData()
 
-                val fieldLink: String? = run {
-                    if (sourceLink == null) return@run null
-                    if (sourceMetadata == null) return@run null
-
-                    val fieldRange: IntRange? = sourceMetadata.getFieldRange(field)
-                    if (fieldRange == null) {
-                        logger.warn { "Field not found: ${field.declaringClass.className}#${field.fieldName}" }
-                        return@run null
-                    }
-
-                    // This is different from `sourceLink` as it could come from a superclass
-                    val fieldClassSourceLink = reindexData.getClassSourceUrlOrNull(field.declaringClass)
-                    "$fieldClassSourceLink#L${fieldRange.first}-L${fieldRange.last}"
-                }
+                val fieldLink: String? = field.getLinkOrNull(sourceLink)
 
                 val fieldId = insertDoc(DocType.FIELD, clazz.className, field, fieldEmbedJson, fieldLink)
                 insertSeeAlso(field, fieldId)
@@ -146,6 +136,21 @@ internal class DocIndexWriter(
                 )
             }
         }
+    }
+
+    private fun JavadocField.getLinkOrNull(sourceLink: String?): String? {
+        if (sourceLink == null) return null
+        if (sourceMetadata == null) return null
+
+        val fieldRange: IntRange? = sourceMetadata.getFieldRange(this)
+        if (fieldRange == null) {
+            logger.warn { "Field not found: ${declaringClass.className}#$fieldName" }
+            return null
+        }
+
+        // This is different from `sourceLink` as it could come from a superclass
+        val fieldClassSourceLink = reindexData.getClassSourceUrlOrNull(declaringClass)
+        return "$fieldClassSourceLink#L${fieldRange.first}-L${fieldRange.last}"
     }
 
     context(transaction: Transaction)
@@ -195,40 +200,25 @@ internal class DocIndexWriter(
     }
 }
 
+private fun JavadocMethod.isBuiltInEnumMethod(): Boolean {
+    // Technically this isn't entirely accurate, but who leaves empty enums?
+    if (declaringClass.enumConstants.isEmpty()) return false
+
+    // values()
+    if (methodName == "values" && parameters.isEmpty()) return true
+
+    // valueOf(java.lang.String)
+    if (methodName == "valueOf" &&
+        parameters.size == 1 &&
+        parameters[0].type == "java.lang.String"
+    ) return true
+
+    return false
+}
+
 private fun SourceMetadata.getMethodRange(method: JavadocMethod): IntRange? {
-    val docsParametersString = method.methodParameters
-        ?.asString
-        ?.drop(1)
-        ?.dropLast(1)
-        ?.replace(annotationRegex, "")
-        ?: ""
-
-    if (docsParametersString.isEmpty() && method.classDetailType == ClassDetailType.CONSTRUCTOR) {
-        return null // TODO handle constructors and remove
-    } else if (docsParametersString.isEmpty() && method.classDetailType == ClassDetailType.ANNOTATION_ELEMENT) {
-        return null // TODO handle annotation members and remove
-    } else if (docsParametersString.contains("net.dv8tion.jda.internal")) {
-        return null // TODO fix MethodDocParameter#type then remove
-    } else if (docsParametersString.contains("okhttp3")) {
-        return null // TODO fix MethodDocParameter#type then remove
-    } else if (docsParametersString.contains("gnu.")) {
-        return null // TODO fix MethodDocParameter#type then remove
-    } else {
-        // Move enum checks outside so they don't trigger warnings
-        if (docsParametersString.isEmpty() && method.methodName == "values"
-            && method.declaringClass.enumConstants.isNotEmpty()
-        ) {
-            return null
-            // TODO check effective type
-        } else if (docsParametersString == "String name" && method.methodName == "valueOf"
-            && method.declaringClass.enumConstants.isNotEmpty()
-        ) {
-            return null
-        }
-    }
-
     return getMethodsParameters(method.declaringClass.classNameFqcn, method.methodName)
-        .find { it.parametersString == docsParametersString }
+        .find { it.types == method.parameters.map(MethodDocParameter::type) }
         ?.methodRange
 }
 

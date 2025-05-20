@@ -1,7 +1,10 @@
 package dev.freya02.doxxy.docs
 
 import dev.freya02.doxxy.docs.SerializableJavadocClass.SerializableSeeAlso
-import dev.freya02.doxxy.docs.declarations.*
+import dev.freya02.doxxy.docs.declarations.JavadocClass
+import dev.freya02.doxxy.docs.declarations.JavadocField
+import dev.freya02.doxxy.docs.declarations.JavadocMethod
+import dev.freya02.doxxy.docs.declarations.MethodDocParameter
 import dev.freya02.doxxy.docs.sections.DocDetail
 import dev.freya02.doxxy.docs.sections.SeeAlso
 import dev.freya02.doxxy.docs.sections.SeeAlso.TargetType
@@ -84,7 +87,7 @@ private data class SerializableJavadocMethod(
     val methodAnnotations: String?,
     val methodName: String,
     val methodSignature: String,
-    val methodParameters: SerializableParameters?,
+    val parameters: List<SerializableParameter>?,
     val methodReturnType: String,
     val isStatic: Boolean,
     val descriptionElements: List<SerializableJavadocElement>,
@@ -94,19 +97,12 @@ private data class SerializableJavadocMethod(
 ) {
 
     @Serializable
-    data class SerializableParameters(
-        val originalText: String,
-        val parameters: List<SerializableParameter>,
-    ) {
-
-        @Serializable
-        data class SerializableParameter(
-            val annotations: Set<String>,
-            val type: String,
-            val simpleType: String,
-            val name: String
-        )
-    }
+    data class SerializableParameter(
+        val annotations: Set<String>,
+        val type: String,
+        val simpleType: String,
+        val name: String
+    )
 }
 
 @Serializable
@@ -211,7 +207,7 @@ object IntegrationTests {
         methodAnnotations,
         methodName,
         methodSignature,
-        methodParameters?.toSerializable(),
+        parameters.map { it.toSerializable() },
         methodReturnType,
         isStatic,
         descriptionElements,
@@ -220,12 +216,7 @@ object IntegrationTests {
         seeAlso?.toSerializable(),
     )
 
-    private fun MethodDocParameters.toSerializable() = SerializableJavadocMethod.SerializableParameters(
-        asString,
-        parameters.map { it.toSerializable() },
-    )
-
-    private fun MethodDocParameter.toSerializable() = SerializableJavadocMethod.SerializableParameters.SerializableParameter(
+    private fun MethodDocParameter.toSerializable() = SerializableJavadocMethod.SerializableParameter(
         annotations,
         type,
         simpleType,
