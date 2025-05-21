@@ -56,6 +56,10 @@ class SourceMetadata(sourceRootPath: Path) {
         }
     }
 
+    fun getClassMetadata(className: ClassName): ClassMetadata? {
+        return classMetadataMap[className]
+    }
+
     fun getMethodsParameters(className: ClassName, methodName: String): List<MethodMetadata> {
         return classMetadataMap[className]
             ?.methodMetadataMap

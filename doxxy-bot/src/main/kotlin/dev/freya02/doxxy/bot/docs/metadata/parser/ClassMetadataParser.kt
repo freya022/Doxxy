@@ -4,6 +4,7 @@ import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.ImportDeclaration
 import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.body.*
+import com.github.javaparser.ast.nodeTypes.NodeWithRange
 import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName
 import com.github.javaparser.ast.nodeTypes.NodeWithTypeArguments
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter
@@ -83,7 +84,7 @@ class ClassMetadataParser private constructor(private val sourceRoot: SourceRoot
 
             private fun withClassName(n: TypeDeclaration<*>, block: () -> Unit) {
                 metadataStack.push(classMetadataMap.getOrPut(n.fullyQualifiedName.get()) {
-                    ClassMetadata(n.fullyQualifiedName.get(), metadataStack.lastOrNull()?.name).also {
+                    ClassMetadata(n.fullyQualifiedName.get(), n.rangeKt, metadataStack.lastOrNull()?.name).also {
                         it.resolvedMap.putAll(importedVariants)
                     }
                 })
@@ -203,7 +204,7 @@ class ClassMetadataParser private constructor(private val sourceRoot: SourceRoot
                 currentClassStack.peek().let { currentClass ->
                     n.variables.forEach {
                         classMetadataMap[currentClass]!!.fieldMetadataMap[it.nameAsString] =
-                            FieldMetadata(n.begin.get().line..n.end.get().line)
+                            FieldMetadata(n.rangeKt)
                     }
                 }
 
@@ -213,7 +214,7 @@ class ClassMetadataParser private constructor(private val sourceRoot: SourceRoot
             override fun visit(n: EnumConstantDeclaration, arg: Void?) {
                 currentClassStack.peek().let { currentClass ->
                     classMetadataMap[currentClass]!!.fieldMetadataMap[n.nameAsString] =
-                        FieldMetadata(n.begin.get().line..n.end.get().line)
+                        FieldMetadata(n.rangeKt)
                 }
 
                 super.visit(n, arg)
@@ -229,7 +230,7 @@ class ClassMetadataParser private constructor(private val sourceRoot: SourceRoot
                     classMetadata.methodMetadataMap[n.nameAsString] = arrayListOf(
                         MethodMetadata(
                             emptyList(),
-                            n.begin.get().line..n.end.get().line
+                            n.rangeKt,
                         )
                     )
                 }
@@ -249,7 +250,7 @@ class ClassMetadataParser private constructor(private val sourceRoot: SourceRoot
                         .add(
                             MethodMetadata(
                                 n.parameters.map { it.resolve().describeType() },
-                                n.begin.get().line..n.end.get().line
+                                n.rangeKt,
                             )
                         )
                 }
@@ -290,3 +291,9 @@ class ClassMetadataParser private constructor(private val sourceRoot: SourceRoot
         }
     }
 }
+
+private val NodeWithRange<*>.rangeKt: IntRange
+    get() {
+        val range = range.get()
+        return range.begin.line..range.end.line
+    }

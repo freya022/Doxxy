@@ -59,13 +59,14 @@ internal class DocIndexWriter(
                     try {
                         val classEmbed = toEmbed(javadocClass)
                         val classEmbedJson = classEmbed.toData()
-                        val sourceLink = reindexData.getClassSourceUrlOrNull(javadocClass)
+                        val baseLink = reindexData.getClassSourceUrlOrNull(javadocClass)
+                        val sourceLink = baseLink?.let { javadocClass.getRangedLink(it) }
 
                         val classDocId = insertDoc(DocType.CLASS, javadocClass.className, javadocClass, classEmbedJson, sourceLink)
                         insertSeeAlso(javadocClass, classDocId)
 
-                        insertMethodDocs(javadocClass, sourceLink)
-                        insertFieldDocs(javadocClass, sourceLink)
+                        insertMethodDocs(javadocClass, baseLink)
+                        insertFieldDocs(javadocClass, baseLink)
                     } catch (e: Exception) {
                         throw RuntimeException("An exception occurred while reading the docs of '${javadocClass.sourceURL}'", e)
                     }
@@ -79,6 +80,20 @@ internal class DocIndexWriter(
                 executeUpdate()
             }
         }
+    }
+
+    private fun JavadocClass.getRangedLink(baseLink: String): String? {
+        if (sourceMetadata == null) return baseLink
+        val metadata = sourceMetadata.getClassMetadata(classNameFqcn)
+        if (metadata == null) {
+            logger.warn { "Class metadata not found: $classNameFqcn" }
+            return baseLink
+        }
+
+        // Don't put range on top-level classes as it would select most of the file
+        if (metadata.enclosedBy == null) return baseLink
+
+        return "$baseLink#L${metadata.range.first}-L${metadata.range.last}"
     }
 
     context(_: Transaction)
