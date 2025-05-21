@@ -1,5 +1,5 @@
 [versions]
-kotlin = "2.2.0-Beta2" # Also change in buildSrc
+kotlin = "2.2.0-RC" # Also change in buildSrc
 kotlinx-coroutines = "1.10.2"
 stacktrace-decoroutinator = "2.4.8"
 slf4j = "2.0.16"
