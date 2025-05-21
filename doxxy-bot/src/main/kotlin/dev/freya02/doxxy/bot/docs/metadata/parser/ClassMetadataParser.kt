@@ -75,7 +75,6 @@ class ClassMetadataParser private constructor(private val sourceRoot: SourceRoot
     // If a type's class name cannot be found in the pool then keep the original type's class name
     private fun parseResult(compilationUnit: CompilationUnit) {
         val imports: MutableMap<FullSimpleClassName, PackageName> = hashMapOf()
-        val importedVariants: MutableMap<FullSimpleClassName, FullSimpleClassName> = hashMapOf()
 
         imports.putAll(packageToClasses[compilationUnit.packageDeclaration.get().nameAsString]!!)
 
@@ -84,9 +83,7 @@ class ClassMetadataParser private constructor(private val sourceRoot: SourceRoot
 
             private fun withClassName(n: TypeDeclaration<*>, block: () -> Unit) {
                 metadataStack.push(classMetadataMap.getOrPut(n.fullyQualifiedName.get()) {
-                    ClassMetadata(n.fullyQualifiedName.get(), n.rangeKt, metadataStack.lastOrNull()?.name).also {
-                        it.resolvedMap.putAll(importedVariants)
-                    }
+                    ClassMetadata(n.fullyQualifiedName.get(), n.rangeKt, metadataStack.lastOrNull()?.name)
                 })
                 block()
                 metadataStack.pop()
@@ -104,7 +101,6 @@ class ClassMetadataParser private constructor(private val sourceRoot: SourceRoot
                 if (n.isLocalClassDeclaration) return
 
                 withClassName(n) {
-                    addVariants(n)
                     metadataStack.peek().extends.addAll(n.extendedTypes.map { resolveWithImports(it) })
                     metadataStack.peek().implements.addAll(n.implementedTypes.map { resolveWithImports(it) })
                     super.visit(n, arg)
@@ -113,7 +109,6 @@ class ClassMetadataParser private constructor(private val sourceRoot: SourceRoot
 
             override fun visit(n: EnumDeclaration, arg: Void?) {
                 withClassName(n) {
-                    addVariants(n)
                     metadataStack.peek().implements.addAll(n.implementedTypes.map { resolveWithImports(it) })
                     super.visit(n, arg)
                 }
@@ -121,7 +116,6 @@ class ClassMetadataParser private constructor(private val sourceRoot: SourceRoot
 
             override fun visit(n: AnnotationDeclaration, arg: Void?) {
                 withClassName(n) {
-                    addVariants(n)
                     super.visit(n, arg)
                 }
             }
@@ -137,25 +131,10 @@ class ClassMetadataParser private constructor(private val sourceRoot: SourceRoot
 
                     imports.putAll(classes)
                 } else {
-                    val importFullSimpleClassName = n.fullClassName
-
-                    imports[importFullSimpleClassName] = n.fullPackageName
-                    findAllImportVariants(importFullSimpleClassName).forEach { variant ->
-                        importedVariants[variant] = importFullSimpleClassName
-                    }
+                    imports[n.fullClassName] = n.fullPackageName
                 }
 
                 super.visit(n, arg)
-            }
-
-            private fun addVariants(n: TypeDeclaration<*>) {
-                val fullSimpleName = n.findSimpleFullName()
-                n.findAllImportVariants().forEach {
-                    metadataStack.forEach { m ->
-                        val old = m.resolvedMap.put(it, fullSimpleName)
-                        if (old != null) logger.warn { "Variant '$it' already existed, old value: $old, new value: $fullSimpleName" }
-                    }
-                }
             }
         }, null)
     }
@@ -256,22 +235,6 @@ class ClassMetadataParser private constructor(private val sourceRoot: SourceRoot
                 }
             }
         }, null)
-    }
-
-    private fun findAllImportVariants(simpleFullName: String): List<String> {
-        val split = simpleFullName.split('.')
-
-        return List(split.size) { i ->
-            split.takeLast(i + 1).joinToString(".")
-        }
-    }
-
-    private fun TypeDeclaration<*>.findAllImportVariants(): List<String> {
-        val split = findSimpleFullName().split('.')
-
-        return List(split.size) { i ->
-            split.takeLast(i + 1).joinToString(".")
-        }
     }
 
     private fun TypeDeclaration<*>.findSimpleFullName(): String {
