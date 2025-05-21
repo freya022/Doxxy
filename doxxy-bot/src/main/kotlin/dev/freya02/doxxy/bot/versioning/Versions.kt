@@ -24,6 +24,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
 import kotlin.io.path.moveTo
 import kotlin.time.Duration
@@ -66,6 +68,8 @@ class Versions(
     val latestLavaPlayerVersion: ArtifactInfo
         get() = lavaPlayerChecker.latest.artifactInfo
 
+    private val docIndexLock = Mutex()
+
     @BEventListener(mode = BEventListener.RunMode.ASYNC, timeout = -1)
     suspend fun initUpdateLoop(event: InjectedJDAEvent) {
         val scope = namedDefaultScope("Version checker", 1)
@@ -76,7 +80,10 @@ class Versions(
 
         //First index for Java's docs, may take some time
         if (docIndexMap[DocSourceType.JAVA].getClassDoc("Object") == null) {
-            docIndexMap[DocSourceType.JAVA].reindex(ReindexData())
+            docIndexLock.withLock {
+                logger.info { "Reindexing Java docs" }
+                docIndexMap[DocSourceType.JAVA].reindex(ReindexData())
+            }
 
             //Once java's docs are indexed, invalidate caches if the user had time to use the commands before docs were loaded
             for (autocompleteName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
@@ -129,8 +136,10 @@ class Versions(
                 VersionsUtils.extractZip(tempZip, DocSourceType.JDA.sourceDirectoryPath!!, "java")
             }
 
-            logger.trace { "Invalidating JDA index" }
-            docIndexMap[DocSourceType.JDA].reindex(ReindexData(sourceUrl))
+            docIndexLock.withLock {
+                logger.trace { "Reindexing JDA docs" }
+                docIndexMap[DocSourceType.JDA].reindex(ReindexData(sourceUrl))
+            }
             for (handlerName in CommonDocsHandlers.AUTOCOMPLETE_NAMES) {
                 applicationCommandsContext.invalidateAutocompleteCache(handlerName)
             }
