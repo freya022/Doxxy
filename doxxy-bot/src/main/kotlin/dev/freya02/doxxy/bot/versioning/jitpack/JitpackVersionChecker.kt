@@ -4,13 +4,12 @@ import dev.freya02.doxxy.bot.versioning.LibraryVersion
 import dev.freya02.doxxy.bot.versioning.VersionChecker
 import dev.freya02.doxxy.github.client.GithubClient
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.runBlocking
 
 class JitpackVersionChecker(private val githubClient: GithubClient, latest: LibraryVersion) : VersionChecker(latest) {
-    override fun retrieveLatest(): LibraryVersion {
+    override suspend fun retrieveLatest(): LibraryVersion {
         val (_, groupId, artifactId) = latest
         // TODO make retrieveLatest suspend and replace with `run`
-        val latestBranch = runBlocking {
+        val latestBranch = run {
             val branches = githubClient.getBranches(groupId.substringAfter(".github."), artifactId, perPage = 100).toList()
             val mostRecentVersionedBranch = branches
                 .filter { it.name.matches("\\d\\.\\d\\.\\d".toRegex()) }

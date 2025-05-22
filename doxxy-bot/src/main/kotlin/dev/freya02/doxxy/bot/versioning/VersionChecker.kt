@@ -6,9 +6,9 @@ abstract class VersionChecker protected constructor(latest: LibraryVersion) {
 
     private var savedVersion: LibraryVersion = latest
 
-    protected abstract fun retrieveLatest(): LibraryVersion
+    protected abstract suspend fun retrieveLatest(): LibraryVersion
 
-    fun checkVersion(): Boolean {
+    suspend fun checkVersion(): Boolean {
         val latestVersion = retrieveLatest()
         val changed = latestVersion != latest
 
