@@ -10,8 +10,8 @@ import dev.freya02.doxxy.bot.utils.Utils.withTemporaryFile
 import dev.freya02.doxxy.bot.versioning.VersionsUtils.downloadMavenJavadoc
 import dev.freya02.doxxy.bot.versioning.VersionsUtils.downloadMavenSources
 import dev.freya02.doxxy.bot.versioning.maven.DependencyVersionChecker
+import dev.freya02.doxxy.bot.versioning.maven.MavenRepositoryClient
 import dev.freya02.doxxy.bot.versioning.maven.MavenVersionChecker
-import dev.freya02.doxxy.bot.versioning.maven.RepoType
 import dev.freya02.doxxy.github.client.GithubClient
 import dev.freya02.doxxy.github.client.utils.CommitHash
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommandsContext
@@ -39,9 +39,10 @@ class Versions(
     private val docIndexMap: DocIndexMap,
     private val versionsRepository: VersionsRepository,
     private val githubClient: GithubClient,
+    private val mavenCentralClient: MavenRepositoryClient,
 ) {
     private val bcChecker =
-        MavenVersionChecker(versionsRepository.getInitialVersion(LibraryType.BOT_COMMANDS), RepoType.MAVEN)
+        MavenVersionChecker(mavenCentralClient, versionsRepository.getInitialVersion(LibraryType.BOT_COMMANDS))
     val latestBotCommandsVersion: ArtifactInfo
         get() = bcChecker.latest.artifactInfo
 
@@ -54,17 +55,17 @@ class Versions(
         get() = bcJdaVersionChecker.latest.artifactInfo
 
     private val jdaChecker: MavenVersionChecker =
-        MavenVersionChecker(versionsRepository.getInitialVersion(LibraryType.JDA), RepoType.MAVEN)
+        MavenVersionChecker(mavenCentralClient, versionsRepository.getInitialVersion(LibraryType.JDA))
     val latestJDAVersion: ArtifactInfo
         get() = jdaChecker.latest.artifactInfo
 
     private val jdaKtxChecker: MavenVersionChecker =
-        MavenVersionChecker(versionsRepository.getInitialVersion(LibraryType.JDA_KTX), RepoType.MAVEN)
+        MavenVersionChecker(mavenCentralClient, versionsRepository.getInitialVersion(LibraryType.JDA_KTX))
     val latestJDAKtxVersion: ArtifactInfo
         get() = jdaKtxChecker.latest.artifactInfo
 
     private val lavaPlayerChecker: MavenVersionChecker =
-        MavenVersionChecker(versionsRepository.getInitialVersion(LibraryType.LAVA_PLAYER), RepoType.MAVEN)
+        MavenVersionChecker(mavenCentralClient, versionsRepository.getInitialVersion(LibraryType.LAVA_PLAYER))
     val latestLavaPlayerVersion: ArtifactInfo
         get() = lavaPlayerChecker.latest.artifactInfo
 

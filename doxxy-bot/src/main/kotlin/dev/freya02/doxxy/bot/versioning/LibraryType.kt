@@ -1,13 +1,12 @@
 package dev.freya02.doxxy.bot.versioning
 
 import dev.freya02.doxxy.bot.utils.Utils.isBCGuild
-import dev.freya02.doxxy.bot.versioning.maven.RepoType
 import net.dv8tion.jda.api.entities.Guild
 
 enum class LibraryType(
     val displayString: String,
     val githubOwnerName: String, val githubRepoName: String,
-    val repoType: RepoType = RepoType.MAVEN, val mavenGroupId: String, val mavenArtifactId: String
+    val mavenGroupId: String, val mavenArtifactId: String
 ) {
     JDA(
         displayString = "JDA",

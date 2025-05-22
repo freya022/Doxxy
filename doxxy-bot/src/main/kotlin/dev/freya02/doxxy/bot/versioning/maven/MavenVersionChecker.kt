@@ -4,10 +4,10 @@ import dev.freya02.doxxy.bot.versioning.LibraryVersion
 import dev.freya02.doxxy.bot.versioning.VersionChecker
 
 class MavenVersionChecker(
+    private val repositoryClient: MavenRepositoryClient,
     latest: LibraryVersion,
-    private val repoType: RepoType,
 ) : VersionChecker(latest) {
     override suspend fun retrieveLatest(): LibraryVersion {
-        return latest.copy(version = MavenUtils.getLatestStableMavenVersion(repoType, latest.groupId, latest.artifactId))
+        return latest.copy(version = repositoryClient.getLatestStableMavenVersion(latest.groupId, latest.artifactId))
     }
 }
