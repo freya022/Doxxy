@@ -102,6 +102,7 @@ class SlashInfo(private val context: BContext) : ApplicationCommand() {
                 field {
                     name = "Memory usage"
 
+                    System.gc()
                     val heapMemoryUsage = ManagementFactory.getMemoryMXBean().heapMemoryUsage
                     value = "%.2f / %d MB".format(heapMemoryUsage.used / 1024.0 / 1024.0, (heapMemoryUsage.max / 1024.0 / 1024.0).toInt())
                 }
