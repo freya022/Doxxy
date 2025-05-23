@@ -34,6 +34,7 @@ object Main {
             } else if ("--no-decoroutinator" in args) {
                 logger.info { "Skipping stacktrace-decoroutinator as --no-decoroutinator is specified" }
             } else {
+                logger.info { "Installing stacktrace-decoroutinator" }
                 DecoroutinatorJvmApi.install()
             }
 
@@ -47,7 +48,7 @@ object Main {
                     queryLogThreshold = 500.milliseconds
                 }
 
-                addPredefinedOwners(*config.ownerIds.toLongArray())
+                addPredefinedOwners(config.ownerIds)
 
                 addSearchPath("dev.freya02.doxxy.bot")
 
@@ -75,7 +76,7 @@ object Main {
                 }
             }
 
-            logger.info { "Loaded commands" }
+            logger.info { "Finished loading" }
         } catch (e: Exception) {
             logger.error(e) { "Unable to start the bot" }
             exitProcess(-1)
