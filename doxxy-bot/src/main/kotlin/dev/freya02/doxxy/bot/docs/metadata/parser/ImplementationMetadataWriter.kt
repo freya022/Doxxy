@@ -8,7 +8,10 @@ import io.github.freya022.botcommands.api.core.db.Transaction
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.intellij.lang.annotations.Language
+import org.postgresql.copy.CopyManager
+import org.postgresql.core.BaseConnection
 import org.slf4j.profiler.Profiler
+import java.sql.Connection
 
 internal class ImplementationMetadataWriter private constructor(
     private val sourceType: DocSourceType,
@@ -16,7 +19,7 @@ internal class ImplementationMetadataWriter private constructor(
     private val sourceMetadata: SourceMetadata
 ) {
     context(transaction: Transaction, profiler: Profiler)
-    private suspend fun reindex() {
+    private suspend fun reindex() = withContext(Dispatchers.IO) {
         @Language("PostgreSQL")
         val deleteStatements = listOf(
             "delete from implementation where (select source_id from class where id = class_id) = ?",
@@ -59,22 +62,35 @@ internal class ImplementationMetadataWriter private constructor(
 
     context(transaction: Transaction)
     private suspend fun addClasses(classes: Collection<ImplementationMetadata.Class>): Map<ImplementationMetadata.Class, Int> {
-        return classes.associateWith {
-            transaction.preparedStatement(
-                """
-                    insert into class (source_id, class_type, package_name, class_name, source_link)
-                    values (?, ?, ?, ?, ?)
-                    returning id
-                """.trimIndent()
-            ) {
-                executeQuery(sourceType.id, it.classType.id, it.packageName, it.name, reindexData.getClassSourceUrl(it))
-                    .read().getInt(1)
+        return transaction.preparedStatement(
+            """
+                insert into class (source_id, class_type, package_name, class_name, source_link)
+                values (?, ?, ?, ?, ?)
+                returning id
+            """.trimIndent(),
+            columnNames = arrayOf("id")
+        ) {
+            classes.forEach {
+                setParameters(arrayOf<Any?>(
+                    sourceType.id,
+                    it.classType.id,
+                    it.packageName,
+                    it.name,
+                    reindexData.getClassSourceUrl(it)
+                ))
+
+                addBatch()
             }
+
+            executeBatch_()
+
+            val generatedKeys = generatedKeys
+            classes.associateWith { generatedKeys.read().getInt(1) }
         }
     }
 
     context(transaction: Transaction)
-    private suspend fun addSubclasses(
+    private fun addSubclasses(
         classes: Collection<ImplementationMetadata.Class>,
         dbClasses: Map<ImplementationMetadata.Class, Int>
     ) {
@@ -84,9 +100,7 @@ internal class ImplementationMetadataWriter private constructor(
             }
         }
 
-        withContext(Dispatchers.IO) {
-            transaction.connection.copyFrom("subclass", subclasses)
-        }
+        transaction.connection.copyFrom("subclass", subclasses)
     }
 
     context(transaction: Transaction)
@@ -94,29 +108,39 @@ internal class ImplementationMetadataWriter private constructor(
         classes: Collection<ImplementationMetadata.Class>,
         dbClasses: Map<ImplementationMetadata.Class, Int>
     ): Map<ImplementationMetadata.Method, Int> {
-        return classes.flatMap { it.declaredMethods.values }.associateWith { method ->
-            transaction.preparedStatement(
-                """
-                    insert into method (class_id, method_type, name, signature, source_link)
-                    values (?, ?, ?, ?, ?)
-                    returning id
-                """.trimIndent()
-            ) {
+        return transaction.preparedStatement(
+            """
+                insert into method (class_id, method_type, name, signature, source_link)
+                values (?, ?, ?, ?, ?)
+                returning id
+            """.trimIndent(),
+            columnNames = arrayOf("id")
+        ) {
+            val methods = classes.flatMap { it.declaredMethods.values }
+
+            methods.forEach { method ->
                 val methodSourceUrl = reindexData.getMethodSourceUrl(method)
 
-                executeQuery(
+                setParameters(arrayOf<Any?>(
                     dbClasses[method.owner],
                     method.type.id,
                     method.name,
                     method.signature,
                     methodSourceUrl
-                ).read().getInt(1)
+                ))
+
+                addBatch()
             }
+
+            executeBatch_()
+
+            val generatedKeys = generatedKeys
+            methods.associateWith { generatedKeys.read().getInt(1) }
         }
     }
 
     context(transaction: Transaction)
-    private suspend fun addImplementations(
+    private fun addImplementations(
         classes: Collection<ImplementationMetadata.Class>,
         dbClasses: Map<ImplementationMetadata.Class, Int>,
         dbMethods: Map<ImplementationMetadata.Method, Int>
@@ -143,9 +167,7 @@ internal class ImplementationMetadataWriter private constructor(
                 }
         }
 
-        withContext(Dispatchers.IO) {
-            transaction.connection.copyFrom("implementation", implementations)
-        }
+        transaction.connection.copyFrom("implementation", implementations)
     }
 
     companion object {
@@ -160,4 +182,12 @@ internal class ImplementationMetadataWriter private constructor(
             }
         }
     }
+}
+
+private fun Connection.copyFrom(
+    @Language("PostgreSQL", prefix = "copy ", suffix = " from stdin delimiter ','") table: String,
+    list: Collection<Collection<Any?>>,
+) {
+    CopyManager(unwrap(BaseConnection::class.java))
+        .copyIn("copy $table from stdin delimiter ','", list.joinToString("\n") { it.joinToString(",") }.byteInputStream())
 }

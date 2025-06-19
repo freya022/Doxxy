@@ -7,10 +7,6 @@ import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclar
 import com.github.javaparser.resolution.types.ResolvedPrimitiveType
 import com.github.javaparser.resolution.types.ResolvedReferenceType
 import io.github.oshai.kotlinlogging.KLogger
-import org.intellij.lang.annotations.Language
-import org.postgresql.copy.CopyManager
-import org.postgresql.core.BaseConnection
-import java.sql.Connection
 import java.util.*
 import kotlin.jvm.optionals.getOrNull
 
@@ -108,9 +104,4 @@ fun ResolvedReferenceTypeDeclaration.getAllAncestorsOptimized(cache: JavaParserC
         }
     }
     return ancestors
-}
-
-fun Connection.copyFrom(@Language("PostgreSQL", prefix = "copy ", suffix = " from stdin delimiter ','") table: String, list: Collection<Collection<Any?>>) {
-    CopyManager(unwrap(BaseConnection::class.java))
-        .copyIn("copy $table from stdin delimiter ','", list.joinToString("\n") { it.joinToString(",") }.byteInputStream())
 }
