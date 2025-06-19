@@ -20,6 +20,8 @@ class DatabaseSource(config: Config) : HikariSourceSupplier {
 
         maximumPoolSize = 2
         leakDetectionThreshold = 10.seconds.inWholeMilliseconds
+
+        addDataSourceProperty("reWriteBatchedInserts", true)
     })
 
     init {
