@@ -35,7 +35,14 @@ internal object DocUtils {
         append(method.methodName)
 
         append(method.parameters.joinToString(", ", "(", ")") { parameter ->
-            "${parameter.annotations.joinToString(" ")}${parameter.simpleType} ${parameter.name}"
+            val annotations = buildString {
+                val annotations = parameter.annotations
+                if (annotations.isNotEmpty()) {
+                    append(parameter.annotations.joinToString(" ") { "@$it" })
+                    append(" ")
+                }
+            }
+            "$annotations${parameter.simpleType} ${parameter.name}"
         })
 
         append(" : ")
