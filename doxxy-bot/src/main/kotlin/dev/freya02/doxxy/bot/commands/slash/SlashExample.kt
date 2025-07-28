@@ -1,5 +1,8 @@
 package dev.freya02.doxxy.bot.commands.slash
 
+import dev.freya02.botcommands.jda.ktx.messages.deleteDelayed
+import dev.freya02.botcommands.jda.ktx.messages.reply_
+import dev.freya02.botcommands.jda.ktx.messages.send
 import dev.freya02.doxxy.bot.examples.ExampleAPI
 import dev.freya02.doxxy.bot.examples.ExamplePaginatorFactory
 import dev.freya02.doxxy.bot.switches.RequiresBackend
@@ -8,8 +11,6 @@ import dev.freya02.doxxy.bot.utils.Utils.letIf
 import dev.freya02.doxxy.bot.utils.github.PullRequestCache
 import dev.freya02.doxxy.bot.utils.github.toAutocompleteChoices
 import dev.freya02.doxxy.github.client.GithubClient
-import dev.minn.jda.ktx.messages.reply_
-import dev.minn.jda.ktx.messages.send
 import io.github.freya022.botcommands.api.annotations.CommandMarker
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
@@ -20,7 +21,6 @@ import io.github.freya022.botcommands.api.commands.application.slash.annotations
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.SlashOption
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.annotations.CacheAutocomplete
-import io.github.freya022.botcommands.api.core.utils.deleteDelayed
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import kotlin.time.Duration.Companion.seconds

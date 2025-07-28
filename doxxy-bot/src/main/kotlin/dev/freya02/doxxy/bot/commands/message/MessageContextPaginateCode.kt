@@ -6,16 +6,18 @@ import com.github.javaparser.Range
 import com.github.javaparser.StaticJavaParser
 import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.expr.StringLiteralExpr
+import dev.freya02.botcommands.jda.ktx.components.asDisabled
+import dev.freya02.botcommands.jda.ktx.components.row
+import dev.freya02.botcommands.jda.ktx.messages.Embed
+import dev.freya02.botcommands.jda.ktx.messages.edit
+import dev.freya02.botcommands.jda.ktx.messages.send
+import dev.freya02.botcommands.jda.ktx.messages.suppressContentWarning
 import dev.freya02.doxxy.bot.format.Formatter
 import dev.freya02.doxxy.bot.pagination.CodePaginator
 import dev.freya02.doxxy.bot.pagination.CodePaginatorBuilder
 import dev.freya02.doxxy.bot.utils.ParsingUtils.codeBlockRegex
 import dev.freya02.doxxy.bot.utils.Utils.digitAmount
 import dev.freya02.doxxy.bot.utils.Utils.letIf
-import dev.minn.jda.ktx.interactions.components.asDisabled
-import dev.minn.jda.ktx.interactions.components.row
-import dev.minn.jda.ktx.messages.Embed
-import dev.minn.jda.ktx.messages.send
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
 import io.github.freya022.botcommands.api.commands.application.context.annotations.JDAMessageCommand
@@ -26,8 +28,6 @@ import io.github.freya022.botcommands.api.components.builder.IEphemeralActionabl
 import io.github.freya022.botcommands.api.components.data.InteractionConstraints
 import io.github.freya022.botcommands.api.components.event.ButtonEvent
 import io.github.freya022.botcommands.api.core.BContext
-import io.github.freya022.botcommands.api.core.utils.edit
-import io.github.freya022.botcommands.api.core.utils.suppressContentWarning
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.runBlocking
@@ -267,7 +267,7 @@ class MessageContextPaginateCode(
         try {
             if (!block(it, it.hook)) {
                 it.message.componentTree
-                    .replace(ComponentReplacer.byId(it.component, it.component.asDisabled()))
+                    .replace(ComponentReplacer.byUniqueId(it.component, it.component.asDisabled()))
                     .let { tree -> it.hook.editOriginalComponents(tree) }
                     .queue()
             }

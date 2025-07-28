@@ -1,14 +1,16 @@
 package dev.freya02.doxxy.bot.docs.mentions
 
+import dev.freya02.botcommands.jda.ktx.components.row
+import dev.freya02.botcommands.jda.ktx.messages.MessageCreate
+import dev.freya02.botcommands.jda.ktx.messages.edit
+import dev.freya02.botcommands.jda.ktx.messages.reply_
+import dev.freya02.botcommands.jda.ktx.messages.toEditData
 import dev.freya02.doxxy.bot.commands.controllers.CommonDocsController
 import dev.freya02.doxxy.bot.commands.slash.DeleteButtonListener.Companion.messageDelete
 import dev.freya02.doxxy.bot.docs.DocIndexMap
 import dev.freya02.doxxy.bot.docs.DocSourceType
 import dev.freya02.doxxy.bot.utils.ParsingUtils.codeBlockRegex
 import dev.freya02.doxxy.bot.utils.ParsingUtils.spaceRegex
-import dev.minn.jda.ktx.interactions.components.row
-import dev.minn.jda.ktx.messages.MessageCreate
-import dev.minn.jda.ktx.messages.reply_
 import io.github.freya022.botcommands.api.components.Buttons
 import io.github.freya022.botcommands.api.components.SelectMenus
 import io.github.freya022.botcommands.api.components.builder.select.ephemeral.EphemeralStringSelectBuilder
@@ -17,8 +19,6 @@ import io.github.freya022.botcommands.api.core.db.Database
 import io.github.freya022.botcommands.api.core.db.Transaction
 import io.github.freya022.botcommands.api.core.db.transactional
 import io.github.freya022.botcommands.api.core.service.annotations.BService
-import io.github.freya022.botcommands.api.core.utils.edit
-import io.github.freya022.botcommands.api.core.utils.toEditData
 import net.dv8tion.jda.api.components.selections.SelectMenu
 import net.dv8tion.jda.api.entities.Message.MentionType
 import net.dv8tion.jda.api.entities.UserSnowflake

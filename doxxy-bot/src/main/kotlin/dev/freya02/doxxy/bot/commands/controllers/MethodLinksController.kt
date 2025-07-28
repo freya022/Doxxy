@@ -1,5 +1,11 @@
 package dev.freya02.doxxy.bot.commands.controllers
 
+import dev.freya02.botcommands.jda.ktx.components.InlineActionRow
+import dev.freya02.botcommands.jda.ktx.components.row
+import dev.freya02.botcommands.jda.ktx.coroutines.await
+import dev.freya02.botcommands.jda.ktx.messages.MessageCreate
+import dev.freya02.botcommands.jda.ktx.messages.reply_
+import dev.freya02.botcommands.jda.ktx.messages.toEditData
 import dev.freya02.doxxy.bot.docs.DocIndexMap
 import dev.freya02.doxxy.bot.docs.cached.CachedMethod
 import dev.freya02.doxxy.bot.docs.index.DocIndex
@@ -7,11 +13,6 @@ import dev.freya02.doxxy.bot.docs.metadata.ImplementationIndex
 import dev.freya02.doxxy.bot.docs.metadata.MethodType
 import dev.freya02.doxxy.bot.docs.metadata.simpleQualifiedSignature
 import dev.freya02.doxxy.bot.utils.joinLengthyString
-import dev.minn.jda.ktx.coroutines.await
-import dev.minn.jda.ktx.interactions.components.InlineActionRow
-import dev.minn.jda.ktx.interactions.components.row
-import dev.minn.jda.ktx.messages.MessageCreate
-import dev.minn.jda.ktx.messages.reply_
 import io.github.freya022.botcommands.api.components.Buttons
 import io.github.freya022.botcommands.api.components.SelectMenus
 import io.github.freya022.botcommands.api.components.event.ButtonEvent
@@ -20,7 +21,6 @@ import io.github.freya022.botcommands.api.core.BContext
 import io.github.freya022.botcommands.api.core.service.ServiceContainer
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.freya022.botcommands.api.core.service.lazy
-import io.github.freya022.botcommands.api.core.utils.toEditData
 import io.github.oshai.kotlinlogging.KotlinLogging
 import net.dv8tion.jda.api.components.selections.SelectMenu
 import net.dv8tion.jda.api.entities.MessageEmbed

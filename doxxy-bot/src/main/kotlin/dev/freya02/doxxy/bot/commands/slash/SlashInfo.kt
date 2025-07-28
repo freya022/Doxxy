@@ -1,9 +1,9 @@
 package dev.freya02.doxxy.bot.commands.slash
 
+import dev.freya02.botcommands.jda.ktx.components.row
+import dev.freya02.botcommands.jda.ktx.coroutines.await
+import dev.freya02.botcommands.jda.ktx.messages.MessageCreate
 import dev.freya02.doxxy.bot.utils.UpdateCountdown
-import dev.minn.jda.ktx.coroutines.await
-import dev.minn.jda.ktx.interactions.components.row
-import dev.minn.jda.ktx.messages.MessageCreate
 import io.github.freya022.botcommands.api.BCInfo
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommand

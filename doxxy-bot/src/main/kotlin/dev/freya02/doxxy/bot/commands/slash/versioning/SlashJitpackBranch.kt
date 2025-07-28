@@ -1,5 +1,9 @@
 package dev.freya02.doxxy.bot.commands.slash.versioning
 
+import dev.freya02.botcommands.jda.ktx.components.ActionRow
+import dev.freya02.botcommands.jda.ktx.components.Container
+import dev.freya02.botcommands.jda.ktx.components.TextDisplay
+import dev.freya02.botcommands.jda.ktx.messages.reply_
 import dev.freya02.doxxy.bot.commands.slash.DeleteButtonListener.Companion.messageDelete
 import dev.freya02.doxxy.bot.versioning.ArtifactInfo
 import dev.freya02.doxxy.bot.versioning.LibraryType
@@ -9,15 +13,11 @@ import dev.freya02.doxxy.bot.versioning.jitpack.pullupdater.UpdatedBranch
 import dev.freya02.doxxy.bot.versioning.supplier.BuildToolType
 import dev.freya02.doxxy.bot.versioning.supplier.DependencySupplier
 import dev.freya02.doxxy.github.client.data.Branches
-import dev.minn.jda.ktx.interactions.components.ActionRow
-import dev.minn.jda.ktx.interactions.components.Container
-import dev.minn.jda.ktx.interactions.components.TextDisplay
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.AutocompleteAlgorithms
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
 import io.github.freya022.botcommands.api.components.Buttons
 import io.github.freya022.botcommands.api.core.annotations.Handler
-import io.github.freya022.botcommands.api.core.utils.reply
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
@@ -90,7 +90,7 @@ class SlashJitpackBranch(
             )
         }
 
-        event.reply {
+        event.reply_(useComponentsV2 = true) {
             components += Container {
                 +TextDisplay("### [${buildToolType.humanName} dependencies for ${libraryType.displayString} @ branch '$branchName'](${branch.toUrl(libraryType)})")
                 +TextDisplay(when (buildToolType) {
@@ -103,8 +103,6 @@ class SlashJitpackBranch(
             components += ActionRow {
                 +buttons.messageDelete(event.user)
             }
-
-            useComponentsV2 = true
         }.queue()
     }
 

@@ -1,5 +1,8 @@
 package dev.freya02.doxxy.bot.commands.slash.versioning
 
+import dev.freya02.botcommands.jda.ktx.components.*
+import dev.freya02.botcommands.jda.ktx.messages.*
+import dev.freya02.botcommands.jda.ktx.requests.queueIgnoring
 import dev.freya02.doxxy.bot.commands.slash.DeleteButtonListener.Companion.messageDelete
 import dev.freya02.doxxy.bot.utils.AppEmojis
 import dev.freya02.doxxy.bot.utils.github.toAutocompleteChoices
@@ -16,18 +19,11 @@ import dev.freya02.doxxy.github.client.data.Branch
 import dev.freya02.doxxy.github.client.data.CommitComparisons
 import dev.freya02.doxxy.github.client.data.PullRequest
 import dev.freya02.jda.emojis.unicode.Emojis
-import dev.minn.jda.ktx.interactions.components.*
-import dev.minn.jda.ktx.messages.MessageCreate
-import dev.minn.jda.ktx.messages.reply_
-import dev.minn.jda.ktx.messages.send
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
 import io.github.freya022.botcommands.api.components.Buttons
 import io.github.freya022.botcommands.api.components.event.ButtonEvent
 import io.github.freya022.botcommands.api.core.annotations.Handler
-import io.github.freya022.botcommands.api.core.utils.edit
-import io.github.freya022.botcommands.api.core.utils.queueIgnoring
-import io.github.freya022.botcommands.api.core.utils.toEditData
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.Interaction
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
@@ -83,7 +79,7 @@ class SlashJitpackPr(
             )
         }
 
-        return MessageCreate {
+        return MessageCreate(useComponentsV2 = true) {
             components += Container {
                 +TextDisplay("### [${buildToolType.humanName} dependencies for ${libraryType.displayString}: ${pullRequest.title} (#${pullRequest.number})](${pullRequest.pullUrl})")
                 +TextDisplay(when (buildToolType) {
@@ -100,12 +96,10 @@ class SlashJitpackPr(
             }
 
             components += ActionRow {
-                +link("https://jda.wiki/using-jda/using-new-features/", "How? (Wiki)", Emojis.FACE_WITH_MONOCLE)
+                link("https://jda.wiki/using-jda/using-new-features/", "How? (Wiki)", Emojis.FACE_WITH_MONOCLE)
 
                 +buttons.messageDelete(interaction.user)
             }
-
-            useComponentsV2 = true
         }
     }
 
@@ -124,14 +118,15 @@ class SlashJitpackPr(
         val branchStatus = "${AppEmojis.changesPush.formatted} ${commitComparisons.aheadBy} commits ahead, ${AppEmojis.changesUpdate.formatted} ${commitComparisons.behindBy} commits $behindText"
 
         if (jitpackPrService.canUsePullUpdate(libraryType)) {
-            val updateButton = when (updating) {
-                true -> primary(id = "fake", label = "Updating...", emoji = AppEmojis.sync, disabled = true)
-                false -> buttons.primary(label = "Update PR", emoji = AppEmojis.sync).ephemeral {
+            val updateButton = when {
+                updating -> buttons.primary("Updating...", AppEmojis.sync).toLabelButton()
+                pullRequest.mergeable != true || commitComparisons.behindBy == 0 -> buttons.primary(label = "Update PR", emoji = AppEmojis.sync).toLabelButton()
+                else -> buttons.primary(label = "Update PR", emoji = AppEmojis.sync).ephemeral {
                     timeout(1.hours)
                     bindTo {
                         onUpdatePrClick(it, targetBranch, additionalDetails)
                     }
-                }.withDisabled(disabled = pullRequest.mergeable != true || commitComparisons.behindBy == 0)
+                }
             }
 
             +Section(accessory = updateButton) {

@@ -1,8 +1,8 @@
 package dev.freya02.doxxy.bot.commands.slash
 
+import dev.freya02.botcommands.jda.ktx.messages.reply_
 import dev.freya02.doxxy.bot.format.Formatter
 import dev.freya02.doxxy.bot.format.FormattingException
-import dev.minn.jda.ktx.messages.reply_
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
 import io.github.freya022.botcommands.api.commands.application.CommandScope

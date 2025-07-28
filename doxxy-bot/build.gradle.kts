@@ -19,7 +19,7 @@ dependencies {
 
     implementation(libs.jda)
     implementation(libs.botcommands)
-    implementation(libs.jda.ktx)
+    implementation(libs.botcommands.jda.ktx)
 
     implementation(libs.postgresql)
     implementation(libs.hikaricp)

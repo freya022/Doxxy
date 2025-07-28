@@ -2,7 +2,7 @@ package dev.freya02.doxxy.bot.commands.slash
 
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.LoggerContext
-import dev.minn.jda.ktx.messages.reply_
+import dev.freya02.botcommands.jda.ktx.messages.reply_
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
 import io.github.freya022.botcommands.api.commands.application.CommandScope

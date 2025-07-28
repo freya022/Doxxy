@@ -1,5 +1,9 @@
 package dev.freya02.doxxy.bot.commands.controllers
 
+import dev.freya02.botcommands.jda.ktx.components.ActionRow
+import dev.freya02.botcommands.jda.ktx.components.SelectOption
+import dev.freya02.botcommands.jda.ktx.messages.Embed
+import dev.freya02.botcommands.jda.ktx.messages.InlineEmbed
 import dev.freya02.doxxy.bot.commands.slash.DeleteButtonListener.Companion.messageDelete
 import dev.freya02.doxxy.bot.commands.slash.docs.CommonDocsHandlers
 import dev.freya02.doxxy.bot.config.BackendConfig
@@ -13,10 +17,6 @@ import dev.freya02.doxxy.bot.docs.index.DocSuggestion
 import dev.freya02.doxxy.bot.examples.ExampleAPI
 import dev.freya02.doxxy.bot.utils.joinLengthyString
 import dev.freya02.doxxy.docs.sections.SeeAlso.TargetType
-import dev.minn.jda.ktx.interactions.components.ActionRow
-import dev.minn.jda.ktx.interactions.components.SelectOption
-import dev.minn.jda.ktx.messages.Embed
-import dev.minn.jda.ktx.messages.InlineEmbed
 import io.github.freya022.botcommands.api.components.Buttons
 import io.github.freya022.botcommands.api.components.SelectMenus
 import io.github.freya022.botcommands.api.components.builder.bindWith

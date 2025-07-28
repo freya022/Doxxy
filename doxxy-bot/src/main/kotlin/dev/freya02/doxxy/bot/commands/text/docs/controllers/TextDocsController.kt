@@ -1,13 +1,13 @@
 package dev.freya02.doxxy.bot.commands.text.docs.controllers
 
+import dev.freya02.botcommands.jda.ktx.messages.edit
+import dev.freya02.botcommands.jda.ktx.messages.reply_
+import dev.freya02.botcommands.jda.ktx.messages.toEditData
 import dev.freya02.doxxy.bot.commands.controllers.CommonDocsController
 import dev.freya02.doxxy.bot.docs.index.DocIndex
 import dev.freya02.doxxy.bot.docs.index.DocSuggestion
-import dev.minn.jda.ktx.messages.reply_
 import io.github.freya022.botcommands.api.components.event.ButtonEvent
 import io.github.freya022.botcommands.api.core.service.annotations.BService
-import io.github.freya022.botcommands.api.core.utils.edit
-import io.github.freya022.botcommands.api.core.utils.toEditData
 import io.github.freya022.botcommands.api.pagination.menu.buttonized.ButtonMenu
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.exceptions.ErrorHandler

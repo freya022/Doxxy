@@ -1,5 +1,7 @@
 package dev.freya02.doxxy.bot.commands.slash.versioning
 
+import dev.freya02.botcommands.jda.ktx.messages.MessageCreate
+import dev.freya02.botcommands.jda.ktx.messages.reply_
 import dev.freya02.doxxy.bot.commands.slash.DeleteButtonListener.Companion.messageDelete
 import dev.freya02.doxxy.bot.commands.slash.SlashLogback
 import dev.freya02.doxxy.bot.versioning.LibraryType
@@ -9,8 +11,6 @@ import dev.freya02.doxxy.bot.versioning.supplier.BuildToolType
 import dev.freya02.doxxy.bot.versioning.supplier.DependencySupplier
 import dev.freya02.doxxy.bot.versioning.supplier.GradleFlavor
 import dev.freya02.doxxy.bot.versioning.supplier.UnsupportedDependencyException
-import dev.minn.jda.ktx.messages.MessageCreate
-import dev.minn.jda.ktx.messages.reply_
 import io.github.freya022.botcommands.api.annotations.CommandMarker
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandManager

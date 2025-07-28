@@ -1,5 +1,6 @@
 package dev.freya02.doxxy.bot.docs
 
+import dev.freya02.botcommands.jda.ktx.messages.InlineEmbed
 import dev.freya02.doxxy.bot.docs.render.toMarkdown
 import dev.freya02.doxxy.bot.utils.HttpUtils.doesStartByLocalhost
 import dev.freya02.doxxy.docs.declarations.AbstractJavadoc
@@ -9,7 +10,6 @@ import dev.freya02.doxxy.docs.declarations.JavadocMethod
 import dev.freya02.doxxy.docs.sections.DocDetail
 import dev.freya02.doxxy.docs.sections.SeeAlso
 import dev.freya02.doxxy.docs.sections.SeeAlso.SeeAlsoReference
-import dev.minn.jda.ktx.messages.InlineEmbed
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.MessageEmbed
 import java.util.*

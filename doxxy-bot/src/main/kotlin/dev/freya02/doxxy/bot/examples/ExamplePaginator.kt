@@ -1,15 +1,15 @@
 package dev.freya02.doxxy.bot.examples
 
+import dev.freya02.botcommands.jda.ktx.components.SelectOption
+import dev.freya02.botcommands.jda.ktx.components.into
+import dev.freya02.botcommands.jda.ktx.coroutines.await
+import dev.freya02.botcommands.jda.ktx.messages.MessageCreate
+import dev.freya02.botcommands.jda.ktx.messages.toEditData
 import dev.freya02.doxxy.bot.commands.slash.DeleteButtonListener.Companion.messageDelete
 import dev.freya02.doxxy.common.dto.ExampleDTO.ExampleContentDTO.ExampleContentPartDTO
-import dev.minn.jda.ktx.coroutines.await
-import dev.minn.jda.ktx.interactions.components.SelectOption
-import dev.minn.jda.ktx.messages.MessageCreate
-import dev.minn.jda.ktx.messages.into
 import io.github.freya022.botcommands.api.components.Buttons
 import io.github.freya022.botcommands.api.components.SelectMenus
 import io.github.freya022.botcommands.api.core.service.annotations.BService
-import io.github.freya022.botcommands.api.core.utils.toEditData
 import io.github.freya022.botcommands.api.utils.EmojiUtils
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.entities.emoji.Emoji

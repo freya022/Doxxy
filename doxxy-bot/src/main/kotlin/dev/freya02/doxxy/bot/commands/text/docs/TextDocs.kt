@@ -1,5 +1,6 @@
 package dev.freya02.doxxy.bot.commands.text.docs
 
+import dev.freya02.botcommands.jda.ktx.messages.send
 import dev.freya02.doxxy.bot.commands.controllers.CommonDocsController
 import dev.freya02.doxxy.bot.commands.text.docs.controllers.TextDocsController
 import dev.freya02.doxxy.bot.docs.DocIndexMap
@@ -12,7 +13,6 @@ import io.github.freya022.botcommands.api.commands.text.BaseCommandEvent
 import io.github.freya022.botcommands.api.commands.text.TextCommand
 import io.github.freya022.botcommands.api.commands.text.annotations.JDATextCommandVariation
 import io.github.freya022.botcommands.api.commands.text.annotations.TextOption
-import io.github.freya022.botcommands.api.core.utils.send
 
 @Command
 class TextDocs(

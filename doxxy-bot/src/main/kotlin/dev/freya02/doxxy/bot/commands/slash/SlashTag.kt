@@ -1,13 +1,11 @@
 package dev.freya02.doxxy.bot.commands.slash
 
+import dev.freya02.botcommands.jda.ktx.components.row
+import dev.freya02.botcommands.jda.ktx.coroutines.await
+import dev.freya02.botcommands.jda.ktx.messages.*
 import dev.freya02.doxxy.bot.commands.filters.decl.NotJDACommandDeclarationFilter
 import dev.freya02.doxxy.bot.tag.*
 import dev.freya02.doxxy.bot.utils.isUniqueViolation
-import dev.minn.jda.ktx.coroutines.await
-import dev.minn.jda.ktx.interactions.components.row
-import dev.minn.jda.ktx.messages.Embed
-import dev.minn.jda.ktx.messages.InlineEmbed
-import dev.minn.jda.ktx.messages.reply_
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
 import io.github.freya022.botcommands.api.commands.application.CommandScope
@@ -22,8 +20,6 @@ import io.github.freya022.botcommands.api.components.Buttons
 import io.github.freya022.botcommands.api.components.Components
 import io.github.freya022.botcommands.api.components.data.InteractionConstraints
 import io.github.freya022.botcommands.api.components.event.ButtonEvent
-import io.github.freya022.botcommands.api.core.utils.deleteDelayed
-import io.github.freya022.botcommands.api.core.utils.send
 import io.github.freya022.botcommands.api.modals.*
 import io.github.freya022.botcommands.api.modals.annotations.ModalData
 import io.github.freya022.botcommands.api.modals.annotations.ModalHandler
@@ -338,10 +334,8 @@ class SlashTag(
                 field("Uses", tag.uses.toString(), true)
                 field("Rank", tagDB.getRank(event.guild.idLong, tagName).toString(), true)
 
-                footer {
-                    name = "Created on"
-                    timestamp = tag.createdAt
-                }
+                footer(name = "Created on")
+                timestamp = tag.createdAt
             }
 
             event.hook.sendMessageEmbeds(embed).setEphemeral(true).queue()
