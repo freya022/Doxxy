@@ -50,7 +50,7 @@ class Versions(
         DependencyVersionChecker(
             versionsRepository.getInitialVersion(LibraryType.JDA, "freya022-botcommands-release"),
             targetArtifactId = "JDA"
-        ) { bcChecker.latest.artifactInfo.toMavenUrl(FileType.POM) }
+        ) { bcChecker.latest.artifactInfo.copy(artifactId = "BotCommands-core").toMavenUrl(FileType.POM) }
     val jdaVersionFromBotCommands: ArtifactInfo
         get() = bcJdaVersionChecker.latest.artifactInfo
 
