@@ -23,7 +23,8 @@ dependencies {
 
     implementation(libs.postgresql)
     implementation(libs.hikaricp)
-    implementation(libs.bundles.flyway)
+    implementation(libs.flyway.core)
+    runtimeOnly(libs.flyway.database.postgresql)
 
     implementation(libs.kotlinx.serialization.json)
 
@@ -48,7 +49,7 @@ dependencies {
     testImplementation(libs.javassist)
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.mockk)
-    testImplementation(libs.bytebuddy)
+    runtimeOnly(libs.bytebuddy)
 }
 
 jib {

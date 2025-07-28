@@ -21,7 +21,7 @@ dependencies {
 
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.mockk)
-    testImplementation(libs.bytebuddy)
+    testRuntimeOnly(libs.bytebuddy)
 
     testImplementation(libs.bundles.slf4j)
     testImplementation(libs.logback.classic)

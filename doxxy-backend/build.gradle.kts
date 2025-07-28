@@ -12,8 +12,9 @@ plugins {
 dependencies {
     implementation(projects.doxxy.doxxyCommons)
 
-    implementation(libs.postgresql)
-    implementation(libs.bundles.flyway)
+    runtimeOnly(libs.postgresql)
+    implementation(libs.flyway.core)
+    runtimeOnly(libs.flyway.database.postgresql)
 
     implementation(libs.kotlin.reflect) // Spring depends on it
     implementation(libs.kotlinx.serialization.json)

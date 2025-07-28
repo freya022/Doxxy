@@ -84,4 +84,3 @@ bytebuddy = { module = "net.bytebuddy:byte-buddy", version.ref = "bytebuddy" }
 
 [bundles]
 slf4j = ["slf4j-api", "slf4j-ext"]
-flyway = ["flyway-core", "flyway-database-postgresql"]
