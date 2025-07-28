@@ -8,7 +8,6 @@ import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.expr.StringLiteralExpr
 import dev.freya02.botcommands.jda.ktx.components.asDisabled
 import dev.freya02.botcommands.jda.ktx.components.row
-import dev.freya02.botcommands.jda.ktx.messages.Embed
 import dev.freya02.botcommands.jda.ktx.messages.edit
 import dev.freya02.botcommands.jda.ktx.messages.send
 import dev.freya02.botcommands.jda.ktx.messages.suppressContentWarning
@@ -39,8 +38,6 @@ import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 import kotlin.reflect.KMutableProperty0
 import kotlin.time.Duration.Companion.minutes
-
-private typealias MessageId = Long
 
 private val logger = KotlinLogging.logger { }
 private const val CODE_BLOCK_LENGTH = "```java\n```".length
@@ -159,21 +156,19 @@ class MessageContextPaginateCode(
         private fun tryParseCode(content: String): Node {
             return try {
                 StaticJavaParser.parseBlock("""{ $content }""")
-            } catch (e: ParseProblemException) {
+            } catch (_: ParseProblemException) {
                 try {
                     StaticJavaParser.parseBodyDeclaration("""class X { $content }""")
-                } catch (e: ParseProblemException) {
+                } catch (_: ParseProblemException) {
                     try {
                         StaticJavaParser.parseBodyDeclaration(content)
-                    } catch (e: ParseProblemException) {
+                    } catch (_: ParseProblemException) {
                         StaticJavaParser.parseBodyDeclaration("""$content }""") //Missing curly bracket
                     }
                 }
             }
         }
     }
-
-    private val emptyEmbed = Embed { description = "dummy" }
 
     @JDAMessageCommand(name = "Paginate code")
     suspend fun onMessageContextPaginateCode(event: GuildMessageEvent) {

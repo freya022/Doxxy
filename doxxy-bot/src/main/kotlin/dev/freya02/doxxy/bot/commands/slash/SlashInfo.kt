@@ -1,6 +1,5 @@
 package dev.freya02.doxxy.bot.commands.slash
 
-import dev.freya02.botcommands.jda.ktx.components.row
 import dev.freya02.botcommands.jda.ktx.coroutines.await
 import dev.freya02.botcommands.jda.ktx.messages.MessageCreate
 import dev.freya02.doxxy.bot.utils.UpdateCountdown
@@ -11,7 +10,6 @@ import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashE
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.JDASlashCommand
 import io.github.freya022.botcommands.api.core.BContext
 import net.dv8tion.jda.api.JDAInfo
-import net.dv8tion.jda.api.components.buttons.Button
 import net.dv8tion.jda.api.requests.RestAction
 import net.dv8tion.jda.api.utils.TimeFormat
 import java.lang.management.ManagementFactory
@@ -108,7 +106,9 @@ class SlashInfo(private val context: BContext) : ApplicationCommand() {
                 }
             }
 
-            components += row(Button.link("https://github.com/freya022/Doxxy", "Source"))
+            actionRow {
+                link("https://github.com/freya022/Doxxy", "Source")
+            }
         }).queue()
     }
 

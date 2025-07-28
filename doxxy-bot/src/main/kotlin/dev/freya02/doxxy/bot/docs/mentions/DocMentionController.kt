@@ -1,6 +1,5 @@
 package dev.freya02.doxxy.bot.docs.mentions
 
-import dev.freya02.botcommands.jda.ktx.components.row
 import dev.freya02.botcommands.jda.ktx.messages.MessageCreate
 import dev.freya02.botcommands.jda.ktx.messages.edit
 import dev.freya02.botcommands.jda.ktx.messages.reply_
@@ -94,19 +93,17 @@ class DocMentionController(
         timeoutCallback: suspend () -> Unit
     ): MessageCreateData {
         return MessageCreate {
-            val docsMenu = selectMenus.stringSelectMenu().ephemeral {
-                placeholder = "Select a doc"
-                addMatchOptions(docMatches)
+            actionRow {
+                +selectMenus.stringSelectMenu().ephemeral {
+                    placeholder = "Select a doc"
+                    addMatchOptions(docMatches)
 
-                constraints += caller
-                timeout(1.minutes, timeoutCallback)
-                bindTo { selectEvent -> onSelectedDoc(selectEvent) }
+                    constraints += caller
+                    timeout(1.minutes, timeoutCallback)
+                    bindTo { selectEvent -> onSelectedDoc(selectEvent) }
+                }
             }
-
-            val deleteButton = buttons.messageDelete(caller)
-
-            components += row(docsMenu)
-            components += row(deleteButton)
+            actionRow(buttons.messageDelete(caller))
 
             content = "${caller.asMention} This message will be deleted in a minute"
             allowedMentionTypes = EnumSet.noneOf(MentionType::class.java) //No mentions

@@ -1,8 +1,5 @@
 package dev.freya02.doxxy.bot.commands.slash.versioning
 
-import dev.freya02.botcommands.jda.ktx.components.ActionRow
-import dev.freya02.botcommands.jda.ktx.components.Container
-import dev.freya02.botcommands.jda.ktx.components.TextDisplay
 import dev.freya02.botcommands.jda.ktx.messages.reply_
 import dev.freya02.doxxy.bot.commands.slash.DeleteButtonListener.Companion.messageDelete
 import dev.freya02.doxxy.bot.versioning.ArtifactInfo
@@ -60,10 +57,8 @@ class SlashJitpackBranch(
     }
 
     suspend fun onSlashJitpackBranch(event: GuildSlashEvent, libraryType: LibraryType, buildToolType: BuildToolType, branchName: String?) {
-        val branch = jitpackBranchService.getBranch(libraryType, branchName) ?: run {
-            event.reply("Unknown branch '$branchName'").setEphemeral(true).queue()
-            return
-        }
+        val branch = jitpackBranchService.getBranch(libraryType, branchName)
+            ?: return event.reply_("Unknown branch '$branchName'", ephemeral = true).queue()
 
         onSlashJitpackBranchImpl(event, libraryType, buildToolType, branch)
     }
@@ -91,16 +86,16 @@ class SlashJitpackBranch(
         }
 
         event.reply_(useComponentsV2 = true) {
-            components += Container {
-                +TextDisplay("### [${buildToolType.humanName} dependencies for ${libraryType.displayString} @ branch '$branchName'](${branch.toUrl(libraryType)})")
-                +TextDisplay(when (buildToolType) {
+            container {
+                textDisplay("### [${buildToolType.humanName} dependencies for ${libraryType.displayString} @ branch '$branchName'](${branch.toUrl(libraryType)})")
+                textDisplay(when (buildToolType) {
                     BuildToolType.MAVEN -> "```xml\n$dependencyStr```"
                     BuildToolType.GRADLE, BuildToolType.GRADLE_KTS -> "```gradle\n$dependencyStr```"
                 })
-                +TextDisplay("-# *Remember to remove your existing dependency before adding this*")
+                textDisplay("-# *Remember to remove your existing dependency before adding this*")
             }
 
-            components += ActionRow {
+            actionRow {
                 +buttons.messageDelete(event.user)
             }
         }.queue()

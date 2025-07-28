@@ -1,7 +1,7 @@
 package dev.freya02.doxxy.bot.commands.controllers
 
 import dev.freya02.botcommands.jda.ktx.components.InlineActionRow
-import dev.freya02.botcommands.jda.ktx.components.row
+import dev.freya02.botcommands.jda.ktx.components.into
 import dev.freya02.botcommands.jda.ktx.messages.MessageCreate
 import dev.freya02.botcommands.jda.ktx.messages.reply_
 import dev.freya02.botcommands.jda.ktx.messages.toEditData
@@ -40,28 +40,29 @@ class ClassLinksController(
     private val logger = KotlinLogging.logger { }
     private val commonDocsController: CommonDocsController by serviceContainer.lazy()
 
+    // TODO: the data fetching should be done in some kind of DeclarationLinkService
+    //  then create an extension:
+    //  context(linkService: DeclarationLinkService)
+    //  suspend fun InlineActionRow.addCachedClassComponents(cachedClass: CachedClass, originalHook: InteractionHook?, caller: UserSnowflake)
     suspend fun InlineActionRow.addCachedClassComponents(cachedDoc: CachedClass, originalHook: InteractionHook?, caller: UserSnowflake) {
         val index = docIndexMap[cachedDoc.source]
         val clazz = index.implementationIndex.getClass(cachedDoc.name)
+            ?: return logger.trace { "Found no metadata for ${cachedDoc.name}" }
 
-        if (clazz != null) {
-            if (cachedDoc.subclasses.isNotEmpty()) {
-                val decorations = clazz.classType.subDecorations
-                +buttons.secondary(decorations.getLabel(context), decorations.emoji).ephemeral {
-                    timeout(5.minutes)
-                    bindTo { sendClassLinks(it, originalHook, caller, index, clazz, clazz.getSubclasses(), decorations) }
-                }
+        if (cachedDoc.subclasses.isNotEmpty()) {
+            val decorations = clazz.classType.subDecorations
+            +buttons.secondary(decorations.getLabel(context), decorations.emoji).ephemeral {
+                timeout(5.minutes)
+                bindTo { sendClassLinks(it, originalHook, caller, index, clazz, clazz.getSubclasses(), decorations) }
             }
+        }
 
-            if (cachedDoc.superclasses.isNotEmpty()) {
-                val decorations = clazz.classType.superDecorations
-                +buttons.secondary(decorations.getLabel(context), decorations.emoji).ephemeral {
-                    timeout(5.minutes)
-                    bindTo { sendClassLinks(it, originalHook, caller, index, clazz, clazz.getSuperclasses(), decorations) }
-                }
+        if (cachedDoc.superclasses.isNotEmpty()) {
+            val decorations = clazz.classType.superDecorations
+            +buttons.secondary(decorations.getLabel(context), decorations.emoji).ephemeral {
+                timeout(5.minutes)
+                bindTo { sendClassLinks(it, originalHook, caller, index, clazz, clazz.getSuperclasses(), decorations) }
             }
-        } else {
-            logger.trace { "Found no metadata for ${cachedDoc.name}" }
         }
     }
 
@@ -90,10 +91,10 @@ class ClassLinksController(
             }
 
             if (apiClasses.isNotEmpty()) {
-                components += apiClasses.take(SelectMenu.OPTIONS_MAX_AMOUNT * 5)
+                apiClasses.take(SelectMenu.OPTIONS_MAX_AMOUNT * 5)
                     .chunked(SelectMenu.OPTIONS_MAX_AMOUNT)
-                    .map { superclassesChunk ->
-                        row(selectMenus.stringSelectMenu().ephemeral {
+                    .forEach { superclassesChunk ->
+                        components += selectMenus.stringSelectMenu().ephemeral {
                             if (originalHook != null) {
                                 timeout(originalHook.expirationTimestamp - System.currentTimeMillis(), TimeUnit.MILLISECONDS)
                             } else {
@@ -115,7 +116,7 @@ class ClassLinksController(
                             superclassesChunk.forEach {
                                 addOption(it.className, it.className, it.classType.emoji)
                             }
-                        })
+                        }.into()
                     }
             }
         }

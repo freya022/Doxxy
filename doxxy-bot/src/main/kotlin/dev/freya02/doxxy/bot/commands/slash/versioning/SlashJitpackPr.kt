@@ -1,6 +1,6 @@
 package dev.freya02.doxxy.bot.commands.slash.versioning
 
-import dev.freya02.botcommands.jda.ktx.components.*
+import dev.freya02.botcommands.jda.ktx.components.InlineContainer
 import dev.freya02.botcommands.jda.ktx.messages.*
 import dev.freya02.botcommands.jda.ktx.requests.queueIgnoring
 import dev.freya02.doxxy.bot.commands.slash.DeleteButtonListener.Companion.messageDelete
@@ -80,22 +80,22 @@ class SlashJitpackPr(
         }
 
         return MessageCreate(useComponentsV2 = true) {
-            components += Container {
-                +TextDisplay("### [${buildToolType.humanName} dependencies for ${libraryType.displayString}: ${pullRequest.title} (#${pullRequest.number})](${pullRequest.pullUrl})")
-                +TextDisplay(when (buildToolType) {
+            container {
+                textDisplay("### [${buildToolType.humanName} dependencies for ${libraryType.displayString}: ${pullRequest.title} (#${pullRequest.number})](${pullRequest.pullUrl})")
+                textDisplay(when (buildToolType) {
                     BuildToolType.MAVEN -> "```xml\n$dependencyStr```"
                     BuildToolType.GRADLE, BuildToolType.GRADLE_KTS -> "```gradle\n$dependencyStr```"
                 })
-                +TextDisplay("-# *Remember to remove your existing dependency before adding this*")
+                textDisplay("-# *Remember to remove your existing dependency before adding this*")
 
                 if (additionalDetails != null) {
                     displayAdditionalDetails(targetBranch, additionalDetails, updating)
                 } else {
-                    +TextDisplay("-# *Loading pull request details...*")
+                    textDisplay("-# *Loading pull request details...*")
                 }
             }
 
-            components += ActionRow {
+            actionRow {
                 link("https://jda.wiki/using-jda/using-new-features/", "How? (Wiki)", Emojis.FACE_WITH_MONOCLE)
 
                 +buttons.messageDelete(interaction.user)
@@ -129,39 +129,44 @@ class SlashJitpackPr(
                 }
             }
 
-            +Section(accessory = updateButton) {
-                +TextDisplay(when (pullRequest.mergeable) {
+            section(accessory = updateButton) {
+                textDisplay(when (pullRequest.mergeable) {
                     true -> branchStatus
                     false -> "$branchStatus, has conflicts"
                     null -> "$branchStatus, checking for conflicts..."
                 })
             }
         } else {
-            +TextDisplay(branchStatus)
+            textDisplay(branchStatus)
         }
 
         displayMissingCommits(reverseCommitComparisons)
     }
 
     private fun InlineContainer.displayMissingCommits(reverseCommitComparisons: CommitComparisons) {
+        if (reverseCommitComparisons.aheadBy == 0) return
+
         fun CommitComparisons.Commit.asText(): String {
             return "[`${sha.asSha7}`](${htmlUrl}) ${commit.message.lineSequence().first()} (${TimeFormat.RELATIVE.format(commit.committer.date)})"
         }
 
-        // If the base branch is ahead (PR is missing updates)
-        if (reverseCommitComparisons.aheadBy == 1) {
-            +TextDisplay(reverseCommitComparisons.commits[0].asText())
-        } else if (reverseCommitComparisons.aheadBy == 2) {
-            +TextDisplay("""
-                |${reverseCommitComparisons.commits[0].asText()}
-                |${reverseCommitComparisons.commits[1].asText()}
-            """.trimMargin())
-        } else if (reverseCommitComparisons.aheadBy > 2) {
-            +TextDisplay("""
-                |${reverseCommitComparisons.commits.first().asText()}
-                |...
-                |${reverseCommitComparisons.commits.last().asText()}
-            """.trimMargin())
+        textDisplay {
+            // If the base branch is ahead (PR is missing updates)
+            content = when (reverseCommitComparisons.aheadBy) {
+                1 -> reverseCommitComparisons.commits[0].asText()
+
+                2 -> """
+                    |${reverseCommitComparisons.commits[0].asText()}
+                    |${reverseCommitComparisons.commits[1].asText()}
+                """.trimMargin()
+
+                // > 2
+                else -> """
+                    |${reverseCommitComparisons.commits.first().asText()}
+                    |...
+                    |${reverseCommitComparisons.commits.last().asText()}
+                """.trimMargin()
+            }
         }
     }
 

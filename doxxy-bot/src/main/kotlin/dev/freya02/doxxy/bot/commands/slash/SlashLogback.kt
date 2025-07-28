@@ -1,6 +1,5 @@
 package dev.freya02.doxxy.bot.commands.slash
 
-import dev.freya02.botcommands.jda.ktx.components.row
 import dev.freya02.botcommands.jda.ktx.messages.MessageCreate
 import dev.freya02.doxxy.bot.commands.slash.DeleteButtonListener.Companion.messageDelete
 import dev.freya02.doxxy.bot.logback.LogbackProfile
@@ -42,7 +41,7 @@ class SlashLogback(private val buttons: Buttons) : ApplicationCommand() {
             files += FileUpload.fromStreamSupplier("logback.xml") { getLogbackStream(libraryType, profile) }
 
             if (!ephemeral) {
-                components += row(buttons.messageDelete(event.user))
+                actionRow(buttons.messageDelete(event.user))
             }
         }
 

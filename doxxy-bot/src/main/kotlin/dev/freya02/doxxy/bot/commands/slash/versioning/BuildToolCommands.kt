@@ -20,7 +20,6 @@ import io.github.freya022.botcommands.api.commands.application.slash.builder.Top
 import io.github.freya022.botcommands.api.components.Buttons
 import io.github.freya022.botcommands.api.core.utils.asUnicodeEmoji
 import io.github.oshai.kotlinlogging.KotlinLogging
-import net.dv8tion.jda.api.components.actionrow.ActionRowChildComponent
 import net.dv8tion.jda.api.utils.FileUpload
 import net.fellbaum.jemoji.Emojis
 import kotlin.time.Duration.Companion.days
@@ -29,7 +28,6 @@ import kotlin.time.Duration.Companion.days
 class BuildToolCommands(private val versions: Versions, private val buttons: Buttons, private val slashLogback: SlashLogback) : GuildApplicationCommandProvider {
     private val logger = KotlinLogging.logger { }
 
-    @CommandMarker
     suspend fun onSlashBuildTool(
         event: GuildSlashEvent,
         scriptType: ScriptType,
@@ -50,8 +48,6 @@ class BuildToolCommands(private val versions: Versions, private val buttons: But
             }
 
             val messageData = MessageCreate {
-                val components: MutableList<ActionRowChildComponent> = arrayListOf(buttons.messageDelete(event.user))
-
                 when (scriptType) {
                     ScriptType.DEPENDENCIES -> {
                         embed {
@@ -66,7 +62,13 @@ class BuildToolCommands(private val versions: Versions, private val buttons: But
                         } else {
                             files += FileUpload.fromData(script.encodeToByteArray(), "${buildToolType.fileName}.${buildToolType.fileExtension}")
                         }
+                    }
+                }
 
+                actionRow {
+                    +buttons.messageDelete(event.user)
+
+                    if (scriptType == ScriptType.FULL) {
                         components += buttons.secondary(
                             label = "Logback config",
                             emoji = Emojis.SCROLL.asUnicodeEmoji()
@@ -76,8 +78,6 @@ class BuildToolCommands(private val versions: Versions, private val buttons: But
                         }
                     }
                 }
-
-                actionRow(components)
             }
 
             event.reply(messageData).queue()

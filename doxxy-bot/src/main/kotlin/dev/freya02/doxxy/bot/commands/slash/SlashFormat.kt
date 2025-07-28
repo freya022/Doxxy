@@ -44,7 +44,7 @@ class SlashFormat : ApplicationCommand() {
             } else {
                 modalEvent.reply_(formattedSource, ephemeral = true).queue()
             }
-        } catch (e: FormattingException) {
+        } catch (_: FormattingException) {
             modalEvent.reply_("Cannot format this code, this formatter only supports Java, your snippet may have a syntax error.", ephemeral = true).queue()
         }
     }

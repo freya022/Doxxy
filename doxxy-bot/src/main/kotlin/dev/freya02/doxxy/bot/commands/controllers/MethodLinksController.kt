@@ -1,7 +1,7 @@
 package dev.freya02.doxxy.bot.commands.controllers
 
 import dev.freya02.botcommands.jda.ktx.components.InlineActionRow
-import dev.freya02.botcommands.jda.ktx.components.row
+import dev.freya02.botcommands.jda.ktx.components.into
 import dev.freya02.botcommands.jda.ktx.coroutines.await
 import dev.freya02.botcommands.jda.ktx.messages.MessageCreate
 import dev.freya02.botcommands.jda.ktx.messages.reply_
@@ -45,25 +45,22 @@ class MethodLinksController(
     suspend fun InlineActionRow.addCachedMethodComponents(cachedMethod: CachedMethod, originalHook: InteractionHook?, caller: UserSnowflake) {
         val index = docIndexMap[cachedMethod.source]
         val method = index.implementationIndex.getMethod(cachedMethod.className, cachedMethod.signature)
+            ?: return logger.trace { "Found no metadata for ${cachedMethod.className}#${cachedMethod.signature}" }
 
-        if (method != null) {
-            if (cachedMethod.implementations.isNotEmpty()) {
-                val decorations = method.methodType.implementationDecorations
-                +buttons.secondary(decorations.getLabel(context), decorations.emoji).ephemeral {
-                    timeout(5.minutes)
-                    bindTo { sendMethodLinks(it, originalHook, caller, index, method, method.getImplementations(), decorations) }
-                }
+        if (cachedMethod.implementations.isNotEmpty()) {
+            val decorations = method.methodType.implementationDecorations
+            +buttons.secondary(decorations.getLabel(context), decorations.emoji).ephemeral {
+                timeout(5.minutes)
+                bindTo { sendMethodLinks(it, originalHook, caller, index, method, method.getImplementations(), decorations) }
             }
+        }
 
-            if (cachedMethod.overriddenMethods.isNotEmpty()) {
-                val decorations = method.methodType.overriddenMethodsDecorations
-                +buttons.secondary(decorations.getLabel(context), decorations.emoji).ephemeral {
-                    timeout(5.minutes)
-                    bindTo { sendMethodLinks(it, originalHook, caller, index, method, method.getOverriddenMethods(), decorations) }
-                }
+        if (cachedMethod.overriddenMethods.isNotEmpty()) {
+            val decorations = method.methodType.overriddenMethodsDecorations
+            +buttons.secondary(decorations.getLabel(context), decorations.emoji).ephemeral {
+                timeout(5.minutes)
+                bindTo { sendMethodLinks(it, originalHook, caller, index, method, method.getOverriddenMethods(), decorations) }
             }
-        } else {
-            logger.trace { "Found no metadata for ${cachedMethod.className}#${cachedMethod.signature}" }
         }
     }
 
@@ -92,10 +89,10 @@ class MethodLinksController(
             }
 
             if (apiMethods.isNotEmpty()) {
-                components += apiMethods.take(SelectMenu.OPTIONS_MAX_AMOUNT * 5)
+                apiMethods.take(SelectMenu.OPTIONS_MAX_AMOUNT * 5)
                     .chunked(SelectMenu.OPTIONS_MAX_AMOUNT)
-                    .map { methodsChunk ->
-                        row(selectMenus.stringSelectMenu().ephemeral {
+                    .forEach { methodsChunk ->
+                        components += selectMenus.stringSelectMenu().ephemeral {
                             if (originalHook != null) {
                                 timeout(originalHook.expirationTimestamp - System.currentTimeMillis(), TimeUnit.MILLISECONDS)
                             } else {
@@ -117,7 +114,7 @@ class MethodLinksController(
                                     logger.warn { "Already added '$simpleQualifiedSignature' from ${method.simpleQualifiedSignature}" }
                                 }
                             }
-                        })
+                        }.into()
                     }
             }
         }

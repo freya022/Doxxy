@@ -15,10 +15,7 @@ class MessageContextMentions(private val docMentionController: DocMentionControl
     @JDAMessageCommand(name = "Find docs")
     suspend fun onMessageContextFindDocs(event: GuildMessageEvent) {
         val docMatches = suppressContentWarning { docMentionController.processMentions(event.target.contentRaw) }
-        if (docMatches.isEmpty) {
-            event.reply_("Could not match any docs", ephemeral = true).queue()
-            return
-        }
+        if (docMatches.isEmpty) return event.reply_("Could not match any docs", ephemeral = true).queue()
 
         val hook = event.hook
         val message = docMentionController.createDocsMenuMessage(
