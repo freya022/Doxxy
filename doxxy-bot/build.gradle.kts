@@ -26,6 +26,8 @@ dependencies {
     implementation(libs.flyway.core)
     runtimeOnly(libs.flyway.database.postgresql)
 
+    implementation(libs.java.string.similarity)
+
     implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.ktor.client.core)
