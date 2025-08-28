@@ -80,7 +80,6 @@ class SlashJitpackBranch(
             LibraryType.BOT_COMMANDS -> DependencySupplier.formatBCJitpack(
                 ScriptType.DEPENDENCIES,
                 buildToolType,
-                jitpackBranchService.getUsedJDAVersionFromBranch(branch.toUpdatedBranch(libraryType)),
                 branch.toJitpackArtifact(libraryType)
             )
         }

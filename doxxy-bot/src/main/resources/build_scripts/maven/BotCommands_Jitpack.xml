@@ -70,18 +70,6 @@
             <groupId>%s</groupId>
             <artifactId>%s</artifactId>
             <version>%s</version>
-            <exclusions>
-                <!-- Removes audio as to save space, you can remove the exclusion if you want to use audio -->
-                <exclusion>
-                    <groupId>club.minnced</groupId>
-                    <artifactId>opus-java</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>%s</groupId>
-            <artifactId>%s</artifactId>
-            <version>%s</version>
         </dependency>
         <!-- Uncomment these if you want to use the components -->
 <!--        <dependency>-->

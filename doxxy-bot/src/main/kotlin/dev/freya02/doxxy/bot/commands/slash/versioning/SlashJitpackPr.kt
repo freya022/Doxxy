@@ -9,7 +9,6 @@ import dev.freya02.doxxy.bot.utils.github.toAutocompleteChoices
 import dev.freya02.doxxy.bot.versioning.ArtifactInfo
 import dev.freya02.doxxy.bot.versioning.LibraryType
 import dev.freya02.doxxy.bot.versioning.ScriptType
-import dev.freya02.doxxy.bot.versioning.jitpack.JitpackBranchService
 import dev.freya02.doxxy.bot.versioning.jitpack.JitpackPrService
 import dev.freya02.doxxy.bot.versioning.jitpack.JitpackPrService.AdditionalPullRequestDetails
 import dev.freya02.doxxy.bot.versioning.jitpack.pullupdater.UpdatedBranch
@@ -36,7 +35,6 @@ import kotlin.time.Duration.Companion.hours
 class SlashJitpackPr(
     private val buttons: Buttons,
     private val jitpackPrService: JitpackPrService,
-    private val jitpackBranchService: JitpackBranchService,
 ) {
 
     suspend fun onSlashJitpackPR(event: GuildSlashEvent, libraryType: LibraryType, buildToolType: BuildToolType, pullNumber: Int) {
@@ -69,7 +67,6 @@ class SlashJitpackPr(
             LibraryType.BOT_COMMANDS -> DependencySupplier.formatBCJitpack(
                 ScriptType.DEPENDENCIES,
                 buildToolType,
-                jitpackBranchService.getUsedJDAVersionFromBranch(targetBranch),
                 targetBranch.toJitpackArtifact()
             )
             LibraryType.JDA, LibraryType.JDA_KTX, LibraryType.LAVA_PLAYER -> DependencySupplier.formatJitpack(

@@ -22,11 +22,9 @@ object DependencySupplier {
     fun formatBCJitpack(
         scriptType: ScriptType,
         buildToolType: BuildToolType,
-        jdaVersionFromBotCommands: ArtifactInfo,
         latestBotCommands: ArtifactInfo
     ): String = readResource("/${scriptType.folderName}/${buildToolType.folderName}/BotCommands_Jitpack.${buildToolType.getEffectiveExtension(scriptType)}")
         .format(
-            jdaVersionFromBotCommands.groupId, jdaVersionFromBotCommands.artifactId, jdaVersionFromBotCommands.version,
             latestBotCommands.groupId, latestBotCommands.artifactId, latestBotCommands.version
         )
 

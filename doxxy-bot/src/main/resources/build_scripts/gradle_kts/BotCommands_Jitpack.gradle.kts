@@ -26,7 +26,6 @@ dependencies {
 
     //JDA
     implementation("%s:%s:%s")
-    implementation("%s:%s:%s")
 }
 
 tasks.withType<JavaCompile> {

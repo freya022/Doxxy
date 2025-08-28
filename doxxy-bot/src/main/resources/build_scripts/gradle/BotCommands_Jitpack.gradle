@@ -24,7 +24,6 @@ dependencies {
 
     //JDA
     implementation '%s:%s:%s'
-    implementation '%s:%s:%s'
 }
 
 compileJava {

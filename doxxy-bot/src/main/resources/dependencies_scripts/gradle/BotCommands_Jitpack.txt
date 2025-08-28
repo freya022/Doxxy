@@ -5,5 +5,4 @@ repositories {
 
 dependencies {
     implementation '%s:%s:%s'
-    implementation '%s:%s:%s'
 }
