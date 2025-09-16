@@ -12,7 +12,6 @@ version = "2.5"
 
 repositories {
     mavenCentral()
-    maven("https://jitpack.io")
 }
 
 private val matchers: Map<String, Regex> = mapOf(

@@ -5,6 +5,11 @@ plugins {
     alias(libs.plugins.kotlinx.serialization)
 }
 
+repositories {
+    // Required by our remark-java fork
+    maven("https://jitpack.io")
+}
+
 dependencies {
     implementation(projects.doxxy.doxxyCommons)
     implementation(projects.doxxy.doxxyDocs)
