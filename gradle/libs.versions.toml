@@ -19,7 +19,7 @@ remark-java = "4a18f84801"
 javaparser = "3.26.3"
 palantir-java-format = "2.52.0"
 javassist = "3.30.2-GA"
-junit = "5.9.2"
+junit = "5.13.4"
 mockk = "1.14.2"
 bytebuddy = "1.17.5"
 jmh = "0.7.3"
@@ -38,6 +38,7 @@ jib-plugin = { module = "com.google.cloud.tools:jib-gradle-plugin", version = "3
 kotlin-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 
+kotlin-test-junit5 = { module = "org.jetbrains.kotlin:kotlin-test-junit5", version.ref = "kotlin" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-debug = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-debug", version.ref = "kotlinx-coroutines" }
 stacktrace-decoroutinator = { module = "dev.reformator.stacktracedecoroutinator:stacktrace-decoroutinator-jvm", version.ref = "stacktrace-decoroutinator" }
@@ -85,8 +86,10 @@ palantir-java-format = { module = "com.palantir.javaformat:palantir-java-format"
 javassist = { module = "org.javassist:javassist", version.ref = "javassist" }
 
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 bytebuddy = { module = "net.bytebuddy:byte-buddy", version.ref = "bytebuddy" }
 
 [bundles]
 slf4j = ["slf4j-api", "slf4j-ext"]
+junit = ["kotlin-test-junit5", "junit-jupiter", "junit-jupiter-params"]

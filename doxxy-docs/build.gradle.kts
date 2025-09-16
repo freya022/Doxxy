@@ -19,7 +19,7 @@ dependencies {
 
     implementation(libs.jda)
 
-    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.bundles.junit)
     testImplementation(libs.mockk)
     testRuntimeOnly(libs.bytebuddy)
 
@@ -30,6 +30,10 @@ dependencies {
     testImplementation(libs.ktor.server.netty)
 
     testImplementation(libs.kotlinx.serialization.json)
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
 }
 
 jmh {

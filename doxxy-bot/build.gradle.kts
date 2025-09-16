@@ -48,10 +48,15 @@ dependencies {
 
     implementation(libs.palantir.java.format)
 
+    testImplementation(libs.bundles.junit)
     testImplementation(libs.javassist)
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.mockk)
     runtimeOnly(libs.bytebuddy)
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
 }
 
 jib {

@@ -32,9 +32,6 @@ tasks.withType<DependencyUpdatesTask> {
 }
 
 dependencies {
-    testImplementation(kotlin("test"))
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.0")
-
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.0")
 }
 
@@ -53,8 +50,4 @@ kotlin {
 
         freeCompilerArgs.addAll("-Xjsr305=strict", "-Xcontext-parameters")
     }
-}
-
-tasks.withType<Test> {
-    useJUnitPlatform()
 }
