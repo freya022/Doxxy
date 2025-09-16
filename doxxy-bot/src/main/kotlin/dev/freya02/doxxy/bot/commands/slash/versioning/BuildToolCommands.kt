@@ -66,7 +66,7 @@ class BuildToolCommands(private val versions: Versions, private val buttons: But
                 }
 
                 actionRow {
-                    +buttons.messageDelete(event.user)
+                    components += buttons.messageDelete(event.user)
 
                     if (scriptType == ScriptType.FULL) {
                         components += buttons.secondary(

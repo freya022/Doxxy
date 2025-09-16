@@ -29,7 +29,6 @@ import io.github.freya022.botcommands.api.pagination.menu.buttonized.ButtonMenu
 import io.github.freya022.botcommands.api.pagination.menu.buttonized.ButtonMenuBuilder
 import io.github.freya022.botcommands.api.pagination.menu.buttonized.SuspendingChoiceCallback
 import io.github.oshai.kotlinlogging.KotlinLogging
-import net.dv8tion.jda.api.components.buttons.Button
 import net.dv8tion.jda.api.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.components.selections.SelectMenu
 import net.dv8tion.jda.api.entities.Member
@@ -128,7 +127,7 @@ class CommonDocsController(
         if (examples.isEmpty()) return
 
         addComponents(ActionRow {
-            +selectMenus.stringSelectMenu().persistent {
+            components += selectMenus.stringSelectMenu().persistent {
                 placeholder = "Examples"
                 options += examples.map { SelectOption(it.title, it.title, emoji = Emojis.TEST_TUBE.asUnicodeEmoji()) }
 
@@ -145,7 +144,7 @@ class CommonDocsController(
         caller: UserSnowflake
     ) {
         addComponents(ActionRow {
-            cachedDoc.sourceLink?.also { sourceLink -> +Button.link(sourceLink, "Source") }
+            cachedDoc.sourceLink?.also { sourceLink -> linkButton(sourceLink, "Source") }
 
             if (cachedDoc is CachedClass) {
                 with (classLinksController) {
@@ -158,7 +157,7 @@ class CommonDocsController(
             }
 
             if (!ephemeral)
-                +buttons.messageDelete(caller)
+                components += buttons.messageDelete(caller)
 
             if (components.isEmpty())
                 return
@@ -170,7 +169,7 @@ class CommonDocsController(
         if (docReferences.isEmpty()) return
 
         addComponents(ActionRow {
-            +selectMenus.stringSelectMenu().persistent {
+            components += selectMenus.stringSelectMenu().persistent {
                 bindWith(CommonDocsHandlers::onSeeAlsoSelect, caller, cachedDoc.source)
                 timeout(15.minutes)
                 placeholder = "See also"

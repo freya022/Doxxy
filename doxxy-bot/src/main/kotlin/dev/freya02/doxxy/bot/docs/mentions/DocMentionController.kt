@@ -94,7 +94,7 @@ class DocMentionController(
     ): MessageCreateData {
         return MessageCreate {
             actionRow {
-                +selectMenus.stringSelectMenu().ephemeral {
+                components += selectMenus.stringSelectMenu().ephemeral {
                     placeholder = "Select a doc"
                     addMatchOptions(docMatches)
 

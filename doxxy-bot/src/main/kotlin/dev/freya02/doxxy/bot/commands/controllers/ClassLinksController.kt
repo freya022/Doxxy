@@ -51,7 +51,7 @@ class ClassLinksController(
 
         if (cachedDoc.subclasses.isNotEmpty()) {
             val decorations = clazz.classType.subDecorations
-            +buttons.secondary(decorations.getLabel(context), decorations.emoji).ephemeral {
+            components += buttons.secondary(decorations.getLabel(context), decorations.emoji).ephemeral {
                 timeout(5.minutes)
                 bindTo { sendClassLinks(it, originalHook, caller, index, clazz, clazz.getSubclasses(), decorations) }
             }
@@ -59,7 +59,7 @@ class ClassLinksController(
 
         if (cachedDoc.superclasses.isNotEmpty()) {
             val decorations = clazz.classType.superDecorations
-            +buttons.secondary(decorations.getLabel(context), decorations.emoji).ephemeral {
+            components += buttons.secondary(decorations.getLabel(context), decorations.emoji).ephemeral {
                 timeout(5.minutes)
                 bindTo { sendClassLinks(it, originalHook, caller, index, clazz, clazz.getSuperclasses(), decorations) }
             }

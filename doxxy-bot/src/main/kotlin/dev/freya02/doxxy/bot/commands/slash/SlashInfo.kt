@@ -107,7 +107,7 @@ class SlashInfo(private val context: BContext) : ApplicationCommand() {
             }
 
             actionRow {
-                link("https://github.com/freya022/Doxxy", "Source")
+                linkButton("https://github.com/freya022/Doxxy", "Source")
             }
         }).queue()
     }

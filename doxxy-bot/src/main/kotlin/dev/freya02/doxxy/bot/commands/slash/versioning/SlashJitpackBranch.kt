@@ -86,16 +86,16 @@ class SlashJitpackBranch(
 
         event.reply_(useComponentsV2 = true) {
             container {
-                textDisplay("### [${buildToolType.humanName} dependencies for ${libraryType.displayString} @ branch '$branchName'](${branch.toUrl(libraryType)})")
-                textDisplay(when (buildToolType) {
+                text("### [${buildToolType.humanName} dependencies for ${libraryType.displayString} @ branch '$branchName'](${branch.toUrl(libraryType)})")
+                text(when (buildToolType) {
                     BuildToolType.MAVEN -> "```xml\n$dependencyStr```"
                     BuildToolType.GRADLE, BuildToolType.GRADLE_KTS -> "```gradle\n$dependencyStr```"
                 })
-                textDisplay("-# *Remember to remove your existing dependency before adding this*")
+                text("-# *Remember to remove your existing dependency before adding this*")
             }
 
             actionRow {
-                +buttons.messageDelete(event.user)
+                components += buttons.messageDelete(event.user)
             }
         }.queue()
     }

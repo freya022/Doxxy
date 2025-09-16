@@ -78,24 +78,24 @@ class SlashJitpackPr(
 
         return MessageCreate(useComponentsV2 = true) {
             container {
-                textDisplay("### [${buildToolType.humanName} dependencies for ${libraryType.displayString}: ${pullRequest.title} (#${pullRequest.number})](${pullRequest.pullUrl})")
-                textDisplay(when (buildToolType) {
+                text("### [${buildToolType.humanName} dependencies for ${libraryType.displayString}: ${pullRequest.title} (#${pullRequest.number})](${pullRequest.pullUrl})")
+                text(when (buildToolType) {
                     BuildToolType.MAVEN -> "```xml\n$dependencyStr```"
                     BuildToolType.GRADLE, BuildToolType.GRADLE_KTS -> "```gradle\n$dependencyStr```"
                 })
-                textDisplay("-# *Remember to remove your existing dependency before adding this*")
+                text("-# *Remember to remove your existing dependency before adding this*")
 
                 if (additionalDetails != null) {
                     displayAdditionalDetails(targetBranch, additionalDetails, updating)
                 } else {
-                    textDisplay("-# *Loading pull request details...*")
+                    text("-# *Loading pull request details...*")
                 }
             }
 
             actionRow {
-                link("https://jda.wiki/using-jda/using-new-features/", "How? (Wiki)", Emojis.FACE_WITH_MONOCLE)
+                linkButton("https://jda.wiki/using-jda/using-new-features/", "How? (Wiki)", Emojis.FACE_WITH_MONOCLE)
 
-                +buttons.messageDelete(interaction.user)
+                components += buttons.messageDelete(interaction.user)
             }
         }
     }
@@ -127,14 +127,14 @@ class SlashJitpackPr(
             }
 
             section(accessory = updateButton) {
-                textDisplay(when (pullRequest.mergeable) {
+                text(when (pullRequest.mergeable) {
                     true -> branchStatus
                     false -> "$branchStatus, has conflicts"
                     null -> "$branchStatus, checking for conflicts..."
                 })
             }
         } else {
-            textDisplay(branchStatus)
+            text(branchStatus)
         }
 
         displayMissingCommits(reverseCommitComparisons)
@@ -147,7 +147,7 @@ class SlashJitpackPr(
             return "[`${sha.asSha7}`](${htmlUrl}) ${commit.message.lineSequence().first()} (${TimeFormat.RELATIVE.format(commit.committer.date)})"
         }
 
-        textDisplay {
+        text {
             // If the base branch is ahead (PR is missing updates)
             content = when (reverseCommitComparisons.aheadBy) {
                 1 -> reverseCommitComparisons.commits[0].asText()

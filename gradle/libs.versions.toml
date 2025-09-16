@@ -5,8 +5,8 @@ stacktrace-decoroutinator = "2.4.8"
 slf4j = "2.0.16"
 logback-classic = "1.5.16"
 dotenv-kotlin = "6.5.0"
-jda = "e87771b759"
-botcommands = "8758b34af1"
+jda = "6.0.0-rc.5"
+botcommands = "3.0.0-beta.6"
 postgresql = "42.7.5"
 hikaricp = "6.2.1"
 flyway = "11.3.2"
@@ -48,9 +48,9 @@ logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "lo
 
 dotenv-kotlin = { module = "io.github.cdimascio:dotenv-kotlin", version.ref = "dotenv-kotlin" }
 
-jda = { module = "io.github.freya022:JDA", version.ref = "jda" }
+jda = { module = "net.dv8tion:JDA", version.ref = "jda" }
 botcommands = { module = "io.github.freya022:BotCommands", version.ref = "botcommands" }
-botcommands-jda-ktx = { module = "io.github.freya022.BotCommands:BotCommands-jda-ktx", version.ref = "botcommands" }
+botcommands-jda-ktx = { module = "io.github.freya022:BotCommands-jda-ktx", version.ref = "botcommands" }
 
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }

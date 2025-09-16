@@ -1,5 +1,6 @@
 package dev.freya02.doxxy.bot.commands.slash
 
+import dev.freya02.botcommands.jda.ktx.components.TextInput
 import dev.freya02.botcommands.jda.ktx.components.row
 import dev.freya02.botcommands.jda.ktx.coroutines.await
 import dev.freya02.botcommands.jda.ktx.messages.*
@@ -20,16 +21,19 @@ import io.github.freya022.botcommands.api.components.Buttons
 import io.github.freya022.botcommands.api.components.Components
 import io.github.freya022.botcommands.api.components.data.InteractionConstraints
 import io.github.freya022.botcommands.api.components.event.ButtonEvent
-import io.github.freya022.botcommands.api.modals.*
+import io.github.freya022.botcommands.api.modals.ModalEvent
+import io.github.freya022.botcommands.api.modals.Modals
 import io.github.freya022.botcommands.api.modals.annotations.ModalData
 import io.github.freya022.botcommands.api.modals.annotations.ModalHandler
 import io.github.freya022.botcommands.api.modals.annotations.ModalInput
+import io.github.freya022.botcommands.api.modals.create
 import io.github.freya022.botcommands.api.pagination.PageEditor
 import io.github.freya022.botcommands.api.pagination.Paginators
 import io.github.freya022.botcommands.api.pagination.paginator.Paginator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import net.dv8tion.jda.api.Permission.MANAGE_ROLES
 import net.dv8tion.jda.api.Permission.MANAGE_SERVER
+import net.dv8tion.jda.api.components.textinput.TextInputStyle
 import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
@@ -116,19 +120,16 @@ class SlashTag(
     @JDASlashCommand(name = "tags", subcommand = "create", description = "Creates a tag in this guild")
     fun createTag(event: GuildSlashEvent) {
         val modal = modals.create("Create a tag") {
-            shortTextInput("tagName", "Tag name") {
-                minLength = TagDB.NAME_MIN_LENGTH
-                maxLength = TagDB.NAME_MAX_LENGTH
+            label("Tag name") {
+                child = TextInput("tagName", TextInputStyle.SHORT, range = TagDB.NAME_MIN_LENGTH..TagDB.NAME_MAX_LENGTH)
             }
 
-            shortTextInput("tagDescription", "Tag description") {
-                minLength = TagDB.DESCRIPTION_MIN_LENGTH
-                maxLength = TagDB.DESCRIPTION_MAX_LENGTH
+            label("Tag description") {
+                child = TextInput("tagDescription", TextInputStyle.SHORT, range = TagDB.DESCRIPTION_MIN_LENGTH..TagDB.DESCRIPTION_MAX_LENGTH)
             }
 
-            paragraphTextInput("tagContent", "Tag content") {
-                minLength = TagDB.CONTENT_MIN_LENGTH
-                maxLength = TagDB.CONTENT_MAX_LENGTH
+            label("Tag content") {
+                child = TextInput("tagContent", TextInputStyle.PARAGRAPH, range = TagDB.CONTENT_MIN_LENGTH..TagDB.CONTENT_MAX_LENGTH)
             }
 
             bindTo(TAGS_CREATE_MODAL_HANDLER)
@@ -140,9 +141,9 @@ class SlashTag(
     @ModalHandler(name = TAGS_CREATE_MODAL_HANDLER)
     suspend fun createTag(
         event: ModalEvent,
-        @ModalInput(name = "tagName") name: String,
-        @ModalInput(name = "tagDescription") description: String,
-        @ModalInput(name = "tagContent") content: String
+        @ModalInput(customId = "tagName") name: String,
+        @ModalInput(customId = "tagDescription") description: String,
+        @ModalInput(customId = "tagContent") content: String
     ) {
         try {
             tagDB.create(checkGuild(event.guild).idLong, event.user.idLong, name, description, content)
@@ -166,16 +167,16 @@ class SlashTag(
     ) {
         withOwnedTag(event, name) { tag: Tag ->
             val modal = modals.create("Edit a tag") {
-                shortTextInput("tagName", "Tag name") {
-                    value = tag.name
+                label("Tag name") {
+                    child = TextInput("tagName", TextInputStyle.SHORT, value = tag.name, range = TagDB.NAME_MIN_LENGTH..TagDB.NAME_MAX_LENGTH)
                 }
 
-                shortTextInput("tagDescription", "Tag description") {
-                    value = tag.description
+                label("Tag description") {
+                    child = TextInput("tagDescription", TextInputStyle.SHORT, value = tag.description, range = TagDB.DESCRIPTION_MIN_LENGTH..TagDB.DESCRIPTION_MAX_LENGTH)
                 }
 
-                paragraphTextInput("tagContent", "Tag content") {
-                    value = tag.content
+                label("Tag content") {
+                    child = TextInput("tagContent", TextInputStyle.PARAGRAPH, value = tag.content, range = TagDB.CONTENT_MIN_LENGTH..TagDB.CONTENT_MAX_LENGTH)
                 }
 
                 bindTo(TAGS_EDIT_MODAL_HANDLER, name)
@@ -189,9 +190,9 @@ class SlashTag(
     suspend fun editTag(
         event: ModalEvent,
         @ModalData name: String,
-        @ModalInput(name = "tagName") newName: String,
-        @ModalInput(name = "tagDescription") newDescription: String,
-        @ModalInput(name = "tagContent") newContent: String
+        @ModalInput(customId = "tagName") newName: String,
+        @ModalInput(customId = "tagDescription") newDescription: String,
+        @ModalInput(customId = "tagContent") newContent: String
     ) {
         withOwnedTag(event, name) {
             try {

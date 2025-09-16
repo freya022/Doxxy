@@ -49,7 +49,7 @@ class MethodLinksController(
 
         if (cachedMethod.implementations.isNotEmpty()) {
             val decorations = method.methodType.implementationDecorations
-            +buttons.secondary(decorations.getLabel(context), decorations.emoji).ephemeral {
+            components += buttons.secondary(decorations.getLabel(context), decorations.emoji).ephemeral {
                 timeout(5.minutes)
                 bindTo { sendMethodLinks(it, originalHook, caller, index, method, method.getImplementations(), decorations) }
             }
@@ -57,7 +57,7 @@ class MethodLinksController(
 
         if (cachedMethod.overriddenMethods.isNotEmpty()) {
             val decorations = method.methodType.overriddenMethodsDecorations
-            +buttons.secondary(decorations.getLabel(context), decorations.emoji).ephemeral {
+            components += buttons.secondary(decorations.getLabel(context), decorations.emoji).ephemeral {
                 timeout(5.minutes)
                 bindTo { sendMethodLinks(it, originalHook, caller, index, method, method.getOverriddenMethods(), decorations) }
             }
