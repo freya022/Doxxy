@@ -25,6 +25,7 @@ dependencies {
     implementation(libs.jda)
     implementation(libs.botcommands)
     implementation(libs.botcommands.jda.ktx)
+    runtimeOnly(libs.botcommands.method.accessors.classfile)
 
     implementation(libs.postgresql)
     implementation(libs.hikaricp)

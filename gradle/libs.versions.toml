@@ -35,6 +35,7 @@ version-catalog-update = "nl.littlerobots.version-catalog-update:1.0.0"
 [libraries]
 botcommands = { module = "io.github.freya022:BotCommands", version.ref = "botcommands" }
 botcommands-jda-ktx = { module = "io.github.freya022:BotCommands-jda-ktx", version.ref = "botcommands" }
+botcommands-method-accessors-classfile = { module = "io.github.freya022:BotCommands-method-accessors-classfile", version.ref = "botcommands" }
 bytebuddy = { module = "net.bytebuddy:byte-buddy", version.ref = "bytebuddy" }
 dotenv-kotlin = { module = "io.github.cdimascio:dotenv-kotlin", version.ref = "dotenv-kotlin" }
 flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }

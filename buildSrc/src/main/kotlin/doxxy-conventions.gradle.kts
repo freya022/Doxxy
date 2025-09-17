@@ -20,13 +20,13 @@ java {
         languageVersion = JavaLanguageVersion.of(24)
     }
 
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_24
+    targetCompatibility = JavaVersion.VERSION_24
 }
 
 kotlin {
     compilerOptions {
-        jvmTarget = JvmTarget.JVM_21
+        jvmTarget = JvmTarget.JVM_24
 
         freeCompilerArgs.addAll("-Xjsr305=strict", "-Xcontext-parameters")
     }
