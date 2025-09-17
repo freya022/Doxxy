@@ -1,12 +1,8 @@
 package dev.freya02.doxxy.docs.utils
 
 import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
-import okhttp3.ResponseBody
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 internal object HttpUtils {
@@ -17,28 +13,6 @@ internal object HttpUtils {
     @Synchronized
     fun parseDocument(downloadedBody: String, baseUri: String): Document {
         return Jsoup.parse(downloadedBody, baseUri)
-    }
-
-    fun <R> doRequest(request: Request, handleNonSuccess: Boolean = true, block: (Response, ResponseBody) -> R): R {
-        CLIENT.newCall(request).execute().use { response ->
-            if (handleNonSuccess) {
-                if (!response.isSuccessful) throw IOException("Got an unsuccessful response from ${response.request.url}, code: ${response.code}")
-            }
-
-            val body: ResponseBody = response.body
-                ?: throw IOException("Got no ResponseBody for ${response.request.url}")
-
-            return block(response, body)
-        }
-    }
-
-    fun <R> doRequest(url: String, handleNonSuccess: Boolean = true, block: (Response, ResponseBody) -> R): R {
-        return doRequest(Request.Builder().url(url).build(), handleNonSuccess, block)
-    }
-
-    @Throws(IOException::class)
-    fun downloadBody(url: String): String = doRequest(url) { _, body ->
-        body.string()
     }
 
     fun removeFragment(url: String): String = url.substringBefore('#')
