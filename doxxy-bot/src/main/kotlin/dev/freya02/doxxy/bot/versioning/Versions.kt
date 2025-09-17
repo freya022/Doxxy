@@ -136,7 +136,7 @@ class Versions(
             logger.trace { "Downloading JDA sources" }
             jdaChecker.latest.artifactInfo.downloadMavenSources().withTemporaryFile { tempZip ->
                 logger.trace { "Extracting JDA sources" }
-                VersionsUtils.extractZip(tempZip, DocSourceType.JDA.sourceDirectoryPath!!, "java")
+                VersionsUtils.replaceWithZipContent(tempZip, DocSourceType.JDA.sourceDirectoryPath!!, "java")
             }
 
             docIndexLock.withLock {
