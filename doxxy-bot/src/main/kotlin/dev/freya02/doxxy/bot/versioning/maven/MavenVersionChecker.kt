@@ -8,6 +8,6 @@ class MavenVersionChecker(
     latest: LibraryVersion,
 ) : VersionChecker(latest) {
     override suspend fun retrieveLatest(): LibraryVersion {
-        return latest.copy(version = repositoryClient.getLatestStableMavenVersion(latest.groupId, latest.artifactId))
+        return latest.copy(version = repositoryClient.getLatestVersion(latest.groupId, latest.artifactId))
     }
 }

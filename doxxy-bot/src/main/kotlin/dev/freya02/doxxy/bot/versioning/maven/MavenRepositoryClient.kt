@@ -5,7 +5,6 @@ import io.ktor.client.engine.okhttp.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import net.dv8tion.jda.api.exceptions.ParsingException
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
@@ -15,10 +14,13 @@ class MavenRepositoryClient(
 
     private val client = HttpClient(OkHttp)
 
-    suspend fun getMavenMetadata(groupId: String, artifactId: String): Document {
+    // Do not trust the "latest" or "release" attribute of maven-metadata.xml
+    // as it does not correspond to the latest-in-date release
+    // This is why here we parse the FTP-style page and find using the most recent date
+    suspend fun getContents(groupId: String, artifactId: String): Document {
         val response = client.get(baseUrl) {
             url {
-                appendPathSegments(groupId.replace('.', '/'), artifactId, "maven-metadata.xml")
+                appendPathSegments(groupId.replace('.', '/'), artifactId)
             }
         }
 
@@ -26,8 +28,14 @@ class MavenRepositoryClient(
     }
 }
 
-suspend fun MavenRepositoryClient.getLatestStableMavenVersion(groupId: String, artifactId: String): String {
-    val mavenMetadata = getMavenMetadata(groupId, artifactId)
-    val latest = mavenMetadata.selectFirst("metadata > versioning > latest")
-    return latest?.text() ?: throw ParsingException("Unable to parse latest version")
+private val contentRegex = Regex("""^(.+)/\s+(\d{4}-\d{2}-\d{2})""")
+suspend fun MavenRepositoryClient.getLatestVersion(groupId: String, artifactId: String): String {
+    val contentsDoc = getContents(groupId, artifactId)
+    val contents = contentsDoc.selectFirst("html > body > main > pre#contents")!!.text()
+    val latestVersion = contents.lines()
+        .mapNotNull { contentRegex.find(it) }
+        .map { it.groupValues }
+        .maxBy { (_, _, date) -> date }[1]
+
+    return latestVersion
 }
