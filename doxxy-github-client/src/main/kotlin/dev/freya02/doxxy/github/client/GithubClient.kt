@@ -7,7 +7,6 @@ import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
-import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -81,17 +80,6 @@ class GithubClient(
     suspend fun getPullRequest(owner: String, repo: String, pr: Int): PullRequest {
         return client
             .get("https://api.github.com/repos/$owner/$repo/pulls/$pr")
-            .body()
-    }
-
-    suspend fun getLatestRelease(owner: String, repo: String): Release? {
-        return client
-            .get("https://api.github.com/repos/$owner/$repo/releases/latest")
-            .also {
-                if (it.status == HttpStatusCode.NotFound) {
-                    return null
-                }
-            }
             .body()
     }
 

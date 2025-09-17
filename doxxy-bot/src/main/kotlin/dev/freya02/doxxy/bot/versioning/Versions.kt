@@ -13,7 +13,6 @@ import dev.freya02.doxxy.bot.versioning.maven.DependencyVersionChecker
 import dev.freya02.doxxy.bot.versioning.maven.MavenRepositoryClient
 import dev.freya02.doxxy.bot.versioning.maven.MavenVersionChecker
 import dev.freya02.doxxy.github.client.GithubClient
-import dev.freya02.doxxy.github.client.utils.CommitHash
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommandsContext
 import io.github.freya022.botcommands.api.core.annotations.BEventListener
 import io.github.freya022.botcommands.api.core.events.InjectedJDAEvent
@@ -117,12 +116,15 @@ class Versions(
         val changed = jdaChecker.checkVersion()
 
         if (changed) {
-            val sourceUrl = githubClient.getLatestReleaseHash("discord-jda", "JDA")
-                ?.let { hash -> "https://github.com/discord-jda/JDA/blob/${hash.hash}/src/main/java/" }
-                ?: return logger.debug { "Ignoring new JDA version (${jdaChecker.latest}) from Maven Central as no GitHub release could be retrieved" }
-
-            if (sourceUrl == versionsRepository.findByName(LibraryType.JDA, classifier = null)?.sourceUrl)
-                return logger.debug { "Ignoring new JDA version (${jdaChecker.latest}) from Maven Central as the GitHub release hasn't been made" }
+            val sourceUrl = run {
+                val ownerName = LibraryType.JDA.githubOwnerName
+                val repoName = LibraryType.JDA.githubRepoName
+                val matchingTag = githubClient.getAllTags(ownerName, repoName, perPage = 100)
+                    .firstOrNull { it.name == "v${jdaChecker.latest.version}" }
+                    ?: return logger.debug { "Ignoring new JDA version (${jdaChecker.latest}) from Maven Central as no Git tag matches the version" }
+                val hash = matchingTag.commit.sha.hash
+                "https://github.com/${ownerName}/${repoName}/blob/${hash}/src/main/java/"
+            }
 
             logger.info { "JDA version changed" }
 
@@ -181,13 +183,5 @@ class Versions(
 
             logger.info { "BotCommands version updated to ${bcChecker.latest.version}" }
         }
-    }
-
-    private suspend fun GithubClient.getLatestReleaseHash(owner: String, repo: String): CommitHash? {
-        val latestRelease = getLatestRelease(owner, repo) ?: return null
-        val latestReleaseTag = getAllTags(owner, repo, perPage = 100).firstOrNull { tag -> tag.name == latestRelease.tagName }
-            ?: return null
-
-        return latestReleaseTag.commit.sha
     }
 }
