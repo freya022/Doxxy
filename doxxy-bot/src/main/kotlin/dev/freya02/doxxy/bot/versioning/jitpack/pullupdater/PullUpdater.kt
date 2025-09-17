@@ -36,7 +36,6 @@ class PullUpdater(
     private val forkPath = Directories.jdaFork
 
     private val mutex = Mutex()
-    val isRunning: Boolean get() = mutex.isLocked
 
     private val cache: MutableMap<CacheKey, CacheValue> = hashMapOf()
     private var latestCommitHash: CommitHash? = null

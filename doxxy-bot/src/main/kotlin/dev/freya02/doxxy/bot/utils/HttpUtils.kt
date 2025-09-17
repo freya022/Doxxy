@@ -34,8 +34,6 @@ object HttpUtils {
             }
 
             val body: ResponseBody = response.body
-                ?: throw IOException("Got no ResponseBody for ${response.request.url}")
-
             return block(response, body)
         }
     }

@@ -8,6 +8,6 @@ import org.springframework.web.client.RestClient
 @Configuration
 class RestClientProvider {
     @Bean
-    fun botClient(@Value("\${BOT_HOST}") botHttpHost: String, @Value("\${BOT_EXAMPLES_HTTP_PORT}") botExamplesHttpPort: Int): RestClient =
+    fun botClient(@Value($$"${BOT_HOST}") botHttpHost: String, @Value($$"${BOT_EXAMPLES_HTTP_PORT}") botExamplesHttpPort: Int): RestClient =
         RestClient.create("http://$botHttpHost:$botExamplesHttpPort")
 }

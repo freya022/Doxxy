@@ -6,8 +6,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 value class CommitHash(val hash: String) {
     val asSha10: String
-        get() = hash.substring(0, 10)
+        get() = hash.take(10)
 
     val asSha7: String
-        get() = hash.substring(0, 7)
+        get() = hash.take(7)
 }

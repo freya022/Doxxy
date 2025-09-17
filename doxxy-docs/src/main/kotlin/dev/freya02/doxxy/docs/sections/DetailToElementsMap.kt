@@ -15,7 +15,6 @@ class DetailToElementsMap private constructor(detailTarget: Element) {
         fun newDetail(detailName: String) {
             val type = DocDetail.Type.parseType(detailName)
 
-            @Suppress("LiftReturnOrAssignment")
             if (type == null) {
                 if (warned.add(detailName))
                     logger.warn { "Unknown method detail type: '$detailName' at ${detailTarget.baseUri()}" }

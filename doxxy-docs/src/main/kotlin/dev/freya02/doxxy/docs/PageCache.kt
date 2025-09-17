@@ -42,8 +42,7 @@ class PageCache private constructor(name: String) {
                             .build()
                     ).execute().use { response ->
                         check(response.isSuccessful) { "Failed to get '$url': ${response.code} ${response.message}" }
-                        val body = response.body ?: throw IllegalArgumentException("Got no body from url: $url")
-                        return@use body.string()
+                        response.body.string()
                     }.also { body ->
                         cachedFilePath.parent.createDirectories()
                         cachedFilePath.writeText(body)

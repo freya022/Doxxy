@@ -38,7 +38,7 @@ class Versions(
     private val docIndexMap: DocIndexMap,
     private val versionsRepository: VersionsRepository,
     private val githubClient: GithubClient,
-    private val mavenCentralClient: MavenRepositoryClient,
+    mavenCentralClient: MavenRepositoryClient,
 ) {
     private val bcChecker =
         MavenVersionChecker(mavenCentralClient, versionsRepository.getInitialVersion(LibraryType.BOT_COMMANDS))

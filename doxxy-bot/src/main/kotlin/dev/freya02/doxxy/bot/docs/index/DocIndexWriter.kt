@@ -82,7 +82,7 @@ internal class DocIndexWriter(
         }
     }
 
-    private fun JavadocClass.getRangedLink(baseLink: String): String? {
+    private fun JavadocClass.getRangedLink(baseLink: String): String {
         if (sourceMetadata == null) return baseLink
         val metadata = sourceMetadata.getClassMetadata(classNameFqcn)
         if (metadata == null) {

@@ -57,7 +57,7 @@ class ImplementationIndex(val docIndex: DocIndex, private val database: Database
         }
     }
 
-    suspend fun getMethod(className: String, signature: String): ImplementationIndex.Method? {
+    suspend fun getMethod(className: String, signature: String): Method? {
         return database.preparedStatement(
             """
                 select c.class_name,

@@ -16,7 +16,7 @@ import kotlin.time.Duration.Companion.minutes
 
 @BService
 class TextDocsController(private val commonDocsController: CommonDocsController) {
-    suspend fun getDocSuggestionMenu(docIndex: DocIndex, suggestions: List<DocSuggestion>, user: UserSnowflake): ButtonMenu<DocSuggestion> {
+    fun getDocSuggestionMenu(docIndex: DocIndex, suggestions: List<DocSuggestion>, user: UserSnowflake): ButtonMenu<DocSuggestion> {
         suspend fun callback(buttonEvent: ButtonEvent, entry: DocSuggestion) {
             val identifier = entry.fullIdentifier
             val doc = when {

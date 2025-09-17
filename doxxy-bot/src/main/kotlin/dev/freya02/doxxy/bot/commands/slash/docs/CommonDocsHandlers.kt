@@ -23,7 +23,6 @@ import io.github.freya022.botcommands.api.components.annotations.ComponentData
 import io.github.freya022.botcommands.api.components.annotations.JDASelectMenuListener
 import io.github.freya022.botcommands.api.components.event.StringSelectEvent
 import io.github.freya022.botcommands.api.core.annotations.Handler
-import io.github.oshai.kotlinlogging.KotlinLogging
 import net.dv8tion.jda.api.entities.UserSnowflake
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
@@ -139,8 +138,6 @@ class CommonDocsHandlers(
     }
 
     companion object {
-        private val logger = KotlinLogging.logger { }
-
         const val CLASS_NAME_AUTOCOMPLETE_NAME = "CommonDocsHandlers: className"
         const val METHOD_OR_FIELD_BY_CLASS_AUTOCOMPLETE_NAME = "CommonDocsHandlers: methodNameOrFieldByClass"
         const val SEARCH_AUTOCOMPLETE_NAME = "CommonDocsHandlers: search"

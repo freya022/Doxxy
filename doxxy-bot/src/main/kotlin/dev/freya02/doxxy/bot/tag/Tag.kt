@@ -1,12 +1,10 @@
 package dev.freya02.doxxy.bot.tag
 
-import java.lang.reflect.RecordComponent
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.time.Instant
 
-@JvmRecord
-data class Tag(
+class Tag(
     val guildId: Long,
     val ownerId: Long,
     val createdAt: Instant,
@@ -16,10 +14,6 @@ data class Tag(
     val uses: Int
 ) {
     companion object {
-        val COLUMN_NAMES =
-            Tag::class.java.recordComponents
-            .map { obj: RecordComponent -> obj.name }
-            .toTypedArray()
 
         @Throws(SQLException::class)
         fun fromResult(set: ResultSet): Tag {
