@@ -4,6 +4,7 @@ import dev.freya02.doxxy.common.Directories
 import dev.freya02.doxxy.docs.utils.HttpUtils
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Request
+import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
@@ -50,7 +51,7 @@ class PageCache private constructor(name: String) {
                 }
             }
 
-            HttpUtils.parseDocument(body, url)
+            Jsoup.parse(body, url)
         }
     }
 
