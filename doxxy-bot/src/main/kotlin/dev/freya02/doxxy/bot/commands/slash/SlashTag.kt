@@ -11,7 +11,9 @@ import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
 import io.github.freya022.botcommands.api.commands.application.CommandScope
 import io.github.freya022.botcommands.api.commands.application.annotations.DeclarationFilter
+import io.github.freya022.botcommands.api.commands.application.getApplicationCommandById
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
+import io.github.freya022.botcommands.api.commands.application.slash.SlashCommandInfo
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.JDASlashCommand
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.SlashOption
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.TopLevelSlashCommandData
@@ -273,6 +275,11 @@ class SlashTag(
         @SlashOption(name = "sorting", description = "Type of tag sorting", usePredefinedChoices = true) criteria: TagCriteria = TagCriteria.NAME
     ) {
         val totalTags = tagDB.getTotalTags(event.guild.idLong)
+        if (totalTags == 0) {
+            val createCommand = event.context.applicationCommandsContext.getApplicationCommandById<SlashCommandInfo>(event.commandIdLong, group = null, subcommand = "create")!!
+            return event.reply_("There are no tags in this guild, create one using ${createCommand.asMention}", ephemeral = true).queue()
+        }
+
         val pageEditor = PageEditor<Paginator> { _, _, embedBuilder, page: Int ->
             InlineEmbed(embedBuilder).apply {
                 try {
