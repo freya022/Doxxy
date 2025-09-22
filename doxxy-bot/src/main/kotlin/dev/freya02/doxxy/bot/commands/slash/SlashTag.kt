@@ -44,6 +44,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 import org.jetbrains.annotations.Contract
 import java.sql.SQLException
+import kotlin.math.ceil
 import kotlin.time.Duration.Companion.minutes
 
 private typealias TagConsumer = suspend (Tag) -> Unit
@@ -298,7 +299,7 @@ class SlashTag(
             }
         }
 
-        paginators.paginator(totalTags / 10, pageEditor)
+        paginators.paginator(ceil(totalTags / 10.0).toInt(), pageEditor)
             .setConstraints(InteractionConstraints.ofUsers(event.user))
             .setTimeout(5.minutes) { p: Paginator ->
                 p.cleanup()
