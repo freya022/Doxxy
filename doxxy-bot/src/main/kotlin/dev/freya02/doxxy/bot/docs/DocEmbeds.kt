@@ -70,6 +70,8 @@ object DocEmbeds {
     }
 
     fun toEmbed(clazz: JavadocClass, method: JavadocMethod): MessageEmbed = embed {
+        // Cannot use the Javadoc's method signature due to TYPE_USE annotations being duplicated,
+        // see https://bugs.openjdk.java.net/browse/JDK-8278592
         var title = method.getSimpleAnnotatedSignature(clazz)
         if (title.length > MessageEmbed.TITLE_MAX_LENGTH) {
             title = "%s%s#%s : %s - [full signature on online docs]".format(
@@ -82,12 +84,6 @@ object DocEmbeds {
 
         builder.setTitle(title, method.onlineURL)
 
-        //Should use that but JB annotations are duplicated, bruh momentum
-//		    builder.setTitle(method.getMethodSignature(), method.getURL());
-        if (clazz != method.declaringClass) {
-            builder.setDescription("**Inherited from ${method.declaringClass.className}**\n\n")
-        }
-
         builder.addDocDescription(method)
         builder.addDocDeprecation(method)
         builder.addDocDetails(method, includedTypes)
@@ -97,10 +93,6 @@ object DocEmbeds {
     fun toEmbed(clazz: JavadocClass, field: JavadocField): MessageEmbed = embed {
         title = clazz.className + " : " + field.simpleSignature
         url = field.onlineURL
-
-        if (clazz != field.declaringClass) {
-            description = "**Inherited from ${field.declaringClass.className}**\n\n"
-        }
 
         builder.addDocDescription(field)
         builder.addDocDeprecation(field)
