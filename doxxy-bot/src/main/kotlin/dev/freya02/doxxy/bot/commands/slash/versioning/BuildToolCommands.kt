@@ -94,7 +94,7 @@ class BuildToolCommands(private val versions: Versions, private val buttons: But
     suspend fun onSlashGradle(
         event: GuildSlashEvent,
         scriptType: ScriptType,
-        flavor: GradleFlavor,
+        flavor: GradleFlavor = GradleFlavor.KOTLIN,
         libraryType: LibraryType = LibraryType.getDefaultLibrary(event.guild)
     ) {
         val buildToolType = when (flavor) {
@@ -117,7 +117,7 @@ class BuildToolCommands(private val versions: Versions, private val buttons: But
             description = "Shows the Gradle dependencies for a library (default: ${LibraryType.getDefaultLibrary(manager.guild).displayString})"
 
             option("flavor") {
-                description = "The language the gradle script should be in"
+                description = "The language the gradle script should be in (default: Kotlin)"
                 usePredefinedChoices = true
             }
 
