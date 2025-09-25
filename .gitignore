@@ -11,3 +11,6 @@
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
+
+# SQL playgrounds
+pgAdmin
