@@ -47,7 +47,7 @@ internal class DocIndexWriter(
 
             System.gc() //600 MB -> 30 MB
 
-            preparedStatement("delete from doc where source_id = ?") {
+            preparedStatement("delete from declaration where source_id = ?") {
                 executeUpdate(sourceType.id)
             }
 
@@ -72,7 +72,7 @@ internal class DocIndexWriter(
                     }
                 }
 
-            preparedStatement("refresh materialized view doc_view") {
+            preparedStatement("refresh materialized view declaration_full_idents") {
                 executeUpdate()
             }
         }.also {
@@ -176,11 +176,11 @@ internal class DocIndexWriter(
         embedJson: DataObject,
         sourceLink: String?
     ): Int {
-        return transaction.preparedStatement(
+        val declarationId = transaction.preparedStatement(
             """
-            insert into doc (source_id, type, classname, identifier, identifier_no_args, human_identifier, human_class_identifier,
-                             return_type, embed, javadoc_link, source_link)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            insert into declaration (source_id, type, classname, identifier, identifier_no_args, human_identifier, human_class_identifier,
+                                    return_type, source_link)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             returning id""".trimIndent()
         ) {
             executeQuery(
@@ -192,11 +192,21 @@ internal class DocIndexWriter(
                 javadoc.humanIdentifier,
                 javadoc.toHumanClassIdentifier(className),
                 javadoc.returnTypeNoAnnotations,
+                sourceLink
+            ).read().getInt("id")
+        }
+
+        transaction.preparedStatement("""
+            insert into javadoc (decl_id, embed, javadoc_link) values (?, ?, ?)
+        """.trimIndent()) {
+            executeUpdate(
+                declarationId,
                 embedJson.toString(),
                 javadoc.onlineURL,
-                sourceLink
-            ).read()["id"]
+            )
         }
+
+        return declarationId
     }
 
     context(transaction: Transaction)

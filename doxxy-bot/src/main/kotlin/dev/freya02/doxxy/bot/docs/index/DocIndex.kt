@@ -37,7 +37,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         return database.preparedStatement(
             """
                 select *
-                from doc
+                from declaration
                 where source_id = ?
                   and classname = ?
                 limit 1
@@ -51,7 +51,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         return database.preparedStatement(
             """
                 select *
-                from doc
+                from declaration
                 where source_id = ?
                   and classname = ?
                   and identifier = ?
@@ -94,7 +94,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         }
 
     override suspend fun findSignaturesIn(className: String, query: String?, docTypes: DocTypes, limit: Int): List<DocSearchResult> {
-        @Language("PostgreSQL", prefix = "select * from doc ")
+        @Language("PostgreSQL", prefix = "select * from declaration ")
         val sort = when {
             query.isNullOrEmpty() -> "order by identifier"
             else -> "order by similarity(identifier_no_args, ?) desc"
@@ -108,7 +108,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         database.preparedStatement(
             """
                 select full_identifier, human_identifier, human_class_identifier, return_type
-                from doc natural join doc_view
+                from declaration natural join declaration_full_idents
                 where source_id = ?
                   and type = any (?)
                   and classname = ?
@@ -123,7 +123,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
     }
 
     override suspend fun getClasses(query: String?, limit: Int): List<String> {
-        @Language("PostgreSQL", prefix = "select * from doc ")
+        @Language("PostgreSQL", prefix = "select * from declaration ")
         val limitingSort = when {
             query.isNullOrEmpty() -> "order by classname limit ?"
             else -> "order by similarity(classname, ?) desc limit ?"
@@ -137,7 +137,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         return database.preparedStatement(
             """
             select classname
-            from doc
+            from declaration
             where source_id = ?
               and type = ?
             $limitingSort
@@ -162,8 +162,8 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         val type: String? = database.preparedStatement(
             """
                 select coalesce(return_type, classname) as type
-                from doc
-                         natural left join doc_view
+                from declaration
+                         natural left join declaration_full_idents
                 where source_id = ?
                   and full_identifier = ?
                 limit 1
@@ -187,7 +187,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         if ('#' in query) {
             //If the class name has an exact match
             val className = query.substringBefore('#')
-            val isExactClassName = preparedStatement("select id from doc where source_id = ? and classname = ? limit 1") {
+            val isExactClassName = preparedStatement("select id from declaration where source_id = ? and classname = ? limit 1") {
                 executeQuery(sourceType.id, className).any()
             }
             if (isExactClassName) {
@@ -214,8 +214,8 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                              return_type,
                              $similarityScoreQuery                       as overall_similarity,
                              type
-                      from doc_view
-                               natural left join doc
+                      from declaration_full_idents
+                               natural left join declaration
                       where source_id = ?
                         and type = any (?)
                         and full_identifier % ? -- Uses a fake threshold of 0.1, set above
@@ -271,8 +271,8 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                        coalesce(human_class_identifier, classname) as human_class_identifier,
                        return_type,
                        $similarityScoreQuery                       as overall_similarity
-                from doc_view
-                         natural left join doc
+                from declaration_full_idents
+                         natural left join declaration
                 where source_id = ?
                   and type = any (?)
                 -- Uses a fake threshold set by the caller, 
@@ -294,7 +294,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         val matchResult = queryRegex.matchEntire(query) ?: return null
         val (entireMatch, classname, identifier) = matchResult.groupValues
 
-        @Language("PostgreSQL", prefix = "select ", suffix = " from doc")
+        @Language("PostgreSQL", prefix = "select ", suffix = " from declaration")
         val similarityScoreQuery = when {
             //Guild#updateCommands, find with both columns
             classname.isNotBlank() && identifier.isNotBlank() -> "similarity(?, classname) * similarity(?, identifier_no_args)"
@@ -325,7 +325,8 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         database.preparedStatement(
             """
                 select id, embed, javadoc_link, source_link
-                from doc
+                from declaration
+                join javadoc on javadoc.decl_id = declaration.id
                 where source_id = ?
                   and type = ?
                   and lower(classname) = lower(?)

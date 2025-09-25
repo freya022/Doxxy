@@ -74,7 +74,7 @@ class ExampleTargetsController(private val database: Database, config: Config) {
             database.preparedStatement(
                 """
                     select d.classname
-                    from doc d
+                    from declaration d
                     where d.source_id = ?
                       and d.classname = any (?)
                 """.trimIndent(), readOnly = true
@@ -111,7 +111,7 @@ class ExampleTargetsController(private val database: Database, config: Config) {
             database.preparedStatement(
                 """
                     select d.classname || '#' || split_part(d.identifier, '(', 1) as qualified_partial_identifier
-                    from doc d
+                    from declaration d
                     where d.source_id = ?
                       and d.type != 1
                       and ($conditions)

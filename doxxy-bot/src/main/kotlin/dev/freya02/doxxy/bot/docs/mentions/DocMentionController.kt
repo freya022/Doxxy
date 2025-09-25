@@ -50,8 +50,8 @@ class DocMentionController(
                                    full_identifier,
                                    human_class_identifier,
                                    similarity(classname, ?) * similarity(identifier_no_args, ?) as overall_similarity
-                            from doc_view
-                                     natural join doc
+                            from declaration_full_idents
+                                     natural join declaration
                             where type != 1
                               and classname % ?
                               and identifier_no_args % ?
@@ -116,7 +116,7 @@ class DocMentionController(
             transaction.preparedStatement(
                 """
                     select d.source_id, d.classname
-                    from doc d
+                    from declaration d
                     where d.type = 1
                       and classname = any (?);
                 """.trimIndent()
