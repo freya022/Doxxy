@@ -156,16 +156,21 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             ?: return search(chain.lastQualifiedSignature)
 
         // Query next methods
+        val lastDeclarationParts = lastFullIdentifier.split('#')
+        if (lastDeclarationParts.size != 2) return search(chain.lastQualifiedSignature)
+
         val type: String? = database.preparedStatement(
             """
                 select coalesce(return_type, classname) as type
                 from fully_qualified_declarations
                 where source_id = ?
-                  and full_identifier = ?
+                  and classname = ?
+                  and identifier = ?
                 limit 1
             """.trimIndent(), readOnly = true
         ) {
-            executeQuery(sourceType.id, lastFullIdentifier).readOrNull()?.getString("type")
+            val (className, memberName) = lastDeclarationParts
+            executeQuery(sourceType.id, className, memberName).readOrNull()?.getString("type")
         }
 
         return if (type != null)
