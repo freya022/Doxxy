@@ -153,6 +153,9 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
     override suspend fun resolveDocAutocomplete(chain: DocResolveChain): List<DocSearchResult> {
         //Find back last search result
         val lastFullIdentifier = chain.secondLastQualifiedSignatureOrNull
+            ?: return search(chain.lastQualifiedSignature)
+
+        // Query next methods
         val type: String? = database.preparedStatement(
             """
                 select coalesce(return_type, classname) as type
@@ -166,12 +169,10 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             executeQuery(sourceType.id, lastFullIdentifier).readOrNull()?.getString("type")
         }
 
-        return when {
-            // Query next methods
-            type != null -> search("$type#${chain.lastSignature}")
-            // Do full search
-            else -> search(chain.lastQualifiedSignature)
-        }
+        return if (type != null)
+            search("$type#${chain.lastSignature}")
+        else
+            search(chain.lastQualifiedSignature)
     }
 
     override suspend fun search(query: String): List<DocSearchResult> {
