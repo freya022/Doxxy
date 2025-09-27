@@ -20,6 +20,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import net.dv8tion.jda.api.EmbedBuilder
+import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.utils.data.DataObject
 import org.intellij.lang.annotations.Language
 
@@ -180,57 +181,76 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         }
     }
 
-    //Performance optimized
-    //  The trick may be to set a lower similarity threshold as to get more, but similar enough results
-    //  And then filter with the accurate similarity on the remaining rows
-    override suspend fun search(query: String): List<DocSearchResult> = database.transactional(readOnly = true) {
-        if ('#' in query) {
-            //If the class name has an exact match
-            val className = query.substringBefore('#')
-            val isExactClassName = preparedStatement("select id from declaration where source_id = ? and classname = ? limit 1") {
+    private val memberDelimiters = charArrayOf('#', '.')
+    override suspend fun search(query: String): List<DocSearchResult> {
+        if (query.isEmpty()) return emptyList()
+
+        val memberDelimiterIdx = query.indexOfAny(memberDelimiters)
+        if (memberDelimiterIdx != -1) {
+            // Find method or field in a class
+
+            // If the class name has an exact match
+            val className = query.take(memberDelimiterIdx)
+            val memberName = query.drop(memberDelimiterIdx + 1)
+            val isExactClassName = database.preparedStatement("select id from declaration where source_id = ? and classname = ? limit 1", readOnly = true) {
                 executeQuery(sourceType.id, className).any()
             }
             if (isExactClassName) {
-                return@transactional findSignaturesIn(className, query.substringAfter('#'), DocTypes.IDENTIFIERS, limit = 25)
+                return findSignaturesIn(className, memberName, DocTypes.IDENTIFIERS, limit = 25)
+            }
+
+            return database.transactional(readOnly = true) {
+                preparedStatement("set pg_trgm.similarity_threshold = 0.2;") { executeUpdate() }
+
+                preparedStatement("""
+                    SELECT
+                        * 
+                    FROM
+                        search_members(?, ?, ?)
+                    ORDER BY
+                        similarity DESC,
+                        full_identifier
+                    LIMIT ${OptionData.MAX_CHOICES};
+                """.trimIndent()) {
+                    executeQuery(className, memberName, sourceType.id).map { DocSearchResult(it) }
+                }
+            }
+        } else {
+            // Find anything
+
+            return database.transactional(readOnly = true) {
+                preparedStatement("set pg_trgm.similarity_threshold = 0.1;") { executeUpdate() }
+
+                val inferredTypes = when {
+                    query.all { it.isUpperCase() } -> DocTypes.FIELD
+                    else -> DocTypes(DocType.CLASS, DocType.METHOD)
+                }
+
+                val searchQuery = inferredTypes.joinToString(separator = "\nUNION ALL\n") { type ->
+                    """
+                        SELECT
+                            *
+                        FROM
+                            search_declarations(?, _source_id := ?, _type := ${type.id})
+                    """.trimIndent()
+                }
+
+                preparedStatement("""
+                    $searchQuery
+                    ORDER BY
+                        similarity DESC,
+                        full_identifier
+                    LIMIT ${OptionData.MAX_CHOICES};
+                """.trimIndent()) {
+                    repeat(inferredTypes.size) {
+                        setString((it * 2) + 1, query)
+                        setInt((it * 2) + 2, sourceType.id)
+                    }
+
+                    executeQuery().map { DocSearchResult(it) }
+                }
             }
         }
-
-        preparedStatement("set pg_trgm.similarity_threshold = 0.1;") { executeUpdate() }
-
-        val results = findAnySignatures0(query, limit = 5, DocTypes.ANY)
-
-        val inferredTypes = when {
-            query.substringAfter('#').all { it.isUpperCase() } -> DocTypes.FIELD
-            '#' in query -> DocTypes(DocType.METHOD)
-            else -> DocTypes(DocType.CLASS, DocType.METHOD)
-        }
-
-        withSimilarityScoreMethod(query) { similarityScoreQuery, similarityScoreQueryParams ->
-            results + preparedStatement("""
-                select *
-                from (select full_identifier,
-                             coalesce(human_identifier, classname)       as human_identifier,
-                             coalesce(human_class_identifier, classname) as human_class_identifier,
-                             return_type,
-                             $similarityScoreQuery                       as overall_similarity,
-                             type
-                      from declaration_full_idents
-                               natural left join declaration
-                      where source_id = ?
-                        and type = any (?)
-                        and full_identifier % ? -- Uses a fake threshold of 0.1, set above
-                     ) as low_accuracy_search
-                where overall_similarity > 0.22     --Real threshold
-                  and not full_identifier = any (?) --Remove previous results
-                order by case when not ? like '%#%' then type end, --Don't order by type if the query asks for identifiers of a class 
-                         overall_similarity desc nulls last,
-                         full_identifier                           --Class > Method > Field, then similarity
-                limit ?;
-            """.trimIndent()) {
-                executeQuery(*similarityScoreQueryParams, sourceType.id, inferredTypes.map { it.id }.toTypedArray(), query, results.map { it.fullIdentifier }.toTypedArray(), query, 25 - results.size)
-                    .map { DocSearchResult(it) }
-            }
-        } ?: emptyList()
     }
 
     suspend fun reindex(reindexData: ReindexData): DocIndex {
