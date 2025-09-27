@@ -13,7 +13,6 @@ import dev.freya02.doxxy.docs.PageCache
 import dev.freya02.doxxy.docs.sections.SeeAlso.SeeAlsoReference
 import dev.freya02.doxxy.docs.sections.SeeAlso.TargetType
 import io.github.freya022.botcommands.api.core.db.Database
-import io.github.freya022.botcommands.api.core.db.Transaction
 import io.github.freya022.botcommands.api.core.db.preparedStatement
 import io.github.freya022.botcommands.api.core.db.transactional
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -25,7 +24,7 @@ import net.dv8tion.jda.api.utils.data.DataObject
 import org.intellij.lang.annotations.Language
 
 private val logger = KotlinLogging.logger { }
-private val queryRegex = Regex("""^(\w*)#?(\w*)""")
+private val memberDelimiters = charArrayOf('#', '.')
 
 //Initial construct just allows database access
 // Further updates must be invoked by external methods such as version checkers
@@ -87,12 +86,6 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
 
         return CachedField(this, className, fieldName, embed, seeAlsoReferences, javadocLink, sourceLink)
     }
-
-    override suspend fun findAnySignatures(query: String, limit: Int, docTypes: DocTypes) =
-        database.transactional(readOnly = true) {
-            preparedStatement("set pg_trgm.similarity_threshold = 0.1;") { executeUpdate() }
-            findAnySignatures0(query, limit, docTypes)
-        }
 
     override suspend fun findSignaturesIn(className: String, query: String?, docTypes: DocTypes, limit: Int): List<DocSearchResult> {
         @Language("PostgreSQL", prefix = "select * from declaration ")
@@ -181,7 +174,6 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         }
     }
 
-    private val memberDelimiters = charArrayOf('#', '.')
     override suspend fun search(query: String): List<DocSearchResult> {
         if (query.isEmpty()) return emptyList()
 
@@ -277,64 +269,6 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         System.gc() //Very effective
 
         return this
-    }
-
-    /** **Requires `pg_trgm.similarity_threshold` to be set**  */
-    context(transaction: Transaction)
-    private suspend fun findAnySignatures0(query: String, limit: Int, docTypes: DocTypes): List<DocSearchResult> {
-        if (docTypes.isEmpty()) throw IllegalArgumentException("Must have at least one doc type")
-
-        return withSimilarityScoreMethod(query) { similarityScoreQuery, similarityScoreQueryParams ->
-            transaction.preparedStatement("""
-                select full_identifier,
-                       coalesce(human_identifier, classname)       as human_identifier,
-                       coalesce(human_class_identifier, classname) as human_class_identifier,
-                       return_type,
-                       $similarityScoreQuery                       as overall_similarity
-                from declaration_full_idents
-                         natural left join declaration
-                where source_id = ?
-                  and type = any (?)
-                -- Uses a fake threshold set by the caller, 
-                --  it should be low enough as that the X best values are always displayed, 
-                --  but ordered by the accurate score
-                  and ? % full_identifier
-                order by overall_similarity desc nulls last, full_identifier
-                limit ?;
-            """.trimIndent()) {
-                executeQuery(*similarityScoreQueryParams, sourceType.id, docTypes.map { it.id }.toTypedArray(), query, limit).map { DocSearchResult(it) }
-            }
-        } ?: return emptyList()
-    }
-
-    private suspend fun withSimilarityScoreMethod(
-        query: String,
-        block: suspend (String, Array<out Any>) -> List<DocSearchResult>
-    ): List<DocSearchResult>? {
-        val matchResult = queryRegex.matchEntire(query) ?: return null
-        val (entireMatch, classname, identifier) = matchResult.groupValues
-
-        @Language("PostgreSQL", prefix = "select ", suffix = " from declaration")
-        val similarityScoreQuery = when {
-            //Guild#updateCommands, find with both columns
-            classname.isNotBlank() && identifier.isNotBlank() -> "similarity(?, classname) * similarity(?, identifier_no_args)"
-            //Guild#, find all methods of that class
-            classname.isNotBlank() && '#' in entireMatch -> "similarity(?, classname)"
-            //updateCommands or Guild, get the best similarity between class and identifier
-            classname.isNotBlank() -> "greatest(similarity(?, classname), similarity(?, identifier_no_args))"
-            //#updateCommands, get the best similarity in identifiers
-            identifier.isNotBlank() -> "similarity(?, identifier_no_args)"
-            else -> "0" //No input
-        }
-        val similarityScoreQueryParams = when {
-            classname.isNotBlank() && identifier.isNotBlank() -> arrayOf(classname, identifier)
-            classname.isNotBlank() && '#' in entireMatch -> arrayOf(classname)
-            classname.isNotBlank() -> arrayOf(classname, classname)
-            identifier.isNotBlank() -> arrayOf(identifier)
-            else -> arrayOf()
-        }
-
-        return block(similarityScoreQuery, similarityScoreQueryParams)
     }
 
     private suspend fun findDoc(
