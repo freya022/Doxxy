@@ -102,7 +102,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         database.preparedStatement(
             """
                 select full_identifier, human_identifier, human_class_identifier, return_type
-                from declaration natural join declaration_full_idents
+                from fully_qualified_declarations
                 where source_id = ?
                   and type = any (?)
                   and classname = ?
@@ -159,8 +159,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         val type: String? = database.preparedStatement(
             """
                 select coalesce(return_type, classname) as type
-                from declaration
-                         natural left join declaration_full_idents
+                from fully_qualified_declarations
                 where source_id = ?
                   and full_identifier = ?
                 limit 1

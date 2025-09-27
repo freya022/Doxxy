@@ -71,10 +71,6 @@ internal class DocIndexWriter(
                         throw RuntimeException("An exception occurred while reading the docs of '${javadocClass.sourceURL}'", e)
                     }
                 }
-
-            preparedStatement("refresh materialized view declaration_full_idents") {
-                executeUpdate()
-            }
         }.also {
             database.preparedStatement("vacuum analyse") {
                 executeUpdate()
