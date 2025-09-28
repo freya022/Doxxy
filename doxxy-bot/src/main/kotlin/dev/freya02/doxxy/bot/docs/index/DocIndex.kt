@@ -133,11 +133,11 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             select classname
             from declaration
             where source_id = ?
-              and type = ?
+              and type = ${DocType.CLASS.id}
             $limitingSort
             """.trimIndent()
         ) {
-            executeQuery(sourceType.id, DocType.CLASS.id, *sortArgs).map { it["classname"] }
+            executeQuery(sourceType.id, *sortArgs).map { it["classname"] }
         }
     }
 
