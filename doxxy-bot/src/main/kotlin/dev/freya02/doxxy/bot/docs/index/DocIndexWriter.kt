@@ -176,29 +176,32 @@ internal class DocIndexWriter(
         }
     }
 
+    // TODO make overloads of this method to simplify stuff
     context(transaction: Transaction)
     private suspend fun insertDeclaration(
         docType: DocType,
-        className: String,
+        className: String, // TODO replace with 'currentClass: JavadocClass'
         javadoc: AbstractJavadoc,
         sourceLink: String?,
         javadocId: Int,
     ): Int {
         return transaction.preparedStatement(
             """
-            insert into declaration (source_id, type, classname, identifier, identifier_no_args, human_identifier, human_class_identifier,
+            insert into declaration (source_id, type, class_name, member_name, method_args, display_method_args,
                                     return_type, source_link, javadoc_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             returning id""".trimIndent()
         ) {
             executeQuery(
                 sourceType.id,
                 docType.id,
                 className,
-                javadoc.identifier,
                 javadoc.identifierNoArgs,
-                javadoc.humanIdentifier,
-                javadoc.toHumanClassIdentifier(className),
+                // TODO have method to get arguments directly
+                javadoc.identifier?.let { javadoc.identifier!!.dropWhile { it != '(' } },
+                // TODO have method to get display arguments directly
+                //  be careful not to make a string too long, as the class name gets prepended
+                javadoc.humanIdentifier?.let { javadoc.toHumanClassIdentifier(className)!!.substringAfter("$className#").dropWhile { it != '(' } },
                 javadoc.returnTypeNoAnnotations,
                 sourceLink,
                 javadocId,

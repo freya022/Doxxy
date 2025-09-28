@@ -118,7 +118,7 @@ class ImplementationIndex(val docIndex: DocIndex, private val database: Database
                                     and superclass.class_name = ?)
                 select subclass.class_name, subclass.class_type, subclass.source_link
                 from subclass
-                         join declaration on declaration.classname = subclass.class_name -- Join on documented subclasses
+                         join declaration on declaration.class_name = subclass.class_name -- Join on documented subclasses
                 group by subclass.class_name, subclass.class_type, subclass.source_link
                 order by length(subclass.class_name), subclass.class_name;
             """.trimIndent(), readOnly = true

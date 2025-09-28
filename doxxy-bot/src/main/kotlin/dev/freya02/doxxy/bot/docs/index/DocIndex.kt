@@ -18,9 +18,7 @@ import io.github.freya022.botcommands.api.core.db.transactional
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-import net.dv8tion.jda.api.utils.data.DataObject
 import org.intellij.lang.annotations.Language
 
 private val logger = KotlinLogging.logger { }
@@ -39,7 +37,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                 select *
                 from declaration
                 where source_id = ?
-                  and classname = ?
+                  and class_name = ?
                 limit 1
             """.trimIndent(), readOnly = true
         ) {
@@ -53,8 +51,8 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                 select *
                 from declaration
                 where source_id = ?
-                  and classname = ?
-                  and identifier = ?
+                  and class_name = ?
+                  and concat(member_name, method_args) = ?
                 limit 1
             """.trimIndent(), readOnly = true
         ) {
@@ -63,7 +61,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
     }
 
     override suspend fun getClassDoc(className: String): CachedClass? {
-        val (docId, embed, sourceLink) = findDoc(DocType.CLASS, className) ?: return null
+        val (docId, embed, sourceLink) = findClass(className) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
         val subclasses = implementationIndex.getSubclasses(className)
         val superclasses = implementationIndex.getSuperclasses(className)
@@ -72,7 +70,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
     }
 
     override suspend fun getMethodDoc(className: String, identifier: String): CachedMethod? {
-        val (docId, embed, sourceLink) = findDoc(DocType.METHOD, className, identifier) ?: return null
+        val (docId, embed, sourceLink) = findMember(DocType.METHOD, className, identifier) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
         val implementations = implementationIndex.getImplementations(className, identifier)
         val overriddenMethods = implementationIndex.getOverriddenMethods(className, identifier)
@@ -81,7 +79,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
     }
 
     override suspend fun getFieldDoc(className: String, fieldName: String): CachedField? {
-        val (docId, embed, sourceLink) = findDoc(DocType.FIELD, className, fieldName) ?: return null
+        val (docId, embed, sourceLink) = findMember(DocType.FIELD, className, fieldName) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
 
         return CachedField(this, className, fieldName, embed, seeAlsoReferences, sourceLink)
@@ -90,8 +88,8 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
     override suspend fun findSignaturesIn(className: String, query: String?, docTypes: DocTypes, limit: Int): List<DocSearchResult> {
         @Language("PostgreSQL", prefix = "select * from declaration ")
         val sort = when {
-            query.isNullOrEmpty() -> "order by identifier"
-            else -> "order by similarity(identifier_no_args, ?) desc"
+            query.isNullOrEmpty() -> "order by concat(member_name, method_args)"
+            else -> "order by similarity(member_name, ?) desc"
         }
 
         val sortArgs = when {
@@ -102,11 +100,11 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
 
         database.preparedStatement(
             """
-                select full_identifier, human_identifier, human_class_identifier, return_type
-                from fully_qualified_declarations
+                select qualified_member, display_qualified_member, return_type
+                from qualified_declaration
                 where source_id = ?
                   and type = any (?)
-                  and classname = ?
+                  and class_name = ?
                 $sort
                 limit ?
             """.trimIndent(),
@@ -120,8 +118,8 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
     override suspend fun getClasses(query: String?, limit: Int): List<String> {
         @Language("PostgreSQL", prefix = "select * from declaration ")
         val limitingSort = when {
-            query.isNullOrEmpty() -> "order by classname limit ?"
-            else -> "order by similarity(classname, ?) desc limit ?"
+            query.isNullOrEmpty() -> "order by class_name limit ?"
+            else -> "order by similarity(class_name, ?) desc limit ?"
         }
 
         val sortArgs: Array<*> = when {
@@ -131,14 +129,14 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
 
         return database.preparedStatement(
             """
-            select classname
+            select class_name
             from declaration
             where source_id = ?
               and type = ${DocType.CLASS.id}
             $limitingSort
             """.trimIndent()
         ) {
-            executeQuery(sourceType.id, *sortArgs).map { it["classname"] }
+            executeQuery(sourceType.id, *sortArgs).map { it["class_name"] }
         }
     }
 
@@ -162,16 +160,16 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
 
         val type: String? = database.preparedStatement(
             """
-                select coalesce(return_type, classname) as type
-                from fully_qualified_declarations
+                select coalesce(return_type, class_name) as type
+                from qualified_declaration
                 where source_id = ?
-                  and classname = ?
-                  and identifier = ?
+                  and class_name = ?
+                  and concat(member_name, method_args) = ?
                 limit 1
             """.trimIndent(), readOnly = true
         ) {
-            val (className, memberName) = lastDeclarationParts
-            executeQuery(sourceType.id, className, memberName).readOrNull()?.getString("type")
+            val (className, memberSignature) = lastDeclarationParts
+            executeQuery(sourceType.id, className, memberSignature).readOrNull()?.getString("type")
         }
 
         return if (type != null)
@@ -190,7 +188,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             // If the class name has an exact match
             val className = query.take(memberDelimiterIdx)
             val memberName = query.drop(memberDelimiterIdx + 1)
-            val isExactClassName = database.preparedStatement("select id from declaration where source_id = ? and classname = ? limit 1", readOnly = true) {
+            val isExactClassName = database.preparedStatement("select id from declaration where source_id = ? and class_name = ? limit 1", readOnly = true) {
                 executeQuery(sourceType.id, className).any()
             }
             if (isExactClassName) {
@@ -207,7 +205,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                         search_members(?, ?, ?)
                     ORDER BY
                         similarity DESC,
-                        full_identifier
+                        qualified_member
                     LIMIT ${OptionData.MAX_CHOICES};
                 """.trimIndent()) {
                     executeQuery(className, memberName, sourceType.id).map { DocSearchResult(it) }
@@ -237,7 +235,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                     $searchQuery
                     ORDER BY
                         similarity DESC,
-                        full_identifier
+                        qualified_member
                     LIMIT ${OptionData.MAX_CHOICES};
                 """.trimIndent()) {
                     repeat(inferredTypes.size) {
@@ -277,11 +275,26 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
         return this
     }
 
-    private suspend fun findDoc(
-        docType: DocType,
-        className: String,
-        identifier: String? = null
-    ): DocFindData? {
+    private suspend fun findClass(className: String): DocFindData? {
+        database.preparedStatement(
+            """
+                select id, embed, source_link
+                from declaration
+                join javadoc using (javadoc_id)
+                where source_id = ?
+                  and type = ${DocType.CLASS.id}
+                  and lower(class_name) = lower(?)
+                limit 1
+            """.trimIndent()
+        ) {
+            val result = executeQuery(sourceType.id, className).readOrNull() ?: return null
+            return DocFindData(result)
+        }
+    }
+
+    private suspend fun findMember(docType: DocType, className: String, identifier: String): DocFindData? {
+        require(docType != DocType.CLASS)
+
         database.preparedStatement(
             """
                 select id, embed, source_link
@@ -289,16 +302,13 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                 join javadoc using (javadoc_id)
                 where source_id = ?
                   and type = ?
-                  and lower(classname) = lower(?)
-                  and quote_nullable(identifier) = quote_nullable(?)
+                  and lower(class_name) = lower(?)
+                  and concat(member_name, method_args) = ?
                 limit 1
-            """.trimIndent()) {
+            """.trimIndent()
+        ) {
             val result = executeQuery(sourceType.id, docType.id, className, identifier).readOrNull() ?: return null
-            return DocFindData(
-                result["id"],
-                result.getString("embed").let(DataObject::fromJson).let(EmbedBuilder::fromData).build(),
-                result["source_link"]
-            )
+            return DocFindData(result)
         }
     }
 

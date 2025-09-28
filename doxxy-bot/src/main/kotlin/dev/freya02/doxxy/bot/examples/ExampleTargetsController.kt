@@ -73,13 +73,13 @@ class ExampleTargetsController(private val database: Database, config: Config) {
         return classes.mapValuesTo(enumMapOf()) { (documentedExampleLibrary, targetClasses) ->
             database.preparedStatement(
                 """
-                    select d.classname
+                    select d.class_name
                     from declaration d
                     where d.source_id = ?
-                      and d.classname = any (?)
+                      and d.class_name = any (?)
                 """.trimIndent(), readOnly = true
             ) {
-                executeQuery(documentedExampleLibrary.toDocSourceType().id, targetClasses.map { it.str }.toTypedArray()).mapTo(hashSetOf()) { SimpleClassName(it["classname"]) }
+                executeQuery(documentedExampleLibrary.toDocSourceType().id, targetClasses.map { it.str }.toTypedArray()).mapTo(hashSetOf()) { SimpleClassName(it["class_name"]) }
             }
         }
     }
@@ -97,20 +97,20 @@ class ExampleTargetsController(private val database: Database, config: Config) {
                     val memberConditionValues = arrayListOf<String>()
                     qualifiedPartialIdentifiers.map { it.identifier }.forEach { partialIdentifier ->
                         when (partialIdentifier.type) {
-                            PartialIdentifier.Type.FULL_METHOD -> memberConditions.add("d.identifier = ?")
-                            PartialIdentifier.Type.OVERLOADS -> memberConditions.add("d.identifier like ? || '%'")
-                            PartialIdentifier.Type.FIELD -> memberConditions.add("d.identifier = ?")
+                            PartialIdentifier.Type.FULL_METHOD -> memberConditions.add("concat(d.member_name, d.method_args) = ?")
+                            PartialIdentifier.Type.OVERLOADS -> memberConditions.add("concat(d.member_name, d.method_args) like ? || '%'")
+                            PartialIdentifier.Type.FIELD -> memberConditions.add("d.member_name = ?")
                         }
                         memberConditionValues += partialIdentifier.str
                     }
-                    conditions.add("d.classname = ? and ($memberConditions)")
+                    conditions.add("d.class_name = ? and ($memberConditions)")
                     conditionValues += className.str
                     conditionValues += memberConditionValues
                 }
 
             database.preparedStatement(
                 """
-                    select d.classname || '#' || split_part(d.identifier, '(', 1) as qualified_partial_identifier
+                    select d.class_name || '#' || d.member_name as qualified_partial_identifier
                     from declaration d
                     where d.source_id = ?
                       and d.type != 1
