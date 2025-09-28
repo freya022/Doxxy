@@ -208,7 +208,7 @@ object IntegrationTests {
         methodName,
         methodSignature,
         parameters.map { it.toSerializable() },
-        methodReturnType,
+        returnType,
         isStatic,
         descriptionElements,
         deprecationElement,

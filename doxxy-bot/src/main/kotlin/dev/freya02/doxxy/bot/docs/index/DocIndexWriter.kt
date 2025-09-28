@@ -11,6 +11,7 @@ import dev.freya02.doxxy.docs.JavadocSource
 import dev.freya02.doxxy.docs.JavadocSources
 import dev.freya02.doxxy.docs.declarations.*
 import dev.freya02.doxxy.docs.sections.ClassDetailType
+import dev.freya02.doxxy.docs.utils.removeAnnotations
 import io.github.freya022.botcommands.api.core.db.Database
 import io.github.freya022.botcommands.api.core.db.Transaction
 import io.github.freya022.botcommands.api.core.db.preparedStatement
@@ -71,11 +72,13 @@ internal class DocIndexWriter(
                         val sourceLink = baseLink?.let { javadocClass.getRangedLink(it) }
 
                         val javadocId = insertJavadoc(classEmbedJson)
-                        val classDocId = insertDeclaration(DocType.CLASS, javadocClass.className, javadocClass, sourceLink, javadocId)
+                        val classDocId = insertClassDeclaration(javadocClass, sourceLink, javadocId)
                         insertSeeAlso(javadocClass, classDocId)
 
-                        insertMethodDocs(javadocClass, baseLink)
-                        insertFieldDocs(javadocClass, baseLink)
+                        context(javadocClass) {
+                            insertMethodDocs(baseLink)
+                            insertFieldDocs(baseLink)
+                        }
                     } catch (e: Exception) {
                         throw RuntimeException("An exception occurred while reading the docs of '${javadocClass.sourceURL}'", e)
                     }
@@ -101,18 +104,18 @@ internal class DocIndexWriter(
         return "$baseLink#L${metadata.range.first}-L${metadata.range.last}"
     }
 
-    context(_: Transaction)
-    private suspend fun insertMethodDocs(clazz: JavadocClass, sourceLink: String?) {
-        for (method in clazz.methods.values) {
+    context(_: Transaction, currentClass: JavadocClass)
+    private suspend fun insertMethodDocs(sourceLink: String?) {
+        for (method in currentClass.methods.values) {
             try {
                 val methodLink: String? = method.getLinkOrNull(sourceLink)
 
                 val javadocId = memberJavadocs.getOrInsert(method) { insertJavadoc(toEmbed(method).toData()) }
-                val methodId = insertDeclaration(DocType.METHOD, clazz.className, method, methodLink, javadocId)
+                val methodId = insertMethodDeclaration(method, methodLink, javadocId)
                 insertSeeAlso(method, methodId)
             } catch (e: Exception) {
                 throw RuntimeException(
-                    "An exception occurred while reading the docs of " + clazz.className + "#" + method.simpleSignature,
+                    "An exception occurred while reading the docs of " + currentClass.className + "#" + method.simpleSignature,
                     e
                 )
             }
@@ -136,18 +139,18 @@ internal class DocIndexWriter(
         return "$methodClassSourceLink#L${methodRange.first}-L${methodRange.last}"
     }
 
-    context(_: Transaction)
-    private suspend fun insertFieldDocs(clazz: JavadocClass, sourceLink: String?) {
-        for (field in clazz.fields.values) {
+    context(_: Transaction, currentClass: JavadocClass)
+    private suspend fun insertFieldDocs(sourceLink: String?) {
+        for (field in currentClass.fields.values) {
             try {
                 val fieldLink: String? = field.getLinkOrNull(sourceLink)
 
                 val javadocId = memberJavadocs.getOrInsert(field) { insertJavadoc(toEmbed(field).toData()) }
-                val fieldId = insertDeclaration(DocType.FIELD, clazz.className, field, fieldLink, javadocId)
+                val fieldId = insertFieldDeclaration(field, fieldLink, javadocId)
                 insertSeeAlso(field, fieldId)
             } catch (e: Exception) {
                 throw RuntimeException(
-                    "An exception occurred while reading the docs of " + clazz.className + "#" + field.simpleSignature,
+                    "An exception occurred while reading the docs of " + currentClass.className + "#" + field.simpleSignature,
                     e
                 )
             }
@@ -176,36 +179,53 @@ internal class DocIndexWriter(
         }
     }
 
-    // TODO make overloads of this method to simplify stuff
     context(transaction: Transaction)
-    private suspend fun insertDeclaration(
-        docType: DocType,
-        className: String, // TODO replace with 'currentClass: JavadocClass'
-        javadoc: AbstractJavadoc,
-        sourceLink: String?,
-        javadocId: Int,
-    ): Int {
+    private suspend fun insertClassDeclaration(javadoc: JavadocClass, sourceLink: String?, javadocId: Int): Int {
+        return transaction.preparedStatement(
+            """
+            insert into declaration (source_id, type, class_name, source_link, javadoc_id)
+            VALUES (?, ${DocType.CLASS.id}, ?, ?, ?)
+            returning id""".trimIndent()
+        ) {
+            executeQuery(sourceType.id, javadoc.className, sourceLink, javadocId)
+                .read()
+                .getInt("id")
+        }
+    }
+
+    context(transaction: Transaction, currentClass: JavadocClass)
+    private suspend fun insertMethodDeclaration(javadoc: JavadocMethod, sourceLink: String?, javadocId: Int): Int {
         return transaction.preparedStatement(
             """
             insert into declaration (source_id, type, class_name, member_name, method_args, display_method_args,
                                     return_type, source_link, javadoc_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ${DocType.METHOD.id}, ?, ?, ?, ?, ?, ?, ?)
             returning id""".trimIndent()
         ) {
             executeQuery(
                 sourceType.id,
-                docType.id,
-                className,
-                javadoc.identifierNoArgs,
-                // TODO have method to get arguments directly
-                javadoc.identifier?.let { javadoc.identifier!!.dropWhile { it != '(' } },
-                // TODO have method to get display arguments directly
-                //  be careful not to make a string too long, as the class name gets prepended
-                javadoc.humanIdentifier?.let { javadoc.toHumanClassIdentifier(className)!!.substringAfter("$className#").dropWhile { it != '(' } },
-                javadoc.returnTypeNoAnnotations,
+                currentClass.className,
+                javadoc.methodName,
+                javadoc.simpleArguments,
+                javadoc.getDisplayArguments(prefixLength = currentClass.className.length + /* # */ 1 + javadoc.methodName.length),
+                javadoc.returnType.removeAnnotations(),
                 sourceLink,
                 javadocId,
             ).read().getInt("id")
+        }
+    }
+
+    context(transaction: Transaction, currentClass: JavadocClass)
+    private suspend fun insertFieldDeclaration(javadoc: JavadocField, sourceLink: String?, javadocId: Int): Int {
+        return transaction.preparedStatement(
+            """
+            insert into declaration (source_id, type, class_name, member_name, return_type, source_link, javadoc_id)
+            VALUES (?, ${DocType.FIELD.id}, ?, ?, ?, ?, ?)
+            returning id""".trimIndent()
+        ) {
+            executeQuery(sourceType.id, currentClass.className, javadoc.fieldName, javadoc.fieldType.removeAnnotations(), sourceLink, javadocId)
+                .read()
+                .getInt("id")
         }
     }
 

@@ -1,7 +1,6 @@
 package dev.freya02.doxxy.docs.utils
 
 import dev.freya02.doxxy.docs.declarations.JavadocMethod
-import dev.freya02.doxxy.docs.declarations.returnTypeNoAnnotations
 import dev.freya02.doxxy.docs.exceptions.DocParseException
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
@@ -48,7 +47,7 @@ internal object DocUtils {
         })
 
         append(" : ")
-        append(method.returnTypeNoAnnotations)
+        append(method.returnType.removeAnnotations())
     }
 
     fun Document.isJavadocVersionCorrect(): Boolean {

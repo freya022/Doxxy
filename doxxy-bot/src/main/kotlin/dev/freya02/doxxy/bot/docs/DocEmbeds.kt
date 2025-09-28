@@ -10,6 +10,7 @@ import dev.freya02.doxxy.docs.declarations.JavadocMethod
 import dev.freya02.doxxy.docs.sections.DocDetail
 import dev.freya02.doxxy.docs.sections.SeeAlso
 import dev.freya02.doxxy.docs.sections.SeeAlso.SeeAlsoReference
+import dev.freya02.doxxy.docs.utils.removeAnnotations
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.MessageEmbed
 import java.util.*
@@ -78,7 +79,7 @@ object DocEmbeds {
                 if (method.isStatic) "static " else "",
                 method.declaringClass.className,
                 method.methodName,
-                method.methodReturnType
+                method.returnType.removeAnnotations()
             )
         }
 

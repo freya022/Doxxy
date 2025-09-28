@@ -6,7 +6,6 @@ import dev.freya02.doxxy.docs.sections.DetailToElementsMap
 import dev.freya02.doxxy.docs.sections.DocDetail
 import dev.freya02.doxxy.docs.sections.SeeAlso
 import java.util.*
-import java.util.regex.Pattern
 
 abstract class AbstractJavadoc internal constructor() {
     abstract val onlineURL: String?
@@ -19,9 +18,6 @@ abstract class AbstractJavadoc internal constructor() {
     abstract val identifier: String?
     /** method */
     abstract val identifierNoArgs: String?
-    /** method(Type name, name2) */
-    abstract val humanIdentifier: String?
-    abstract fun toHumanClassIdentifier(className: String): String?
     abstract val returnType: String?
 
     internal abstract val detailToElementsMap: DetailToElementsMap
@@ -31,11 +27,3 @@ abstract class AbstractJavadoc internal constructor() {
             .filter { it in includedTypes }
             .mapNotNull { detailType -> detailToElementsMap.getDetail(detailType) }
 }
-
-private val ANNOTATION_PATTERN = Pattern.compile("@\\w*")
-val AbstractJavadoc.returnTypeNoAnnotations: String?
-    get() = returnType?.let {
-        ANNOTATION_PATTERN.matcher(it)
-            .replaceAll("")
-            .trim()
-    }

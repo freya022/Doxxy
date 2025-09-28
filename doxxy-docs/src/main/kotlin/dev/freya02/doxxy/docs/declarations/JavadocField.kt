@@ -96,11 +96,7 @@ class JavadocField internal constructor(
         get() = simpleSignature
     override val identifierNoArgs: String
         get() = simpleSignature
-    override val humanIdentifier: String
-        get() = simpleSignature
 
     override val returnType: String
         get() = fieldType
-
-    override fun toHumanClassIdentifier(className: String): String = "$className#$simpleSignature"
 }
