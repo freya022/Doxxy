@@ -87,8 +87,8 @@ class JavadocMethod internal constructor(
     override val humanIdentifier: String by lazy { generateHumanIdentifier("") }
     override fun toHumanClassIdentifier(className: String): String = generateHumanIdentifier("$className#")
 
-    fun getSimpleAnnotatedSignature(targetClassdoc: JavadocClass): String {
-        return DocUtils.getSimpleAnnotatedSignature(targetClassdoc, this)
+    fun getSimpleAnnotatedSignature(): String {
+        return DocUtils.getSimpleAnnotatedSignature(this)
     }
 
     private fun List<MethodDocParameter>.asParametersString(numTypes: Int): String {

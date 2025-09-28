@@ -19,6 +19,8 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import net.dv8tion.jda.api.utils.data.DataObject
 
 private val logger = KotlinLogging.logger { }
@@ -29,6 +31,8 @@ internal class DocIndexWriter(
     private val reindexData: ReindexData
 ) {
     private val sourceMetadata: SourceMetadata? = sourceType.sourceDirectoryPath?.let { SourceMetadata(it) }
+
+    private val memberJavadocs = MemberJavadocs()
 
     suspend fun doReindex() {
         val globalJavadocSession = GlobalJavadocSession(JavadocSources(DocSourceType.entries.map { type ->
@@ -47,8 +51,12 @@ internal class DocIndexWriter(
 
             System.gc() //600 MB -> 30 MB
 
-            preparedStatement("delete from declaration where source_id = ?") {
-                executeUpdate(sourceType.id)
+            val javadocIds = preparedStatement("delete from declaration where source_id = ? returning javadoc_id") {
+                executeQuery(sourceType.id).mapTo(hashSetOf()) { it.getInt(1) }.toIntArray()
+            }
+
+            preparedStatement("DELETE FROM javadoc WHERE javadoc_id = any(?)") {
+                executeUpdate(javadocIds)
             }
 
             javadocModuleSession
@@ -62,7 +70,8 @@ internal class DocIndexWriter(
                         val baseLink = reindexData.getClassSourceUrlOrNull(javadocClass)
                         val sourceLink = baseLink?.let { javadocClass.getRangedLink(it) }
 
-                        val classDocId = insertDoc(DocType.CLASS, javadocClass.className, javadocClass, classEmbedJson, sourceLink)
+                        val javadocId = insertJavadoc(javadocClass, classEmbedJson)
+                        val classDocId = insertDeclaration(DocType.CLASS, javadocClass.className, javadocClass, sourceLink, javadocId)
                         insertSeeAlso(javadocClass, classDocId)
 
                         insertMethodDocs(javadocClass, baseLink)
@@ -96,12 +105,10 @@ internal class DocIndexWriter(
     private suspend fun insertMethodDocs(clazz: JavadocClass, sourceLink: String?) {
         for (method in clazz.methods.values) {
             try {
-                val methodEmbed = toEmbed(clazz, method)
-                val methodEmbedJson = methodEmbed.toData()
-
                 val methodLink: String? = method.getLinkOrNull(sourceLink)
 
-                val methodId = insertDoc(DocType.METHOD, clazz.className, method, methodEmbedJson, methodLink)
+                val javadocId = memberJavadocs.getOrInsert(method) { insertJavadoc(method, toEmbed(method).toData()) }
+                val methodId = insertDeclaration(DocType.METHOD, clazz.className, method, methodLink, javadocId)
                 insertSeeAlso(method, methodId)
             } catch (e: Exception) {
                 throw RuntimeException(
@@ -133,12 +140,10 @@ internal class DocIndexWriter(
     private suspend fun insertFieldDocs(clazz: JavadocClass, sourceLink: String?) {
         for (field in clazz.fields.values) {
             try {
-                val fieldEmbed = toEmbed(clazz, field)
-                val fieldEmbedJson = fieldEmbed.toData()
-
                 val fieldLink: String? = field.getLinkOrNull(sourceLink)
 
-                val fieldId = insertDoc(DocType.FIELD, clazz.className, field, fieldEmbedJson, fieldLink)
+                val javadocId = memberJavadocs.getOrInsert(field) { insertJavadoc(field, toEmbed(field).toData()) }
+                val fieldId = insertDeclaration(DocType.FIELD, clazz.className, field, fieldLink, javadocId)
                 insertSeeAlso(field, fieldId)
             } catch (e: Exception) {
                 throw RuntimeException(
@@ -165,18 +170,28 @@ internal class DocIndexWriter(
     }
 
     context(transaction: Transaction)
-    private suspend fun insertDoc(
+    private suspend fun insertJavadoc(
+        javadoc: AbstractJavadoc,
+        embedObj: DataObject,
+    ): Int {
+        return transaction.preparedStatement("insert into javadoc (embed, javadoc_link) values (?, ?) returning javadoc_id") {
+            executeQuery(embedObj.toString(), javadoc.onlineURL).read().getInt("javadoc_id")
+        }
+    }
+
+    context(transaction: Transaction)
+    private suspend fun insertDeclaration(
         docType: DocType,
         className: String,
         javadoc: AbstractJavadoc,
-        embedJson: DataObject,
-        sourceLink: String?
+        sourceLink: String?,
+        javadocId: Int,
     ): Int {
-        val declarationId = transaction.preparedStatement(
+        return transaction.preparedStatement(
             """
             insert into declaration (source_id, type, classname, identifier, identifier_no_args, human_identifier, human_class_identifier,
-                                    return_type, source_link)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                    return_type, source_link, javadoc_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             returning id""".trimIndent()
         ) {
             executeQuery(
@@ -188,21 +203,10 @@ internal class DocIndexWriter(
                 javadoc.humanIdentifier,
                 javadoc.toHumanClassIdentifier(className),
                 javadoc.returnTypeNoAnnotations,
-                sourceLink
+                sourceLink,
+                javadocId,
             ).read().getInt("id")
         }
-
-        transaction.preparedStatement("""
-            insert into javadoc (decl_id, embed, javadoc_link) values (?, ?, ?)
-        """.trimIndent()) {
-            executeUpdate(
-                declarationId,
-                embedJson.toString(),
-                javadoc.onlineURL,
-            )
-        }
-
-        return declarationId
     }
 
     context(transaction: Transaction)
@@ -216,6 +220,23 @@ internal class DocIndexWriter(
                     seeAlsoReference.targetType.id,
                     seeAlsoReference.fullSignature
                 )
+            }
+        }
+    }
+
+    private class MemberJavadocs {
+
+        private val javadocIds: MutableMap<String, Int> = hashMapOf()
+        private val locks: MutableMap<String, Mutex> = hashMapOf()
+
+        suspend fun getOrInsert(javadoc: AbstractJavadoc, onInsert: suspend () -> Int): Int {
+            // Important that we use the class name of the member,
+            // as we want to retrieve the javadoc ID of the class that declared the member's docs,
+            // to reuse it.
+            val qualifiedMember = "${javadoc.className}#${javadoc.identifier}"
+            val mutex = synchronized(locks) { locks.computeIfAbsent(qualifiedMember) { Mutex() } }
+            return mutex.withLock {
+                javadocIds.getOrPut(qualifiedMember) { onInsert() }
             }
         }
     }

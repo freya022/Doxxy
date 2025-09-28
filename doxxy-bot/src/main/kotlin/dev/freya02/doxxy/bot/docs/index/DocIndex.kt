@@ -285,7 +285,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             """
                 select id, embed, javadoc_link, source_link
                 from declaration
-                join javadoc on javadoc.decl_id = declaration.id
+                join javadoc using (javadoc_id)
                 where source_id = ?
                   and type = ?
                   and lower(classname) = lower(?)

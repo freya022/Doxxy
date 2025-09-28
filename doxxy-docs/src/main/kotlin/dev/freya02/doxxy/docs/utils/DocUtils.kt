@@ -1,6 +1,5 @@
 package dev.freya02.doxxy.docs.utils
 
-import dev.freya02.doxxy.docs.declarations.JavadocClass
 import dev.freya02.doxxy.docs.declarations.JavadocMethod
 import dev.freya02.doxxy.docs.declarations.returnTypeNoAnnotations
 import dev.freya02.doxxy.docs.exceptions.DocParseException
@@ -26,11 +25,14 @@ internal object DocUtils {
         }.toString()
     }
 
-    fun getSimpleAnnotatedSignature(targetClassdoc: JavadocClass, method: JavadocMethod) = buildString(100) {
+    fun getSimpleAnnotatedSignature(method: JavadocMethod) = buildString(100) {
         method.methodAnnotations?.let { appendLine(it) }
 
         if (method.isStatic) append("static ")
-        append(targetClassdoc.className)
+        // Use the class name where the method was declared from,
+        // using the class name which inherited this method is undesirable
+        // because javadocs are shared with inheritors
+        append(method.className)
         append("#")
         append(method.methodName)
 

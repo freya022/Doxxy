@@ -69,10 +69,10 @@ object DocEmbeds {
         builder.addSeeAlso(doc.seeAlso, doc.onlineURL)
     }
 
-    fun toEmbed(clazz: JavadocClass, method: JavadocMethod): MessageEmbed = embed {
+    fun toEmbed(method: JavadocMethod): MessageEmbed = embed {
         // Cannot use the Javadoc's method signature due to TYPE_USE annotations being duplicated,
         // see https://bugs.openjdk.java.net/browse/JDK-8278592
-        var title = method.getSimpleAnnotatedSignature(clazz)
+        var title = method.getSimpleAnnotatedSignature()
         if (title.length > MessageEmbed.TITLE_MAX_LENGTH) {
             title = "%s%s#%s : %s - [full signature on online docs]".format(
                 if (method.isStatic) "static " else "",
@@ -90,8 +90,11 @@ object DocEmbeds {
         builder.addSeeAlso(method.seeAlso, method.onlineURL)
     }
 
-    fun toEmbed(clazz: JavadocClass, field: JavadocField): MessageEmbed = embed {
-        title = clazz.className + " : " + field.simpleSignature
+    fun toEmbed(field: JavadocField): MessageEmbed = embed {
+        // Use the class name where the field was declared from,
+        // using the class name which inherited this field is undesirable
+        // because javadocs are shared with inheritors
+        title = field.className + " : " + field.simpleSignature
         url = field.onlineURL
 
         builder.addDocDescription(field)
