@@ -155,11 +155,11 @@ class CommonDocsHandlers(
 
         fun Iterable<String>.toChoices() = this.map { Choice(it, it) }
         fun Iterable<DocSearchResult>.searchResultToFullIdentifierChoices() = this
-            .filter { it.fullIdentifier.length <= Choice.MAX_STRING_VALUE_LENGTH }
-            .map { Choice(it.humanClassIdentifier.tryAppendReturnType(it), it.fullIdentifier) }
+            .filter { it.qualifiedMember.length <= Choice.MAX_STRING_VALUE_LENGTH }
+            .map { Choice(it.displayQualifiedMember.tryAppendReturnType(it), it.qualifiedMember) }
         fun Iterable<DocSearchResult>.searchResultToIdentifierChoices() = this
-            .filter { it.identifier.length <= Choice.MAX_STRING_VALUE_LENGTH }
-            .map { Choice(it.humanIdentifier.tryAppendReturnType(it), it.identifier) }
+            .filter { it.memberSignature.length <= Choice.MAX_STRING_VALUE_LENGTH }
+            .map { Choice(it.displayMemberSignature.tryAppendReturnType(it), it.memberSignature) }
 
         private fun String.tryAppendReturnType(searchResult: DocSearchResult): String = when {
             searchResult.returnType == null -> this
