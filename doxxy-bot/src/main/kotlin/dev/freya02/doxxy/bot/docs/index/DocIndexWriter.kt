@@ -70,7 +70,7 @@ internal class DocIndexWriter(
                         val baseLink = reindexData.getClassSourceUrlOrNull(javadocClass)
                         val sourceLink = baseLink?.let { javadocClass.getRangedLink(it) }
 
-                        val javadocId = insertJavadoc(javadocClass, classEmbedJson)
+                        val javadocId = insertJavadoc(classEmbedJson)
                         val classDocId = insertDeclaration(DocType.CLASS, javadocClass.className, javadocClass, sourceLink, javadocId)
                         insertSeeAlso(javadocClass, classDocId)
 
@@ -107,7 +107,7 @@ internal class DocIndexWriter(
             try {
                 val methodLink: String? = method.getLinkOrNull(sourceLink)
 
-                val javadocId = memberJavadocs.getOrInsert(method) { insertJavadoc(method, toEmbed(method).toData()) }
+                val javadocId = memberJavadocs.getOrInsert(method) { insertJavadoc(toEmbed(method).toData()) }
                 val methodId = insertDeclaration(DocType.METHOD, clazz.className, method, methodLink, javadocId)
                 insertSeeAlso(method, methodId)
             } catch (e: Exception) {
@@ -142,7 +142,7 @@ internal class DocIndexWriter(
             try {
                 val fieldLink: String? = field.getLinkOrNull(sourceLink)
 
-                val javadocId = memberJavadocs.getOrInsert(field) { insertJavadoc(field, toEmbed(field).toData()) }
+                val javadocId = memberJavadocs.getOrInsert(field) { insertJavadoc(toEmbed(field).toData()) }
                 val fieldId = insertDeclaration(DocType.FIELD, clazz.className, field, fieldLink, javadocId)
                 insertSeeAlso(field, fieldId)
             } catch (e: Exception) {
@@ -170,12 +170,9 @@ internal class DocIndexWriter(
     }
 
     context(transaction: Transaction)
-    private suspend fun insertJavadoc(
-        javadoc: AbstractJavadoc,
-        embedObj: DataObject,
-    ): Int {
-        return transaction.preparedStatement("insert into javadoc (embed, javadoc_link) values (?, ?) returning javadoc_id") {
-            executeQuery(embedObj.toString(), javadoc.onlineURL).read().getInt("javadoc_id")
+    private suspend fun insertJavadoc(embedObj: DataObject): Int {
+        return transaction.preparedStatement("insert into javadoc (embed) values (?) returning javadoc_id") {
+            executeQuery(embedObj.toString()).read().getInt("javadoc_id")
         }
     }
 

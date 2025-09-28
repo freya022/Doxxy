@@ -12,6 +12,5 @@ sealed interface CachedDoc {
     val qualifiedName: String
     val embed: MessageEmbed
     val seeAlsoReferences: List<SeeAlsoReference>
-    val javadocLink: String?
     val sourceLink: String?
 }

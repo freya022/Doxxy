@@ -10,7 +10,6 @@ class CachedField(
     val fieldName: String,
     override val embed: MessageEmbed,
     override val seeAlsoReferences: List<SeeAlsoReference>,
-    override val javadocLink: String?,
     override val sourceLink: String?
 ) : CachedDoc {
     override val qualifiedName: String

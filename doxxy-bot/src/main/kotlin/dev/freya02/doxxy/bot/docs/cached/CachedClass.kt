@@ -10,7 +10,6 @@ class CachedClass(
     val name: String,
     override val embed: MessageEmbed,
     override val seeAlsoReferences: List<SeeAlsoReference>,
-    override val javadocLink: String?,
     override val sourceLink: String?,
     val subclasses: List<ImplementationIndex.Class>,
     val superclasses: List<ImplementationIndex.Class>

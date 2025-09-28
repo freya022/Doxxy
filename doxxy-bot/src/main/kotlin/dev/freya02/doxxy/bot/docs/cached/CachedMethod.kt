@@ -11,7 +11,6 @@ class CachedMethod(
     val signature: String,
     override val embed: MessageEmbed,
     override val seeAlsoReferences: List<SeeAlsoReference>,
-    override val javadocLink: String?,
     override val sourceLink: String?,
     val implementations: List<ImplementationIndex.Method>,
     val overriddenMethods: List<ImplementationIndex.Method>

@@ -63,28 +63,28 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
     }
 
     override suspend fun getClassDoc(className: String): CachedClass? {
-        val (docId, embed, javadocLink, sourceLink) = findDoc(DocType.CLASS, className) ?: return null
+        val (docId, embed, sourceLink) = findDoc(DocType.CLASS, className) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
         val subclasses = implementationIndex.getSubclasses(className)
         val superclasses = implementationIndex.getSuperclasses(className)
 
-        return CachedClass(this, className, embed, seeAlsoReferences, javadocLink, sourceLink, subclasses, superclasses)
+        return CachedClass(this, className, embed, seeAlsoReferences, sourceLink, subclasses, superclasses)
     }
 
     override suspend fun getMethodDoc(className: String, identifier: String): CachedMethod? {
-        val (docId, embed, javadocLink, sourceLink) = findDoc(DocType.METHOD, className, identifier) ?: return null
+        val (docId, embed, sourceLink) = findDoc(DocType.METHOD, className, identifier) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
         val implementations = implementationIndex.getImplementations(className, identifier)
         val overriddenMethods = implementationIndex.getOverriddenMethods(className, identifier)
 
-        return CachedMethod(this, className, identifier, embed, seeAlsoReferences, javadocLink, sourceLink, implementations, overriddenMethods)
+        return CachedMethod(this, className, identifier, embed, seeAlsoReferences, sourceLink, implementations, overriddenMethods)
     }
 
     override suspend fun getFieldDoc(className: String, fieldName: String): CachedField? {
-        val (docId, embed, javadocLink, sourceLink) = findDoc(DocType.FIELD, className, fieldName) ?: return null
+        val (docId, embed, sourceLink) = findDoc(DocType.FIELD, className, fieldName) ?: return null
         val seeAlsoReferences: List<SeeAlsoReference> = findSeeAlsoReferences(docId)
 
-        return CachedField(this, className, fieldName, embed, seeAlsoReferences, javadocLink, sourceLink)
+        return CachedField(this, className, fieldName, embed, seeAlsoReferences, sourceLink)
     }
 
     override suspend fun findSignaturesIn(className: String, query: String?, docTypes: DocTypes, limit: Int): List<DocSearchResult> {
@@ -283,7 +283,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
     ): DocFindData? {
         database.preparedStatement(
             """
-                select id, embed, javadoc_link, source_link
+                select id, embed, source_link
                 from declaration
                 join javadoc using (javadoc_id)
                 where source_id = ?
@@ -296,7 +296,6 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             return DocFindData(
                 result["id"],
                 result.getString("embed").let(DataObject::fromJson).let(EmbedBuilder::fromData).build(),
-                result["javadoc_link"],
                 result["source_link"]
             )
         }
