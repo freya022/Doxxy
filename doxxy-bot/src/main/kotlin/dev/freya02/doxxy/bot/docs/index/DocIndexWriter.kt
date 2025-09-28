@@ -249,7 +249,7 @@ internal class DocIndexWriter(
         private val javadocIds: MutableMap<String, Int> = hashMapOf()
         private val locks: MutableMap<String, Mutex> = hashMapOf()
 
-        suspend fun getOrInsert(javadoc: AbstractJavadoc, onInsert: suspend () -> Int): Int {
+        suspend fun getOrInsert(javadoc: AbstractJavadocMember, onInsert: suspend () -> Int): Int {
             // Important that we use the class name of the member,
             // as we want to retrieve the javadoc ID of the class that declared the member's docs,
             // to reuse it.

@@ -17,7 +17,7 @@ class JavadocMethod internal constructor(
     val declaringClass: JavadocClass,
     val classDetailType: ClassDetailType,
     element: Element
-) : AbstractJavadoc() {
+) : AbstractJavadocMember() {
     val elementId: String
     val methodAnnotations: String?
     val methodName: String
@@ -93,8 +93,6 @@ class JavadocMethod internal constructor(
 
     override val identifier: String
         get() = simpleSignature
-    override val identifierNoArgs: String
-        get() = methodName
 
     fun getSimpleAnnotatedSignature(): String {
         return DocUtils.getSimpleAnnotatedSignature(this)

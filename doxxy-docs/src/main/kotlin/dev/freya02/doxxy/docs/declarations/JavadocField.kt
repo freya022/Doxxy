@@ -16,7 +16,7 @@ class JavadocField internal constructor(
     val declaringClass: JavadocClass,
     val classDetailType: ClassDetailType,
     element: Element
-) : AbstractJavadoc() {
+) : AbstractJavadocMember() {
     override val onlineURL: String?
 
     val fieldName: String
@@ -93,8 +93,6 @@ class JavadocField internal constructor(
         get() = declaringClass.className
 
     override val identifier: String
-        get() = simpleSignature
-    override val identifierNoArgs: String
         get() = simpleSignature
 
     override val returnType: String

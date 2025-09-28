@@ -14,11 +14,6 @@ abstract class AbstractJavadoc internal constructor() {
     abstract val seeAlso: SeeAlso?
 
     abstract val className: String
-    /** method(Type1, Type2) */
-    abstract val identifier: String?
-    /** method */
-    abstract val identifierNoArgs: String?
-    abstract val returnType: String?
 
     internal abstract val detailToElementsMap: DetailToElementsMap
 

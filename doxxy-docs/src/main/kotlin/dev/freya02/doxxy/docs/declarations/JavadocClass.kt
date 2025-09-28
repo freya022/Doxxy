@@ -177,10 +177,6 @@ class JavadocClass internal constructor(
     override val onlineURL: String?
         get() = moduleSession.source.toOnlineURL(sourceURL)
 
-    override val identifier: String? = null
-    override val identifierNoArgs: String? = null
-    override val returnType: String? = null
-
     val enumConstants: List<JavadocField>
         get() = fields
             .values
