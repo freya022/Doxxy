@@ -20,11 +20,9 @@ class SlashSearch : GuildApplicationCommandProvider {
                     generatedOption("sourceType") { sourceType }
 
                     option("query") {
-                        description = "Search query, # only searches methods, all uppercase for constant fields"
+                        description = "Search with partial queries of 'ClassName', 'methodName' or 'ClassName#methodName', like 'rest#comp'"
                         autocompleteByName(SEARCH_AUTOCOMPLETE_NAME)
                     }
-
-                    //TODO add option to replace description with link
                 }
             }
         }
