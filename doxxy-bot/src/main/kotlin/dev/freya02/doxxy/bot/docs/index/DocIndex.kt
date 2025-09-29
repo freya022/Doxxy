@@ -196,7 +196,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
             }
 
             return database.transactional(readOnly = true) {
-                preparedStatement("set pg_trgm.similarity_threshold = 0.2;") { executeUpdate() }
+                preparedStatement("set pg_trgm.similarity_threshold = 0.1;") { executeUpdate() }
 
                 preparedStatement("""
                     SELECT
