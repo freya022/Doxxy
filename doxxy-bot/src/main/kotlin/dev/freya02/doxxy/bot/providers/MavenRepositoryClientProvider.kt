@@ -9,5 +9,5 @@ object MavenRepositoryClientProvider {
 
     @BService
     fun mavenCentralClient(): MavenRepositoryClient =
-        MavenRepositoryClient("https://repo.maven.apache.org/maven2")
+        MavenRepositoryClient("https://repo1.maven.org/maven2")
 }
