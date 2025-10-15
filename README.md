@@ -2,11 +2,11 @@
 A Discord bot to help guide users of the JDA library.
 
 ## Features
-* Search docs (JDA & JDK 17) using patterns:
-  * `JDA` -> Class
-  * `#createDefault` -> Method from any class
-  * `#MAX_FILE_SIZE` -> Constant field from any class
-  * `JDA#openPrivateChannelById` -> Method from the `JDA` class
+* Search docs (JDA & JDK 17), with support for partial matching:
+  * Typing anything will search for classes and methods
+  * Typing a class name, followed by a `#` and a name, will search for methods in a class
+    * For example, `rest#comp` will give, among other results, `RestAction#complete()`
+  * Constant fields can be searched by typing in all caps, like `Message#MAX_COMPONENT_CONUT`.
 * Sending Maven/Gradle/Gradle KTS build scripts
 * Sending Logback configurations
 * Getting the latest versions and snapshots
