@@ -27,7 +27,7 @@ jobs:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
       - name: Build bot base image
-        run: docker build --tag doxxy-bot-eclipse-temurin:24-jdk ./doxxy-bot
+        run: docker build --tag doxxy-bot-eclipse-temurin:25-jdk ./doxxy-bot
 
       - name: Docker metadata
         id: metadata

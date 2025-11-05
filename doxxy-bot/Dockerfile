@@ -1,2 +1,2 @@
-FROM eclipse-temurin:24-jdk
+FROM eclipse-temurin:25-jdk
 RUN apt-get update && apt-get install git -y --no-install-recommends

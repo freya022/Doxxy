@@ -68,7 +68,7 @@ tasks.withType<Test> {
 
 jib {
     from {
-        image = "docker://doxxy-bot-eclipse-temurin:24-jdk"
+        image = "docker://doxxy-bot-eclipse-temurin:25-jdk"
     }
 
     to {
