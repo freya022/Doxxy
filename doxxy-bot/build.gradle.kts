@@ -78,6 +78,7 @@ jib {
     container {
         mainClass = "dev.freya02.doxxy.bot.Main"
         jvmFlags = listOf(
+            "-Dnet.dv8tion.measure.decompression=true",
             "--add-exports", "jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
             "--add-exports", "jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED",
             "--add-exports", "jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED",
