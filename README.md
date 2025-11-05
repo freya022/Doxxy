@@ -22,7 +22,7 @@ A Discord bot to help guide users of the JDA library.
 
 ## Contributing
 ### Requirements
-* JDK 24+
+* JDK 25+
   * [Configure your IDE](https://docs.gradle.org/current/userguide/toolchains.html#sec:ide-settings-toolchain) to run Gradle with it
 * A PostgreSQL 13 or higher database
 
