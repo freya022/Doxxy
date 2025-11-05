@@ -23,6 +23,7 @@ dependencies {
     implementation(libs.logback.classic)
 
     implementation(libs.jda)
+    runtimeOnly(libs.discord.zstd.java.jni.impl)
     implementation(libs.botcommands)
     implementation(libs.botcommands.jda.ktx)
     runtimeOnly(libs.botcommands.method.accessors.classfile)

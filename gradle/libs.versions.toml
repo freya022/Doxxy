@@ -7,7 +7,7 @@ hikaricp = "7.0.2"
 java-string-similarity = "2.0.0"
 javaparser = "3.27.0"
 javassist = "3.30.2-GA"
-jda = "6.1.1"
+jda = "ac530ee939"
 jmh = "0.7.3"
 jsoup = "1.21.2"
 junit = "5.13.4"
@@ -38,6 +38,7 @@ botcommands = { module = "io.github.freya022:BotCommands", version.ref = "botcom
 botcommands-jda-ktx = { module = "io.github.freya022:BotCommands-jda-ktx", version.ref = "botcommands" }
 botcommands-method-accessors-classfile = { module = "io.github.freya022:BotCommands-method-accessors-classfile", version.ref = "botcommands" }
 bytebuddy = { module = "net.bytebuddy:byte-buddy", version.ref = "bytebuddy" }
+discord-zstd-java-jni-impl = "dev.freya02:discord-zstd-java-jni-impl:0.3.0"
 dotenv-kotlin = { module = "io.github.cdimascio:dotenv-kotlin", version.ref = "dotenv-kotlin" }
 flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 flyway-database-postgresql = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
@@ -47,7 +48,7 @@ java-string-similarity = { module = "info.debatty:java-string-similarity", versi
 javaparser-core = { module = "com.github.javaparser:javaparser-core", version.ref = "javaparser" }
 javaparser-symbol-solver-core = { module = "com.github.javaparser:javaparser-symbol-solver-core", version.ref = "javaparser" }
 javassist = { module = "org.javassist:javassist", version.ref = "javassist" }
-jda = { module = "net.dv8tion:JDA", version.ref = "jda" }
+jda = { module = "io.github.freya022:JDA", version.ref = "jda" }
 jib-plugin = "com.google.cloud.tools:jib-gradle-plugin:3.4.4"
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }

@@ -4,6 +4,10 @@ plugins {
     alias(libs.plugins.kotlinx.serialization)
 }
 
+repositories {
+    maven("https://jitpack.io")
+}
+
 dependencies {
     implementation(projects.doxxy.doxxyCommons)
 

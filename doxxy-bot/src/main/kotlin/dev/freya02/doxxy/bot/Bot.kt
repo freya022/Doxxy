@@ -8,6 +8,7 @@ import io.github.freya022.botcommands.api.core.service.annotations.BService
 import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.hooks.IEventManager
 import net.dv8tion.jda.api.requests.GatewayIntent
+import net.dv8tion.jda.api.utils.Compression
 import net.dv8tion.jda.api.utils.cache.CacheFlag
 
 @BService
@@ -19,7 +20,7 @@ class Bot(private val config: Config) : JDAService() {
     override fun createJDA(event: BReadyEvent, eventManager: IEventManager) {
         // You MUST disable enableCoroutines and set the event manager to the injected one
         light(config.token, activity = Activity.customStatus("Reading the docs")) {
-
+            setCompression(Compression.ZSTD)
         }
     }
 }
