@@ -106,33 +106,33 @@ class BuildToolCommands(private val versions: Versions, private val buttons: But
 
     override fun declareGuildApplicationCommands(manager: GuildApplicationCommandManager) {
         manager.slashCommand("maven", function = BuildToolCommands::onSlashBuildTool) {
-            description = "Shows the Maven dependencies for a library (default: ${LibraryType.getDefaultLibrary(manager.guild).displayString})"
+            description = "Shows the Maven dependencies for a library"
 
             generatedOption("buildToolType") { BuildToolType.MAVEN }
 
-            addCommonOptions()
+            addCommonOptions(manager)
         }
 
         manager.slashCommand("gradle", function = BuildToolCommands::onSlashGradle) {
-            description = "Shows the Gradle dependencies for a library (default: ${LibraryType.getDefaultLibrary(manager.guild).displayString})"
+            description = "Shows the Gradle dependencies for a library"
 
             option("flavor") {
                 description = "The language the gradle script should be in (default: Kotlin)"
                 usePredefinedChoices = true
             }
 
-            addCommonOptions()
+            addCommonOptions(manager)
         }
     }
 
-    private fun TopLevelSlashCommandBuilder.addCommonOptions() {
+    private fun TopLevelSlashCommandBuilder.addCommonOptions(manager: GuildApplicationCommandManager) {
         option("scriptType") {
             description = "Whether to show the full build script or only the dependencies"
             usePredefinedChoices = true
         }
 
         option(declaredName = "libraryType", optionName = "library") {
-            description = "Type of library"
+            description = "Type of library (default: ${LibraryType.getDefaultLibrary(manager.guild).displayString})"
             usePredefinedChoices = true
         }
     }
