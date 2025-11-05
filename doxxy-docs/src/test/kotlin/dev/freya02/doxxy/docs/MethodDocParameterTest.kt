@@ -32,7 +32,7 @@ object MethodDocParameterTest {
     fun `Linked parameters have full types`() {
         val parameters = MethodDocParameter.parseParameters(htmlFragment(
             """
-                <span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang">String</a> content)</span>
+                <span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang">String</a> content)</span>
             """.trimIndent()
         ))
 

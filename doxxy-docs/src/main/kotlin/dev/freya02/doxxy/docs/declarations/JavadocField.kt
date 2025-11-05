@@ -51,10 +51,10 @@ class JavadocField internal constructor(
         fieldType = fieldTypeElement.text()
 
         //Get field description
-        descriptionElements = JavadocElements.fromElements(element.select("section.detail > div.block"))
+        descriptionElements = JavadocElements.fromElements(element.select("div > div.block"))
 
         //Get field possible's deprecation
-        deprecationElement = JavadocElement.tryWrap(element.selectFirst("section.detail > div.deprecation-block"))
+        deprecationElement = JavadocElement.tryWrap(element.selectFirst("div > div.deprecation-block"))
 
         //Details
         detailToElementsMap = DetailToElementsMap.parseDetails(element)

@@ -18,8 +18,8 @@ val JDA_SOURCE = JavadocSource(
 
 val JDK_SOURCE = JavadocSource(
     name = "JDK",
-    sourceUrl = "https://docs.oracle.com/en/java/javase/17/docs/api",
-    onlineURL = "https://docs.oracle.com/en/java/javase/17/docs/api",
+    sourceUrl = "https://docs.oracle.com/en/java/javase/25/docs/api",
+    onlineURL = "https://docs.oracle.com/en/java/javase/25/docs/api",
     packageMatchers = listOf(
         recursive("java.io"),
         single("java.lang"),
