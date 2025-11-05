@@ -1,26 +1,28 @@
 plugins {
     id 'java'
     id 'application'
-    id 'com.github.johnrengelman.shadow' version '7.1.2'
+    id 'com.gradleup.shadow' version '9.2.2'
 }
 
-application.mainClass = 'io.github.name.bot.Main'   //TODO change here
-group = 'io.github.name'                            //TODO change here
+group = 'io.github.name' // TODO change here
 version = '1.0-SNAPSHOT'
 
+application {
+    mainClass = 'io.github.name.bot.Main' // TODO change here
+}
+
 shadowJar {
-    archiveFileName = 'your-project-name.jar'       //TODO change here
+    archiveFileName = "${rootProject.name}.jar"
 }
 
 repositories {
-    mavenLocal()
     mavenCentral()
     maven { url "https://jitpack.io" }
 }
 
 dependencies {
-    //Logging implementation, you can remove the comments if you have a warning related to loggers
-    //implementation 'ch.qos.logback:logback-classic:1.5.6'
+    //Logging implementation, you can remove this is you use another SLF4J logger
+    implementation 'ch.qos.logback:logback-classic:1.5.20'
 
     implementation '%s:%s:%s'
 }
@@ -30,5 +32,5 @@ compileJava {
     options.incremental = true
 
     //JDA supports Java 8 and above
-    sourceCompatibility = "1.8"
+    options.release = 8
 }
