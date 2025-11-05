@@ -12,7 +12,8 @@ services:
     ports:
       - "127.0.0.1:5431:5432" # So we can connect to it using an SSH tunnel via localhost:5431
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - db-data:/var/lib/postgresql
+    env_file: ./.env
   backend:
     image: ghcr.io/freya022/doxxy-backend:latest
     container_name: doxxy-backend
