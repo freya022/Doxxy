@@ -12,6 +12,6 @@ internal inline fun requireDoc(boolean: Boolean) {
 
 internal fun Document.checkJavadocVersion() {
     if (!isJavadocVersionCorrect()) {
-        throw DocParseException("Javadoc at '${baseUri()}' is not javadoc 17")
+        throw DocParseException("Javadoc at '${baseUri()}' is not javadoc 25")
     }
 }

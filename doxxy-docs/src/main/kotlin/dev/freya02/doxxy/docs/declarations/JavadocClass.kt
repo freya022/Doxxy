@@ -45,19 +45,19 @@ class JavadocClass internal constructor(
         document.checkJavadocVersion()
 
         //Get javadoc title
-        docTitleElement = JavadocElement.wrap(document.selectFirst("body > div.flex-box > div > main > div > h1"))
+        docTitleElement = JavadocElement.wrap(document.selectFirst("body > div > main > div > h1"))
 
         //Get package name
-        packageName = document.selectFirst("body > div > div > main > div.header > div.sub-title > a[href='package-summary.html']")?.text() ?: throw DocParseException()
+        packageName = document.selectFirst("body > header > nav > div > div > ol > li > a[href='package-summary.html']")?.text() ?: throw DocParseException()
 
         //Get class name
         className = getClassName(sourceURL)
 
         //Get class description
-        descriptionElements = JavadocElements.fromElements(document.select("#class-description > div.block"))
+        descriptionElements = JavadocElements.fromElements(document.select("#class-description > div > div.block"))
 
         //Get class possible's deprecation
-        deprecationElement = JavadocElement.tryWrap(document.selectFirst("#class-description > div.deprecation-block"))
+        deprecationElement = JavadocElement.tryWrap(document.selectFirst("#class-description > div > div.deprecation-block"))
 
         //Get class type parameters if they exist
         val detailTarget = document.selectFirst("#class-description") ?: throw DocParseException()
@@ -139,7 +139,7 @@ class JavadocClass internal constructor(
     private fun onInheritedMethod(superClass: JavadocClass, targetId: String?) {
         // You can inherit the same method multiple times, it will show up multiple times in the docs
         // As the HTML is ordered such as the latest overridden method is shown, we can set the already existing doc to the newest one
-        // Example: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/AbstractCollection.html#method.summary
+        // Example: https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/AbstractCollection.html#method.summary
         val method = superClass._methods[targetId]
         // This might happen if the target superclass doesn't expose the same access level of members.
         // For example, this class might expose protected+ members, but the superclass exposes only public members

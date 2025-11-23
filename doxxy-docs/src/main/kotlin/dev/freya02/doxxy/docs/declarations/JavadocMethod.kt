@@ -61,10 +61,10 @@ class JavadocMethod internal constructor(
         isStatic = modifiersElement != null && "static" in modifiersElement.text()
 
         //Get method description
-        descriptionElements = JavadocElements.fromElements(element.select("section.detail > div.block"))
+        descriptionElements = JavadocElements.fromElements(element.select("div > div.block"))
 
         //Get method possible's deprecation
-        deprecationElement = JavadocElement.tryWrap(element.selectFirst("section.detail > div.deprecation-block"))
+        deprecationElement = JavadocElement.tryWrap(element.selectFirst("div > div.deprecation-block"))
 
         //Need to parse the children of the <dl> tag in order to make a map of dt[class] -> List<Element>
         detailToElementsMap = DetailToElementsMap.parseDetails(element)
