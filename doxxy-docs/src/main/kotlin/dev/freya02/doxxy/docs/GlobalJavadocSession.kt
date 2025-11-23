@@ -1,5 +1,6 @@
 package dev.freya02.doxxy.docs
 
+import dev.freya02.doxxy.docs.declarations.JavadocClass
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -18,5 +19,13 @@ class GlobalJavadocSession(
         moduleSessions.getOrPut(source) {
             JavadocModuleSession(this, source)
         }
+    }
+
+    internal fun retrieveClassOrNull(classUrl: DocsURL): JavadocClass? {
+        val targetSource = sources.getByUrl(classUrl)
+            ?: return null
+        val moduleSession = moduleSessions[targetSource]
+            ?: return null
+        return moduleSession.retrieveClassOrNull(classUrl)
     }
 }

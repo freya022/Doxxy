@@ -120,7 +120,7 @@ class JavadocClass internal constructor(
 
             if (superClassLinkElement != null) {
                 val superClassLink = superClassLinkElement.absUrl("href")
-                val superClassDocs = session.retrieveClassOrNull(superClassLink)
+                val superClassDocs = session.globalSession.retrieveClassOrNull(superClassLink)
                 //Probably a bad link or an unsupported Javadoc version
                 if (superClassDocs == null) {
                     if (loggedMissingSuperclassLinks.add(superClassLink))

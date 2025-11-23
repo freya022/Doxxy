@@ -11,6 +11,9 @@ internal class JavadocClassCache internal constructor(
     private val session: JavadocModuleSession,
 ) {
 
+    // TODO is this actually doing anything..?
+    private val pageCache = PageCache[session.source]
+
     private val docMap = hashMapOf<DocsURL, JavadocClass>()
     private val locks = ConcurrentHashMap<DocsURL, ReentrantLock>()
 
@@ -26,8 +29,13 @@ internal class JavadocClassCache internal constructor(
         locks.computeIfAbsent(classUrl) { ReentrantLock() }.withLock {
             docMap[classUrl]?.let { return it }
 
-            val targetSource = session.globalSession.sources.getByUrl(classUrl) ?: return null
-            val document = PageCache[targetSource].getPage(classUrl)
+            // TODO this part should probably be moved in a closure in JavadocModuleSession
+            val requestedSource = session.globalSession.sources.getByUrl(classUrl)
+            require(requestedSource == session.source) {
+                "Class '$classUrl' is from a different source (current: ${session.source}, requested: $requestedSource)"
+            }
+
+            val document = pageCache.getPage(classUrl)
             if (!document.isJavadocVersionCorrect()) return null
 
             return JavadocClass(session, removeFragment(classUrl), document).also { javadocClass ->
