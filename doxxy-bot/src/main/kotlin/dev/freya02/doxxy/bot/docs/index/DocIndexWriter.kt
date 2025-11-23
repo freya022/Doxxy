@@ -122,8 +122,12 @@ internal class DocIndexWriter(
         }
     }
 
+    context(currentClass: JavadocClass)
     private fun JavadocMethod.getLinkOrNull(sourceLink: String?): String? {
         if (sourceLink == null || sourceMetadata == null) return null
+        // Can't get source links from foreign modules
+        if (currentClass.moduleSession != declaringClass.moduleSession) return null
+        // Can't get source links from implicit methods
         if (isBuiltInEnumMethod()) return null
 
         val methodRange: IntRange? = sourceMetadata.getMethodRange(this)
