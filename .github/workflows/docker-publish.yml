@@ -13,21 +13,21 @@ jobs:
       packages: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 25
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v5
         with:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
       - name: Build bot base image
-        run: docker build --tag doxxy-bot-eclipse-temurin:24-jdk ./doxxy-bot
+        run: docker build --tag doxxy-bot-eclipse-temurin:25-jdk ./doxxy-bot
 
       - name: Docker metadata
         id: metadata
@@ -35,7 +35,7 @@ jobs:
 
       - name: Transform labels to JIB's map format
         id: formatted-labels
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         env:
           LABELS: ${{ steps.metadata.outputs.labels }}
         with:
@@ -45,7 +45,7 @@ jobs:
       - name: Build and push images
         env:
           # GitHub Actions has 16GBs of available RAM for workers, so let's bump it a bit up!
-          # https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#standard-github-hosted-runners-for-public-repositories
+          # https://docs.github.com/en/actions/reference/runners/github-hosted-runners#standard-github-hosted-runners-for-public-repositories
           GRADLE_OPTS: -Xmx5G -Xms5G
         run: > 
           ./gradlew jib

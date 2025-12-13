@@ -27,7 +27,7 @@ dependencies {
 
 jib {
     from {
-        image = "eclipse-temurin:24-jre"
+        image = "eclipse-temurin:25-jre"
     }
 
     to {
