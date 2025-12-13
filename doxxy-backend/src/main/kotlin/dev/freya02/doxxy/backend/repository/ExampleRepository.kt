@@ -3,6 +3,7 @@ package dev.freya02.doxxy.backend.repository
 import dev.freya02.doxxy.backend.entity.Example
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
+import org.springframework.data.jpa.repository.NativeQuery
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Propagation
@@ -11,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional
 @Repository
 interface ExampleRepository : JpaRepository<Example, Int> {
     @Modifying
-    @Query("truncate example cascade", nativeQuery = true)
+    @NativeQuery("truncate example cascade")
     @Transactional(propagation = Propagation.MANDATORY)
     fun removeAll()
 
@@ -19,10 +20,10 @@ interface ExampleRepository : JpaRepository<Example, Int> {
     // Guild#getRoleById(long) like Guild#getRoleById%
     // Guild#getRoleById(String) like Guild#getRoleById%
     // Guild#getRoleById(String) like Guild#getRoleById(String)%
-    @Query("from Example example join example.targets target where :target like target.target || '%'")
+    @Query("select example from Example example join example.targets target where :target like target.target || '%'")
     fun findByTarget(target: String): List<Example>
 
-    @Query("select * from example where title % :title order by similarity(title, :title) desc", nativeQuery = true)
+    @NativeQuery("select * from example where title % :title order by similarity(title, :title) desc")
     fun searchByTitle(title: String): List<Example>
 
     fun findByTitle(title: String): Example?

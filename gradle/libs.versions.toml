@@ -30,7 +30,7 @@ jmh = { id = "me.champeau.jmh", version.ref = "jmh" }
 jpa = { id = "org.jetbrains.kotlin.plugin.jpa", version.ref = "kotlin" }
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
-spring-boot = "org.springframework.boot:3.5.5"
+spring-boot = "org.springframework.boot:4.0.0"
 version-catalog-update = "nl.littlerobots.version-catalog-update:1.0.0"
 
 [libraries]
