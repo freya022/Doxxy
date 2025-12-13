@@ -26,6 +26,8 @@ object Env {
     fun getList(name: String): List<String> = getList(name) { it }
 
     fun <R> getList(name: String, transform: (String) -> R): List<R> {
-        return get(name).split(",").map { it.trim().let(transform) }
+        val value = get(name)
+        if (value.isBlank()) return emptyList()
+        return value.split(",").map { it.trim().let(transform) }
     }
 }
