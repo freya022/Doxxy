@@ -26,6 +26,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
+import kotlin.io.path.createParentDirectories
 import kotlin.io.path.moveTo
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
@@ -131,7 +132,7 @@ class Versions(
             logger.trace { "Downloading JDA javadocs" }
             jdaChecker.latest.artifactInfo
                 .downloadMavenJavadoc()
-                .moveTo(DocSourceType.JDA.javadocArchivePath, overwrite = true)
+                .moveTo(DocSourceType.JDA.javadocArchivePath.createParentDirectories(), overwrite = true)
 
             logger.trace { "Downloading JDA sources" }
             jdaChecker.latest.artifactInfo.downloadMavenSources().withTemporaryFile { tempZip ->
