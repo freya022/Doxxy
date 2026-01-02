@@ -7,8 +7,8 @@ import dev.freya02.doxxy.bot.commands.slash.SlashLogback
 import dev.freya02.doxxy.bot.versioning.LibraryType
 import dev.freya02.doxxy.bot.versioning.ScriptType
 import dev.freya02.doxxy.bot.versioning.Versions
+import dev.freya02.doxxy.bot.versioning.supplier.BuildScriptSupplier
 import dev.freya02.doxxy.bot.versioning.supplier.BuildToolType
-import dev.freya02.doxxy.bot.versioning.supplier.DependencySupplier
 import dev.freya02.doxxy.bot.versioning.supplier.GradleFlavor
 import dev.freya02.doxxy.bot.versioning.supplier.UnsupportedDependencyException
 import io.github.freya022.botcommands.api.annotations.CommandMarker
@@ -36,15 +36,14 @@ class BuildToolCommands(private val versions: Versions, private val buttons: But
     ) {
         try {
             val script = when (libraryType) {
-                LibraryType.BOT_COMMANDS -> DependencySupplier.formatBC(
-                    scriptType,
+                LibraryType.BOT_COMMANDS -> BuildScriptSupplier.of(scriptType).formatBC(
                     buildToolType,
                     versions.jdaVersionFromBotCommands,
                     versions.latestBotCommandsVersion
                 )
-                LibraryType.JDA -> DependencySupplier.formatJDA(scriptType, buildToolType, versions.latestJDAVersion)
-                LibraryType.JDA_KTX -> DependencySupplier.formatJDA(scriptType, buildToolType, versions.latestJDAKtxVersion)
-                LibraryType.LAVA_PLAYER -> DependencySupplier.formatJDA(scriptType, buildToolType, versions.latestLavaPlayerVersion)
+                LibraryType.JDA -> BuildScriptSupplier.of(scriptType).formatJDA(buildToolType, versions.latestJDAVersion)
+                LibraryType.JDA_KTX -> BuildScriptSupplier.of(scriptType).formatJDA(buildToolType, versions.latestJDAKtxVersion)
+                LibraryType.LAVA_PLAYER -> BuildScriptSupplier.of(scriptType).formatJDA(buildToolType, versions.latestLavaPlayerVersion)
             }
 
             val messageData = MessageCreate {

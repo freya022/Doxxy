@@ -8,12 +8,11 @@ import dev.freya02.doxxy.bot.utils.AppEmojis
 import dev.freya02.doxxy.bot.utils.github.toAutocompleteChoices
 import dev.freya02.doxxy.bot.versioning.ArtifactInfo
 import dev.freya02.doxxy.bot.versioning.LibraryType
-import dev.freya02.doxxy.bot.versioning.ScriptType
 import dev.freya02.doxxy.bot.versioning.jitpack.JitpackPrService
 import dev.freya02.doxxy.bot.versioning.jitpack.JitpackPrService.AdditionalPullRequestDetails
 import dev.freya02.doxxy.bot.versioning.jitpack.pullupdater.UpdatedBranch
+import dev.freya02.doxxy.bot.versioning.supplier.BuildScriptSupplier
 import dev.freya02.doxxy.bot.versioning.supplier.BuildToolType
-import dev.freya02.doxxy.bot.versioning.supplier.DependencySupplier
 import dev.freya02.doxxy.github.client.data.Branch
 import dev.freya02.doxxy.github.client.data.CommitComparisons
 import dev.freya02.doxxy.github.client.data.PullRequest
@@ -64,13 +63,11 @@ class SlashJitpackPr(
         updating: Boolean = false,
     ): MessageCreateData {
         val dependencyStr: String = when (libraryType) {
-            LibraryType.BOT_COMMANDS -> DependencySupplier.formatBCJitpack(
-                ScriptType.DEPENDENCIES,
+            LibraryType.BOT_COMMANDS -> BuildScriptSupplier.Dependencies.formatBCJitpack(
                 buildToolType,
                 targetBranch.toJitpackArtifact()
             )
-            LibraryType.JDA, LibraryType.JDA_KTX, LibraryType.LAVA_PLAYER -> DependencySupplier.formatJitpack(
-                ScriptType.DEPENDENCIES,
+            LibraryType.JDA, LibraryType.JDA_KTX, LibraryType.LAVA_PLAYER -> BuildScriptSupplier.Dependencies.formatJitpack(
                 buildToolType,
                 targetBranch.toJitpackArtifact()
             )
