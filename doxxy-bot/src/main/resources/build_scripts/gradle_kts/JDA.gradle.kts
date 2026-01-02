@@ -26,7 +26,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.5.20")
 
     //JDA
-    implementation("%s:%s:%s")
+    implementation("{{group_id}}:{{artifact_id}}:{{version}}")
 }
 
 tasks.withType<JavaCompile> {

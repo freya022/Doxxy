@@ -30,12 +30,10 @@ interface BuildScriptSupplier {
             jdaVersionFromBotCommands: ArtifactInfo,
             latestBotCommands: ArtifactInfo
         ): String {
-            val path = "build_scripts/${buildToolType.folderName}/BotCommands.${buildToolType.fileExtension}"
+            val path = "/build_scripts/${buildToolType.folderName}/BotCommands.${buildToolType.fileExtension}"
             return readResource(path)
-                .format(
-                    jdaVersionFromBotCommands.groupId, jdaVersionFromBotCommands.artifactId, jdaVersionFromBotCommands.version,
-                    latestBotCommands.groupId, latestBotCommands.artifactId, latestBotCommands.version
-                )
+                .replaceGAV(jdaVersionFromBotCommands, "jda")
+                .replaceGAV(latestBotCommands)
         }
 
         override fun formatBCJitpack(
@@ -44,8 +42,8 @@ interface BuildScriptSupplier {
         ) = throw UnsupportedDependencyException("Jitpack dependencies should not have full scripts")
 
         override fun formatJDA(buildToolType: BuildToolType, version: ArtifactInfo): String =
-            readResource("build_scripts/${buildToolType.folderName}/JDA.${buildToolType.fileExtension}")
-                .format(version.groupId, version.artifactId, version.version)
+            readResource("/build_scripts/${buildToolType.folderName}/JDA.${buildToolType.fileExtension}")
+                .replaceGAV(version)
 
         override fun formatJitpack(buildToolType: BuildToolType, version: ArtifactInfo) =
             throw UnsupportedDependencyException("Jitpack dependencies should not have full scripts")
@@ -56,27 +54,23 @@ interface BuildScriptSupplier {
             buildToolType: BuildToolType,
             jdaVersionFromBotCommands: ArtifactInfo,
             latestBotCommands: ArtifactInfo
-        ): String = readResource("dependencies_scripts/${buildToolType.folderName}/BotCommands.txt")
-            .format(
-                jdaVersionFromBotCommands.groupId, jdaVersionFromBotCommands.artifactId, jdaVersionFromBotCommands.version,
-                latestBotCommands.groupId, latestBotCommands.artifactId, latestBotCommands.version
-            )
+        ): String = readResource("/dependencies_scripts/${buildToolType.folderName}/BotCommands.txt")
+            .replaceGAV(jdaVersionFromBotCommands, "jda")
+            .replaceGAV(latestBotCommands)
 
         override fun formatBCJitpack(
             buildToolType: BuildToolType,
             latestBotCommands: ArtifactInfo
-        ): String = readResource("dependencies_scripts/${buildToolType.folderName}/BotCommands_Jitpack.txt")
-            .format(
-                latestBotCommands.groupId, latestBotCommands.artifactId, latestBotCommands.version
-            )
+        ): String = readResource("/dependencies_scripts/${buildToolType.folderName}/BotCommands_Jitpack.txt")
+            .replaceGAV(latestBotCommands)
 
         override fun formatJDA(buildToolType: BuildToolType, version: ArtifactInfo): String =
-            readResource("dependencies_scripts/${buildToolType.folderName}/JDA.txt")
-                .format(version.groupId, version.artifactId, version.version)
+            readResource("/dependencies_scripts/${buildToolType.folderName}/JDA.txt")
+                .replaceGAV(version)
 
         override fun formatJitpack(buildToolType: BuildToolType, version: ArtifactInfo): String =
-            readResource("dependencies_scripts/${buildToolType.folderName}/Jitpack.txt")
-                .format(version.groupId, version.artifactId, version.version)
+            readResource("/dependencies_scripts/${buildToolType.folderName}/Jitpack.txt")
+                .replaceGAV(version)
     }
 
     companion object {
@@ -93,3 +87,12 @@ private fun readResource(path: String): String {
         ?: throw UnsupportedDependencyException("Unable to find the DependencySupplier resource: $path")
     return stream.readAllBytes().decodeToString()
 }
+
+private fun String.replaceGAV(artifactInfo: ArtifactInfo, prefix: String? = null): String {
+    val effectivePrefix = if (prefix == null) "" else "${prefix}_"
+    return replaceToken("${effectivePrefix}group_id", artifactInfo.groupId)
+        .replaceToken("${effectivePrefix}artifact_id", artifactInfo.artifactId)
+        .replaceToken("${effectivePrefix}version", artifactInfo.version)
+}
+
+private fun String.replaceToken(name: String, value: String) = replace("{{$name}}", value)

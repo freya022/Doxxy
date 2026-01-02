@@ -4,5 +4,5 @@ repositories {
 }
 
 dependencies {
-    implementation("%s:%s:%s")
+    implementation("{{group_id}}:{{artifact_id}}:{{version}}")
 }

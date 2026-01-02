@@ -1,8 +1,19 @@
 repositories {
     mavenCentral()
-    maven { url 'https://jitpack.io' }
+
+    exclusiveContent {
+        forRepository {
+            maven {
+                url = "https://jitpack.io"
+            }
+        }
+
+        filter {
+            includeModule("{{group_id}}", "{{artifact_id}}")
+        }
+    }
 }
 
 dependencies {
-    implementation '%s:%s:%s'
+    implementation '{{group_id}}:{{artifact_id}}:{{version}}'
 }

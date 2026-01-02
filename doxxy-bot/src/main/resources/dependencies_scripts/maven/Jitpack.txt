@@ -7,8 +7,8 @@
 
 <dependencies>
     <dependency>
-        <groupId>%s</groupId>
-        <artifactId>%s</artifactId>
-        <version>%s</version>
+        <groupId>{{group_id}}</groupId>
+        <artifactId>{{artifact_id}}</artifactId>
+        <version>{{version}}</version>
     </dependency>
 </dependencies>
