@@ -1,0 +1,19 @@
+repositories {
+    mavenCentral()
+
+    exclusiveContent {
+        forRepository {
+            maven("https://repo.freya02.dev/snapshots") {
+                mavenContent { snapshotsOnly() }
+            }
+        }
+
+        filter {
+            includeVersionByRegex("""{{escaped_group_id}}""", ".+", "[a-f0-9]{40}-SNAPSHOT")
+        }
+    }
+}
+
+dependencies {
+    implementation("{{group_id}}:{{artifact_id}}:{{version}}")
+}

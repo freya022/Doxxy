@@ -61,8 +61,9 @@ interface BuildScriptSupplier {
         override fun formatBCJitpack(
             buildToolType: BuildToolType,
             latestBotCommands: ArtifactInfo
-        ): String = readResource("/dependencies_scripts/${buildToolType.folderName}/BotCommands_Jitpack.txt")
+        ): String = readResource("/dependencies_scripts/${buildToolType.folderName}/BotCommands_Snapshots.txt")
             .replaceGAV(latestBotCommands)
+            .replaceToken("escaped_group_id", Regex.escape(latestBotCommands.groupId))
 
         override fun formatJDA(buildToolType: BuildToolType, version: ArtifactInfo): String =
             readResource("/dependencies_scripts/${buildToolType.folderName}/JDA.txt")

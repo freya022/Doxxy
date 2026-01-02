@@ -1,7 +1,8 @@
 <repositories>
     <repository>
-        <id>jitpack</id>
-        <url>https://jitpack.io</url>
+        <id>reposilite-repository-snapshots</id>
+        <name>freya02 repository</name>
+        <url>https://repo.freya02.dev/snapshots</url>
     </repository>
 </repositories>
 
