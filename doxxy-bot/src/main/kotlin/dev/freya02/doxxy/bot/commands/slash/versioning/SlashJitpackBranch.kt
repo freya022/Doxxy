@@ -4,11 +4,10 @@ import dev.freya02.botcommands.jda.ktx.messages.reply_
 import dev.freya02.doxxy.bot.commands.slash.DeleteButtonListener.Companion.messageDelete
 import dev.freya02.doxxy.bot.versioning.ArtifactInfo
 import dev.freya02.doxxy.bot.versioning.LibraryType
-import dev.freya02.doxxy.bot.versioning.ScriptType
 import dev.freya02.doxxy.bot.versioning.jitpack.JitpackBranchService
 import dev.freya02.doxxy.bot.versioning.jitpack.pullupdater.UpdatedBranch
+import dev.freya02.doxxy.bot.versioning.supplier.BuildScriptSupplier
 import dev.freya02.doxxy.bot.versioning.supplier.BuildToolType
-import dev.freya02.doxxy.bot.versioning.supplier.DependencySupplier
 import dev.freya02.doxxy.github.client.data.Branches
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.AutocompleteAlgorithms
@@ -72,13 +71,11 @@ class SlashJitpackBranch(
         val branchName = branch.name
 
         val dependencyStr = when (libraryType) {
-            LibraryType.JDA, LibraryType.JDA_KTX, LibraryType.LAVA_PLAYER -> DependencySupplier.formatJitpack(
-                ScriptType.DEPENDENCIES,
+            LibraryType.JDA, LibraryType.JDA_KTX, LibraryType.LAVA_PLAYER -> BuildScriptSupplier.Dependencies.formatJitpack(
                 buildToolType,
                 branch.toJitpackArtifact(libraryType)
             )
-            LibraryType.BOT_COMMANDS -> DependencySupplier.formatBCJitpack(
-                ScriptType.DEPENDENCIES,
+            LibraryType.BOT_COMMANDS -> BuildScriptSupplier.Dependencies.formatBCJitpack(
                 buildToolType,
                 branch.toJitpackArtifact(libraryType)
             )

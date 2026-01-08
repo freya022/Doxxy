@@ -3,6 +3,6 @@ repositories {
 }
 
 dependencies {
-    implementation '%s:%s:%s'
-    implementation '%s:%s:%s'
+    implementation '{{jda_group_id}}:{{jda_artifact_id}}:{{jda_version}}'
+    implementation '{{group_id}}:{{artifact_id}}:{{version}}'
 }

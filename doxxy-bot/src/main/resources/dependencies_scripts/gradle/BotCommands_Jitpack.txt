@@ -1,8 +1,0 @@
-repositories {
-    mavenCentral()
-    maven { url 'https://jitpack.io' }
-}
-
-dependencies {
-    implementation '%s:%s:%s'
-}

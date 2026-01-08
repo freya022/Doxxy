@@ -60,32 +60,14 @@
             <version>1.5.20</version>
         </dependency>
         <dependency>
-            <groupId>%s</groupId>
-            <artifactId>%s</artifactId>
-            <version>%s</version>
-            <exclusions>
-                <!-- Removes audio as to save space, you can remove the exclusion if you want to use audio -->
-                <exclusion>
-                    <groupId>club.minnced</groupId>
-                    <artifactId>opus-java</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>{{jda_group_id}}</groupId>
+            <artifactId>{{jda_artifact_id}}</artifactId>
+            <version>{{jda_version}}</version>
         </dependency>
         <dependency>
-            <groupId>%s</groupId>
-            <artifactId>%s</artifactId>
-            <version>%s</version>
+            <groupId>{{group_id}}</groupId>
+            <artifactId>{{artifact_id}}</artifactId>
+            <version>{{version}}</version>
         </dependency>
-        <!-- Uncomment these if you want to use the components -->
-<!--        <dependency>-->
-<!--            <groupId>org.postgresql</groupId>-->
-<!--            <artifactId>postgresql</artifactId>-->
-<!--            <version>42.5.1</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>com.zaxxer</groupId>-->
-<!--            <artifactId>HikariCP</artifactId>-->
-<!--            <version>5.0.1</version>-->
-<!--        </dependency>-->
     </dependencies>
 </project>

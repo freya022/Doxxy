@@ -4,12 +4,13 @@ repositories {
     exclusiveContent {
         forRepository {
             maven {
-                url = "https://jitpack.io"
+                url = "https://repo.freya02.dev/snapshots"
+                mavenContent { snapshotsOnly() }
             }
         }
 
         filter {
-            includeModule("{{group_id}}", "{{artifact_id}}")
+            includeVersionByRegex("""{{escaped_group_id}}""", ".+", "[a-f0-9]{40}-SNAPSHOT")
         }
     }
 }
