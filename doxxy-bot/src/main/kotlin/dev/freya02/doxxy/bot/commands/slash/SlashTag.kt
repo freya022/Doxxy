@@ -8,7 +8,6 @@ import dev.freya02.doxxy.bot.commands.filters.decl.NotJDACommandDeclarationFilte
 import dev.freya02.doxxy.bot.tag.*
 import dev.freya02.doxxy.bot.utils.isUniqueViolation
 import io.github.freya022.botcommands.api.commands.annotations.Command
-import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
 import io.github.freya022.botcommands.api.commands.application.CommandScope
 import io.github.freya022.botcommands.api.commands.application.annotations.DeclarationFilter
 import io.github.freya022.botcommands.api.commands.application.getApplicationCommandById
@@ -60,7 +59,7 @@ class SlashTag(
     private val modals: Modals,
     private val buttons: Buttons,
     private val paginators: Paginators
-) : ApplicationCommand() {
+) {
     @Contract(value = "null -> fail", pure = true)
     private fun <T> checkGuild(obj: T?): T = requireNotNull(obj) { "Event did not happen in a guild" }
 

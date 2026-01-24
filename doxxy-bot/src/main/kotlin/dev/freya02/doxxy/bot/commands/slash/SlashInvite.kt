@@ -1,7 +1,6 @@
 package dev.freya02.doxxy.bot.commands.slash
 
 import io.github.freya022.botcommands.api.commands.annotations.Command
-import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
 import io.github.freya022.botcommands.api.commands.application.CommandScope
 import io.github.freya022.botcommands.api.commands.application.annotations.Test
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
@@ -9,7 +8,7 @@ import io.github.freya022.botcommands.api.commands.application.slash.annotations
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.TopLevelSlashCommandData
 
 @Command
-class SlashInvite : ApplicationCommand() {
+class SlashInvite {
     @Test
     @TopLevelSlashCommandData(scope = CommandScope.GUILD)
     @JDASlashCommand(name = "invite")

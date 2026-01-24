@@ -13,7 +13,6 @@ import dev.freya02.doxxy.bot.utils.github.toAutocompleteChoices
 import dev.freya02.doxxy.github.client.GithubClient
 import io.github.freya022.botcommands.api.annotations.CommandMarker
 import io.github.freya022.botcommands.api.commands.annotations.Command
-import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandManager
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandProvider
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
@@ -35,7 +34,7 @@ class SlashExample(
     private val githubClient: GithubClient,
     private val exampleApi: ExampleAPI,
     private val paginatorFactory: ExamplePaginatorFactory
-) : ApplicationCommand(), GuildApplicationCommandProvider {
+) : GuildApplicationCommandProvider {
 
     @JDASlashCommand(name = "example", description = "Sends an example")
     suspend fun onSlashExample(

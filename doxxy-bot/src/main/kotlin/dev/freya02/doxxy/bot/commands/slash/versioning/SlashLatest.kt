@@ -7,7 +7,6 @@ import dev.freya02.doxxy.bot.utils.Utils.isJDAGuild
 import dev.freya02.doxxy.bot.versioning.LibraryType
 import dev.freya02.doxxy.bot.versioning.Versions
 import io.github.freya022.botcommands.api.commands.annotations.Command
-import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
 import io.github.freya022.botcommands.api.commands.application.CommandScope
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.JDASlashCommand
@@ -17,7 +16,7 @@ import io.github.freya022.botcommands.api.components.Buttons
 import net.dv8tion.jda.api.EmbedBuilder
 
 @Command
-class SlashLatest(private val versions: Versions, private val buttons: Buttons) : ApplicationCommand() {
+class SlashLatest(private val versions: Versions, private val buttons: Buttons) {
     @JDASlashCommand(name = "latest", description = "Shows the latest version of the library")
     @TopLevelSlashCommandData(scope = CommandScope.GUILD)
     suspend fun onSlashLatest(

@@ -18,7 +18,6 @@ import dev.freya02.doxxy.bot.utils.ParsingUtils.codeBlockRegex
 import dev.freya02.doxxy.bot.utils.Utils.digitAmount
 import dev.freya02.doxxy.bot.utils.Utils.letIf
 import io.github.freya022.botcommands.api.commands.annotations.Command
-import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
 import io.github.freya022.botcommands.api.commands.application.context.annotations.JDAMessageCommand
 import io.github.freya022.botcommands.api.commands.application.context.message.GuildMessageEvent
 import io.github.freya022.botcommands.api.components.Button
@@ -46,7 +45,7 @@ private const val CODE_BLOCK_LENGTH = "```java\n```".length
 class MessageContextPaginateCode(
     private val context: BContext,
     private val buttons: Buttons
-) : ApplicationCommand() {
+) {
     private class PaginationState(val paginator: CodePaginator, val originalContent: String, val owner: UserSnowflake) {
         var showLineNumbers: Boolean = false
             private set

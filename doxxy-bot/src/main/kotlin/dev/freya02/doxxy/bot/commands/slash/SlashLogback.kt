@@ -5,7 +5,6 @@ import dev.freya02.doxxy.bot.commands.slash.DeleteButtonListener.Companion.messa
 import dev.freya02.doxxy.bot.logback.LogbackProfile
 import dev.freya02.doxxy.bot.versioning.LibraryType
 import io.github.freya022.botcommands.api.commands.annotations.Command
-import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.JDASlashCommand
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.SlashOption
@@ -19,7 +18,7 @@ private const val ephemeralDefault = true
 private val profileDefault = LogbackProfile.DEV
 
 @Command
-class SlashLogback(private val buttons: Buttons) : ApplicationCommand() {
+class SlashLogback(private val buttons: Buttons) {
     @JDASlashCommand(name = "logback", description = "Gives a logback.xml")
     suspend fun onSlashLogback(
         event: GuildSlashEvent,

@@ -5,7 +5,6 @@ import dev.freya02.botcommands.jda.ktx.messages.MessageCreate
 import dev.freya02.doxxy.bot.utils.UpdateCountdown
 import io.github.freya022.botcommands.api.BCInfo
 import io.github.freya022.botcommands.api.commands.annotations.Command
-import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.JDASlashCommand
 import io.github.freya022.botcommands.api.core.BContext
@@ -16,7 +15,7 @@ import java.lang.management.ManagementFactory
 import kotlin.time.Duration.Companion.minutes
 
 @Command
-class SlashInfo(private val context: BContext) : ApplicationCommand() {
+class SlashInfo(private val context: BContext) {
     private val combinedMemberCountCountdown = UpdateCountdown(5.minutes)
     private var combinedMemberCount: Int = 0
 

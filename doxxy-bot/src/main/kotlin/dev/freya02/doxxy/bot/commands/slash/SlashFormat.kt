@@ -5,7 +5,6 @@ import dev.freya02.botcommands.jda.ktx.messages.reply_
 import dev.freya02.doxxy.bot.format.Formatter
 import dev.freya02.doxxy.bot.format.FormattingException
 import io.github.freya022.botcommands.api.commands.annotations.Command
-import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
 import io.github.freya022.botcommands.api.commands.application.CommandScope
 import io.github.freya022.botcommands.api.commands.application.slash.GlobalSlashEvent
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.JDASlashCommand
@@ -19,7 +18,7 @@ import net.dv8tion.jda.api.interactions.InteractionContextType
 private const val CODE_INPUT_ID = "code"
 
 @Command
-class SlashFormat : ApplicationCommand() {
+class SlashFormat {
 
     @TopLevelSlashCommandData(scope = CommandScope.GLOBAL, contexts = [InteractionContextType.GUILD, InteractionContextType.BOT_DM])
     @JDASlashCommand(name = "format", description = "Formats your code and sends it back to you as a copy-paste-able block")

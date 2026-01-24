@@ -9,7 +9,6 @@ import dev.freya02.doxxy.bot.docs.index.DocSuggestion
 import dev.freya02.doxxy.bot.docs.index.DocSuggestion.Companion.mapToSuggestions
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.text.BaseCommandEvent
-import io.github.freya022.botcommands.api.commands.text.TextCommand
 import io.github.freya022.botcommands.api.commands.text.annotations.JDATextCommandVariation
 import io.github.freya022.botcommands.api.commands.text.annotations.TextOption
 
@@ -18,7 +17,7 @@ class TextDocs(
     private val docIndexMap: DocIndexMap,
     private val commonDocsController: CommonDocsController,
     private val textDocsController: TextDocsController
-) : TextCommand() {
+) {
     @JDATextCommandVariation(path = ["docs"], description = "Shows the documentation for a class, a method or a field")
     suspend fun onTextDocs(
         event: BaseCommandEvent,

@@ -4,7 +4,6 @@ import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.LoggerContext
 import dev.freya02.botcommands.jda.ktx.messages.reply_
 import io.github.freya022.botcommands.api.commands.annotations.Command
-import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
 import io.github.freya022.botcommands.api.commands.application.CommandScope
 import io.github.freya022.botcommands.api.commands.application.annotations.Test
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
@@ -16,7 +15,7 @@ import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInterac
 import org.slf4j.LoggerFactory
 
 @Command
-class SlashLogging : ApplicationCommand() {
+class SlashLogging {
     private val loggerContext = (LoggerFactory.getILoggerFactory() as LoggerContext)
 
     @Test

@@ -15,7 +15,6 @@ import dev.freya02.doxxy.bot.docs.index.DocSearchResult
 import dev.freya02.doxxy.bot.examples.ExampleAPI
 import dev.freya02.doxxy.bot.examples.ExamplePaginatorFactory
 import dev.freya02.doxxy.docs.sections.SeeAlso.TargetType
-import io.github.freya022.botcommands.api.commands.application.ApplicationCommand
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.annotations.AutocompleteHandler
 import io.github.freya022.botcommands.api.commands.application.slash.autocomplete.annotations.CacheAutocomplete
 import io.github.freya022.botcommands.api.components.SelectMenus
@@ -37,7 +36,7 @@ class CommonDocsHandlers(
     private val commonDocsController: CommonDocsController,
     private val slashDocsController: SlashDocsController,
     private val examplePaginatorFactory: ExamplePaginatorFactory
-) : ApplicationCommand() {
+) {
     @JDASelectMenuListener(name = SEE_ALSO_SELECT_LISTENER_NAME)
     suspend fun onSeeAlsoSelect(event: StringSelectEvent, @ComponentData owner: UserSnowflake, @ComponentData docSourceType: DocSourceType) {
         val values = event.selectedOptions.single().value.split(":")
