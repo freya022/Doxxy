@@ -7,7 +7,16 @@ plugins {
 // Repositories are required by the version catalog update plugin
 repositories {
     mavenCentral()
-    maven("https://jitpack.io")
+
+    exclusiveContent {
+        forRepository {
+            maven("https://jitpack.io")
+        }
+
+        filter {
+            includeModule("com.github.freya022", "remark-java")
+        }
+    }
 }
 
 versionCatalogUpdate {

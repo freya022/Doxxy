@@ -6,8 +6,15 @@ plugins {
 }
 
 repositories {
-    // Required by our remark-java fork
-    maven("https://jitpack.io")
+    exclusiveContent {
+        forRepository {
+            maven("https://jitpack.io")
+        }
+
+        filter {
+            includeModule("com.github.freya022", "remark-java")
+        }
+    }
 }
 
 dependencies {
