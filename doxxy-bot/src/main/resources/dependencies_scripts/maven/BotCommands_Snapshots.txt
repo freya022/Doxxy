@@ -10,6 +10,6 @@
     <dependency>
         <groupId>{{group_id}}</groupId>
         <artifactId>{{artifact_id}}</artifactId>
-        <version>{{version}}</version>
+        <version>{{version}}-SNAPSHOT</version>
     </dependency>
 </dependencies>

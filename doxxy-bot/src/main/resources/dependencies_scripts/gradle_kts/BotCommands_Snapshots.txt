@@ -15,5 +15,5 @@ repositories {
 }
 
 dependencies {
-    implementation("{{group_id}}:{{artifact_id}}:{{version}}")
+    implementation("{{group_id}}:{{artifact_id}}:{{version}}-SNAPSHOT")
 }
