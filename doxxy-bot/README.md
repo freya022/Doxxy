@@ -22,7 +22,6 @@ Module for the main Discord bot.
 - [Ktor](https://ktor.io/) — Framework for building asynchronous web servers and clients
 - [Flyway](https://github.com/flyway/flyway) — Database migration
 - [JavaParser](https://github.com/javaparser/javaparser) — Java 1–21 parser as Abstract Syntax Trees with resolution capabilities
-- [palantir-java-format](https://github.com/palantir/palantir-java-format) — 120-characters Java formatter
 - [remark-java](https://github.com/freya022/remark-java) — Converts Javadoc's HTML to Markdown
 
 ## Contributing
@@ -31,9 +30,7 @@ See the [`Contributing` section of the project root](../README.md#contributing) 
 
 ### Running
 
-Run the main class at [`src/main/kotlin/dev/freya02/doxxy/bot/Main.kt`](src/main/kotlin/dev/freya02/doxxy/bot/Main.kt),
-and add the following VM options in the run configuration:
-`--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED`
+Run the main class at [`src/main/kotlin/dev/freya02/doxxy/bot/Main.kt`](src/main/kotlin/dev/freya02/doxxy/bot/Main.kt).
 
 ### Making database changes
 When changing the schema, please write a migration script in [`src/main/resources/doxxy_database_scripts`](./src/main/resources/doxxy_database_scripts),

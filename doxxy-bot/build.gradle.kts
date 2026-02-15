@@ -58,8 +58,6 @@ dependencies {
 
     implementation(libs.javaparser.symbol.solver.core)
 
-    implementation(libs.palantir.java.format)
-
     testImplementation(libs.bundles.junit)
     testImplementation(libs.javassist)
     testImplementation(libs.junit.jupiter)
