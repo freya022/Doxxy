@@ -24,7 +24,6 @@ dependencies {
 
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.debug)
-    implementation(libs.stacktrace.decoroutinator)
 
     implementation(libs.bundles.slf4j)
     implementation(libs.logback.classic)

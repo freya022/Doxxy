@@ -23,7 +23,6 @@ postgresql = "42.7.8"
 # @pin
 remark-java = "4a18f84801"
 slf4j = "2.0.17"
-stacktrace-decoroutinator = "2.5.7"
 
 [plugins]
 jmh = { id = "me.champeau.jmh", version.ref = "jmh" }
@@ -73,7 +72,6 @@ postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" 
 remark-java = { module = "com.github.freya022:remark-java", version.ref = "remark-java" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 slf4j-ext = { module = "org.slf4j:slf4j-ext", version.ref = "slf4j" }
-stacktrace-decoroutinator = { module = "dev.reformator.stacktracedecoroutinator:stacktrace-decoroutinator-jvm", version.ref = "stacktrace-decoroutinator" }
 
 [bundles]
 junit = [
