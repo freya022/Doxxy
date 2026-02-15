@@ -71,7 +71,7 @@ tasks.withType<Test> {
 
 jib {
     from {
-        image = "docker://doxxy-bot-eclipse-temurin:25-jdk"
+        image = "docker://doxxy-bot-eclipse-temurin:25-jre"
     }
 
     to {
@@ -80,12 +80,5 @@ jib {
 
     container {
         mainClass = "dev.freya02.doxxy.bot.Main"
-        jvmFlags = listOf(
-            "--add-exports", "jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
-            "--add-exports", "jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED",
-            "--add-exports", "jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED",
-            "--add-exports", "jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
-            "--add-exports", "jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
-        )
     }
 }
