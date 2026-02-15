@@ -65,7 +65,7 @@ class SlashJitpackPr(
         val dependencyStr: String = when (libraryType) {
             LibraryType.BOT_COMMANDS -> BuildScriptSupplier.Dependencies.formatBCJitpack(
                 buildToolType,
-                targetBranch.toJitpackArtifact()
+                targetBranch.toSnapshotArtifact()
             )
             LibraryType.JDA, LibraryType.JDA_KTX, LibraryType.LAVA_PLAYER -> BuildScriptSupplier.Dependencies.formatJitpack(
                 buildToolType,
@@ -221,6 +221,12 @@ class SlashJitpackPr(
         "io.github.$ownerName",
         repoName,
         sha.asSha10
+    )
+
+    private fun UpdatedBranch.toSnapshotArtifact(): ArtifactInfo = ArtifactInfo(
+        "io.github.$ownerName",
+        repoName,
+        sha.hash
     )
 
     private fun Branch.toUpdatedBranch(): UpdatedBranch = UpdatedBranch(ownerName, repoName, branchName, latestCommitSha)

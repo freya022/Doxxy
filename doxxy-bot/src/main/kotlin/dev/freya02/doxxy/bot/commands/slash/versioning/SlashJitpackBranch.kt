@@ -77,7 +77,7 @@ class SlashJitpackBranch(
             )
             LibraryType.BOT_COMMANDS -> BuildScriptSupplier.Dependencies.formatBCJitpack(
                 buildToolType,
-                branch.toJitpackArtifact(libraryType)
+                branch.toSnapshotArtifact(libraryType)
             )
         }
 
@@ -104,6 +104,12 @@ class SlashJitpackBranch(
         "io.github.${libraryType.githubOwnerName}",
         libraryType.githubRepoName,
         commit.sha.asSha10,
+    )
+
+    private fun Branches.Branch.toSnapshotArtifact(libraryType: LibraryType): ArtifactInfo = ArtifactInfo(
+        "io.github.${libraryType.githubOwnerName}",
+        libraryType.githubRepoName,
+        commit.sha.hash,
     )
 
     private fun Branches.Branch.toUpdatedBranch(libraryType: LibraryType): UpdatedBranch =
