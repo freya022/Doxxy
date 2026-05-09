@@ -1,5 +1,5 @@
 [versions]
-botcommands = "3.0.0-beta.8"
+botcommands = "3.1.0"
 bytebuddy = "1.18.2"
 dotenv-kotlin = "6.5.0"
 flyway = "11.19.0"
@@ -7,14 +7,14 @@ hikaricp = "7.0.2"
 java-string-similarity = "2.0.0"
 javaparser = "3.27.0"
 javassist = "3.30.2-GA"
-jda = "6.3.0"
+jda = "6.4.1"
 jmh = "0.7.3"
 jsoup = "1.21.2"
 junit = "6.0.1"
-kotlin = "2.3.0"
+kotlin = "2.3.20"
 kotlinx-coroutines = "1.10.2"
 kotlinx-serialization = "1.9.0"
-ktor = "3.3.3"
+ktor = "3.4.3"
 logback-classic = "1.5.18"
 mockk = "1.14.5"
 okhttp = "5.3.2"
@@ -28,7 +28,7 @@ jmh = { id = "me.champeau.jmh", version.ref = "jmh" }
 jpa = { id = "org.jetbrains.kotlin.plugin.jpa", version.ref = "kotlin" }
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
-spring-boot = "org.springframework.boot:4.0.0"
+spring-boot = "org.springframework.boot:4.0.6"
 version-catalog-update = "nl.littlerobots.version-catalog-update:1.0.0"
 
 [libraries]
