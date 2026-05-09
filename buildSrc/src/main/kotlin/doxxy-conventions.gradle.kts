@@ -11,6 +11,11 @@ repositories {
     mavenCentral()
 }
 
+configurations.all {
+    exclude(module = "opus-java")
+    exclude(module = "tink")
+}
+
 dependencies {
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.0")
 }
