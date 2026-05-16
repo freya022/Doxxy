@@ -71,5 +71,6 @@ jib {
 
     container {
         mainClass = "dev.freya02.doxxy.bot.Main"
+        jvmFlags = listOf("-XX:+UseCompactObjectHeaders")
     }
 }

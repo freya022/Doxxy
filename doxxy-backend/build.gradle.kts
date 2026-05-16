@@ -36,5 +36,6 @@ jib {
 
     container {
         mainClass = "dev.freya02.doxxy.backend.BackendApplicationKt"
+        jvmFlags = listOf("-XX:+UseCompactObjectHeaders")
     }
 }
