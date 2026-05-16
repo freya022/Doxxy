@@ -23,6 +23,9 @@ services:
       - ./.env:/.env
       - ./config:/config
       - ./backend/logs:/logs
+    environment:
+      # backend does practically nothing
+      JDK_JAVA_OPTIONS: -Xmx64M
   bot:
     image: ghcr.io/freya022/doxxy-bot:latest
     container_name: doxxy-bot
