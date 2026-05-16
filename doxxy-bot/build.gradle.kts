@@ -5,18 +5,6 @@ plugins {
     alias(libs.plugins.kotlinx.serialization)
 }
 
-repositories {
-    exclusiveContent {
-        forRepository {
-            maven("https://jitpack.io")
-        }
-
-        filter {
-            includeModule("com.github.freya022", "remark-java")
-        }
-    }
-}
-
 dependencies {
     implementation(projects.doxxy.doxxyCommons)
     implementation(projects.doxxy.doxxyDocs)

@@ -7,10 +7,6 @@ plugins {
 group = "dev.freya02"
 version = "2.5"
 
-repositories {
-    mavenCentral()
-}
-
 configurations.all {
     exclude(module = "opus-java")
     exclude(module = "tink")
