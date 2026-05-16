@@ -17,7 +17,10 @@ dependencies {
 
     implementation(libs.javaparser.core)
 
-    implementation(libs.jda)
+    implementation(libs.jda) {
+        exclude(module = "opus-java")
+        exclude(module = "tink")
+    }
 
     testImplementation(libs.bundles.junit)
     testImplementation(libs.mockk)

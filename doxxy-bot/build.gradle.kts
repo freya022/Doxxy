@@ -16,7 +16,10 @@ dependencies {
     implementation(libs.bundles.slf4j)
     implementation(libs.logback.classic)
 
-    implementation(libs.jda)
+    implementation(libs.jda) {
+        exclude(module = "opus-java")
+        exclude(module = "tink")
+    }
     implementation(libs.botcommands)
     implementation(libs.botcommands.jda.ktx)
     runtimeOnly(libs.botcommands.method.accessors.classfile)
