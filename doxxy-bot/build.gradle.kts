@@ -50,7 +50,6 @@ dependencies {
     implementation(libs.javaparser.symbol.solver.core)
 
     testImplementation(libs.bundles.junit)
-    testImplementation(libs.javassist)
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.mockk)
     runtimeOnly(libs.bytebuddy)
