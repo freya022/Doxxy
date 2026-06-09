@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
     kotlin("jvm")
 }
@@ -19,6 +17,8 @@ java {
 
 kotlin {
     compilerOptions {
-        freeCompilerArgs.addAll("-Xjsr305=strict", "-Xcontext-parameters")
+        freeCompilerArgs.addAll(
+            "-Xjsr305=strict",
+        )
     }
 }
