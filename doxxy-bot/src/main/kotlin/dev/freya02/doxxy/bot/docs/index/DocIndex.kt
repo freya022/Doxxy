@@ -218,7 +218,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                 preparedStatement("set pg_trgm.similarity_threshold = 0.1;") { executeUpdate() }
 
                 val inferredTypes = when {
-                    query.all { it.isUpperCase() } -> DocTypes.FIELD
+                    query.all { it.isUpperCase() || it == '_' } -> DocTypes.FIELD
                     else -> DocTypes(DocType.CLASS, DocType.METHOD)
                 }
 
