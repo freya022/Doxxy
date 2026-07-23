@@ -173,16 +173,20 @@ class Versions(
     }
 
     private suspend fun checkLatestBCVersion() {
-        val changed = bcChecker.checkVersion()
+        val bcChanged = bcChecker.checkVersion()
+        val bcJdaVersionChanged = bcJdaVersionChecker.checkVersion()
 
-        if (changed) {
-            logger.info { "BotCommands version changed" }
+        if (bcChanged) logger.info { "BotCommands version changed" }
+        if (bcJdaVersionChanged) logger.info { "BotCommands JDA version changed" }
 
+        if (bcChanged) {
             bcChecker.save(versionsRepository)
-            bcJdaVersionChecker.checkVersion()
-            bcJdaVersionChecker.save(versionsRepository)
-
             logger.info { "BotCommands version updated to ${bcChecker.latest.version}" }
+        }
+
+        if (bcJdaVersionChanged) {
+            bcJdaVersionChecker.save(versionsRepository)
+            logger.info { "BotCommands JDA version updated to ${bcJdaVersionChecker.latest.version}" }
         }
     }
 }

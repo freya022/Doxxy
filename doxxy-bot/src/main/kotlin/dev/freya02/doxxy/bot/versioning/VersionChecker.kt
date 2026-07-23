@@ -17,6 +17,8 @@ abstract class VersionChecker protected constructor(latest: LibraryVersion) {
     }
 
     suspend fun save(versionsRepository: VersionsRepository, sourceUrl: String? = null) {
+        if (savedVersion === latest) return
+
         latest.sourceUrl = sourceUrl
         versionsRepository.save(latest)
         savedVersion = latest
