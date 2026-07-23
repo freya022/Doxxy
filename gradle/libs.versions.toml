@@ -1,23 +1,23 @@
 [versions]
-botcommands = "3.2.0"
-bytebuddy = "1.18.10"
-dotenv-kotlin = "6.5.0"
-flyway = "12.8.1"
-hikaricp = "7.0.2"
+botcommands = "3.3.0"
+bytebuddy = "1.18.11"
+dotenv-kotlin = "6.5.1"
+flyway = "13.0.0"
+hikaricp = "7.1.0"
 java-string-similarity = "2.0.0"
 javaparser = "3.28.2"
-jda = "6.4.2"
+jda = "6.5.0"
 jmh = "0.7.3"
 jsoup = "1.22.2"
-junit = "6.1.0"
-kotlin = "2.4.0"
+junit = "6.1.2"
+kotlin = "2.4.10"
 kotlinx-coroutines = "1.11.0"
 kotlinx-serialization = "1.11.0"
-ktor = "3.5.0"
-logback-classic = "1.5.34"
-mockk = "1.14.5"
+ktor = "3.5.1"
+logback-classic = "1.6.0"
+mockk = "1.14.11"
 okhttp = "5.4.0"
-postgresql = "42.7.11"
+postgresql = "42.7.13"
 # @pin
 remark-java = "4a18f84801"
 slf4j = "2.0.18"
@@ -27,7 +27,7 @@ jmh = { id = "me.champeau.jmh", version.ref = "jmh" }
 jpa = { id = "org.jetbrains.kotlin.plugin.jpa", version.ref = "kotlin" }
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
-spring-boot = "org.springframework.boot:4.0.6"
+spring-boot = "org.springframework.boot:4.1.0"
 version-catalog-update = "nl.littlerobots.version-catalog-update:1.1.0"
 
 [libraries]
