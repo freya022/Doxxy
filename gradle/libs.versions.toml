@@ -40,6 +40,7 @@ flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 flyway-database-postgresql = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
 gradle-versions-plugin = "com.github.ben-manes.versions:com.github.ben-manes.versions.gradle.plugin:0.52.0"
 hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
+jackson-dataformat-toml = "tools.jackson.dataformat:jackson-dataformat-toml:3.2.1"
 java-string-similarity = { module = "info.debatty:java-string-similarity", version.ref = "java-string-similarity" }
 javaparser-core = { module = "com.github.javaparser:javaparser-core", version.ref = "javaparser" }
 javaparser-symbol-solver-core = { module = "com.github.javaparser:javaparser-symbol-solver-core", version.ref = "javaparser" }

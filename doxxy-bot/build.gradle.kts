@@ -33,6 +33,8 @@ dependencies {
 
     implementation(libs.kotlinx.serialization.json)
 
+    implementation(libs.jackson.dataformat.toml)
+
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.client.content.negotiation)
