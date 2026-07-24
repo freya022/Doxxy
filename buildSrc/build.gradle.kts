@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
     `kotlin-dsl`
 }
@@ -16,18 +14,11 @@ dependencies {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    }
 }
 
-// Kotlin configuration for the precompiled classes
 kotlin {
-    compilerOptions {
-        // Version of the buildscript bytecode, so Gradle shuts up
-        jvmTarget = JvmTarget.JVM_17
-
-        freeCompilerArgs.addAll(
-            "-Xjsr305=strict",
-        )
-    }
+    jvmToolchain(25)
 }
