@@ -187,8 +187,8 @@ object IntegrationTests {
         deprecationElement?.targetElement,
         detailToElementsMap.map,
         seeAlso?.toSerializable(),
-        methods.mapValues { (_, method) -> method.toSerializable() },
-        fields.mapValues { (_, field) -> field.toSerializable() },
+        methods.mapValues { [_, method] -> method.toSerializable() },
+        fields.mapValues { [_, field] -> field.toSerializable() },
     )
 
     private fun SeeAlso.toSerializable() = SerializableSeeAlso(

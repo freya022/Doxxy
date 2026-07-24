@@ -168,7 +168,7 @@ class DocIndex(val sourceType: DocSourceType, private val database: Database) : 
                 limit 1
             """.trimIndent(), readOnly = true
         ) {
-            val (className, memberSignature) = lastDeclarationParts
+            val [className, memberSignature] = lastDeclarationParts
             executeQuery(sourceType.id, className, memberSignature).readOrNull()?.getString("type")
         }
 

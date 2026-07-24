@@ -5,7 +5,7 @@ internal object SubSuperScripts {
     // fun
     // https://lingojam.com/SuperscriptGenerator
     internal val superscripts = "abcdefghijklmnopqrstuvwxyz0123456789+-=()".zip("ᵃᵇᶜᵈᵉᶠᵍʰᶦʲᵏˡᵐⁿᵒᵖᑫʳˢᵗᵘᵛʷˣʸᶻ⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾") //uhh ok
-        .associate { (k, v) -> k to v } + mapOf(
+        .toMap() + mapOf(
         // https://en.wikipedia.org/wiki/Unicode_subscripts_and_superscripts#Superscripts_and_subscripts_block
         '2' to '\u00B2',
         '3' to '\u00B3',
@@ -34,7 +34,7 @@ internal object SubSuperScripts {
     // even funnier
     // https://lingojam.com/SubscriptGenerator
     internal val subscripts = "abcdefghijklmnopqrstuvwxyz0123456789+-=()".zip("ₐ₆꜀ₔₑբ₉ₕᵢⱼₖₗₘₙₒₚqᵣₛₜᵤᵥᵥᵥₓᵧ₂₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎") //wtf
-        .associate { (k, v) -> k to v } + mapOf(
+        .toMap() + mapOf(
         // https://en.wikipedia.org/wiki/Unicode_subscripts_and_superscripts#Superscripts_and_subscripts_block
         '0' to '\u2080',
         '1' to '\u2081',

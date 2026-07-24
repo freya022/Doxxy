@@ -103,7 +103,7 @@ class SlashJitpackPr(
         additionalDetails: AdditionalPullRequestDetails,
         updating: Boolean,
     ) {
-        val (pullRequest, commitComparisons, reverseCommitComparisons) = additionalDetails
+        (val pullRequest = updatedPR, val commitComparisons, val reverseCommitComparisons) = additionalDetails
 
         val behindText = when (commitComparisons.behindBy) {
             0 -> "behind"
@@ -174,7 +174,7 @@ class SlashJitpackPr(
 
     context(libraryType: LibraryType, buildToolType: BuildToolType)
     private suspend fun onUpdatePrClick(event: ButtonEvent, targetBranch: UpdatedBranch, additionalDetails: AdditionalPullRequestDetails) {
-        val (pullRequest) = additionalDetails
+        val pullRequest = additionalDetails.updatedPR
 
         createPrMessage(event, pullRequest, targetBranch, additionalDetails, updating = true)
             .toEditData()

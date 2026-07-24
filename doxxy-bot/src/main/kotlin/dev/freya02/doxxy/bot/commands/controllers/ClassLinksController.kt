@@ -76,7 +76,7 @@ class ClassLinksController(
         decorations: ClassType.Decorations
     ) {
         val message = MessageCreate {
-            val (apiClasses, internalClasses) = classes.sortedBy { it.className }.partition { it.hasClassDoc() }
+            val [apiClasses, internalClasses] = classes.sortedBy { it.className }.partition { it.hasClassDoc() }
 
             if (internalClasses.isNotEmpty()) {
                 embed {

@@ -34,7 +34,7 @@ class JavadocModuleSession internal constructor(
     fun classesAsFlow(): Flow<JavadocClass> = channelFlow {
         val dispatcher = Dispatchers.IO.limitedParallelism(parallelism = 8, name = "Document fetch")
 
-        classUrlMappings.forEach { (className, classUrl) ->
+        classUrlMappings.forEach { [className, classUrl] ->
             launch(dispatcher) {
                 try {
                     val javadocClass = retrieveClassOrNull(classUrl) ?: run {

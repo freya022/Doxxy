@@ -74,7 +74,7 @@ class MethodLinksController(
         decorations: MethodType.Decorations
     ) {
         val message = MessageCreate {
-            val (apiMethods, internalMethods) = methods.sortedBy { it.className }.partition { it.hasMethodDoc() }
+            val [apiMethods, internalMethods] = methods.sortedBy { it.className }.partition { it.hasMethodDoc() }
 
             if (internalMethods.isNotEmpty()) {
                 embed {

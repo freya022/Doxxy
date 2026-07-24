@@ -160,7 +160,7 @@ internal class ImplementationMetadataWriter private constructor(
                         clazz.subclasses.any { sub -> sub.isSubclassOf(implementation.owner) }
                     }
                 }
-                .flatMap insertLoop@{ (superMethod, implementations) ->
+                .flatMap insertLoop@{ [superMethod, implementations] ->
                     implementations.map {
                         listOf(dbClasses[clazz], dbMethods[superMethod], dbMethods[it])
                     }

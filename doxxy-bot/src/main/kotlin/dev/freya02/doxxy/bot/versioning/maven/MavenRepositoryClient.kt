@@ -35,7 +35,7 @@ suspend fun MavenRepositoryClient.getLatestVersion(groupId: String, artifactId: 
     val latestVersion = contents.lines()
         .mapNotNull { contentRegex.find(it) }
         .map { it.groupValues }
-        .maxBy { (_, _, date) -> date }[1]
+        .maxBy { [_, _, date] -> date }[1]
 
     return latestVersion
 }

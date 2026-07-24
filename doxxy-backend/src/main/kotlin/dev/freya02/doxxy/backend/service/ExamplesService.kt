@@ -30,8 +30,6 @@ class ExamplesService(
     private val exampleRepository: ExampleRepository,
     private val json: Json
 ) {
-    private val client = RestClient.create()
-
     @Serializable
     private data class IndexedExample(
         val name: String,
@@ -86,10 +84,10 @@ class ExamplesService(
             .groupBy { it.exampleLibrary.documentedLibrary!! }
             .let { examplesBySourceType ->
                 RequestedTargetsDTO(
-                    examplesBySourceType.mapValues { (_, examples) ->
+                    examplesBySourceType.mapValues { [_, examples] ->
                         examples.flatMap { it.targets }.filterNot { '#' in it }.mapTo(hashSetOf(), ::SimpleClassName)
                     },
-                    examplesBySourceType.mapValues { (_, examples) ->
+                    examplesBySourceType.mapValues { [_, examples] ->
                         examples.flatMap { it.targets }.filter { '#' in it }.mapTo(hashSetOf(), ::QualifiedPartialIdentifier)
                     }
                 )
@@ -101,12 +99,12 @@ class ExamplesService(
             .body<String>()!!
             .let(json::decodeFromString)
 
-        missingTargets.sourceTypeToSimpleClassNames.forEach { (documentedExampleLibrary, simpleClassNames) ->
+        missingTargets.sourceTypeToSimpleClassNames.forEach { [documentedExampleLibrary, simpleClassNames] ->
             if (simpleClassNames.isNotEmpty()) {
                 logger.error { "Missing classes in $documentedExampleLibrary:\n${simpleClassNames.joinToString()}" }
             }
         }
-        missingTargets.sourceTypeToPartialIdentifiers.forEach { (documentedExampleLibrary, partialIdentifiers) ->
+        missingTargets.sourceTypeToPartialIdentifiers.forEach { [documentedExampleLibrary, partialIdentifiers] ->
             if (partialIdentifiers.isNotEmpty()) {
                 logger.error { "Missing (possibly partial) identifiers in $documentedExampleLibrary:\n${partialIdentifiers.joinToString()}" }
             }

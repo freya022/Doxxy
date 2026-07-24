@@ -59,14 +59,14 @@ class SlashDocsController(private val commonDocsController: CommonDocsController
         val docIndex = docIndexMap[sourceType]
         when {
             '(' in query && '#' in query -> {
-                val (className, identifier) = query.split("#")
+                val [className, identifier] = query.split("#")
                 handleMethodDocs(event, className, identifier, docIndex) {
                     searchAutocomplete(docIndex, query).mapToSuggestions()
                 }
             }
 
             '#' in query -> {
-                val (className, identifier) = query.split("#")
+                val [className, identifier] = query.split("#")
                 handleFieldDocs(event, className, identifier, docIndex) {
                     searchAutocomplete(docIndex, query).mapToSuggestions()
                 }

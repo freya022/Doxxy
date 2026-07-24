@@ -2,7 +2,7 @@ package dev.freya02.doxxy.bot.utils
 
 private fun <T> Iterable<T>.joinTo(buffer: StringBuilder, separator: CharSequence = ", ", prefix: CharSequence = "", postfix: CharSequence = "", limit: Int = -1, truncated: CharSequence = "...", transform: ((T) -> CharSequence)? = null): StringBuilder {
     buffer.append(prefix)
-    for ((count, element) in this.withIndex()) {
+    for ([count, element] in this.withIndex()) {
         val elementStr = when {
             transform != null -> transform(element)
             else -> element.toString()

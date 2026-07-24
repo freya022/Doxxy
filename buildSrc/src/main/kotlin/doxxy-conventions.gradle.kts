@@ -18,7 +18,7 @@ java {
 kotlin {
     compilerOptions {
         freeCompilerArgs.addAll(
-            "-Xjsr305=strict",
+            "-Xname-based-destructuring=complete"
         )
     }
 }

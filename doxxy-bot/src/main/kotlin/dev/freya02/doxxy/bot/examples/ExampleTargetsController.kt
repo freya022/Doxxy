@@ -22,7 +22,7 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import java.util.*
+import java.util.StringJoiner
 
 @RequiresBackend
 @BService
@@ -55,12 +55,12 @@ class ExampleTargetsController(private val database: Database, config: Config) {
             val existingClassName = findClassNames(targets.sourceTypeToSimpleClassNames)
             val existingQualifiedPartialIdentifiers = findFullSignatures(targets.sourceTypeToQualifiedPartialIdentifiers)
 
-            val missingClasses = existingClassName.mapValues { (documentedExampleLibrary, existingClassNames) ->
+            val missingClasses = existingClassName.mapValues { [documentedExampleLibrary, existingClassNames] ->
                 val requestedClassNames = targets.sourceTypeToSimpleClassNames[documentedExampleLibrary]!!
                 requestedClassNames - existingClassNames
             }
 
-            val missingPartialIdentifiers = existingQualifiedPartialIdentifiers.mapValues { (documentedExampleLibrary, existingQualifiedPartialIdentifiers) ->
+            val missingPartialIdentifiers = existingQualifiedPartialIdentifiers.mapValues { [documentedExampleLibrary, existingQualifiedPartialIdentifiers] ->
                 val requestedQualifiedPartialIdentifiers = targets.sourceTypeToQualifiedPartialIdentifiers[documentedExampleLibrary]!!
                 requestedQualifiedPartialIdentifiers - existingQualifiedPartialIdentifiers
             }
@@ -70,7 +70,7 @@ class ExampleTargetsController(private val database: Database, config: Config) {
     }
 
     private suspend fun findClassNames(classes: Map<DocumentedExampleLibrary, Set<SimpleClassName>>): Map<DocumentedExampleLibrary, Set<SimpleClassName>> {
-        return classes.mapValuesTo(enumMapOf()) { (documentedExampleLibrary, targetClasses) ->
+        return classes.mapValuesTo(enumMapOf()) { [documentedExampleLibrary, targetClasses] ->
             database.preparedStatement(
                 """
                     select d.class_name
@@ -85,14 +85,14 @@ class ExampleTargetsController(private val database: Database, config: Config) {
     }
 
     private suspend fun findFullSignatures(sourceMap: Map<DocumentedExampleLibrary, Set<QualifiedPartialIdentifier>>): Map<DocumentedExampleLibrary, Set<QualifiedPartialIdentifier>> {
-        return sourceMap.mapValuesTo(enumMapOf()) { (documentedExampleLibrary, targetReferences) ->
+        return sourceMap.mapValuesTo(enumMapOf()) { [documentedExampleLibrary, targetReferences] ->
             val conditions = StringJoiner(") or (", "(", ")")
             val conditionValues = arrayListOf<String>()
 
             // Find all members (fields/methods)
             targetReferences
                 .groupBy { it.className }
-                .forEach { (className, qualifiedPartialIdentifiers) ->
+                .forEach { [className, qualifiedPartialIdentifiers] ->
                     val memberConditions = StringJoiner(" or ")
                     val memberConditionValues = arrayListOf<String>()
                     qualifiedPartialIdentifiers.map { it.identifier }.forEach { partialIdentifier ->
