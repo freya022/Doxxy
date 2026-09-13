@@ -15,6 +15,16 @@ dependencyResolutionManagement {
                 includeModule("com.github.freya022", "remark-java")
             }
         }
+
+        exclusiveContent {
+            forRepository {
+                maven("https://jitpack.io")
+            }
+
+            filter {
+                includeModule("io.github.discord-jda", "JDA")
+            }
+        }
     }
 }
 

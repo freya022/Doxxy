@@ -6,7 +6,7 @@ flyway = "13.5.0"
 hikaricp = "7.1.0"
 java-string-similarity = "2.0.0"
 javaparser = "3.28.2"
-jda = "6.6.0"
+jda = "33dc921551"
 jmh = "0.7.3"
 jsoup = "1.23.2"
 junit = "6.1.3"
@@ -44,7 +44,7 @@ jackson-dataformat-toml = "tools.jackson.dataformat:jackson-dataformat-toml:3.2.
 java-string-similarity = { module = "info.debatty:java-string-similarity", version.ref = "java-string-similarity" }
 javaparser-core = { module = "com.github.javaparser:javaparser-core", version.ref = "javaparser" }
 javaparser-symbol-solver-core = { module = "com.github.javaparser:javaparser-symbol-solver-core", version.ref = "javaparser" }
-jda = { module = "net.dv8tion:JDA", version.ref = "jda" }
+jda = { module = "io.github.discord-jda:JDA", version.ref = "jda" }
 jib-plugin = "com.google.cloud.tools:jib-gradle-plugin:3.4.4"
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
