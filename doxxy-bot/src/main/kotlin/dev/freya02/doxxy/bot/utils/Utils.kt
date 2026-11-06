@@ -19,7 +19,7 @@ object Utils {
     @Contract("null -> false")
     fun Guild?.isJDAGuild(): Boolean = this?.idLong == jdaGuildId || this?.idLong == Config.config.fakeJDAGuildId
 
-    inline fun <R> Path.withTemporaryFile(block: (Path) -> R) {
+    inline fun Path.withTemporaryFile(block: (Path) -> Unit) {
         try {
             block(this)
         } finally {

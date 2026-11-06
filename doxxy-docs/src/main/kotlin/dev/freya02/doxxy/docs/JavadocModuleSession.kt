@@ -117,10 +117,10 @@ private fun getConstants(source: JavadocSource): Map<SimpleName, Map<FieldName, 
 
         this[fullName] = buildMap {
             val elementIterator = classConstantSection.select("div.summary-table > div").iterator()
-            repeat(3) { elementIterator.next() } // Skip headers
+            repeat(3) { val _ = elementIterator.next() } // Skip headers
 
             while (elementIterator.hasNext()) {
-                elementIterator.next() // "Modifier and type"
+                val _ = elementIterator.next() // "Modifier and type"
                 val constantName = elementIterator.next().text()
                 val constantValue = elementIterator.next().text()
 

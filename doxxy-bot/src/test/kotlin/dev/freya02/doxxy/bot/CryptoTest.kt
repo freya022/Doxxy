@@ -47,7 +47,7 @@ object CryptoTest {
 
     private fun formatTest() {
         val digest = sha512.digest(STR.toByteArray(StandardCharsets.UTF_8))
-        measureTime("String.format", 100000, 100000) { String.format("%032X", BigInteger(1, digest)) }
+        measureTime("String.format", 100000, 100000) { val _ = String.format("%032X", BigInteger(1, digest)) }
         measureTime("String builder", 100000, 100000) { toHexString(digest) }
     }
 }

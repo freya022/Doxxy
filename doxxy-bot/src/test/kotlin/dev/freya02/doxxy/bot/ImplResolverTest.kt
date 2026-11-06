@@ -30,7 +30,7 @@ object ImplResolverTest {
     @JvmStatic
     fun main(args: Array<String>) {
         sourceRoot.parserConfiguration.setSymbolResolver(solver)
-        sourceRoot
+        val _ = sourceRoot
             .tryToParse("net.dv8tion.jda")
             .filter { result ->
                 if (result.problems.isNotEmpty()) {

@@ -18,7 +18,8 @@ java {
 kotlin {
     compilerOptions {
         freeCompilerArgs.addAll(
-            "-Xname-based-destructuring=complete"
+            "-Xname-based-destructuring=complete",
+            "-Xreturn-value-checker=check",
         )
     }
 }
